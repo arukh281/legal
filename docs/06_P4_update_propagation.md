@@ -89,7 +89,9 @@ Because repeated and low-value alerts measurably reduce the rate at which people
     "trigger_delta_id": "gdl_…", "trigger_delta_ids": ["gdl_…"],       // spine field kept; list for coalesced impacts
     "root": { "target_id": "wrk_A", "target_kind": "WORK|PROPOSITION|PROVISION|CASE|ANCHOR",
               "old": { "status": "GOOD", "definitive": true },
-              "new": { "status": "NEGATIVE", "definitive": false, "reason_codes": ["OVERRULED"] },
+              "new": { "status": "NEGATIVE", "definitive": false, "reason_codes": ["OVERRULED"],
+                       "reason_assertion_ids": ["asr_…"] },                  // spine §F AuthorityStatus field
+              "scope_anchor_ids": [],        // non-empty for OVERRULES_IN_PART / partial strike-down, e.g. ["wrk_G/en#p22","wrk_G/en#p29"]
               "direction": "DOWNGRADE|UPGRADE|LATERAL" },
     "trigger_authority": { "work_id": "wrk_B", "court_level": "SC", "bench_strength": 7,
                            "decision_date": "2023-12-13", "anchor_ids": ["wrk_B/en#p225"] },
@@ -102,7 +104,10 @@ Because repeated and low-value alerts measurably reduce the rate at which people
       "effect": "RETROSPECTIVE|PROSPECTIVE|FROM_DATE|CONDITIONAL",
       "legal_effect_from": "2023-12-13", "legal_effect_to": null,
       "territory": "IN",                                              // or IN-UP etc. for state amendments / HC scope
-      "conditions_anchor_ids": [], "retrospective_flag": false, "contested": false
+      "conditions_anchor_ids": [], "retrospective_flag": false, "contested": false,
+      "date_basis": "CAUSE_OF_ACTION",   // which matter date decides applicability (§5.5.3); CORE → ARBITRATOR_APPOINTMENT
+      "scope_predicates": [],            // machine-checkable limits, e.g. [{"fact":"tribunal_size","op":"eq","value":3}]
+      "date_check": "MATCHED"            // legal_effect_from vs P0 source_metadata decision date: MATCHED|MISMATCH|NO_SOURCE
     },
     "severity": 1, "significance": 0.91,                             // public-only (§5.7)
     "verification": { "state": "MACHINE|PENDING_REVIEW|VERIFIED", "definitive": false,
@@ -151,14 +156,16 @@ GET /p4/v1/freshness?court_id=crt_dhc
     "propagation_frontier": "2026-09-30T04:10:00+05:30",   // min captured_at of docs not yet IMPACT_EVALUATED
     "stage_lag_p95_min": { "parse": 22, "index": 41, "graph": 63, "impact": 4 },
     "known_gaps": [ { "doc_key": "…", "reason": "DLQ_PARSE_FAILURE", "excused_by": "ops@…" } ],
-    "source_health": "OK|DEGRADED|DOWN|BLOCKED", "p4_logic_version": "1.3.0" }
+    "source_health": "OK|DEGRADED|DOWN|BLOCKED",
+    "completeness_basis": "ENUMERATED|SERIAL_GAP_CHECK|HEURISTIC|UNKNOWN",   // §5.3; UNKNOWN ⇒ law_current_to = null
+    "p4_logic_version": "1.3.0" }
 GET /p4/v1/freshness/forum?court_id=crt_dhc   // min over the forum's binding hierarchy (SC + DHC + its tribunals)
 ```
 P6 prints `law_current_to` on every memo (08_P6 §2), P5 sets `CORPUS_STALE(court)` warnings, and P8 lowers confidence in "no negative treatment found" claims when the frontier lags.
 
 **O5 — Status commits.** P4 calls the P3 KG Writer's `commit_status_batch(results[], cause{kind: RECOMPUTE|SCHEDULED, ref})`. The writer stays the only holder of write credentials (05_P3 §5.1). It emits a follow-on `graph.delta.v1` with `status_changes` and `cause.kind=RECOMPUTE`.
 
-**O6 — `impact-match-core@semver`.** This is a deterministic library (Rust core with a Python binding) that P7 embeds in every tenant cell and on-prem install. It exposes `applicability(impact, matter_dates, jurisdiction) → APPLIES|PRE_CHANGE|SAVED|UNCERTAIN|NOT_APPLICABLE_TERRITORY` and `tenant_severity(impact, dependency_kinds[], stance?) → 1|2|3 + polarity RISK|OPPORTUNITY|INFO` (§5.6).
+**O6 — `impact-match-core@semver`.** This is a deterministic library (Rust core with a Python binding) that P7 embeds in every tenant cell and on-prem install. It exposes `applicability(impact, matter_dates, matter_facts, jurisdiction) → APPLIES|PRE_CHANGE|SAVED|UNCERTAIN|NOT_APPLICABLE_TERRITORY|NOT_APPLICABLE_SCOPE` and `tenant_severity(impact, dependency_kinds[], stance?) → 1|2|3 + polarity RISK|OPPORTUNITY|INFO` (§5.6).
 
 ### 2.3 Idempotency-key grammar
 
@@ -171,6 +178,8 @@ P6 prints `law_current_to` on every memo (08_P6 §2), P5 sets `CORPUS_STALE(cour
 | reprocess shard | `p4|reprocess|{campaign_id}|{shard}|{sha256(target_pipeline_version)}` | re-issuing a shard does not double-spend |
 | status commit | `p4|status|{recompute_batch_id}` | exactly-once effect in P3's writer |
 | tenant alert (P7) | `p7|alert|{impact_id}|{matter_id}` plus `impact_version` for in-place update | one alert per matter per impact, updated in place |
+
+Because `impact_version` is part of the impact key, it must be assigned deterministically. P4 first looks up `(impact_id, decision_hash)`, using the unique constraint in §5.14. A crash-replay finds the existing decision and re-publishes the *same* version rather than minting v+1.
 
 Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_hash, processed_at)`. It is written in the same transaction as the side effect: the inbox/outbox pattern [P4-12], with Stripe-style idempotency keys [P4-29]. If a known key arrives with a *different* `payload_hash`, that is a producer bug. The consumer raises `IDEMPOTENCY_KEY_REUSE` and parks the event.
 
@@ -185,6 +194,7 @@ Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_
 | SP4-5 | §I | Close the bus and workflow decision: the **Apache Kafka 4.x API** (self-managed KRaft or a managed Kafka in an Indian region), with transactional outbox; **Temporal** for durable, long-running workflows (self-hosted, or Temporal Cloud `aws-ap-south-1`/`ap-south-2`/`gcp-asia-south1` [P4-18]) | See §6.2–6.3. This closes P0 §6.6. |
 | SP4-6 | §G `matter.alert.v1` (P7 §2.5-2) | Carry `impact_version` and `lifecycle`. `dedupe_key = hash(impact_id, matter_id)`, and alerts are updated in place. | Retraction and confirmation must update the same alert rather than send a new one (§5.8; alert-fatigue evidence [P4-35]). |
 | SP4-7 | P0 `acquire.requested.v1` | Add reason `LINEAGE_WATCH` | Appeals and reviews of status-relevant decisions must be polled, not discovered late. |
+| SP4-9 | §H `MatterContext.key_dates` (P7-owned) | Add optional keys that mirror `temporal_scope.date_basis`: `offence_committed`, `proceeding_instituted`, `arbitrator_appointment`, `agreement_execution`, `transactions[]{from,to}`. Add `facts{tribunal_size?, …}` for `scope_predicates`. Absent keys yield `UNCERTAIN` | *CORE* is keyed to appointment date and three-member tribunals [P4-39]. BNSS s.531 is keyed to whether a proceeding was pending on commencement [P4-49]. *MADA* is keyed to transaction date [P4-38]. Art. 20(1) keys penal law to the date of the offence [P4-50]. With cause of action alone, the matcher returns wrong `APPLIES`/`SAVED` labels. |
 | SP4-8 | §F `AuthorityStatus` | Status equivalence for early cutoff is defined on `(status, definitive, reason_codes, binding-relevant fields)`, with confidence bucketed at 0.1 | Prevents alert churn from confidence jitter (U-2). |
 
 ---
@@ -242,9 +252,9 @@ Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_
 | *In re Interplay between Arbitration Agreements and the Stamp Act*, 2023 INSC 1066 | 7 judges, 13 Dec 2023. Para 224(e): "The decision in NN Global 2 … and SMS Tea Estates … are overruled. Paragraphs 22 and 29 of Garware Wall Ropes … are overruled to that extent" [P4-36] | Multi-target: `OVERRULES` for *N.N. Global* and *SMS Tea Estates*; `OVERRULES_IN_PART` scoped to `wrk_garware/en#p22`, `#p29` (→ `PARTIAL_NEGATIVE`, `root.scope_anchor_ids`, §5.6); the larger bench is doctrine-valid [P4-45]; one coalesced impact per overruled work; ring-1 to HC decisions applying *N.N. Global* on unstamped agreements |
 | *Sita Soren v. Union of India*, 2024 INSC 161 | 7 judges, 4 Mar 2024. Para 188 (Conclusion): "We disagree with and overrule the judgment of the majority on this aspect", i.e. immunity from prosecution for bribery under Arts 105/194 (*P.V. Narasimha Rao*, 5 judges, 1998) [P4-37] | Proposition-level overruling of the majority view; the dissent's proposition is untouched; `temporal_scope.effect=RETROSPECTIVE` by default |
 | *Mineral Area Development Authority v. SAIL* | 9-judge judgment of 25 Jul 2024 [P4-38] (snippet); order of 14 Aug 2024: prospective effect "rejected" (para 24); tax demand not on transactions before 1 Apr 2005; staggered over 12 years from 1 Apr 2026; interest and penalty before 25 Jul 2024 waived (para 25) [P4-38] | Two linked impacts: the judgment (status change for *India Cement* to the extent overruled) and the order, as `effect=CONDITIONAL` with `conditions_anchor_ids` → tenant applicability `UNCERTAIN` → human reads the conditions |
-| *CORE v. ECI-SPIC-SMO-MCML (JV)* | 5 judges, 8 Nov 2024; unilateral appointment or curation by an interested party offends equal treatment; Part I "Prospective Overruling" (paras 166–168) and para 169(g): "The law laid down in the present reference will apply prospectively to arbitrator appointments to be made after the date of this judgment. This direction applies to three-member tribunals." The majority disagreed with *Voestalpine* and *CORE* (2019) [P4-39] | `effect=PROSPECTIVE`, `legal_effect_from=2024-11-08`, **`date_basis=ARBITRATOR_APPOINTMENT`**, `scope_predicates=[{tribunal_size: 3}]` (§5.5.3). The matcher compares the *appointment* date, not the cause of action, and returns `UNCERTAIN` unless the matter records the appointment date and tribunal size |
+| *CORE v. ECI-SPIC-SMO-MCML (JV)* | 5 judges, 8 Nov 2024; unilateral appointment or curation by an interested party offends equal treatment; Part I "Prospective Overruling" (paras 166–168) and para 169(g): "The law laid down in the present reference will apply prospectively to arbitrator appointments to be made after the date of this judgment. This direction applies to three-member tribunals." The majority disagreed with *Voestalpine* and *CORE* (2019) [P4-39] | `effect=PROSPECTIVE`, `legal_effect_from=2024-11-09` ("appointments to be made *after* the date of this judgment"), **`date_basis=ARBITRATOR_APPOINTMENT`**, `scope_predicates=[{tribunal_size: 3}]` (§5.5.3). The matcher compares the *appointment* date, not the cause of action, and returns `UNCERTAIN` unless the matter records the appointment date and tribunal size |
 | UP Madarsa Act (*Anjum Kadari v. UoI*, 2024 INSC 831, 5 Nov 2024) | On 5 Apr 2024 the SC stayed the Allahabad HC judgment of 22 Mar 2024. On 5 Nov 2024 it set that judgment aside (para 105), upholding the Act except the provisions on the Fazil and Kamil higher-education degrees, which conflict with the UGC Act [P4-43] | Status flips HC-struck-down → STAYED → set aside, ending in `UPHOLDS_VALIDITY` plus a *partial* `STRIKES_DOWN` scoped to the Fazil/Kamil provisions. Each flip is an impact *version*, so tenants see one evolving card, not three alerts |
-| BNS/BNSS/BSA commencement | BNS in force 1 Jul 2024 [P4-44]; BNSS commenced the same date (secondary) [P4-44]. BNSS s.531(2)(a): any appeal, application, trial, inquiry or investigation *pending* immediately before commencement continues under the CrPC 1973 [P4-49]. BSA date is *unverified here* | `date_basis=PROCEEDING_PENDING_ON` for procedural crosswalks: a matter whose proceeding was pending on 1 Jul 2024 gets `SAVED`, not `APPLIES`; A **scheduled legal event**: pre-announced at notification, fired at `valid_from`; mass `CROSSWALK_CHANGED`/`PROVISION_COMMENCED` handled as a storm campaign (§5.7.3) |
+| BNS/BNSS/BSA commencement | BNS in force 1 Jul 2024 [P4-44]; BNSS commenced the same date (secondary) [P4-44]. BNSS s.531(2)(a): any appeal, application, trial, inquiry or investigation *pending* immediately before commencement continues under the CrPC 1973 [P4-49]. BSA date is *unverified here* | `date_basis=PROCEEDING_PENDING_ON` for procedural crosswalks: a matter whose proceeding was pending on 1 Jul 2024 gets `SAVED`, not `APPLIES`. It is also a **scheduled legal event**: pre-announced at notification, fired at `valid_from`; mass `CROSSWALK_CHANGED`/`PROVISION_COMMENCED` handled as a storm campaign (§5.7.3) |
 | s.66A after *Shreya Singhal* | Struck down 2015 [P4-40]; still invoked [P4-41][P4-42] | `PROVISION_VALIDITY_CHANGED` must reach every matter where the provision is a `GOVERNING_PROVISION` or `CITED_BY_OPPONENT`, including *opponent notices citing dead law*. That is an **opportunity** alert (§5.6) |
 
 ---
@@ -350,6 +360,11 @@ law_current_to(forum F)       = min over courts whose decisions bind or are rout
                                 (SC ∪ F's HC ∪ F's appellate tribunals; from the P3 court registry)
 ```
 - A stuck document therefore holds the frontier back visibly. Ops must fix it or **excuse** it: `ledger.excuse(doc_key, reason, actor)`. An excused document appears in `known_gaps[]` and in the P8/P10 caveat. This turns "silent partial ingestion" into a number on the screen.
+- **Completeness basis.** Many portals publish no enumerable daily list, so P0 cannot always prove that "every publication up to T" was captured. `completeness_basis` records how the capture frontier was obtained:
+  - `ENUMERATED`: the portal lists the day's output.
+  - `SERIAL_GAP_CHECK`: gaps in sequential neutral-citation serials (`YYYY INSC n`, `YYYY:DHC:n`) are detected and resolved. [NOVEL — unvalidated]
+  - `HEURISTIC`: for example, reconciliation against the cause list.
+  - `UNKNOWN`: `law_current_to` is returned as `null` and P5/P6/P10 print "completeness unknown for <court>" rather than a date. A date that cannot be backed is never shown (U-5).
 - The frontier is computed every 60 s into `freshness_frontier`. Reads are O(1).
 
 ### 5.4 Status recompute (incremental, early cutoff, bounded)
@@ -440,6 +455,20 @@ The rules are computed deterministically from assertion qualifiers (P3 S3-1 `eff
 - **Statute changes** give `FROM_DATE = valid_from`, with `retrospective_flag` when the amending text says so (P1 `AmendmentInstruction`). `territory` is taken from the version.
 - **Stays** give `FROM_DATE`, with `legal_effect_to` open until vacated.
 - Scope also carries `contested=true` whenever P3's rule is contested, for example BNSS transitional rules or the precedential effect of a stayed HC judgment (05_P3 B11).
+- **Date basis.** `date_basis` names the matter date that decides applicability. It is extracted by P3 (HITL for tier 1). When a PROSPECTIVE or CONDITIONAL judgment's basis was not extracted, it defaults to `CAUSE_OF_ACTION` with `contested=true`.
+
+  | `date_basis` | Used for | Example |
+  |---|---|---|
+  | `CAUSE_OF_ACTION` | default | — |
+  | `OFFENCE_COMMITTED` | substantive penal changes | Art. 20(1) bars conviction or a greater penalty except under the law in force when the offence was committed [P4-50] |
+  | `PROCEEDING_PENDING_ON` | procedural code transitions | BNSS s.531(2)(a) [P4-49] |
+  | `ARBITRATOR_APPOINTMENT` | appointment-rule changes | *CORE*, together with `scope_predicates=[tribunal_size=3]` [P4-39] |
+  | `AGREEMENT_EXECUTION` | agreement-rule changes | the *BALCO* (2012) 9 SCC 552 prospectivity "to all the arbitration agreements executed hereafter", as quoted in *CORE* [P4-39] |
+  | `TRANSACTION` | fiscal changes | *MADA*: no demand on transactions before 1 Apr 2005 [P4-38] |
+  | `FILING` | filing-rule changes | — |
+- **Date cross-check (bad OCR).** `legal_effect_from` comes from judgment text. It is compared with the decision date in P0's `source_metadata` as published by the portal.
+  - A mismatch sets `date_check=MISMATCH` and `contested=true`, caps severity at 2 and opens a review task.
+  - A mis-OCR'd year (2021 for 2024) otherwise flips `APPLIES`/`SAVED` silently.
 
 ### 5.6 Tenant-scoped fan-out without leakage
 
@@ -454,8 +483,17 @@ The rules are computed deterministically from assertion qualifiers (P3 S3-1 `eff
 **`impact-match-core`** (P4-owned, runs in tenant) [NOVEL — unvalidated]:
 ```text
 applicability(impact, matter):
-  s = impact.temporal_scope ; D = matter.key_dates.cause_of_action ?? matter.as_of_legal_date_default
+  s = impact.temporal_scope
+  D = matter.key_dates[s.date_basis]                                  # SP4-9
+      ?? (s.date_basis == CAUSE_OF_ACTION ? matter.as_of_legal_date_default : null)
   if s.territory ∉ {IN, matter.jurisdiction_state}:           return NOT_APPLICABLE_TERRITORY
+  for p in s.scope_predicates:                                # e.g. tribunal_size = 3 (CORE)
+      v = matter.facts[p.fact]
+      if v is null: return UNCERTAIN
+      if not p.holds(v): return NOT_APPLICABLE_SCOPE
+  if s.date_basis == PROCEEDING_PENDING_ON:                   # BNSS s.531(2)(a): pending → old code continues
+      if D is null: return UNCERTAIN
+      return D < s.legal_effect_from ? SAVED : APPLIES
   switch s.effect:
     RETROSPECTIVE: return APPLIES
     PROSPECTIVE:   if D is null: return UNCERTAIN ; return D ≥ s.legal_effect_from ? APPLIES : SAVED
@@ -466,7 +504,10 @@ applicability(impact, matter):
 tenant_severity(impact, deps, applicability):
   sev = impact.severity
   if any(dep.kind ∈ {OWN_CASE, CITED_IN_OUR_DRAFT}): sev = max(1, sev-1)
-  if applicability ∈ {SAVED, PRE_CHANGE, NOT_APPLICABLE_TERRITORY}: sev = 3
+  if applicability ∈ {SAVED, PRE_CHANGE, NOT_APPLICABLE_TERRITORY, NOT_APPLICABLE_SCOPE}: sev = 3
+  if impact.root.scope_anchor_ids ≠ ∅ and all(dep.anchor_ids known)
+     and ∪dep.anchor_ids ∩ impact.root.scope_anchor_ids = ∅: sev = 3       # partial overruling; cited paras untouched
+                                                                          # (e.g. Garware paras other than 22/29)
   if applicability == UNCERTAIN and sev == 1: sev = 2 (+ "confirm the relevant date" action)
   polarity = RISK if dep.kind ∈ {CITED_IN_OUR_DRAFT, IN_MEMO_FAVOURABLE, GOVERNING_PROVISION}
              and impact.root.direction == DOWNGRADE
@@ -493,9 +534,17 @@ severity = 1 if significance ≥ 0.75 and ring = 0
 - (i) the cue is explicit in ratio or operative text ("overruled", "struck down", "set aside");
 - (ii) `doctrine_valid`: a larger bench or superior court [P4-45];
 - (iii) confidence ≥ 0.9;
-- (iv) the trigger is from an official source.
+- (iv) the trigger is from an official source;
+- (v) the cue was detected by a P3 treatment extractor validated for the judgment's language (§9 per-language recall). Hindi or regional-language judgments with no validated extractor are capped at 2 until HITL;
+- (vi) `temporal_scope.date_check ≠ MISMATCH`.
 
 Otherwise it is capped at 2 and labelled "machine-detected — under review". This meets the 6 h provisional-alert SLO without paging on guesses (13_cross_cutting §6.2).
+
+**Operative order now, reasons later.** Indian courts sometimes pronounce an operative order with "reasons to follow" (frequency not quantified here).
+- The operative order is official text. It may seed a PROVISIONAL impact if its wording is explicit, for example "set aside" or "overruled".
+- The scope is marked `contested=true`, and the explanation says the reasons are awaited.
+- The reasoned judgment later yields an UPDATED version under the same `coalesce_key`.
+- News reports (LiveLaw, Bar & Bench) never seed impacts. They may only trigger `acquire.requested.v1{reason: LINEAGE_WATCH}` so that P0 polls the official source.
 
 #### 5.7.2 Lifecycle and coalescing
 ```mermaid
@@ -510,7 +559,7 @@ stateDiagram-v2
   CONFIRMED --> RETRACTED: later correction
   RETRACTED --> [*]
 ```
-- **Coalescing.** `coalesce_key = hash(root.target_id, trigger_work_id)`. Any change with the same key within 6 h becomes a new *version* of the same `impact_id`. A 7-judge judgment overruling three works yields three impacts, one per root (tenants care about *which* authority they used). Each impact carries `trigger_authority`, so P10 can group them on one card.
+- **Coalescing.** `coalesce_key = hash(root.target_id, trigger_work_id)`. Any change with the same key within 6 h becomes a new *version* of the same `impact_id`. The 6 h window is measured on the triggering deltas' `recorded_at` (event time), not on processing time, so a replay coalesces identically (U-6). A 7-judge judgment overruling three works yields three impacts, one per root (tenants care about *which* authority they used). Each impact carries `trigger_authority`, so P10 can group them on one card.
 - **In-place updates.** P7 updates an existing alert when `impact_version` increases (SP4-6). Re-notification happens only when severity *increases* or the lifecycle becomes RETRACTED. This is the direct countermeasure to the repeat-alert effect [P4-35].
 
 #### 5.7.3 Storm control (big judgments, commencements, reprocess waves)
@@ -537,7 +586,7 @@ Commencement notifications, sunset clauses, ordinance lapse dates, and stays "un
   1. P3 rejects the assertion, and truth maintenance retracts its children (05_P3 §5.9).
   2. `graph.delta.v1.retracted` arrives, followed by P4 recompute.
   3. The detector looks up `impact_reason(assertion_id)` and finds every impact whose root reasons include the retracted assertion.
-  4. For each one it emits `lifecycle=RETRACTED` with `impact_version+1` and the explanation "Withdrawn: the earlier alert was based on a treatment our reviewers rejected".
+  4. For each one, if *every* reason assertion of the current version is now retracted, it emits `lifecycle=RETRACTED` with `impact_version+1` and the explanation "Withdrawn: the earlier alert was based on a treatment our reviewers rejected". If some reasons survive, as in a coalesced impact, it emits `UPDATED` with the recomputed status, closure and severity; this can be a downgrade to severity 3.
   5. P7 marks alerts withdrawn, and memos whose STALE reason was only this impact return to their prior state after P8 re-verification.
   - Retractions are broadcast like originals, so they reach exactly the original audience without P4 knowing it (U-3, U-4).
 - **Knowledge correction versus law change.** Impacts caused by reprocessing or reclassification carry `cause_kind=RECLASSIFICATION` or `KNOWLEDGE_CORRECTION`. P10 phrases them as "our analysis changed", not "the law changed". The rules for such impacts:
@@ -626,7 +675,11 @@ CREATE TABLE impact (
   severity smallint NOT NULL, significance real NOT NULL, temporal_scope jsonb NOT NULL,
   verification jsonb NOT NULL, explanation jsonb NOT NULL, closure_count int, manifest_uri text, manifest_sha256 bytea,
   graph_watermark bigint NOT NULL, doctrine_version text NOT NULL, p4_logic_version text NOT NULL, storm_id text,
-  recorded_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (impact_id, impact_version));
+  decision_hash bytea NOT NULL,   -- content hash of the §2.3 impact key (reasons ‖ statuses ‖ lifecycle ‖ closure hash)
+  recorded_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY (impact_id, impact_version),
+  UNIQUE (impact_id, decision_hash));
+-- version assignment, in one txn with SELECT … FOR UPDATE on the latest version:
+--   if decision_hash already present → no-op (replay); else impact_version = max(impact_version) + 1
 CREATE TABLE impact_reason (impact_id text, assertion_id text, PRIMARY KEY (assertion_id, impact_id)); -- retraction lookup
 CREATE TABLE impact_affected (impact_id text, impact_version int, affected_id text, ring smallint,
   via_assertion_id text, weight real) PARTITION BY HASH (impact_id);
@@ -665,7 +718,7 @@ CREATE TABLE outbox (id text PRIMARY KEY, topic text, msg_key text, payload json
   - **Injection resistance:** P4 runs no LLM. Explanations are templates filled with *evidence quotes as data*. A forged "judgment" cannot create a severity-1 impact, because tier-1 requires an official source (P0 provenance), doctrine validity and, for "definitive", HITL.
 - **Cost at ≈5M docs.** P4's own compute is small:
   - about 6K–15K docs/day, which gives on the order of 10⁴–10⁵ recomputes/day on the daily path (estimate);
-  - a weekly sweep of about 5M CPU-only `authority-core` evaluations;
+  - a weekly sweep of about 5M CPU-only `authority-core` evaluations. At an *assumed* 1–5 ms each this is about 1.5–7 CPU-hours, or 3–14 at 10M documents; benchmark it before relying on the figure;
   - Postgres rows in the low millions per month.
 
   The cost that matters is **campaign LLM spend**, which P4 governs through minimality, scoping, shadow-before-apply and hard caps (§5.11; 13_cross_cutting). Infrastructure is a 3-broker Kafka cluster, a Temporal cluster (or Temporal Cloud in Mumbai/Hyderabad [P4-18]) and one Postgres. Dollar figures for these were not verified in this session.
@@ -705,7 +758,7 @@ At 10⁴–10⁵ events/day, throughput does not decide anything. What decides i
 
 | Option | Strengths | Weaknesses | Verdict |
 |---|---|---|---|
-| **Temporal** | mature durable execution and replay [P4-21]; timers and signals (scheduled legal events, HITL waits); Priority + Fairness GA [P4-19]; Cloud in Mumbai/Hyderabad [P4-18]; MIT server | separate cluster; history limit 51,200 events → continue-as-new discipline [P4-20]; deterministic-code constraints | **chosen** (P0, P1, P2 and P6 already assume Temporal-class semantics) |
+| **Temporal** | mature durable execution and replay [P4-21]; timers and signals (scheduled legal events, HITL waits); Priority + Fairness documented for self-hosted and Cloud [P4-19]; Cloud in Mumbai/Hyderabad [P4-18]; MIT server | separate cluster; history limit 51,200 events → continue-as-new discipline [P4-20]; deterministic-code constraints | **chosen** (P0, P1, P2 and P6 already assume Temporal-class semantics) |
 | Restate | low latency, simple model | BSL 1.1 [P4-16]; younger | rejected (licence and maturity for on-prem) |
 | DBOS Transact | Postgres-only, MIT, queues with priority and rate limits [P4-17] | fewer operational tools at scale; shares the system-of-record DB | fallback for small deployments |
 | Dagster / Airflow | excellent partitioned backfills and UI | batch-oriented; weak for event-driven timers and signals | rejected as the core; Dagster acceptable for analytics |
@@ -762,8 +815,8 @@ Options compared:
 | Attack / condition | What breaks | Mitigation in design | Residual risk |
 |---|---|---|---|
 | **10M+ documents** | Weekly sweep of ~10M evaluations; closure manifests for mega-cited cases; ledger growth | Sweep is CPU-only and sharded (Temporal fairness); manifests in S3 with SHA-256; ledger partitioned monthly, hot 24 months; recompute partitions scale to 96 | Graph Query API latency for `dependents()` on hubs; mitigated by the P3 CSR projection |
-| **Bad OCR** | Garbled cue words → missed or false treatments → missed or false impacts | Provisional severity-1 gate needs an explicit cue in ratio/operative text + `quality.gate=PASS`; a QUARANTINED doc cannot create tier-1 (P3 H5); OCR upgrades flow as campaigns with impact dry-run | Missed overrulings in bad scans until HITL, attestation mining (P3 §5.8-3) or re-OCR |
-| **Hindi / regional-language judgment** | Cue detection or treatment extraction weaker; explanation language | P4 is language-agnostic (it operates on assertions); explanation templates are rendered in the user's UI language from structured fields; the evidence quote stays in the original language plus a P1 translation expression with a "machine translation" label | Recall lower for non-English treatments; measured per language (§9) |
+| **Bad OCR** | Garbled cue words → missed or false treatments → missed or false impacts | Provisional severity-1 gate needs an explicit cue in ratio/operative text + `quality.gate=PASS`; a QUARANTINED doc cannot create tier-1 (P3 H5); OCR upgrades flow as campaigns with impact dry-run; OCR'd dates are cross-checked against portal metadata (`date_check`, §5.5.3); a mismatch caps severity at 2 | Missed overrulings in bad scans until HITL, attestation mining (P3 §5.8-3) or re-OCR |
+| **Hindi / regional-language judgment** | Cue detection or treatment extraction weaker; explanation language | P4 is language-agnostic (it operates on assertions); explanation templates are rendered in the user's UI language from structured fields; the evidence quote stays in the original language plus a P1 translation expression with a "machine translation" label. Severity-1 gate (v): with no validated extractor for the language, the impact is capped at 2 until HITL. Status attaches to the Work, not the expression. Evidence anchors in an `hi` expression are mapped to `en` anchors through P1 alignment; when alignment confidence < 0.9 the explanation quotes the original only, never an unaligned translation | Recall lower for non-English treatments; measured per language (§9) |
 | **Precedent overruled yesterday** | Capture lag; HITL not yet done; caches stale | RT lane; provisional impact ≤ 6 h labelled unverified; P5 `revalidate`; memo `law_current_to` shows the frontier; P9 `FLAG_BAD_LAW` fast path to P0 recheck (P9 §5.5.3) | Portal upload delay is outside our control; `law_current_to` makes it visible |
 | **Wrong edge (false overruling) then retraction** | Firms alarmed; memos marked STALE | Provisional labelling; severity-1 gate; RETRACTED version ≤ 30 min after rejection; in-place alert update; retraction-rate metric per method version feeds P3 circuit breakers | Reputational cost of any false severity-1; keep its rate < 1 per quarter (§9) |
 | **Storm after a big judgment / code commencement** | Thousands of impacts; REVERIFY cost spikes; alert flood | Coalescing; storm mode (ring ≥ 1 → digest; token bucket); lazy REVERIFY; planned campaigns for commencements | Tenant with thousands of criminal matters still gets a large "code transition" card; UX owned by P10 |
@@ -777,6 +830,48 @@ Options compared:
 | **Temporal or Kafka outage** | Campaigns and timers pause; event delivery stops | Daily path does not depend on Temporal (choreography); Kafka outage → outbox accumulates, replay on recovery (RPO 0); scheduled events re-evaluated on recovery (catch-up fire) | RTO ≤ 2 h |
 | **Clock / time-zone errors** | Scheduled events fire on the wrong day; frontier skew | All legal dates are `date` in IST semantics; timestamps in UTC with IST rendering; scheduled fire at 00:00 IST | Commencement "from the date of publication" ambiguity → review task |
 | **Runaway campaign cost** | Budget blown by a mis-scoped selector | Frozen ID list; cost estimate; approval threshold; hard cap auto-pause; minimality filter | Estimate error on new model pricing |
+| **Operative order pronounced, reasons later / news-first** | LiveLaw reports "X overruled" hours before any official text; the operative order says "reasons to follow" | News never seeds impacts (it only triggers `LINEAGE_WATCH` polling); the explicit operative order seeds a PROVISIONAL, `contested` impact; the reasoned judgment updates it (§5.7.1) | Hours of lag after news; the reasoned judgment may narrow the order |
+| **Wrong date basis** (prospective or transitional law keyed to a date other than cause of action) | *CORE* matters labelled APPLIES/SAVED on the wrong date; BNSS-pending matters told the new code applies | `date_basis` + `scope_predicates` + SP4-9 matter keys; missing key → `UNCERTAIN` | Date-basis extraction errors in P3; HITL for tier 1 only |
+| **Partial overruling / partial strike-down** (*Garware* paras 22 and 29 [P4-36]; *Madarsa* Fazil/Kamil [P4-43]) | Every matter citing the whole work alerted as NEGATIVE | `OVERRULES_IN_PART` → `PARTIAL_NEGATIVE`, `root.scope_anchor_ids`; the matcher demotes to severity 3 when the matter's cited paragraphs do not intersect | Matters whose dependency anchors are unknown (citation without a pinpoint) stay at base severity |
+| **Feedback flood** (a tenant or bot mass-files `FLAG_BAD_LAW`) | P0 recheck fast path saturated; RT lane starved | Flags never change status; per-tenant rate limit and dedupe per target per 24 h at the P9 gate; rechecks run on a capped sub-lane | Coordinated multi-tenant abuse; P9 anomaly detection |
+
+### 8.R Independent review findings
+
+This review was adversarial. It re-fetched about 22 high-stakes sources: Indian Kanoon full texts for *Interplay*, *Sita Soren*, *MADA* (order), *CORE*, *Anjum Kadari* and BNSS s.531; the arXiv abstracts; the Kafka and Temporal documentation; the Europe PMC abstracts; the Hellyer abstract; the licences; and KeyCite.
+
+**Citation corrections.**
+- *Sita Soren*: the overruling is at **para 188**, not para 131. The quoted words were not in the judgment and have been replaced with the actual text [P4-37].
+- *CORE*: the prospective scope is now verified (paras 166–168 and 169(g)). It is keyed to **arbitrator-appointment date** and limited to **three-member tribunals**. "Para 109" was a page number [P4-39].
+- *Interplay*: *Garware* is overruled only at paras 22 and 29, "to that extent". That is `OVERRULES_IN_PART`, not a whole-work overruling [P4-36].
+- *Anjum Kadari*: the interim stay of 5 Apr 2024 and the final partial strike-down are now verified [P4-43].
+- BNSS s.531 savings is verified [P4-49].
+- Hellyer: "53 of 357" and "85% disagreement" were not in the abstract. They were replaced with the abstract's findings, and the figure is marked unverified [P4-9].
+- Temporal Priority/Fairness "GA" is unverified.
+- Kafka share groups are now verified: preview in 4.1, production-ready in 4.2 [P4-47][P4-48].
+- FinCacheServe: the 38.97% baseline belongs to the 544-request suite, not the 2,230-request trace [P4-7].
+- The *Zombie Tracker* co-author is unconfirmed.
+- Magesh et al.: their *Casey* example is recast as the reliance (ring-1) failure it actually is [P4-1].
+
+**Design gaps patched.**
+1. `temporal_scope.date_basis` and `scope_predicates` were added, with matcher logic (§5.5.3, §5.6) and SP4-9 for matter keys. Before this, every prospective or transitional impact was evaluated against cause of action, which is wrong for *CORE*, BNSS s.531, *MADA* and Art. 20(1).
+2. Partial-overruling scope (`root.scope_anchor_ids`) and paragraph-level demotion.
+3. Deterministic `impact_version` through `UNIQUE(impact_id, decision_hash)`. Without it, a crash-replay could mint a duplicate version and re-notify.
+4. The coalescing window is event-time, so replays are deterministic (U-6).
+5. Partial retraction of a coalesced impact becomes `UPDATED`, not `RETRACTED`.
+6. `completeness_basis` in Freshness: `law_current_to=null` when completeness is unprovable; neutral-citation serial-gap checks.
+7. Severity-1 gate conditions for language coverage and the OCR'd-date cross-check.
+8. Handling of "reasons to follow" and news-first reports.
+9. A feedback-flood control.
+10. `reason_assertion_ids` in `root.new`, for conformance with spine §F.
+
+**Still open.**
+- (a) `commit_status_batch` and `cause.kind=RECOMPUTE|SCHEDULED` are not yet in the P3 doc. They need P3's acknowledgement (SP4-3).
+- (b) P3 must extract `date_basis` and `scope_predicates`, and nobody has measured whether it can.
+- (c) The later PUCL 66A orders (2021–2022) and the BSA commencement date were not re-verified.
+- (d) The early-cutoff equivalence and the severity weights (§5.7.1) are unvalidated priors.
+- (e) The "reasons to follow" frequency in Indian courts is unquantified.
+- (f) P5/P6 per-ID Graph Query API reads from tenant cells are an access-pattern side channel outside P4's L1 rule. This needs a cross-cutting decision (13_cross_cutting).
+- (g) CloudEvents envelope naming (open question 6).
 
 ---
 
@@ -793,6 +888,8 @@ Options compared:
 | Retraction latency | P3 rejection → RETRACTED published | p95 ≤ 30 min |
 | Duplicate / repeat rate | tenant alerts re-notified without a severity increase | < 0.1% |
 | As-of correctness | on drills with prospective/conditional/pre-change cases, applicability label accuracy vs lawyer judgment | ≥ 90% (`UNCERTAIN` counted correct only when the date is missing) |
+| Date-basis accuracy | P3-extracted `date_basis`/`scope_predicates` vs lawyer annotation on all PROSPECTIVE/CONDITIONAL/transitional impacts | ≥ 95% on tier 1 (after HITL) |
+| Completeness coverage | share of courts with `completeness_basis ∈ {ENUMERATED, SERIAL_GAP_CHECK}` | tracked; MVP courts 100% |
 | Early-cutoff ratio | recomputes ending with no change (efficiency; sudden drops signal churn bugs) | monitored; alert on ±3σ |
 | Reconciler discrepancies | per class per day | → 0; any tier-1 class pages |
 | Campaign quality | sentinels pass 100%; tier-1 flip rate; anchor churn; cost vs plan | pass / ≤ 0.5% / ≤ 0.1% / ≤ 1.2× |
@@ -812,7 +909,7 @@ Options compared:
 | Recompute | Depth 1 (reliance risk), early cutoff, weekly sweep | Depth 2, crosswalk carry-over, rules `MADE_UNDER` |
 | Impact kinds | STATUS, DIRECT_HISTORY, PROVISION_TEXT/VALIDITY, TEXT_CORRECTED, IDENTITY_REMAPPED | + RELIANCE_RISK ring 2, NEW_INTERPRETATION, REFERENCE_STATE, CROSSWALK, SUPPRESSED, WITHDRAWN |
 | Lifecycle | PROVISIONAL/CONFIRMED/RETRACTED, in-place updates | + UPDATED coalescing, storm automation |
-| Tenant | Broadcast-and-match with `impact-match-core` v1 (RETROSPECTIVE/FROM_DATE; PROSPECTIVE/CONDITIONAL → UNCERTAIN) | Full applicability incl. prospective dates; opportunity polarity; on-prem signed bundles |
+| Tenant | Broadcast-and-match with `impact-match-core` v1 (RETROSPECTIVE/FROM_DATE; `date_basis` ∈ {CAUSE_OF_ACTION, PROCEEDING_PENDING_ON, OFFENCE_COMMITTED}, because the criminal-code transition is day-one volume; PROSPECTIVE/CONDITIONAL → UNCERTAIN) | Full applicability incl. prospective dates; opportunity polarity; on-prem signed bundles |
 | Severity | Rule-based priors (§5.7.1) | Calibrated on P9 alert feedback per practice area |
 | Scheduled events | Manual entry for known commencements | Automatic from `COMMENCES` notifications and ordinance lapse rules |
 | Campaigns | Runbook-driven with shadow + diff (no impact dry-run) | Impact dry-run gate, minimality filter, confidence-targeted scoping, auto rollback |
@@ -890,3 +987,4 @@ Options compared:
 [P4-47] Apache Kafka. "Apache Kafka 4.2.0 Release Announcement." 17 Feb 2026 ("Kafka Queues (Share Groups) is now production-ready"). https://kafka.apache.org/blog/2026/02/17/apache-kafka-4.2.0-release-announcement/ — verified
 [P4-48] Apache Kafka. "Apache Kafka 4.1.0 Release Announcement." 4 Sep 2025 (KIP-932 "now in preview … still not ready for production"). https://kafka.apache.org/blog/2025/09/04/apache-kafka-4.1.0-release-announcement/ — verified
 [P4-49] Bharatiya Nagarik Suraksha Sanhita, 2023, s.531 "Repeal and savings" (CrPC 1973 repealed; pending appeals, applications, trials, inquiries and investigations continue under the CrPC). https://indiankanoon.org/doc/74791982/ — verified
+[P4-50] Constitution of India, Art. 20(1) (no conviction or greater penalty except under the law in force at the time of the offence). https://indiankanoon.org/doc/655638/ — verified
