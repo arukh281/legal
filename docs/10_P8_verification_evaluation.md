@@ -1,6 +1,6 @@
 # P8 — Verification, Trust and Evaluation
 
-**Abstract.** P8 is the platform's quality authority. It has two halves that share one data model. The first is the **Verifier**, an online service. It takes typed `Claim`s from P6 (memos, answers, drafts) and checks each one against a *legal-warrant* ladder. Does the anchor exist? Is the quote exact? Does the **cited paragraph**, and not merely the case, entail the claim? Is that paragraph the court's holding, or counsel's submission, obiter or a dissent? Is the authority good law as of the relevant date? Is it binding on this forum? Are the dates, numbers and old↔new criminal-code sections right? The output is a `VerificationReport`: a per-claim status, a calibrated confidence, a display band and a PASS / PARTIAL / BLOCK gate. The second half is the **Evaluation Platform**. It holds versioned, signed gold sets built with the design-partner firm, a metric catalogue for every phase (P0–P10), a regression-gating policy for every model, prompt, parser, index or ontology change, production audit sampling, and the Design Partner Program (consent, MoU/DPA, privilege, annotation, incentives). Four findings shape the design. (1) Commercial legal RAG tools hallucinated 17–33% of the time, and their most insidious failure was *misgrounding*: a real source that does not support the claim [P8-1]. (2) The hard verification case is not a fake case but a **wrong pinpoint**. Frontier models caught only 37–61% of wrong-pinpoint corruptions in court opinions [P8-4], and the best agentic checker reached 52.8% recall on incorrect pincites [P8-3]. (3) Citation-graph "hallucination rates" mostly measure the *coverage of the oracle*, not the model [P8-6]. (4) Indian courts have set aside orders in 2025–2026 because they rested on fabricated or misrepresented case law, including Supreme Court decisions in 2026 [P8-8]. So P8 (a) verifies at **anchor level with role and status awareness**, (b) separates *UNVERIFIABLE* (we could not check) from *UNSUPPORTED* (we checked and it fails), (c) shows **ordinal, audited confidence bands** instead of raw percentages, and (d) gates every change on *statistically powered* non-inferiority tests plus zero-tolerance sentinel suites. Target verifier cost is ≈US$0.02–0.05 per Q&A answer and ≈US$0.2–0.6 per full memo. Target latency is ≤4 s p95 for an answer and ≤20 s p95 per memo section. Both are estimates (§5.12).
+**Abstract.** P8 is the platform's quality authority. It has two halves that share one data model. The first is the **Verifier**, an online service. It takes typed `Claim`s from P6 (memos, answers, drafts) and checks each one against a *legal-warrant* ladder. Does the anchor exist? Is the quote exact? Does the **cited paragraph**, and not merely the case, entail the claim? Is that paragraph the court's holding, or counsel's submission, obiter or a dissent? Is the authority good law as of the relevant date? Is it binding on this forum? Are the dates, numbers and old↔new criminal-code sections right? The output is a `VerificationReport`: a per-claim status, a calibrated confidence, a display band and a PASS / PARTIAL / BLOCK gate. The second half is the **Evaluation Platform**. It holds versioned, signed gold sets built with the design-partner firm, a metric catalogue for every phase (P0–P10), a regression-gating policy for every model, prompt, parser, index or ontology change, production audit sampling, and the Design Partner Program (consent, MoU/DPA, privilege, annotation, incentives). Four findings shape the design. (1) Commercial legal RAG tools hallucinated 17–33% of the time, and their most insidious failure was *misgrounding*: a real source that does not support the claim [P8-1]. (2) The hard verification case is not a fake case but a **wrong pinpoint**. Frontier models caught only 37–61% of wrong-pinpoint corruptions in court opinions [P8-4], and the best agentic checker reached 52.8% recall on incorrect pincites [P8-3]. (3) Citation-graph "hallucination rates" mostly measure the *coverage of the oracle*, not the model [P8-6]. (4) Indian courts have set aside orders in 2025–2026 because they rested on fabricated or misrepresented case law, including Supreme Court decisions in 2026 [P8-8]. So P8 (a) verifies at **anchor level with role and status awareness**, (b) separates *UNVERIFIABLE* (we could not check) from *UNSUPPORTED* (we checked and it fails), (c) shows **ordinal, audited confidence bands** instead of raw percentages, and (d) gates every change on *statistically powered* non-inferiority tests plus zero-tolerance sentinel suites. Target verifier cost is ≈US$0.02–0.05 per Q&A answer and ≈US$0.2–0.6 per full memo. Target latency is ≤4 s p95 for an answer and ≤20 s p95 per memo section. Both are estimates (§5.14).
 
 ---
 
@@ -13,7 +13,7 @@
 2. **Hallucination detection** across answers, memos, drafts and **uploaded third-party documents** (opponent pleadings, lower-court orders, a firm's own drafts), exposed as the Citation Audit service (§5.8).
 3. **Confidence**: a calibrated per-claim probability, conformal display thresholds, UI band semantics and the "trust ledger" (§5.6–5.7).
 4. **Re-verification** when law changes (graph deltas) or when the claim text is edited (drafts).
-5. **Evaluation platform**: gold-set store, eval runner, metric catalogue P0–P10, benchmark adapters (IL-TUR, LegalBench, etc.), LLM-as-judge policy, regression gates in CI/CD, shadow/canary evaluation, production audit sampling and drift detection (§5.9–5.11).
+5. **Evaluation platform**: gold-set store, eval runner, metric catalogue P0–P10, benchmark adapters (IL-TUR, LegalBench, etc.), LLM-as-judge policy, regression gates in CI/CD, shadow/canary evaluation, production audit sampling and drift detection (§5.10–5.12).
 6. **Gold-set construction with the design partner**, and the **Design Partner Program** (§5.13).
 7. **Adjudication of eval-case candidates** proposed by P9 (`eval.case.proposed.v1`).
 
@@ -213,6 +213,10 @@ All O4 events use the spine §G CloudEvents envelope unchanged. `tenant_id` is s
 | S8-3 | §G events | Add `verification.completed.v1`, `eval.run.completed.v1`, `eval.case.adjudicated.v1` | P9 needs machine labels and closure. The Gateway and P4 need gate outcomes. |
 | S8-4 | §H new objects | `CitationAuditReport`, `EvalCase`, `EvalRun`, `GateDecision` | Shared by P6/P9/P10/XC. They are schema'd once here. |
 | S8-5 | Policy (P9 §5.13, XC §4.6) | Replace "no regression > 1 point on any gold slice" with **non-inferiority at a slice-specific margin δ_s = max(1 pt, 2·SE_diff,s), one-sided 95%, plus zero-tolerance sentinels** | A slice of 200 binary items at p≈0.85 has SE≈2.5 pts. A 1-pt rule is therefore either noise-driven (it blocks good changes) or ignored [P8-42]. §5.11 gives the arithmetic. |
+| S8-6 | §H `VerificationReport` gate granularity | The spine defines a *memo-level* PASS/BLOCK gate. P8 computes the gate per `subject` (answer or memo section) and defines the memo gate deterministically as: **BLOCK** if any section is BLOCK; **PARTIAL** if any section is PARTIAL; else **PASS** (§5.4). P6 may still stream non-blocked sections, but an export requires memo gate ≠ BLOCK | P6 streams per section (P6 §5.7); a single memo gate computed only at the end would delay every section. Making the aggregation rule explicit keeps P6, P10 and exports consistent |
+| S8-7 | §B/§H naming | Eval objects use `eval_case_id` (`evc_…`), `gold_set_id` (`gld_…`), `run_id` (`evr_…`), `report_id` (`vrp_…`), `audit_id` (`aud_…`). The bare name `case_id` is **never** used for eval items | The spine reserves `case_id` (`cas_…`) for proceedings; the earlier draft of this doc reused it for eval items, which would collide in P9 joins |
+| S8-8 | §F `AuthorityStatus` (P3-owned) | P8 consumes P3's proposed extensions `NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, plus the `definitive` flag and direct-history cautions (`STAYS`, pending appeal, `REFERS_TO_LARGER_BENCH`). **If P3's extension is not adopted**, P8 maps `NEGATIVE_SIGNAL_UNDER_REVIEW` → `CAUTION` + `definitive=false`, and `COVERAGE_GAP` → `UNKNOWN` | Avoids a silent divergence: the C6 table (§5.3) is written against the extended enum, and this row states the fallback onto the spine's five values |
+| S8-9 | §C anchor read API | Expose per-expression `authoritative: boolean` (which language version is the court's original/authentic text) alongside sibling-expression links | The cross-lingual rule (§5.5) must know which version is authoritative; it cannot assume English (many HC and district judgments are delivered in Hindi, while SC regional-language versions are translations) |
 
 ---
 ## 3. State-of-the-art survey (with citations)
@@ -220,16 +224,16 @@ All O4 events use the spine §G CloudEvents envelope unchanged. `tenant_id` is s
 ### 3.1 How legal AI actually fails
 - **Stanford RegLab (Magesh et al., preregistered; JELS 2025).** 202 queries. Lexis+ AI answered 65% accurately and hallucinated on ≈17%. Westlaw AI-Assisted Research: 41% and ≈33%. Ask Practical Law AI: 19% and ≈17%, with 62% incomplete answers. A response counts as a hallucination if it is *incorrect* or *misgrounded*, i.e. it cites a source that does not support the claim. Contributing causes were naive retrieval, **inapplicable authority** (wrong jurisdiction, overruled, superseded), reasoning errors and sycophancy toward false premises [P8-1]. The paper's stated contribution is a typology that separates hallucination from accurate answers, and a finding that vendor "hallucination-free" claims were overstated [P8-1].
 - **General LLMs (Dahl et al., 2024).** GPT-4 hallucinated on 58% of verifiable questions about U.S. federal cases and Llama 2 on 88%. The models often failed to correct false legal premises, and **could not reliably predict when they were hallucinating** [P8-2]. Verbalised LLM confidence is systematically overconfident, and elicitation methods "struggle in challenging tasks, such as those requiring professional knowledge" [P8-32]. **Implication:** model self-reports can be *features* for calibration, never the confidence we display.
-- **Vals Legal AI Report, Legal Research (Oct 2025).** 200 questions from U.S. firms, scored 50% accuracy, 40% authoritativeness, 10% appropriateness. Legal AI tools scored 74–78%, ChatGPT 77% and a lawyer baseline 69%. Multi-jurisdiction questions cost ≈14 points. The legal tools' main edge over ChatGPT was authoritativeness (+6) [P8-10]. **Implication:** aggregate "accuracy" barely separates systems. Authority and warrant metrics do.
+- **Vals Legal AI Report, Legal Research (Oct 2025).** 200 questions from U.S. firms, scored 50% accuracy, 40% authoritativeness, 10% appropriateness. All four AI products (Alexi, Counsel Stack, Midpage and ChatGPT) scored within 74–78% on the weighted score, against a lawyer baseline of 69%. Lexis+ AI and Westlaw declined to take part. Multi-jurisdiction questions cost ≈14 points. The legal tools' main edge over ChatGPT was authoritativeness (≈+6) [P8-10]. **Implication:** aggregate "accuracy" barely separates systems. Authority and warrant metrics do.
 - **Harvey BigLaw Bench** reports an *answer score* and a *source score* separately, and finds that public foundation models "struggle significantly" to give verifiable sources [P8-11]. We adopt the split (§9).
-- **Retrieval sets the ceiling.** Legal RAG Bench uses a full factorial design and hierarchical error decomposition. It found retrieval to be "the primary driver" of legal RAG correctness, and found that many errors labelled hallucinations were retrieval failures [P8-7]. **Implication:** P8's end-to-end evals must attribute each failure to a phase (§5.10.5). A single hallucination number is not enough.
+- **Retrieval sets the ceiling.** Legal RAG Bench (built on 4,876 passages of the Australian *Victorian Criminal Charge Book*) uses a full factorial design and hierarchical error decomposition. It found retrieval to be "the primary driver" of legal RAG correctness, and found that many errors labelled hallucinations were retrieval failures [P8-7]. **Implication:** P8's end-to-end evals must attribute each failure to a phase (§5.10.5). A single hallucination number is not enough.
 
 ### 3.2 Citation checking: the hard cases
-- **Taxonomy from real filings (Liu, Stammbach, Henderson, 2026).** More than 1,000 court filings contained fabricated citations, and the number grows year on year. The authors' dataset (1,300 excerpts, 4,499 citations, 1,107 hallucinated) defines five classes: non-existent citation, case-name mismatch, incorrect pincite, verbatim misquote, content misrepresentation. The best agentic checker (GPT-5) reached 84.4% recall at 40.8% precision (F1 55.0%), needing 15.3 steps per excerpt. Incorrect pincites were hardest (52.8% recall). Misquotes were easiest (95.2%). *Information access* (complete, paginated databases) was a binding constraint [P8-3].
-- **Wrong pinpoint vs wrong case (Verma, 2026).** The paper starts from *Mata v. Avianca* (S.D.N.Y. 2023), where two attorneys were sanctioned for ChatGPT-fabricated citations [P8-9]. Such fabrications are mostly caught by database lookups. Fourteen model configurations caught 93–100% of wrong-case corruptions but only **37–61% of wrong-pinpoint corruptions on court opinions**. When the models failed, they accepted the citation because the topic overlapped. GPT-5.4 at high reasoning effort still missed 40% of opinion pinpoint mismatches. Prompting the model to check support at the cited page raised recall but also false positives [P8-4]. **Implication:** our spine's paragraph anchors are the right unit, and verification must entail against *the cited anchor alone* (C3), never the whole judgment.
+- **Taxonomy from real filings (Liu, Stammbach, Henderson, 2026).** More than 1,000 court filings contained fabricated citations, and the number grows year on year. The taxonomy comes from real filings, but the benchmark errors are mostly *synthetically injected* into 1,000 real U.S. appellate-brief excerpts, plus 300 naturally occurring content misrepresentations. In total there are 1,300 excerpts, 4,499 citations and 1,107 hallucinated citations. The five classes are non-existent citation, case-name mismatch, incorrect pincite, verbatim misquote and content misrepresentation. The highest-recall agentic checker (GPT-5) reached 84.4% recall at F1 55.0%, which implies ≈40.8% precision, and needed 15.3 steps per excerpt. The highest-precision agent reached 76.1%. Incorrect pincites were hardest (52.8% recall), and misquotes easiest (95.2%). *Information access* was a binding constraint: 19.9% of retrieved opinions lacked usable text or pagination [P8-3].
+- **Wrong pinpoint vs wrong case (Verma, 2026).** The paper starts from *Mata v. Avianca* (S.D.N.Y. 2023), where two attorneys were sanctioned for ChatGPT-fabricated citations [P8-9]. Such fabrications are mostly caught by database lookups. Fourteen model configurations caught 93–100% of wrong-case corruptions but only **37–61% of wrong-pinpoint corruptions on court opinions**, and 52–83% on briefs. When the models failed, they accepted the citation because the topic overlapped. GPT-5.4 at high reasoning effort still missed 40% of opinion pinpoint mismatches. Prompting the model to check support at the cited page raised recall but also false positives [P8-4]. **Implication:** our spine's paragraph anchors are the right unit, and verification must entail against *the cited anchor alone* (C3), never the whole judgment.
 - **Legal warrant (Taranukhin & Shwartz, 2026, position paper).** Legal hallucination should be evaluated as a *failure of warrant*: the authority exists, applies to the jurisdiction, is current for the date, has the represented status, and supports the proposition. Warranted systems also narrow, ask, warn, correct false premises or abstain. Existence checks, generic attribution and sentence-citation alignment benchmarks miss warrant failures [P8-5]. Our `warrant{}` vector operationalises this.
-- **Oracle coverage (Ovcharov, 2026).** The same 400 LLM responses scored 0.791–0.855 citation grounding against a sparse citation-graph snapshot (4.7×10⁵ records) and 0.989–0.999 against a dense one (3.3×10⁸ records). Coverage, not the model, drove the "15–21% hallucinated" figure, and no pair of systems was separable at 95% [P8-6]. **Implication:** status `UNVERIFIABLE`, a coverage metric on every report, and bootstrap CIs on every comparison.
-- **Graph-constrained verification in India.** Falkor-IRAC accepts an answer only if a supporting path exists in an IRAC knowledge graph of SC/HC judgments. It uses a "Verifier Agent" and treats doctrinal conflicts as first-class outputs [P8-65]. An Italian tax-court pipeline filters LLM-extracted references against citations detected in the judgment by a dedicated extractor [P8-66]. Both confirm the pattern "generate, then deterministically check against structured data". Neither reports lawyer-adjudicated error rates at scale.
+- **Oracle coverage (Ovcharov, 2026; Ukrainian law, 100 queries × 4 commercial LLMs).** The same 400 LLM responses scored 0.791–0.855 citation grounding against a sparse citation-graph snapshot (4.7×10⁵ records) and 0.989–0.999 against a dense one (3.3×10⁸ records). Coverage, not the model, drove the "15–21% hallucinated" figure: all 54 citations flagged by the sparse oracle were real. No pair of systems was separable at 95% [P8-6]. **Implication:** status `UNVERIFIABLE`, a coverage metric on every report, and bootstrap CIs on every comparison.
+- **Graph-constrained verification in India.** Falkor-IRAC accepts an answer only if a supporting path exists in an IRAC knowledge graph of SC/HC judgments. It uses a "Verifier Agent" and treats doctrinal conflicts as first-class outputs. Its evaluation is a proof of concept on 51 SC judgments, and it defers comparison with vector-RAG baselines [P8-65]. An Italian tax-court pipeline filters LLM-extracted references against citations detected in the judgment by a dedicated extractor [P8-66]. Both confirm the pattern "generate, then deterministically check against structured data". Neither reports lawyer-adjudicated error rates at scale.
 - **Treatment classification remains error-prone.** On 239 expert-annotated citations, the best high-level treatment accuracy was 79.1% and the best fine-grained accuracy 67.7%. The authors propose an *Average Severity Error* that weights misclassifications by harm [P8-63]. We use severity-weighted metrics for P3 (§9).
 
 ### 3.3 Faithfulness and grounding checkers
@@ -251,16 +255,16 @@ All O4 events use the spine §G CloudEvents envelope unchanged. `tenant_id` is s
 
 ### 3.6 Communicating uncertainty to users
 - In a preregistered study (N=404), first-person uncertainty phrases ("I'm not sure, but…") reduced over-reliance and improved accuracy. Impersonal phrasing had weaker effects [P8-44].
-- Uncertainty *granularity* matters (N=192). Token-level uncertainty *increased* agreement with the AI. Step-level uncertainty *reduced* users' own external verification and steered them toward relying on the AI's cues [P8-45]. **Implication:** do not decorate text with fine-grained scores. Show claim-level ordinal bands whose meaning is an audited error rate, and keep click-to-source one tap away (§5.7).
+- Uncertainty *granularity* matters (N=192). Token-level uncertainty *increased* agreement with the AI. Relation-level uncertainty (on individual reasoning steps) *reduced* users' own external verification and steered them toward relying on the AI's cues [P8-45]. **Implication:** do not decorate text with fine-grained scores. Show claim-level ordinal bands whose meaning is an audited error rate, and keep click-to-source one tap away (§5.7).
 
 ### 3.7 Benchmarks relevant to Indian legal AI
 | Benchmark | What it measures | Use in P8 |
 |---|---|---|
-| **IL-TUR** (ACL 2024) | 8 Indian tasks: L-NER, rhetorical roles, CJPE, BAIL (Hindi), statute identification, prior-case retrieval, summarisation, legal MT (9 languages). Public leaderboard. GPT models underperformed task-specific SOTA on every task [P8-46] | Comparability smoke tests for P1 (RR, NER), P2/P5 (PCR, LSI), MT. Not a release gate |
+| **IL-TUR** (ACL 2024) | 8 Indian tasks: L-NER, rhetorical roles, CJPE, BAIL (Hindi), statute identification, prior-case retrieval, summarisation, legal MT (9 languages). Public leaderboard. GPT models underperformed task-specific SOTA on every task except GPT-4 on legal MT (MILPaC) [P8-46] | Comparability smoke tests for P1 (RR, NER), P2/P5 (PCR, LSI), MT. Not a release gate |
 | SemEval-2023 LegalEval | RR labelling, legal NER, judgment prediction (Indian) [P8-56] | P1 RR/NER sanity |
 | ILDC / PredEx / NyayaAnumana | Judgment prediction (+explanation). 35k SC cases [P8-51]; 15k+ expert annotations [P8-52]; 702,945 cases across courts [P8-53] | **Not used as a product metric** (no outcome prediction, P6 §5.9). Used only to probe long-document comprehension |
 | AILQA (2026) | Indian legal QA with RAG, expert ratings and AIBE questions [P8-55] | Public-question smoke set; its rating protocol informs G-QA |
-| BHRAM-IL (2025) | Hallucination recognition in Hindi, Gujarati, Marathi, Odia and English, 36,047 questions [P8-59] | Indic hallucination sanity for the judge models |
+| BHRAM-IL (2025) | Hallucination recognition in Hindi, Gujarati, Marathi, Odia and English, 36,047 questions; **general-domain, not legal** [P8-59] | Indic hallucination sanity for the judge models only (no legal signal) |
 | IndicXNLI | NLI in 11 Indic languages, machine-translated from XNLI [P8-60] | Multilingual checker sanity (not legal) |
 | LegalBench | 162 tasks, six reasoning types, lawyer-built, U.S.-centric [P8-47] | Model-tier qualification, rule-application subset |
 | LegalBench-RAG | Precise snippet retrieval [P8-48] | Harness-compatible retrieval format |
@@ -280,6 +284,7 @@ Damien Charlotin's database lists 16 Indian decisions involving AI-hallucinated 
 - *Buckeye Trust v. PCIT*, ITAT Bengaluru, 30 Dec 2024. Misrepresented case law and outdated/repealed norms; the order was retracted and the matter re-heard.
 - Supreme Court orders in *Pooja Ramesh Singh v. J&K Bank* (2 Jul 2026, NCLT/NCLAT judgments set aside) and *Vijay Ghanshyam Gadiya v. Union of India* (2 Sep 2026, order set aside and remanded).
 - Delhi HC W.P.(C) 6049/2026 (17 Jul 2026; six fabricated authorities; order set aside).
+- Tax administration: *KMG Wires Pvt. Ltd. v. National Faceless Assessment Centre*, Bombay HC, 6 Oct 2025 (assessment quashed and set aside). Trial courts: a Bengaluru civil-court judgment later revoked (21 Jan 2026), and a Saket commercial-court judgment stayed (30 Apr 2026).
 - Lawyer filings: *Greenopolis Welfare Assn. v. Narender Singh*, Delhi HC, 25 Sep 2025 (petition withdrawn); *Omkara Assets Reconstruction v. Gstaad Hotels*, SC, 8 Dec 2025 (warning).
 - Pro se litigants: Bombay HC, 7 Jan 2026 (costs).
 
@@ -363,18 +368,23 @@ Every claim gets a **verification tier** (VT). The tier sets which checks are ma
 ### 5.3 The check ladder (algorithms and initial thresholds)
 Thresholds are *initial values*. The Calibrator re-fits them on adjudicated data (§5.6), and each change is versioned in `verifier_version`.
 
-**C0 — Schema and type rules.** Enforces spine §H: LEGAL_PROPOSITION ≥1 DIRECT support from a PLC anchor or an R-handle; RECORD_FACT ≥1 private anchor; PROCEDURAL ≥1 R-handle; STRATEGIC_OPINION non-empty `depends_on_claim_ids`, acyclic. Every `support.anchor_id` must be in the P6 ledger, which enforces the closed world. Failure → UNSUPPORTED (`SCHEMA`/`OUT_OF_LEDGER`). Cost ≈0.
+**C0 — Schema and type rules.** Enforces spine §H ("all other types need ≥1 anchor"): LEGAL_PROPOSITION ≥1 DIRECT support from a PLC anchor (an R-handle alone is *not* sufficient); RECORD_FACT ≥1 private anchor; PROCEDURAL ≥1 R-handle **and** ≥1 statutory/rule anchor that the R-handle's `RuleSpec` cites (spine: deadlines "with statutory anchor"), so every PROCEDURAL claim is still anchor-traceable; STRATEGIC_OPINION non-empty `depends_on_claim_ids`, acyclic. Every `support.anchor_id` must be in the P6 ledger, which enforces the closed world. Failure → UNSUPPORTED (`SCHEMA`/`OUT_OF_LEDGER`). Cost ≈0.
 
 **C1 — Existence, alias and point-in-time.** Resolve each `anchor_id` through the anchor store. Follow `anchor_alias` records and tombstone forward pointers. For statute anchors, resolve `@as_of_legal_date` to the valid expression. Outcomes: `PASS`; `WARN` (resolved via alias, confidence <0.95); `FAIL` (no such anchor → `FABRICATED_ANCHOR`, which should be impossible and is logged as a P6 defect); `UNKNOWN` (anchor store unavailable → the claim becomes UNVERIFIABLE and is never PASSed).
 
 **C2 — Quote fidelity with OCR trust.**
 ```
-q  = normalize(claim.support.quote)          # NFC, collapse whitespace, unify quotes/dashes, strip ellipsis markers
+q  = normalize(claim.support.quote)          # NFC, collapse whitespace, unify quotes/dashes, strip ellipsis markers,
+                                             # strip zero-width/bidi controls (U+200B–U+200F, U+202A–U+202E, U+2066–U+2069),
+                                             # map Indic digits (Devanagari ०–९, Bengali, Gujarati, Tamil …) → ASCII,
+                                             # NFKC-fold confusable Latin/Cyrillic homoglyphs; log if any fold was needed
 a  = normalize(anchor.text[span])
 if q == a                         → PASS  (P6 quote-by-reference normally guarantees this)
 elif lawyer-edited draft:
      r = token_levenshtein_ratio(q, a)
-     if r ≥ 0.97 and digits(q)==digits(a) and negations(q)==negations(a) → WARN(MINOR_QUOTE_VARIANCE)
+     if r ≥ 0.97 and digits(q)==digits(a) and negations(q, lang)==negations(a, lang) → WARN(MINOR_QUOTE_VARIANCE)
+     # negations() is language-aware: en {not, no, never, nor, neither, cannot, un-/in-/non- prefixed legal terms list},
+     # hi {नहीं, न, ना, मत, बिना, अ-/अन- prefixed list}; lists are versioned config owned by P8, tested on G-Claim hi slice
      else FAIL(MISQUOTE)
 else FAIL(MISQUOTE)
 # OCR trust: a correct hash match against *wrong OCR text* is still wrong for the lawyer
@@ -412,7 +422,7 @@ Claim-level result: all sub-claims ENTAILED → PASS. Some ENTAILED → PARTIAL,
 
 Most tools do not check this, but it is a characteristic Indian-judgment trap. Long judgments recite submissions at length before the analysis, so a "supporting" paragraph is often counsel's argument.
 
-**C5 — Metadata consistency.** Parse every citation string, case name, court, year, bench size ("Constitution Bench", "three-Judge Bench") and judge name mentioned in the claim text with the P1 parser. Compare each against the cited work's metadata and aliases. Mismatches → FAIL (`NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`). This covers the "case name mismatch" class [P8-3] and wrong SCC/AIR/neutral strings.
+**C5 — Metadata consistency.** Parse every citation string, case name, court, year, bench size ("Constitution Bench", "three-Judge Bench") and judge name mentioned in the claim text with the P1 parser. Compare each against the cited work's metadata and aliases. Mismatches → FAIL (`NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`). This covers the "case name mismatch" class [P8-3] and wrong SCC/AIR/neutral strings. Case-name comparison uses P1's party-name normaliser (strip "& Ors.", "and another", "M/s", "Shri/Smt."; expand "UoI"/"Union of India", "State of U.P."/"State of Uttar Pradesh"; transliteration-insensitive match for Devanagari cause titles) and passes at token-set Jaccard ≥ 0.6 on the *first-named* party on each side; a lower score is `NAME_MISMATCH` only if the citation string resolves to a different work, otherwise WARN.
 
 **C6 — Authority status as of the relevant date.** Batch-fetch `AuthorityView` for every cited work and proposition, in P3's `status_mode` (CURRENT by default; HISTORICAL when the claim is explicitly historical; P3 §2.3). Record `graph_watermark`.
 | AuthorityView | Claim uses authority as support | Claim is about negative treatment |
@@ -423,12 +433,22 @@ Most tools do not check this, but it is a characteristic Indian-judgment trap. L
 | NEGATIVE, `definitive=false` | WARN, VT1 → human queue | WARN |
 | PARTIAL_NEGATIVE | proposition match: if the claim's proposition (NLI vs `prp_…` text, p≥0.8) is the negated one → BAD_LAW, else WARN | as above |
 | UNKNOWN / COVERAGE_GAP | UNKNOWN → UNVERIFIABLE for VT1; WARN for VT2 | UNVERIFIABLE |
+| GOOD, but direct-history caution: a `STAYS` assertion, a pending appeal/SLP recorded on the case lineage, or `REFERS_TO_LARGER_BENCH` on the relied-on proposition | WARN (`UNDER_APPEAL_OR_STAYED` / `REFERRED_TO_LARGER_BENCH`) → band ≤ VERIFIED_WITH_CAVEAT; VT1 → chip mandatory in exports. Never BAD_LAW | PASS if the claim states the pendency |
 
-**C7 — Binding on the forum.** If the claim text asserts bindingness ("binding on this Court", "the High Court is bound"), or the claim sits in `favourable_authorities` with a binding label, then `AuthorityView.binding_on_forum` for `forum` must equal BINDING. PERSUASIVE → FAIL (`NOT_BINDING_ON_FORUM`). UNDETERMINED → WARN. Bench-strength language is checked against `bench_strength` (C5).
+`NEGATIVE_SIGNAL_UNDER_REVIEW` and `COVERAGE_GAP` are P3's proposed extensions of spine `AuthorityStatus`; if they are not adopted, the fallback mapping in S8-8 applies. The direct-history caution row matters in Indian practice. HC judgments are routinely stayed or kept under challenge in SLPs, and a reference to a larger bench unsettles a proposition without overruling it. None of these is "negative treatment", but a lawyer must be told.
+
+**C7 — Binding on the forum.** If the claim text asserts bindingness ("binding on this Court", "the High Court is bound"), or the claim sits in `favourable_authorities` with a binding label, then `AuthorityView.binding_on_forum` for `forum` must equal BINDING. PERSUASIVE → FAIL (`NOT_BINDING_ON_FORUM`). UNDETERMINED → WARN. Bench-strength language is checked against `bench_strength` (C5). **Context sanity:** if `VerifyRequest.forum` or `as_of_legal_date` differs from the `MatterContext` forum or `key_dates.cause_of_action` (when a matter is attached), the report adds `context_warnings[]` (`FORUM_MISMATCH_WITH_MATTER`, `AS_OF_DATE_MISMATCH_WITH_MATTER`) and every C7/C8 verdict carries reason `CONTEXT_MISMATCH` until a user confirms. A wrong forum silently flips binding verdicts, so this is not left to the user to notice.
 
 **C8 — Temporal and crosswalk.** For each statute anchor, the expression must be valid on `as_of_legal_date` (P3 provision-at-date). If a claim cites a provision not in force on that date → FAIL (`SUPERSEDED_PROVISION`), with the `CORRESPONDS_TO` counterpart as a suggestion. Crosswalk claims ("s.X IPC corresponds to s.Y BNS") must match a P3 `CORRESPONDS_TO` assertion, including `change_type`. The legal rule on *which* code applies to a given offence date or pending proceeding is P3/P6 doctrine. P8 only checks consistency with it.
 
 **C9 — Numeric, date and deadline.** Extract numbers, dates, amounts, periods and section numbers from the claim. Each must appear in the supporting anchor or be produced by the cited R-handle's computation. For PROCEDURAL claims, **recompute** via the P6 rule engine using the same inputs and require exact equality. Mismatch → FAIL (`NUMERIC_MISMATCH` / `DEADLINE_MISMATCH`, VT1). NLI checkers are unreliable on numbers, so numbers are never left to the model.
+Indian normalisation, applied to claim and anchor before comparison:
+- Indic digits → ASCII.
+- Lakh/crore grouping ("1,00,000" = 100000) and words ("₹5 lakh", "2.5 crore", "पाँच लाख") → integer paise.
+- Dates are parsed **day-first** (DD.MM.YYYY, DD/MM/YYYY, "30th September, 2026", Hindi month names). An ambiguous all-numeric date whose day ≤ 12 is compared both ways and passes only if it matches under day-first.
+- Periods ("ninety days", "3 months", "one year") → (count, unit). "Months" and "days" are never converted into each other, because limitation law distinguishes them.
+- Section numbers keep letter suffixes and dots ("302", "34A", "498-A" → `498A`, "138" ≠ "13.8").
+A number from a low-`ocr_conf` anchor is WARN, never PASS on its own.
 
 **C10 — Attribution (record facts).** A RECORD_FACT whose only support comes from a document with trust label `TENANT_OPPOSING_DOC` (or a fact with `asserted_by = OPPONENT`) must be phrased attributively ("the notice alleges…"). A small classifier plus patterns checks this. Otherwise → FAIL (`ATTRIBUTION`). This stops an opponent's allegation from becoming "fact", and it also contains injected assertions (XC §5).
 
@@ -440,24 +460,37 @@ Most tools do not check this, but it is a characteristic Indian-judgment trap. L
 
 Otherwise → WARN (`OVERCLAIM`), with `narrowed_text` that drops the intensifier. It also cross-checks P6's adverse accountability. A claim whose `contrary[]` or bundle ADVERSE items contradict it without acknowledgement → WARN (`ADVERSE_UNACKNOWLEDGED`).
 
-**Injection handling inside the ladder.** Anchor texts are *data*. The small checker is not instruction-following. The judge receives premise and hypothesis in delimited, typed JSON fields, and its output schema is constrained, including an exact-substring `span` check. If an anchor's text matches the XC/P7 injection classifier, the judge is skipped for that anchor, the verdict comes from the small checker alone, and the band is capped at VERIFIED_WITH_CAVEAT.
+**Injection handling inside the ladder.** Anchor texts are *data*. The small checker is not instruction-following. The judge receives premise and hypothesis in delimited, typed JSON fields, and its output schema is constrained, including an exact-substring `span` check. If an anchor's text matches the XC/P7 injection classifier, the judge is skipped for that anchor, the verdict comes from the small checker alone, and the band is capped at VERIFIED_WITH_CAVEAT. Uploaded documents (Citation Audit, private anchors) get two extra checks, both flagged `HIDDEN_TEXT_SUSPECT`:
+- **Text-layer vs render mismatch.** P1 flags spans whose PDF text layer is invisible (white-on-white, zero-size font, off-page, or covered by an image). These spans are excluded from premises.
+- **Normalisation-changed text.** Zero-width, bidi or homoglyph folding altered the text.
+Neither kind of span can support a claim without a page-image check.
 
 ### 5.4 Status assignment, reason taxonomy and gates
 ```
 status(claim) =
   BAD_LAW       if any support anchor's authority fails C6 with BAD_LAW
   CONTRADICTED  if C3/C3b yields CONTRADICTED (p_c ≥ 0.80), or C6 contradicts a treatment claim
-  UNVERIFIABLE  if a mandatory check is UNKNOWN (store down, coverage gap, unsupported language pair for VT1, OCR unusable)
+  UNVERIFIABLE  if a mandatory check is UNKNOWN (store down, coverage gap, unsupported language pair for VT1, OCR unusable,
+                or budget exhausted before a mandatory model check ran → BUDGET_EXHAUSTED)
   UNSUPPORTED   if C0/C1/C2/C5/C7/C8/C9/C10 FAIL, or C3 finds no entailed sub-claim and C3b finds nothing
   PARTIAL       if some sub-claims entailed, or C3b re-anchored, or C4/C12 WARN requiring narrowed wording
   VERIFIED      otherwise
 ```
-**Reason codes** (stable enum, used by P6 repair, P9 analytics and eval attribution). `SCHEMA`, `OUT_OF_LEDGER`, `FABRICATED_ANCHOR`, `MISQUOTE`, `MINOR_QUOTE_VARIANCE`, `QUOTE_FROM_LOW_OCR`, `WRONG_PINPOINT`, `MISREPRESENTS_SOURCE`, `PARTIAL_SUPPORT`, `ROLE_ARGUMENT_AS_HOLDING`, `OBITER_AS_HOLDING`, `DISSENT_AS_HOLDING`, `QUOTED_AUTHORITY`, `NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`, `NEGATIVE_STATUS_DEFINITIVE`, `STATUS_UNDER_REVIEW`, `NOT_BINDING_ON_FORUM`, `BINDING_UNDETERMINED`, `SUPERSEDED_PROVISION`, `CROSSWALK_MISMATCH`, `NUMERIC_MISMATCH`, `DEADLINE_MISMATCH`, `ATTRIBUTION`, `UNGROUNDED_PROPOSITION_IN_OPINION`, `OVERCLAIM`, `ADVERSE_UNACKNOWLEDGED`, `COVERAGE_GAP`, `CROSS_LINGUAL_UNVERIFIED`, `CHECKER_DISAGREEMENT`, `INJECTION_SUSPECT`.
+**Reason codes** (stable enum, used by P6 repair, P9 analytics and eval attribution). `SCHEMA`, `OUT_OF_LEDGER`, `FABRICATED_ANCHOR`, `MISQUOTE`, `MINOR_QUOTE_VARIANCE`, `QUOTE_FROM_LOW_OCR`, `WRONG_PINPOINT`, `MISREPRESENTS_SOURCE`, `PARTIAL_SUPPORT`, `ROLE_ARGUMENT_AS_HOLDING`, `OBITER_AS_HOLDING`, `DISSENT_AS_HOLDING`, `QUOTED_AUTHORITY`, `NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`, `NEGATIVE_STATUS_DEFINITIVE`, `STATUS_UNDER_REVIEW`, `NOT_BINDING_ON_FORUM`, `BINDING_UNDETERMINED`, `SUPERSEDED_PROVISION`, `CROSSWALK_MISMATCH`, `NUMERIC_MISMATCH`, `DEADLINE_MISMATCH`, `ATTRIBUTION`, `UNGROUNDED_PROPOSITION_IN_OPINION`, `OVERCLAIM`, `ADVERSE_UNACKNOWLEDGED`, `COVERAGE_GAP`, `CROSS_LINGUAL_UNVERIFIED`, `CHECKER_DISAGREEMENT`, `INJECTION_SUSPECT`, `HIDDEN_TEXT_SUSPECT`, `UNDER_APPEAL_OR_STAYED`, `REFERRED_TO_LARGER_BENCH`, `CONTEXT_MISMATCH`, `BUDGET_EXHAUSTED`.
+
+**Budget semantics.** `VerifyRequest.budget.max_llm_calls` and `latency_ms` are hard caps. The deterministic checks (C0–C2, C5–C10) always run, because they cost nothing. Judge calls are then allocated in priority order: VT1 first, then claims with 0.10 < p < 0.90, then cross-lingual claims. Any claim whose *mandatory* model check did not run becomes UNVERIFIABLE (`BUDGET_EXHAUSTED`), never PASS. A per-tenant daily judge-call quota (default 50× the tenant's seat count, set in XC) protects against runaway cost. When it is exhausted, the verifier degrades to *small checker only* and caps bands at VERIFIED_WITH_CAVEAT; it does not keep spending.
 
 **Gate** (per section; P6 aggregates to memo level per P6 §5.7):
 - **BLOCK** if any VT1 claim is not VERIFIED/PARTIAL-with-accepted-narrowing; or if >50% of the section's claims are withheld (a *vacuous* section is worse than an honest "needs review" [P8-28]); or if `strict_export` and any displayed claim is below band VERIFIED_WITH_CAVEAT.
 - **PARTIAL** if any non-VT1 claims are withheld.
 - **PASS** otherwise.
+
+**Memo gate** (S8-6; computed by P8 when P6 sends the final `subject.kind="EXPORT"` call, or on demand):
+- **BLOCK** if any section is BLOCK;
+- **PARTIAL** if any section is PARTIAL;
+- **PASS** otherwise.
+
+A memo whose `deadlines` section is BLOCK can never be exported, even with a waiver.
 
 ### 5.5 Entailment engine
 **Small checker (hot path).** MVP: an off-the-shelf grounding checker from the LLM-AggreFact top tier. Sub-1B models are within ≈2 balanced-accuracy points of frontier LLMs on generic grounding [P8-14], and MiniCheck-style training cuts cost ≈400× versus GPT-4-class checking [P8-12]. Candidates, all run through the P8 gate: a MiniCheck-class 0.4–0.8B model for speed and a 7–8B checker for quality. **Full version: `minicheck-in`**, fine-tuned on:
@@ -474,8 +507,8 @@ The model has three heads (entail / neutral / contradict). Promotion requires be
 - Temperature 0. Prompt hashes pinned.
 
 **Cross-lingual and Hindi/regional anchors.** When premise and claim languages differ:
-- (a) If P1 has an aligned sibling expression (e.g. an `en` translation of a `hi` judgment) with paragraph alignment confidence ≥0.9, verify against both. PASS requires the *original-language* anchor to pass via the judge. The translation is a helper only.
-- (b) Otherwise use a multilingual judge (qualified on the Hindi slice of G-Claim; BHRAM-IL and IndicXNLI as sanity checks [P8-59][P8-60]). The claim carries reason `CROSS_LINGUAL_UNVERIFIED` until the Hindi slice meets its gate.
+- (a) If P1 has an aligned sibling expression (e.g. an `en` translation of a `hi` judgment) with paragraph alignment confidence ≥0.9, verify against both. PASS requires the **authoritative** anchor to pass via the judge; the other version is a helper only. Which expression is authoritative is read from the anchor API's `authoritative` flag (S8-9), never assumed. A Hindi-original HC or district judgment is authoritative in `hi`. A regional-language version of an SC judgment is normally a translation of the English original *(general practice; unverified here, P1/21 to confirm per court)*. If the flag is missing, both versions must pass, or the claim gets `CROSS_LINGUAL_UNVERIFIED`.
+- (b) Otherwise use a multilingual judge (qualified on the Hindi slice of G-Claim; BHRAM-IL and IndicXNLI, both general-domain, as sanity checks only [P8-59][P8-60]). The claim carries reason `CROSS_LINGUAL_UNVERIFIED` until the Hindi slice meets its gate.
 - (c) VT1 cross-lingual claims without a qualified checker → human queue `CROSS_LINGUAL`.
 
 The quote is always shown in the original language, with the translation beside it and flagged as machine translation.
@@ -540,6 +573,12 @@ The output is a `CitationAuditReport`. For **incoming orders**, findings of `NOT
 ### 5.9 Re-verification, caching and idempotency
 - **Cache keys.** Entailment: `(claim_hash, sorted anchor text_hashes, checker/judge versions)`. Status/binding/temporal: also `graph_watermark` and `(as_of_legal_date, forum)`. Entailment results never depend on graph state, so they survive status changes. Only C6–C8 are recomputed.
 - **Invalidation.** On `graph.delta.v1`, cached status entries for affected `target_id`s are invalidated. P8 does *not* push alerts to matters. P4 → P7 → P6 `REVERIFY` owns that path (P6 §5.7). P8 answers `/revalidate` in ≤5 s p95 for ≤200 claims, because only C6–C8 run.
+- **Delta storms.** A single Constitution Bench overruling, or a P3 backfill after an ontology change, can touch 10⁴–10⁶ cached status entries. Invalidation is O(affected keys) via a reverse index `target_id → cache keys` (Postgres table `vcache_dep(target_id, cache_key)`), so it is not a scan. Revalidation work is queued with priority:
+  1. claims in open matters with an export pending or a hearing ≤7 days away (from `MatterContext.key_dates`);
+  2. VT1 claims in open matters;
+  3. everything else, lazily on next read.
+
+  Priority 3 is never proactively recomputed, and a read after invalidation always recomputes C6–C8. The queue has a per-tenant concurrency cap, so one large tenant cannot starve others. If P3 marks a delta `bulk=true` (backfill, not new law), P8 invalidates but does not generate temporal-trap sentinels (§5.10.6).
 - **Idempotency.** `request_id` gives the same report. A re-run with a changed watermark gives a new report that references the old one (`supersedes_report_id`).
 - **Private data.** Reports containing private anchors are stored in the tenant plane (P7 storage). Only `verification.completed.v1` metadata (IDs, statuses, reason codes; no text) goes to P9's tenant-plane consumer.
 
@@ -679,9 +718,9 @@ Gold items list `depends_on_ids` (works, provisions, propositions). P8 consumes 
    - *Scope:* pilot seats, SLAs, and the annotation commitment (hours/month).
    - *IP:* the firm keeps all work product. We receive a perpetual, royalty-free licence to D0/D1 data (below). Co-branding or naming the firm requires separate written consent.
    - *Exit:* on termination the firm keeps its tenant-private eval suite (export), and D2/D3-derived items are deleted.
-2. **Data Processing Agreement.** We act as processor for the firm (data fiduciary). The DPDP s.17(1)(a) legal-claims exemption disapplies much of Chapter II/III but **not s.8(1) and s.8(5) security safeguards** (P7/P9 [P8-68]). Breach notification, sub-processor list, India residency, and deletion SLAs are per P7/XC.
+2. **Data Processing Agreement.** We act as processor for the firm (data fiduciary). The DPDP s.17(1)(a) exemption ("processing … necessary for enforcing any legal right or claim") disapplies Chapter II except s.8(1) and s.8(5), plus Chapter III and s.16 [P8-68]. **Do not assume it covers evaluation use.** Using client personal data to evaluate or train a vendor's tool is plausibly *not* "necessary for enforcing a legal right or claim". D2/D3 eval processing is therefore designed to need no exemption. It runs on de-identified, lawyer-restated items (D2) or stays inside the tenant plane under the firm's own processing purpose (D3), with client consent as the basis whenever personal data survives restatement *(legal position unverified; Indian counsel to confirm)*. Timing: the DPDP Rules, 2025 were notified on 14 Nov 2025 (G.S.R. 843(E)). Most substantive obligations (ss.3–5, 7–17) commence 18 months later, around **May 2027** [P8-74], which falls inside the full-version window (§10). The DPP must be DPDP-compliant from day one, not retrofitted. Breach notification, sub-processor list, India residency, and deletion SLAs are per P7/XC.
 3. **Evaluation Data Contribution Schedule.** Defines data classes D0–D4 (table below), permitted uses, retention and withdrawal.
-4. **Client consent template** for retrospective matters (D2). BSA s.132 bars an advocate from disclosing client communications or advice without the client's *express consent*, and the duty extends to the advocate's clerks and employees [P8-69]. The SC recently reaffirmed advocate privilege protections [P8-70]. So D2 requires *written, specific* client consent covering: purpose (evaluation of a research tool), the lawyer-authored restatement, no disclosure of identity, and withdrawal rights.
+4. **Client consent template** for retrospective matters (D2). BSA s.132 bars an advocate from disclosing client communications or advice without the client's *express consent*, and the duty extends to the advocate's clerks and employees [P8-69]. The SC recently reaffirmed advocate privilege protections, extending s.132 to advisory and pre-litigation work. It also held that the privilege does **not** extend to salaried in-house counsel, who are not "advocates" under the Advocates Act, and that privilege does not by itself shield documents from production orders [P8-70]. Two design consequences follow. The vendor's own legal engineers and annotation staff cannot claim s.132 cover, which is one more reason they get no D2/D3 content access. And items derived from a corporate client's in-house counsel communications must be treated as *unprivileged but confidential*, needing the same consent path. So D2 requires *written, specific* client consent covering: purpose (evaluation of a research tool), the lawyer-authored restatement, no disclosure of identity, and withdrawal rights.
 5. **Annotator notice.** Per-annotator reliability scores and labels are personal data of the firm's employees. The notice covers purpose, retention and access; reliability scores are never shared with the employer for performance evaluation.
 6. **Ethics review.** An ABA-512-style duty of competence and confidentiality is used as a comparative benchmark for informed consent on GenAI use [P8-71]. Bar Council of India rules on advertising, solicitation and confidentiality *must be reviewed by Indian counsel before any public co-authorship or case study (not verified in this research)*.
 
@@ -825,10 +864,10 @@ Verification could run only in the export step (cheap, but lawyers read unverifi
 |---|---|---|
 | **10M+ documents** | Per-claim cost is flat, but gold coverage per stratum thins. P3 status coverage gaps grow for district/tribunal material. `UNVERIFIABLE` rises | Strata quotas and rotation. `coverage.verifiable_share` tracked per court tier. UNVERIFIABLE never displayed as VERIFIED. Audit sampling weighted to new strata. Anchor/AuthorityView batch APIs sized by P1/P3 (P8 issues ≤2 batched calls per request) |
 | **Bad OCR** | A quote hash matches *our* text, but our text is wrong (digit or negation OCR errors). Entailment is computed on corrupted premises | C2 OCR trust: low `ocr_conf` or critical-token flags → cross-manifestation agreement, else cap at VERIFIED_WITH_CAVEAT with an image crop. Exports require the page-image check. C9 numbers from low-OCR anchors → WARN. OCR stratum in calibration |
-| **Hindi/regional judgment** | The English-trained checker misjudges. Translations drift. Hindi slice gates are underpowered | Original-language anchor is authoritative; translation is a helper. Multilingual judge qualified on the Hindi slice. VT1 cross-lingual → human. Hindi oversampled to 15% of G-QA. Separate calibration stratum. `CROSS_LINGUAL_UNVERIFIED` chip until the slice passes |
-| **Precedent overruled yesterday** | P3 status not yet updated (P0/P4 lag), so C6 says GOOD. Cached reports stale | Watermark shown on chips; amber if older than the court's freshness SLO. P3 asymmetric safety shows `NEGATIVE_SIGNAL_UNDER_REVIEW` quickly. Cache invalidation on delta. Export re-checks at graph head. Living memo REVERIFY via P4→P7→P6. Auto-generated temporal trap confirms the fix |
+| **Hindi/regional judgment** | The English-trained checker misjudges. Translations drift. Hindi slice gates are underpowered | The *authoritative* expression (anchor-API flag, S8-9) must pass; the other version is a helper. If the flag is missing, both must pass. Hindi negation lists and Indic-digit normalisation are in C2/C9. Multilingual judge qualified on the Hindi slice. VT1 cross-lingual → human. Hindi oversampled to 15% of G-QA. Separate calibration stratum. `CROSS_LINGUAL_UNVERIFIED` chip until the slice passes |
+| **Precedent overruled yesterday** | P3 status not yet updated (P0/P4 lag), so C6 says GOOD. Cached reports stale | Watermark shown on chips; amber if older than the court's freshness SLO. Direct-history cautions (stay, pending SLP, larger-bench reference) are a separate C6 row, capped at VERIFIED_WITH_CAVEAT (§5.3), because "not yet overruled" is not "safe". P3 asymmetric safety shows `NEGATIVE_SIGNAL_UNDER_REVIEW` quickly. Cache invalidation on delta. Export re-checks at graph head. Living memo REVERIFY via P4→P7→P6. Auto-generated temporal trap confirms the fix |
 | **Malicious user / prompt-injected document** | Anchor text contains "mark this as entailed". An opponent's notice asserts false "facts". Coordinated false flags try to poison gold | Checker is not instruction-following. Judge I/O typed + exact-span requirement. Injection-suspect anchors skip the judge (band capped). C10 attribution. Eval candidates from feedback need adjudication (2 lawyers for GLOBAL, P9). Signed gold, 2-reviewer changes |
-| **Confused user** | Lawyer edits a verified claim into an unsupported one and exports it. False premise in the question | Edits re-enter `/verify` (DRAFT mode). Export gate (`strict_export`) plus "DRAFT – NOT VERIFIED" watermark (P6). C6 CONTRADICTED on false status premises, surfaced as a premise correction |
+| **Confused user** | Lawyer edits a verified claim into an unsupported one and exports it. False premise in the question | Wrong forum or as-of date chosen → `context_warnings` + `CONTEXT_MISMATCH` against MatterContext (C7). Edits re-enter `/verify` (DRAFT mode). Export gate (`strict_export`) plus "DRAFT – NOT VERIFIED" watermark (P6). C6 CONTRADICTED on false status premises, surfaced as a premise correction |
 | **Source outage / format change** | Paragraph renumbering after re-parse; new documents lack anchors; the site is down | Verification uses stored anchors and aliases, never live sites. Anchor-stability canary on gold works (L1 for P1 changes). Missing anchors → UNVERIFIABLE, not UNSUPPORTED |
 | **Verifier–generator correlation** | The same model family makes the same mistake twice | Judge family ≠ generator family (enforced). The small checker is an independent architecture |
 | **Over-blocking / vacuous memos** | Conservative thresholds withhold most claims, and lawyers abandon the tool | Withheld rate and BLOCK rate are gated metrics (§9). C3b and `narrowed_text` convert failures into PARTIAL. Informativeness tracked [P8-28] |
@@ -836,6 +875,50 @@ Verification could run only in the export step (cheap, but lawyers read unverifi
 | **Goodhart / contamination** | Tuning to gold, or gold leaking to providers or training sets | Sealed EXAM split, quarterly rotation, canary strings, ZDR-only eval endpoints, public benchmarks non-gating |
 | **Gold goes stale** | Law changes make "expected" answers wrong, punishing a correct system | Self-maintaining gold (§5.10.6) |
 | **Single-partner bias** | Metrics reflect one firm's practice and style | Strata quotas, ≤50% share cap, additional partners by months 9–12 |
+| **Cost blow-up** | A 2,000-page paper book with thousands of citations sent to `/audit`; a tenant scripting `/verify`; judge price rise | `AuditRequest.budget.max_mentions` (default 2,000) with `truncated=true`, not silent drops. Per-request `max_llm_calls`. Per-tenant daily judge quota, after which the verifier degrades to small-checker-only with capped bands. `BUDGET_EXHAUSTED` → UNVERIFIABLE, never PASS (§5.4). Cost-per-claim gate (§9.1) |
+| **Hidden-text / Unicode tricks in uploaded PDFs** | Invisible text-layer spans or zero-width/homoglyph characters make a quote "match", or smuggle instructions into premises | P1 invisible-span flags plus C2 normalisation logging → `HIDDEN_TEXT_SUSPECT`. These spans are excluded from premises and need a page-image check (§5.3) |
+| **Delta storm** | A Constitution Bench overruling or a P3 backfill invalidates 10⁴–10⁶ cached statuses at once | Reverse-index invalidation, priority revalidation (export or hearing ≤7 days first), per-tenant concurrency caps, lazy recompute-on-read, `bulk=true` deltas do not spawn sentinels (§5.9) |
+
+### 8.R Independent review findings
+An independent adversarial review (30 Sep 2026) re-fetched about 35 of the highest-stakes references and red-teamed the design.
+
+**Citation corrections made**
+- **Vals VLAIR [P8-10].** The earlier text gave "ChatGPT 77%". The report gives only a 74–78% band for *all four* AI products including ChatGPT, and Lexis+ AI and Westlaw declined to participate. Corrected.
+- **IL-TUR [P8-46].** "GPT underperformed SOTA on every task" was wrong: GPT-4 beat SOTA on legal MT (MILPaC). Corrected.
+- **LePhantomCite [P8-3].** Added that the benchmark's errors are mostly *synthetically injected* into real U.S. briefs, that the 40.8% precision is derived from recall and F1, that the best precision was 76.1%, and that 19.9% of opinions lacked pagination.
+- **Scope of foreign evidence.** Ovcharov [P8-6] studies Ukrainian law and Legal RAG Bench [P8-7] uses an Australian corpus. Both are now labelled, so their numbers are not read as Indian evidence.
+- **BHRAM-IL [P8-59]** is general-domain, not legal, and is now labelled as such. **Falkor-IRAC [P8-65]** is a 51-judgment proof of concept, now stated.
+- **Other clarifications.** Relation-level vs "step-level" uncertainty [P8-45] was clarified. The SC privilege judgment [P8-70] now includes the in-house-counsel exclusion. A DPDP Rules 2025 commencement reference was added [P8-74].
+- **Confirmed as written.** Magesh per-tool rates [P8-1], Dahl 58/88% [P8-2], Verma 37–61% [P8-4], Taranukhin & Shwartz warrant elements [P8-5], all Charlotin India entries cited [P8-8], LLM-AggreFact numbers [P8-14], MiniCheck 400× [P8-12], conformal-RAG caveats [P8-28], Demir & Canbaz 79.1/67.7% [P8-63], DPDP s.3(c)(ii) and s.17 texts [P8-67][P8-68], and author lists and titles of 14 further arXiv references.
+
+**Spine conformance fixes**
+- `EvalCase.case_id` collided with the spine's `case_id` (`cas_…`). It is renamed `eval_case_id` (`evc_…`) (S8-7).
+- C0 allowed an R-handle alone to support a LEGAL_PROPOSITION, and PROCEDURAL claims with no anchor, contrary to spine §H ("≥1 anchor"). Now fixed.
+- The memo-level gate (spine) vs section-level gate (this doc) is made explicit (S8-6).
+- The use of P3-proposed `AuthorityStatus` values now has a stated fallback (S8-8).
+- New events now show the §G envelope.
+- `supersedes_report_id` is now in the schema. `CitationAuditReport` and `AuditRequest.forum` are now concrete schemas.
+
+**Design gaps patched**
+1. Indic-digit, lakh/crore, day-first date and section-suffix normalisation in C2/C9. Language-aware (Hindi) negation lists.
+2. Direct-history cautions (stay, pending SLP, larger-bench reference) in C6. They are common in Indian practice and were previously invisible.
+3. Authoritative-language determination instead of assuming the original is English (S8-9).
+4. Forum and as-of-date mismatch with MatterContext (confused user).
+5. Hidden-text-layer and Unicode/homoglyph injection in uploaded PDFs.
+6. Hard budget semantics (`BUDGET_EXHAUSTED` → UNVERIFIABLE), `/audit` mention caps and per-tenant judge quotas (cost blow-up).
+7. Delta-storm invalidation and priority revalidation.
+8. Case-name matching rule for Indian cause titles.
+9. The DPDP s.17(1)(a) exemption is no longer assumed to cover evaluation use, and the DPDP commencement date (~May 2027) is flagged.
+10. Advocate privilege does not cover in-house counsel.
+
+**Still open (not fixable on paper)**
+- (a) No measured Indian numbers exist yet for any threshold in §5.3–5.6. Every τ/α is a planning value until G-Claim EXAM exists.
+- (b) The recall of `wrong_pinpoint_hard` on Indian judgments is unknown (§11.3).
+- (c) Hindi and regional verification quality is unknown, and no Indian legal NLI set exists (§11.2).
+- (d) "Overruled yesterday" is bounded by P0/P3 latency. P8 can only disclose staleness, not remove it. Pronounced-but-unuploaded judgments are invisible to every check.
+- (e) The DPDP and BCI positions in §5.13 need Indian counsel.
+- (f) The Charlotin-listed Indian orders are still secondary descriptions (§11.9).
+- (g) Throughput and GPU sizing for the small checker are unbenchmarked (§5.14).
 
 ---
 ## 9. Evaluation metrics for this phase
@@ -849,6 +932,8 @@ Verification could run only in the export step (cheap, but lawyers read unverifi
 | Withheld rate / BLOCK rate | share of claims withheld; share of memo sections BLOCKed | ≤ 15% / ≤ 5% | ≤ 8% / ≤ 2% | tracked, alarm on +50% |
 | Calibration | ECE per stratum with ≥300 labels; reliability-diagram slope | ECE ≤ 0.05 pooled | ≤ 0.05 per stratum | gate on calibrator change |
 | UNVERIFIABLE share | by reason and court tier | report | ≤ 5% for SC/HC | tracked |
+| Budget exhaustion | share of claims UNVERIFIABLE with `BUDGET_EXHAUSTED`; share of audits `truncated` | ≤ 1% / ≤ 5% | ≤ 0.3% / ≤ 2% | alarm |
+| Normalisation robustness | detection recall on Indic-digit, lakh/crore, day-first-date and hidden-text perturbations (G-Claim/G-Sec) | ≥ 0.98 | 1.0 | sentinel (zero-tolerance for hidden-text) |
 | Citation Audit | per-class recall/precision on G-Audit | recall ≥ 0.90 (NOT_FOUND/NAME_MISMATCH ≥ 0.98), precision ≥ 0.80 | recall ≥ 0.95, precision ≥ 0.90 | non-inferiority |
 | Latency | p95 per mode (§5.14) | ≤ 4 s answer / ≤ 8 s section | same | SLO |
 | Cost | $ per verified claim; judge escalation rate | ≤ $0.004/claim; ≤ 30% | ≤ $0.003; ≤ 20% | tracked |
@@ -900,29 +985,30 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 7. **Liability framing.** Does a published trust ledger create warranty exposure? Contract language must describe it as measured performance, not a guarantee.
 8. **Judge dependence on frontier providers.** If a provider retires a judge model, recalibration is needed. The self-hosted checker limits the blast radius.
 9. **Charlotin-listed Indian incidents are secondary descriptions.** Before any marketing or product copy cites them, the underlying orders must be read and anchored (feed to 21/23).
+10. **DPDP timing and basis.** Most substantive DPDP obligations commence around May 2027 [P8-74], during the full-version build. Whether any eval use of client personal data can rely on s.17(1)(a) is doubtful (§5.13). The DPP is designed not to need it, which costs lawyer restatement time.
 
 ---
 ## References
 
-[P8-1] Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." arXiv:2405.20362 (2024); Journal of Empirical Legal Studies, 2025. https://arxiv.org/abs/2405.20362 — verified (abstract; per-tool rates and cause typology via sibling fetch of arXiv HTML, 20/08 docs)
+[P8-1] Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." arXiv:2405.20362 (2024); Journal of Empirical Legal Studies, 2025. https://arxiv.org/abs/2405.20362 — verified (arXiv HTML re-fetched in independent review: 202 queries; per-tool accurate/hallucinated/incomplete rates; four causes)
 
 [P8-2] Dahl, M., Magesh, V., Suzgun, M., Ho, D.E. "Large Legal Fictions: Profiling Legal Hallucinations in Large Language Models." arXiv:2401.01301, 2024. https://arxiv.org/abs/2401.01301 — verified (abstract; 58%/88% figures via sibling P6-2)
 
-[P8-3] Liu, P., Stammbach, D., Henderson, P. "Who Checks the Citations? Benchmarking Legal Hallucination Detection" (LePhantomCite). arXiv:2606.21155, 2026. https://arxiv.org/abs/2606.21155 — verified
+[P8-3] Liu, P., Stammbach, D., Henderson, P. "Who Checks the Citations? Benchmarking Legal Hallucination Detection" (LePhantomCite). arXiv:2606.21155, 2026. https://arxiv.org/abs/2606.21155 — verified (HTML: dataset composition, synthetic injection, per-class recall, 76.1% best precision, 19.9% missing pagination)
 
 [P8-4] Verma, A. "Is this Citation on Point?" arXiv:2608.12571, 2026. https://arxiv.org/abs/2608.12571 — verified (abstract)
 
 [P8-5] Taranukhin, M., Shwartz, V. "Legal LLM Hallucination Should Be Evaluated as Failure of Legal Warrant." arXiv:2609.17546, 2026. https://arxiv.org/abs/2609.17546 — verified (abstract)
 
-[P8-6] Ovcharov, V. "Citation Grounding Measures the Oracle: Graph Coverage Determines Reported LLM Hallucination Rates in Law." arXiv:2606.00898, 2026. https://arxiv.org/abs/2606.00898 — verified (abstract)
+[P8-6] Ovcharov, V. "Citation Grounding Measures the Oracle: Graph Coverage Determines Reported LLM Hallucination Rates in Law." arXiv:2606.00898, 2026. https://arxiv.org/abs/2606.00898 — verified (abstract; Ukrainian legal queries)
 
-[P8-7] Butler, A.-R., Butler, U. "Legal RAG Bench: an end-to-end benchmark for legal RAG." arXiv:2603.01710, 2026. https://arxiv.org/abs/2603.01710 — verified (abstract)
+[P8-7] Butler, A.-R., Butler, U. "Legal RAG Bench: an end-to-end benchmark for legal RAG." arXiv:2603.01710, 2026. https://arxiv.org/abs/2603.01710 — verified (abstract; Victorian Criminal Charge Book corpus, Australia)
 
 [P8-8] Charlotin, D. "AI Hallucination Cases" database, India filter (16 entries incl. Buckeye Trust v. PCIT, ITAT Bangalore 30 Dec 2024; Greenopolis Welfare Assn. v. Narender Singh, Delhi HC 25 Sep 2025; Omkara Assets Reconstruction v. Gstaad Hotels, SC 8 Dec 2025; Pooja Ramesh Singh v. J&K Bank, SC 2 Jul 2026; Vijay Ghanshyam Gadiya v. UoI, SC 2 Sep 2026). Accessed 30 Sep 2026. https://www.damiencharlotin.com/hallucinations/?q=&sort_by=-date&states=India — verified (database entries; underlying orders not read)
 
 [P8-9] Mata v. Avianca, Inc., No. 22-cv-1461 (S.D.N.Y. 2023) (sanctions for ChatGPT-fabricated citations), as described in Verma 2026. https://arxiv.org/abs/2608.12571 — snippet
 
-[P8-10] Vals AI. "Vals Legal AI Report (VLAIR): Legal Research." 14 Oct 2025. https://vals.ai/industry-reports/vlair-10-14-25 — verified (sibling fetch, 20_competitive_teardown)
+[P8-10] Vals AI. "Vals Legal AI Report (VLAIR): Legal Research." 14 Oct 2025. https://vals.ai/industry-reports/vlair-10-14-25 — verified (re-fetched in review: participants Alexi, Counsel Stack, Midpage, ChatGPT; all 74–78%; Lexis/Westlaw declined; individual ChatGPT score not stated)
 
 [P8-11] Harvey. "Introducing BigLaw Bench." 2024. https://www.harvey.ai/blog/introducing-biglaw-bench — verified (sibling fetch, 08_P6)
 
@@ -962,7 +1048,7 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 
 [P8-29] Lin, Z. et al. "Domain-Shift-Aware Conformal Prediction for Large Language Models." arXiv:2510.05566, 2025. https://arxiv.org/abs/2510.05566 — verified (abstract)
 
-[P8-30] Rubin-Toles, M., Gambhir, M., Ramji, K., Roth, A. et al. "Conformal Language Model Reasoning with Coherent Factuality." arXiv:2505.17126, 2025. https://arxiv.org/abs/2505.17126 — verified (abstract)
+[P8-30] Rubin-Toles, M., Gambhir, M., Ramji, K., Roth, A., Goel, S. "Conformal Language Model Reasoning with Coherent Factuality." arXiv:2505.17126, 2025. https://arxiv.org/abs/2505.17126 — verified (abstract)
 
 [P8-31] Jiang, Z., Liu, A., Van Durme, B. "Conformal Linguistic Calibration: Trading-off between Factuality and Specificity." arXiv:2502.19110, 2025. https://arxiv.org/abs/2502.19110 — verified (abstract)
 
@@ -994,7 +1080,7 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 
 [P8-45] Villavicencio, M., Pan, S., Wang, Q. "Not All Uncertainty Is Equal: How Uncertainty Granularity Shapes Human Verification in LLM-Assisted Decision Making." arXiv:2605.28571, 2026. https://arxiv.org/abs/2605.28571 — verified (abstract)
 
-[P8-46] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024; arXiv:2407.05399. https://arxiv.org/html/2407.05399v2 ; leaderboard https://exploration-lab.github.io/IL-TUR/ — verified
+[P8-46] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024; arXiv:2407.05399. https://arxiv.org/html/2407.05399v2 ; leaderboard https://exploration-lab.github.io/IL-TUR/ — verified (HTML re-fetched in review: 8 tasks; GPT worse than SOTA on each task except GPT-4 on MILPaC L-MT)
 
 [P8-47] Guha, N. et al. "LegalBench: A Collaboratively Built Benchmark for Measuring Legal Reasoning in Large Language Models." NeurIPS 2023 D&B; arXiv:2308.11462. https://arxiv.org/abs/2308.11462 — verified
 
@@ -1020,11 +1106,11 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 
 [P8-58] Hou, A.B. et al. "CLERC: A Dataset for Legal Case Retrieval and Retrieval-Augmented Analysis Generation." arXiv:2406.17186, 2024. https://arxiv.org/abs/2406.17186 — verified
 
-[P8-59] Terdalkar, H., Bhojani, K., Dongare, A., Behera, O.A. "BHRAM-IL: A Benchmark for Hallucination Recognition and Assessment in Multiple Indian Languages." arXiv:2512.01852, 2025. https://arxiv.org/abs/2512.01852 — verified (abstract)
+[P8-59] Terdalkar, H., Bhojani, K., Dongare, A., Behera, O.A. "BHRAM-IL: A Benchmark for Hallucination Recognition and Assessment in Multiple Indian Languages." arXiv:2512.01852, 2025. https://arxiv.org/abs/2512.01852 — verified (abstract; general-domain, not legal; BHASHA workshop, IJCNLP-AACL 2025)
 
 [P8-60] Aggarwal, D., Gupta, V., Kunchukuttan, A. "IndicXNLI: Evaluating Multilingual Inference for Indian Languages." EMNLP 2022; arXiv:2204.08776. https://arxiv.org/abs/2204.08776 — verified
 
-[P8-61] Mahapatra, S. et al. "MILPaC: A Novel Benchmark for Evaluating Translation of Legal Text to Indian Languages." arXiv:2310.09765, 2023. https://arxiv.org/abs/2310.09765 — snippet (title/authors only)
+[P8-61] Mahapatra, S. et al. "MILPaC: A Novel Benchmark for Evaluating Translation of Legal Text to Indian Languages." arXiv:2310.09765, 2023. https://arxiv.org/abs/2310.09765 — verified (arXiv metadata: title and authors Mahapatra, Datta, Soni, Goswami, Ghosh; results not read)
 
 [P8-62] Koreeda, Y., Manning, C.D. "ContractNLI: A Dataset for Document-level Natural Language Inference for Contracts." Findings of EMNLP 2021; arXiv:2110.01799. https://arxiv.org/abs/2110.01799 — verified
 
@@ -1032,7 +1118,7 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 
 [P8-64] Wang, C. et al. "LeKUBE: A Legal Knowledge Update BEnchmark." arXiv:2407.14192, 2024; Li, C. et al. "LexKairos: Benchmarking Legal Temporal Capabilities in LLMs." arXiv:2608.09106, 2026. https://arxiv.org/abs/2407.14192 ; https://arxiv.org/abs/2608.09106 — verified (abstracts)
 
-[P8-65] Bose, J. "Falkor-IRAC: Graph-Constrained Generation for Verified Legal Reasoning in Indian Judicial AI." arXiv:2605.14665, 2026. https://arxiv.org/abs/2605.14665 — verified (abstract)
+[P8-65] Bose, J. "Falkor-IRAC: Graph-Constrained Generation for Verified Legal Reasoning in Indian Judicial AI." arXiv:2605.14665, 2026. https://arxiv.org/abs/2605.14665 — verified (abstract; proof of concept on 51 SC judgments; InIRAC dataset)
 
 [P8-66] Piccioli, G., Fidelangeli, A., Santin, P., Vivo, P. "From Judgments to Issues: Structured Extraction of Legal Reasoning with Citation-Hallucination Control." arXiv:2607.03325, 2026. https://arxiv.org/abs/2607.03325 — verified (abstract)
 
@@ -1042,11 +1128,13 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 
 [P8-69] Vidhi Judicial. "Section 132 of the Bharatiya Sakshya Adhiniyam, 2023" (express client consent; extends to clerks/employees of advocates). https://vidhijudicial.com/section-132-of-the-bharatiya-sakshya-adhiniyam,-2023.html — verified (sibling P7-8)
 
-[P8-70] Supreme Court Observer. "In re: Summoning Advocates who give Legal Opinion or Represent Parties during Investigation of Cases and Related Issues", 2025 INSC 1275 (31 Oct 2025). https://www.scobserver.in/supreme-court-observer-law-reports-scolr/re-summoning-advocates-who-give-legal-opinion-or-represent-parties-during-investigation-of-cases-and-related-issues/ — verified (sibling P7-9)
+[P8-70] Supreme Court Observer. "In re: Summoning Advocates who give Legal Opinion or Represent Parties during Investigation of Cases and Related Issues", 2025 INSC 1275 (31 Oct 2025; Gavai CJI, K.V. Chandran, N.V. Anjaria JJ). https://www.scobserver.in/supreme-court-observer-law-reports-scolr/re-summoning-advocates-who-give-legal-opinion-or-represent-parties-during-investigation-of-cases-and-related-issues/ — verified (re-fetched in review: s.132 scope; in-house counsel excluded; documents not shielded from production)
 
 [P8-71] American Bar Association. "Formal Opinion 512: Generative Artificial Intelligence Tools." 29 Jul 2024 (via summaries). https://ezel.ai/ethics-opinions/aba/512-generative-ai-tools — snippet (sibling P9-15; primary PDF 403)
 
 [P8-72] AWS. Price List API, AmazonEC2, ap-south-1 (g6e.xlarge $2.235/h). Retrieved 30 Sep 2026. https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/ap-south-1/index.csv — verified (sibling XC-20)
 
 [P8-73] E2E Networks. "Pricing" (L40S ₹102/h ex-GST). Retrieved 30 Sep 2026. https://www.e2enetworks.com/pricing.md — verified (sibling XC-26)
+
+[P8-74] Digital Personal Data Protection Rules, 2025, G.S.R. 843(E), 14 Nov 2025; enforcement timeline (immediate / +12 months / +18 months for ss.3–5, 7–17 of the Act). https://dpdpa.com/dpdpa_enforcement_timeline.html ; rules PDF https://dpdpa.com/DPDP_Rules_2025_English_only.pdf — verified (timeline page; secondary host, gazette PDF not read)
 

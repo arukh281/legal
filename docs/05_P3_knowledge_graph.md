@@ -504,8 +504,11 @@ on doc.parsed.v1(evt):
   for m in pd.citations with resolved_target_id and resolution_confidence ≥ τ_res (0.95):
       A += CITES(m)                                           # aggregate depth per (citing,cited)
       if m.context.speaker ≠ COURT or opinion_role(m) == DISSENT: continue
+      if m.context.rhetorical_role ∈ {ARGUMENT, QUOTED_SUBMISSION}: continue   # court quoting a party ≠ court's view (review add)
       A += cascade_treatment(m, ctx)                          # L1 → L2 → L3
       A += attestation(m)                                     # "X was overruled in Y" → evidence on (Y OVERRULES X)
+  for m in pd.citations with resolution_confidence < τ_res and has_hardneg_or_attestation_cue(m):   # §2.1 rule 7
+      open_review_task(TIER1_TREATMENT, candidates=m.candidates); maybe_signal(m.candidates[0], p ≥ 0.8)
   A  += statute_links(pd.statute_mentions, ctx)               # CITES → INTERPRETS / STRIKES_DOWN / READS_DOWN
   A  += legislative_actions(pd.amendment_instructions)        # AMENDS/SUBSTITUTES/… + ProvisionVersion rows
   if proposition_eligible(pd, ctx): enqueue(proposition_job(pd))
@@ -598,7 +601,7 @@ The doctrine engine is a pure, deterministic library, `authority-core@semver`. I
 |---|---|---|---|
 | B0 | `AuthorityView(W).status = NEGATIVE` (or W's relevant proposition NEGATIVE) | NOT_BINDING | follows from status |
 | B1 | W is SC (ratio); F is any court or tribunal in India other than SC | BINDING | Art. 141: "law declared by the Supreme Court shall be binding on all courts within the territory of India" [P3-50] |
-| B2 | W is SC; F is an SC bench of strength *b* | bench(W) ≥ *b* → BINDING; bench(W) < *b* → PERSUASIVE (a larger bench may overrule) | *Dawoodi Bohra* (5 judges): a larger-strength decision binds benches of lesser or co-equal strength; a smaller bench cannot disagree and must seek reference [P3-51] |
+| B2 | W is SC; F is an SC bench of strength *b* | bench(W) ≥ *b* → BINDING; bench(W) < *b* → PERSUASIVE (a larger bench may overrule) | *Dawoodi Bohra* (5 judges): a larger-strength decision binds benches of lesser or co-equal strength; a smaller bench cannot disagree and must seek reference; exception — the Chief Justice as master of the roster, and a larger bench already seized of the matter [P3-51]. *Pranay Sethi* (5 judges): a co-equal bench that disagrees must refer to a larger bench, not decide contrary [P3-57] |
 | B3 | W is an SC *obiter* proposition; F below SC | PERSUASIVE, `contested=true` | weight of SC obiter to be settled in 21_india *(unverified here)* |
 | B4 | W is HC(X); F is a court or tribunal subordinate to HC(X) in X's territory | BINDING | tribunal nuance: *L. Chandra Kumar* (7 judges) [P3-59] *(snippet)*; all-India tribunals `contested=true` |
 | B5 | W is HC(X); F is an HC(X) bench of strength *b* | bench(W) ≥ *b* → BINDING, else PERSUASIVE | bench-strength logic by analogy to [P3-51]; HC-specific authority to be cited by 21_india |
@@ -606,11 +609,13 @@ The doctrine engine is a pure, deterministic library, `authority-core@semver`. I
 | B7 | W is an appellate tribunal (e.g., NCLAT); F is a subordinate tribunal bench (NCLT) | BINDING; coordinate-bench rules per tribunal config | per-tribunal `DoctrineRule`s, `contested` where unclear |
 | B8 | W affirmed by a speaking appellate decision (merger) | binding force transfers to the appellate decision; W returns `superseded_by_merger` | *Kunhayammed* [P3-52] *(snippet)* |
 | B9 | W's SLP was `DISMISSES_IN_LIMINE` | no change | *Kunhayammed*: a non-speaking dismissal attracts no merger and is not an Art. 141 declaration [P3-52] |
-| B10 | W is subject to a pending `REFERS_TO_LARGER_BENCH` | unchanged binding, reason `PENDING_REFERENCE` | "reference to a larger Bench does not unsettle declared law" [P3-53] |
-| B11 | W `STAYS`-ed by a superior court | BINDING + `contested=true`, reason `STAYED` | a stay suspends operation and does not wipe out the order [P3-54] *(snippet)*; precedential effect of stayed HC judgments to be settled in 21_india |
+| B10 | W is subject to a pending `REFERS_TO_LARGER_BENCH` | unchanged binding, reason `PENDING_REFERENCE` | *UT of Ladakh* (2 judges, 2023) ¶¶32–33: pendency of a reference does not mean other proceedings on the issue stay; courts decide on the existing law [P3-53] |
+| B11 | W `STAYS`-ed by a superior court | BINDING + `contested=true`, reason `STAYED` | a stay only means the order is not operative from the stay date; it is not "wiped out from existence" (unlike quashing) — *Shree Chamundi Mopeds* [P3-54], as quoted at ¶40 of *Najma Khatun* (2026 INSC 691) [P3-62]; precedential effect of stayed HC judgments to be settled in 21_india |
 | B12 | W is a provision | BINDING if a ProvisionVersion is in force on `as_of_legal_date` in F's territory and validity ∈ {VALID, READ_DOWN}; else NOT_BINDING (unless `SAVES`) | statute graph §5.6 |
 | B13 | Court or bench metadata of W or F unknown or low-confidence | UNDETERMINED | S3-2 |
 | B14 | W is a dissent or counsel's argument | NOT_BINDING | §2.1 rules 3–4 |
+| B15 | W's proposition P is the object of a VERIFIED `DECLARES_SUB_SILENTIO` by a court whose decisions bind F | NOT_BINDING for P only; other propositions unaffected | *Synthetics & Chemicals* (1991) ¶¶93–94: "precedents sub-silentio and without argument are of no moment" [P3-58] *(added in independent review)* |
+| B16 | `DECLARES_PER_INCURIAM` by a bench of *equal or smaller* strength of the same court | W stays BINDING for courts below; reason `PER_INCURIAM_BY_COEQUAL`, `contested=true`; tier-1 review | Judicial discipline requires a co-equal bench to refer [P3-57], yet courts do treat a decision that ignored binding authority as per incuriam [P3-58]; the interaction is for 21_india to settle *(added in independent review)* |
 
 **5.5.2 `AuthorityStatus` algorithm** (per Work or Proposition; bench-strength aware)
 ```text
@@ -627,6 +632,7 @@ authority_status(T, mode, as_of_legal_date D, as_known_at K = now):
             if a.effect == PROSPECTIVE and D < a.effective_from: reasons += CAUTION(PROSPECTIVE_OVERRULING_SAVES)
             elif a.proposition_id and ∃ other live RATIO props of T: reasons += PARTIAL_NEGATIVE(OVERRULED_IN_PART)
             else: reasons += NEGATIVE(OVERRULED | PER_INCURIAM)
+       DECLARES_SUB_SILENTIO:               reasons += PARTIAL_NEGATIVE(SUB_SILENTIO) on T; the proposition itself → NEGATIVE   # B15
        OVERRULES_IN_PART:                   reasons += PARTIAL_NEGATIVE
        REVERSES | SETS_ASIDE | RECALLS:     reasons += NEGATIVE(REVERSED)        # via case lineage
        MODIFIES | REMANDS:                  reasons += PARTIAL_NEGATIVE(MODIFIED)
@@ -648,7 +654,20 @@ authority_status(T, mode, as_of_legal_date D, as_known_at K = now):
   coverage    = feed freshness of courts able to treat T (from P4/P0 health) → add COVERAGE_GAP reason, no downgrade
   return AuthorityView(...)
 ```
-`doctrine_valid` enforces two rules. An `OVERRULES` must come from a superior court, or from the same court with *larger* bench strength [P3-51]. A same-strength "overruling" is kept as `CONFLICTS_WITH` and sent to review.
+`doctrine_valid` enforces two rules. An `OVERRULES` must come from a superior court, or from the same court with *larger* bench strength [P3-51]. A same-strength "overruling" is kept as `CONFLICTS_WITH` and sent to review [P3-57]. *(Added in independent review.)* A `DECLARES_PER_INCURIAM` or `DECLARES_SUB_SILENTIO` from an equal or smaller bench of the same court is *not* discarded. It contributes only `CAUTION(PER_INCURIAM_BY_COEQUAL)` with `contested=true` (B16), and it downgrades to NEGATIVE only when it comes from a larger bench or a superior court.
+
+**Worked test vectors (a CI fixture for `authority-core`; added in independent review).**
+
+| # | Facts | Expected (CURRENT mode) |
+|---|---|---|
+| T1 | *N.N. Global* (5-J SC, 2023) ← `OVERRULES` by the 7-J SC, 13 Dec 2023, VERIFIED [P3-55] | NEGATIVE, `OVERRULED`, definitive; HISTORICAL at 2023-06-01 → GOOD |
+| T2 | 2-J SC decision X ← 2-J SC "we overrule X" | X: CAUTION (`CONFLICTS_WITH`), not NEGATIVE; review task D1 |
+| T3 | HC(Delhi) judgment ← HC(Bombay) "not followed" | Delhi: GOOD with note; `binding_on_forum` (Bombay HC) = PERSUASIVE |
+| T4 | HC judgment; SLP dismissed without reasons | GOOD; `DISMISSES_IN_LIMINE`; no merger (B9) |
+| T5 | 3-J SC decision; reference pending before a 5-J bench | CAUTION `PENDING_REFERENCE`; binding unchanged (B10) |
+| T6 | HC judgment with operation stayed by SC | CAUTION `STAYED`; binding `contested=true` (B11) |
+| T7 | Provision s.66A IT Act; `STRIKES_DOWN` by *Shreya Singhal* (24 Mar 2015) | `provision_text(date=2016-01-01)` returns text + validity=STRUCK_DOWN; `binding` NOT_BINDING (B12) [P3-56] |
+| T8 | Unverified MACHINE `OVERRULES` at confidence 0.62 | CAUTION `NEGATIVE_SIGNAL_UNDER_REVIEW`, `definitive=false` |
 
 Statuses are materialised as **valid-time segments**. For example, *N.N. Global* (5 judges, 2023) is GOOD from its decision date until 13 Dec 2023, when a seven-judge bench overruled it [P3-55], and NEGATIVE thereafter. HISTORICAL reads are then a range lookup. P4 recomputes the segments for every `status_changes` target.
 
@@ -671,7 +690,7 @@ Statuses are materialised as **valid-time segments**. For example, *N.N. Global*
   - `valid_from = 2024-07-01`
 - Provisions with no counterpart use `NO_COUNTERPART_IN` (new offences; omitted offences).
 - All crosswalk rows are **tier 1**. They are `definitive` only when VERIFIED against an official table or by two editors.
-- For scale: the BNS has 358 sections against the IPC's 511, with 20 new offences and 19 IPC provisions dropped [P3-60] *(secondary source)*.
+- For scale: the BNS has 358 sections (the IPC had 511, not re-verified in review), with 20 new offences and 19 IPC provisions dropped [P3-60] *(secondary source)*.
 
 **Verified seed examples (headings).**
 - IPC s.302 "Punishment for murder" ↔ BNS s.103 "Punishment for murder".
@@ -682,7 +701,7 @@ Whether BNS s.103(2) adds new content, making `change_type` SPLIT or WIDENED, is
 
 **Applicability engine.** `applicable_provisions({offence_date, fir_date, proceeding_stage, proceeding_started_on}, provisions[])` returns `{code, provision, rule_ids, contested}`.
 - **Substantive law** follows the offence date. Before 1 July 2024 → IPC. The Art. 20(1) basis is to be cited in 21_india.
-- **Procedure and evidence** follow the repeal-and-savings clauses (the brief cites BNSS s.531 and BSA s.170, *unverified here*). Where High Courts have split on pending investigations, the rule is `contested=true` and **both** answers are returned with their authorities. This is safer than choosing one.
+- **Procedure and evidence** follow the repeal-and-savings clauses: BNSS s.531 "Repeal and savings", which repeals the CrPC 1973 [P3-64], and BSA s.170 "Repeal and savings" [P3-65] *(section numbers verified in review; the savings semantics are for 21_india)*. Both codes commenced on 1 Jul 2024 [P3-64][P3-65]. Where High Courts have split on pending investigations, the rule is `contested=true` and **both** answers are returned with their authorities. This is safer than choosing one.
 
 **Precedent carry-over [NOVEL — unvalidated].** Suppose proposition P `INTERPRETS` old clause *o*, *o* `CORRESPONDS_TO` new clause *n* with `change_type ∈ {IDENTICAL_TEXT, RENUMBERED_EQUIVALENT}`, and the diff shows that the tokens P interprets are unchanged. Then derive `PRECEDENT_CARRIES_TO(P → n)` with confidence = min(conf(crosswalk), conf(P)) × diff_factor, tier 1. For NARROWED, WIDENED or PUNISHMENT_CHANGED the output is "partially carries — see diff" (CAUTION). The derived edge is *confirmed* as post-2024 judgments apply P while citing *n*: a `FOLLOWS` of P by a judgment whose statute mentions include *n* adds ATTESTATION evidence. P5 uses the crosswalk for bidirectional query expansion (`via_crosswalk`, P5 doc). P6 uses the applicability engine.
 
@@ -721,6 +740,8 @@ Whether BNS s.103(2) adds new content, making `change_type` SPLIT or WIDENED, is
 - A4: **sentinel canaries.** About 300 verified landmark relationships, such as the 2023 Stamp Act overruling [P3-55], must be re-derived identically by any new method version before promotion (a P8 gate).
 - A5: citing-consensus disagreement (we say GOOD; ≥ 2 later courts attest "overruled").
 - A6: evidence orphaned by a re-parse. Re-anchor via `anchor_alias`, otherwise QUARANTINE.
+- A7 *(added in independent review)*: **mass-orphan breaker**. If more than 1% of a source's evidence rows, or more than 500 rows, orphan within 24 h, the likely cause is a parser regression or a source format change (e.g. paragraph renumbering), not new law. P3 therefore stops applying A6 quarantines for that `source_id × pipeline_version`, keeps the prior assertion versions in force, and emits `reprocess.requested.v1` to P1 with `reason=MASS_ORPHAN`. Re-anchoring resumes only after P1 publishes a corrected `anchor_changes` set.
+- A8 *(added in independent review)*: **dangling-negative counter**. Hard-negative or attestation cues on mentions below `tau_res_hardneg_task` are aggregated by normalised citation string. At 3 or more independent citing works, a `source.recheck.requested.v1` and a P1 resolution review are raised. This is how a missing or mis-OCR'd overruled judgment is found.
 
 ```mermaid
 stateDiagram-v2
@@ -774,6 +795,8 @@ Cascades touching more than 10k targets move to the P4 batch lane with a single 
 
 Two-person rule: SC hard negatives and all crosswalk rows need R1 plus R2 agreement. A disagreement escalates to R3.
 
+Every reviewer profile carries `languages[]` and `courts[]`. Routing matches the evidence expression's `lang` to `languages[]`, so a Hindi-only judgment never lands with a reviewer who cannot read it *(added in independent review)*.
+
 **SLAs** (targets; staffing in §5.14).
 
 | Item | SLA from P3 ingest |
@@ -794,7 +817,7 @@ Two-person rule: SC hard negatives and all crosswalk rows need R1 plus R2 agreem
 ### 5.11 Confidence calibration
 - Machine confidences are calibrated per (predicate family × method × court level × language) with isotonic regression on the gold set. Calibration is re-fit on every method promotion. The target is ECE ≤ 0.05.
 - `status_confidence(T)` approximates P(no undetected worse treatment) = Π over un-reviewed court-speaker citing mentions *i* of T of (1 − p̂ᵢ(hard-negative)) × coverage factor. VERIFIED reasons use reviewer accuracy on gold. **[NOVEL — unvalidated]** as a citator confidence display.
-- P10 shows three bands (≥ 0.95, 0.80–0.95, < 0.80) and the evidence, never a bare flag. This responds directly to the finding that the major citators disagree on 85% of negatives [P3-14].
+- P10 shows three bands (≥ 0.95, 0.80–0.95, < 0.80) and the evidence, never a bare flag. This responds directly to the finding that the major citators miss or mislabel a third to over two-thirds of negatives [P3-14].
 
 ### 5.12 Graph Query API (read-only; gRPC + REST/JSON)
 
@@ -869,7 +892,7 @@ The cascade therefore cuts construction LLM spend by roughly an order of magnitu
 
 **Human cost.**
 - Estimated tier-1 load: 100–300 items/day (hard-negative candidates, direct-history disagreements, validity).
-- The one-time crosswalk covers 358 + 531 + 170 = 1,059 sections of the three new codes (section counts per the brief and [P3-60]), giving ≈ 2–3k clause-level rows.
+- The one-time crosswalk covers 358 + 531 + 170 = 1,059 sections of the three new codes (BNS 358 [P3-60], BNSS 531 [P3-64], BSA 170 [P3-65]; secondary sources), giving ≈ 2–3k clause-level rows *(row estimate unvalidated)*.
 - Staffing: ≈ 3–5 R1/R2 editors plus a part-time R3 panel *(estimate)*.
 
 ### 5.15 Cross-cutting: security, cost at scale, latency, observability, model-agnostic design
@@ -995,6 +1018,64 @@ All items below are **[NOVEL — unvalidated]**. Each needs an offline evaluatio
 | **Identity merge error** (two different cases merged by P1) | Treatments attach to the wrong work | `identity.split.v1` re-points assertions (new versions). Statuses recompute. Merges are reversible within P1's window. |
 | **Model provider swap or deprecation** | Label distribution shifts | New `method_version` in SHADOW. Sentinels and gold must pass P8 gates. L2 is self-hosted, so the bulk path is unaffected. |
 | **Corrigendum, recall or review of the overruling judgment itself** | Status built on a judgment that was later recalled or modified | `RECALLS`/`REVIEW_OF` outcomes retract or supersede downstream assertions through the justification index. |
+| **LLM cost blow-up** *(added in independent review)* | A reprocess, prompt change, a run of Hindi or low-OCR documents, or a retry storm sends far more than 6% of mentions to L3. Backfill cost scales with it (all-premium ≈ $250k+ at 5M docs, §5.14). | Per-contract daily caps with degrade-to-review (§5.4 budget guard). An L3 cache keyed on context hash plus model and prompt, so re-parses do not pay twice. `REPROCESS` jobs run on a stratified shadow sample first, and corpus-wide runs need an explicit budget line approved by ops. The L3 routing share per (court × language) is a dashboard metric with a CUSUM alert (A3). |
+| **Operative order now, reasons later** *(added in independent review)* | A court pronounces the result ("appeal allowed; reasons to follow") before the reasoned judgment. The `ord` fragment exists, but no ratio or proposition does, so a negative treatment cannot be proposition-scoped. | The L0 history classifier still writes REVERSES/SETS_ASIDE from `ord`, and a hard-negative cue in `ord` writes a work-level tier-1 `NEGATIVE_SIGNAL_UNDER_REVIEW`. When the reasoned judgment arrives as `doc.parsed.v1` with `supersedes_parse_id`, the re-derivation diff (§5.4) narrows the assertion to propositions. |
+| **Translation double-count / wrong-language evidence** *(added in independent review)* | The same judgment in `en` and `hi` expressions yields two sets of treatments, which doubles `depth` and consensus counts. Evidence may point at a machine translation. | §2.1 rule 5 means only the authoritative expression extracts. Hindi or regional HC judgments carry evidence in the original language, and the review task is routed only to reviewers whose `languages[]` includes the expression's `lang`. If none is available within the SLA, the item escalates to R3 and stays `NEGATIVE_SIGNAL_UNDER_REVIEW`. |
+| **Party text laundered through a judgment** *(added in independent review)* | A judgment quotes a written submission such as "X stands overruled by Y". The attestation miner reads it as the court's statement. | The attestation and treatment paths skip mentions whose `rhetorical_role ∈ {ARGUMENT, QUOTED_SUBMISSION}` (§5.4). An attestation alone never creates a definitive edge; it only creates a review candidate. |
+| **Forged or doctored judgment on an unofficial mirror** *(added in independent review)* | A fabricated "overruling" enters the PLC. | §2.1 rule 6: tier 1 comes only from official-source manifestations. Mirror-only documents trigger an official recheck. |
+| **Parser regression or source paragraph renumbering** *(added in independent review)* | Quote hashes drift across a court's entire corpus, and A6 would quarantine thousands of good assertions. | A7 mass-orphan breaker freezes quarantines, keeps prior versions and sends a reprocess request to P1. |
+
+### 8.R Independent review findings
+
+An adversarial review audited the citations and the design against the spine, the standards and the P3 topic brief.
+
+**Citation audit (about 30 references checked against their sources).** These were corrected:
+- **[P3-54] had the wrong URL.** indiankanoon.org/doc/106091339 is *Najma Khatun v. State of West Bengal* (2026 INSC 691), not *Shree Chamundi Mopeds*. It quotes the *Shree Chamundi* stay-versus-quash passage at ¶40. That is now cited as [P3-62], and [P3-54] no longer carries a URL.
+- **[P3-53]'s quoted phrase was not found in the judgment.** It is replaced with the verified ¶¶32–33 holding and the bench strength (two judges).
+- **[P3-24] (SCC Online): the claim about whole versus partial overruling is unsupported and has been removed.**
+- **[P3-25] (Manupatra): the claim "no good or bad law signal" is contradicted** by the training manual, which says Manu Cite depicts treatment. The claim is rewritten.
+- **[P3-43] (Neo4j): "multiple databases" was wrongly listed as Enterprise-only** and has been fixed.
+- **[P3-11]: the "GraphRefine" attribution is not in the paper and has been removed.** The authors (Ghanem and Cruz) have been added.
+- **[P3-14] (Hellyer): the "53 agreements / 85%" figure is not in the abstract.** It is now marked unverified, and the abstract statement has been corrected.
+- **[P3-29]: the title is corrected** to "LeCNet: A Legal Citation Network Benchmark Dataset".
+- **[P3-4]: the venue (JURIX 2025) has been added.**
+- **[P3-1]: the paper's own 41% versus 42% Westlaw accuracy inconsistency is now noted.**
+- **The s.66A example ID was wrong.** It pointed at the IPC. s.66A is in the **IT Act, 2000**.
+- **BNSS s.531 and BSA s.170 (repeal and savings) and the BNSS and BSA section counts are now verified** [P3-64][P3-65].
+- **Pranay Sethi [P3-57] and Synthetics & Chemicals [P3-58] are verified and now cited in the body.** Art. 145(3) has been added [P3-63].
+
+The PUCL post-2015 s.66A orders still could not be located, and the claim remains *(unverified)*.
+
+**Spine conformance.**
+- The `graph.delta.v1` example now shows the full CloudEvents envelope.
+- An `Assertion` wire form in exact spine §F names has been added (§2.2).
+- The silent dependencies on P1 and P9 proposed fields and events are now explicit (S3-6), with fallbacks.
+- The expression-independent provision ID is proposed formally (S3-7).
+
+**Design gaps patched.**
+- **Sub silentio.** This was required by the brief and was missing. It is now covered by the `DECLARES_SUB_SILENTIO` predicate and rule B15.
+- **Per incuriam declared by a co-equal bench** (B16).
+- **Constitution Bench derivation** per Art. 145(3).
+- **Authoritative-expression rule.** This stops translation double-counting (§2.1 rule 5).
+- **Official-source trust gate for tier 1** (§2.1 rule 6).
+- **Low-confidence-resolution hard negatives.** These were previously dropped, which violated P-3 (rule 7, A8).
+- **Court-quoting-party exclusion** (§5.4).
+- **Cascade threshold config** with defaults.
+- **Processing ledger and re-derivation diff.** A verified assertion is never auto-retracted by a re-parse.
+- **L3 cache and budget guard.**
+- **Mass-orphan breaker (A7)** for source format changes.
+- **Reviewer language routing.**
+- **"Reasons to follow" handling.**
+- **`authority-core` test vectors T1–T8.**
+
+**Still open.**
+- The doctrine for B3, B11 and B16, and prospective-overruling scope, is still owed by 21_india.
+- The crosswalk examples beyond BNS ss.103–105 are unverified until the official table is imported.
+- The Hellyer consensus figure is unverified.
+- SBV-LawGraph [P3-3] is still snippet-only (the Springer page is behind an auth redirect).
+- Neptune, TigerGraph, NebulaGraph and JanusGraph are unverified.
+- All cost, volume and threshold numbers are planning assumptions that need measuring in sprint 1.
+- There are no Hindi or regional cue lexicons yet, so every non-English tier-1 item needs a human.
 
 ---
 
@@ -1014,6 +1095,9 @@ All items below are **[NOVEL — unvalidated]**. Each needs an offline evaluatio
 | Graph health | quarantine rate, retraction rate, constraint violations, breaker trips, sentinel pass rate, review backlog vs SLA, reviewer κ | sentinel = 100%; κ ≥ 0.8 |
 | Coverage | % mentions resolved and classified by court; % eligible works with propositions | ≥ 90% / ≥ 95% |
 | API | p95 per §5.12 | as listed |
+| Low-confidence hard negatives *(review add)* | recall of gold hard negatives whose mention had `resolution_confidence < τ_res` (§2.1 rule 7) | ≥ 0.95 surfaced as review task or signal |
+| Cost discipline *(review add)* | L3 routing share per (court × language); L3 cache hit rate on re-parses; budget-cap breaches | ≤ 8% overall; ≥ 90% cache hits; 0 unplanned breaches/month |
+| Doctrine engine *(review add)* | `authority-core` test vectors (§5.5.2 T1–T8 + 21_india scenarios) | 100% pass in CI |
 | External comparison | Hellyer-style audit [P3-14] against Indian citators on a sample, if licence terms allow | report disagreements, adjudicated by the R3 panel |
 
 ---
@@ -1053,32 +1137,32 @@ Cross-document references (P1, P5, P6, P7, P9 docs) point to sections of the sib
 [P3-1] Magesh, V. et al. (Stanford RegLab / Yale). "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." Journal of Empirical Legal Studies, 2025 (arXiv 2405.20362). https://arxiv.org/abs/2405.20362 — verified  
 [P3-2] Chen, Z., Zhang, Q., Xiang, Z., Wei, Z., Gao, L., Huang, X., Zhang, Z., Su, J. "LegalGraphRAG: Multi-Agent Graph Retrieval-Augmented Generation for Reliable Legal Reasoning." ACL 2026 (arXiv 2605.28120). https://arxiv.org/abs/2605.28120 — verified  
 [P3-3] (authors not verified). "SBV-LawGraph: A Hybrid RAG Approach Integrating Knowledge Graph for the State Bank of Vietnam Legal Documents." ACIIDS 2026, Springer. https://link.springer.com/chapter/10.1007/978-981-92-0071-9_16 — snippet  
-[P3-4] de Martim, H. "An Ontology-Driven Graph RAG for Legal Norms: A Structural, Temporal, and Deterministic Approach" (v1: "Graph RAG for Legal Norms: A Hierarchical, Temporal and Deterministic Approach"). arXiv 2505.00039 v5, 2025. https://arxiv.org/abs/2505.00039 — verified  
-[P3-5] Ongris, J.G., Darari, F., Tobing, B.C.L., Faisal, D.R., Lee, O. "Benchmarking KG-based RAG Systems: A Case Study of Legal Documents." CEUR-WS Vol-4079, 2025. https://ceur-ws.org/Vol-4079/paper6.pdf (abstract: https://dara.ui.ac.id/research-output/7409d879-ce06-4519-a24b-8da1fdd90d42) — verified  
+[P3-4] de Martim, H. "An Ontology-Driven Graph RAG for Legal Norms: A Structural, Temporal, and Deterministic Approach" (v1: "Graph RAG for Legal Norms: A Hierarchical, Temporal and Deterministic Approach"). JURIX 2025 (IOS Press, FAIA); arXiv 2505.00039 v5, 11 Sep 2025. https://arxiv.org/abs/2505.00039 — verified  
+[P3-5] Ongris, J.G., Darari, F., Tobing, B.C.L., Faisal, D.R., Lee, O. "Benchmarking KG-based RAG Systems: A Case Study of Legal Documents." CEUR-WS Vol-4079, 2025 (HippoRAG 2, Nano GraphRAG, LightRAG, LlamaIndex; EU Directives + Indonesian Government Regulations). https://ceur-ws.org/Vol-4079/paper6.pdf (abstract: https://dara.ui.ac.id/research-output/7409d879-ce06-4519-a24b-8da1fdd90d42) — verified  
 [P3-6] Edge, D. et al. "From Local to Global: A Graph RAG Approach to Query-Focused Summarization." arXiv 2404.16130, 2024/2025. https://arxiv.org/abs/2404.16130 — verified  
-[P3-7] Microsoft Research. "LazyGraphRAG: Setting a new standard for quality and cost." Blog, 2024. https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/ — snippet  
+[P3-7] Microsoft Research. "LazyGraphRAG: Setting a new standard for quality and cost." Blog, 2024. https://www.microsoft.com/en-us/research/blog/lazygraphrag-setting-a-new-standard-for-quality-and-cost/ — verified  
 [P3-8] Guo, Z., Xia, L., Yu, Y., Ao, T., Huang, C. "LightRAG: Simple and Fast Retrieval-Augmented Generation." arXiv 2410.05779, 2024/2025. https://arxiv.org/abs/2410.05779 — verified  
-[P3-9] Gutiérrez, B.J. et al. "From RAG to Memory: Non-Parametric Continual Learning for Large Language Models" (HippoRAG 2). ICML 2025 (arXiv 2502.14802). https://arxiv.org/abs/2502.14802 — snippet  
+[P3-9] Gutiérrez, B.J., Shu, Y., Qi, W., Zhou, S., Su, Y. "From RAG to Memory: Non-Parametric Continual Learning for Large Language Models" (HippoRAG 2). ICML 2025 (arXiv 2502.14802). https://arxiv.org/abs/2502.14802 — verified  
 [P3-10] Rasmussen, P., Paliychuk, P., Beauvais, T., Ryan, J., Chalef, D. "Zep: A Temporal Knowledge Graph Architecture for Agent Memory." arXiv 2501.13956, 2025. https://arxiv.org/abs/2501.13956 — verified  
-[P3-11] (authors not verified). "Enhancing Knowledge Graph Construction: Evaluating with Emphasis on Hallucination, Omission, and Graph Similarity Metrics." arXiv 2502.05239, 2025 (also GraphRefine, seen in the same search). https://arxiv.org/abs/2502.05239 — snippet  
+[P3-11] Ghanem, H., Cruz, C. "Enhancing Knowledge Graph Construction: Evaluating with Emphasis on Hallucination, Omission, and Graph Similarity Metrics." arXiv 2502.05239, 2025. https://arxiv.org/abs/2502.05239 — verified (abstract)  
 [P3-12] (authors not verified). "Are Large Language Models Effective Knowledge Graph Constructors?" arXiv 2510.11297, 2025. https://arxiv.org/abs/2510.11297 — snippet  
 [P3-13] Demir, M.M., Canbaz, M.A. "Validate Your Authority: Benchmarking LLMs on Multi-Label Precedent Treatment Classification." NLLP Workshop 2025 (arXiv 2605.17691). https://arxiv.org/abs/2605.17691 — verified  
-[P3-14] Hellyer, P. "Evaluating Shepard's, KeyCite, and BCite for Case Validation Accuracy." Law Library Journal 110(4), 2018. https://scholarship.law.wm.edu/libpubs/131 — snippet  
+[P3-14] Hellyer, P. "Evaluating Shepard's, KeyCite, and BCite for Case Validation Accuracy." Law Library Journal 110(4):449–476, 2018. https://scholarship.law.wm.edu/libpubs/131 — verified (abstract; "53 of 357 agreed" figure unverified)  
 [P3-15] Stanford RegLab & Casetext. "The Overruling Dataset: A Benchmark for Detecting Legal Decisions that Have Been Overruled." https://reglab.stanford.edu/data/the-overruling-dataset-a-benchmark-for-detecting-legal-decisions-that-have-been-overruled/ — verified  
 [P3-16] Guha, N. et al. "LegalBench: A Collaboratively Built Benchmark for Measuring Legal Reasoning in Large Language Models." arXiv 2308.11462, 2023. https://arxiv.org/abs/2308.11462 — verified  
 [P3-17] Zheng, L. et al. "When Does Pretraining Help? Assessing Self-Supervised Learning for Law and the CaseHOLD Dataset." ICAIL 2021 (arXiv 2104.08671). https://arxiv.org/abs/2104.08671 — snippet  
 [P3-18] Thomson Reuters. "KeyCite flags and icons for cases." Westlaw Edge help. https://www.thomsonreuters.com/en-ca/help/westlaw-edge/tools/keycite/flags-and-icons.html — snippet  
 [P3-19] Thomson Reuters. "Quickly uncover implied overrulings with KeyCite Overruling Risk." https://legal.thomsonreuters.com/en/insights/articles/quickly-uncover-implied-overrulings-with-keycite-overruling-risk — snippet  
 [P3-20] University of South Carolina School of Law Library. "Updating federal cases" (Shepard's signals). https://guides.law.sc.edu/LRAWSpring/LRAW/updatingfedcases — snippet  
-[P3-21] Free Law Project. "CourtListener Citation Lookup API." https://www.courtlistener.com/help/api/rest/v3/citation-lookup/ — snippet  
+[P3-21] Free Law Project. "CourtListener Citation Lookup API" (v4; 18,128,182 citations; uses eyecite). https://wiki.free.law/c/courtlistener/help/api/rest/v4/citation-lookup — verified  
 [P3-22] Free Law Project & Harvard Library Innovation Lab. "eyecite: A tool for parsing legal citations." Journal of Open Source Software, 2021. https://joss.theoj.org/papers/10.21105/joss.03617 — snippet  
 [P3-23] Free Law Project. "Citation depth data." 2020. https://free.law/2020/03/05/citation-depth-data/ — snippet  
-[P3-24] O.P. Jindal Global University Library. "SCC Online: how to identify overruled judgments" (FAQ). https://libguides.jgu.edu.in/subjects/faq.php?faq_id=42 — snippet  
-[P3-25] Manupatra training manual (Kerala Law Academy library mirror) and JGU guide on Authority Check / Case Map. https://manupatrafast.library.keralalawacademy.in/Defaults/training-manual-manu-cite-feature.aspx — snippet  
+[P3-24] O.P. Jindal Global University Library. "SCC Online: how to identify overruled judgments" (FAQ; red-circle exclamation mark = overruled). https://libguides.jgu.edu.in/subjects/faq.php?faq_id=42 — verified  
+[P3-25] Manupatra training manual (Kerala Law Academy library mirror): Manu Cite shows citation counts and "the treatment of the subject case in other cases"; Authority Check / Case Map pages not opened. https://manupatrafast.library.keralalawacademy.in/Defaults/training-manual-manu-cite-feature.aspx — verified  
 [P3-26] CaseMine. "FAQ / About" (citator; CaseIQ; AMICUS). https://www.casemine.com/home/faq — snippet  
 [P3-27] Indian Kanoon. Document pages and search results showing "Cites / Cited by" counts (e.g., Shreya Singhal). https://indiankanoon.org/doc/110813550/ — verified  
 [P3-28] Bhattacharya, P., Ghosh, K., Pal, A., Ghosh, S. "Hier-SPCNet: A Legal Statute Hierarchy-based Heterogeneous Network for Computing Legal Case Document Similarity." SIGIR 2020 (arXiv 2007.03225). https://arxiv.org/abs/2007.03225 — snippet  
-[P3-29] Harde, P., Jain, B., Jain, S. "LeCNet: Indian Legal Citation Network" (link-prediction benchmark). JUST-NLP 2025. https://aclanthology.org/2025.justnlp-main.4/ — snippet  
+[P3-29] Harde, P., Jain, B., Jain, S. "LeCNet: A Legal Citation Network Benchmark Dataset." Proc. 1st Workshop on NLP for Empowering Justice (JUST-NLP 2025). https://aclanthology.org/2025.justnlp-main.4/ — verified  
 [P3-30] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024 (arXiv 2407.05399). https://arxiv.org/abs/2407.05399 — verified  
 [P3-31] OASIS LegalDocML TC. "Akoma Ntoso Version 1.0" OASIS Standard, 29 Aug 2018. https://www.oasis-open.org/standard/akn-v1-0/ — verified  
 [P3-32] IFLA. "LRMoo: object-oriented definition and mapping from the IFLA Library Reference Model" v1.0, 2024-12-09. https://repository.ifla.org/handle/20.500.14598/3677 — verified  
@@ -1092,7 +1176,7 @@ Cross-document references (P1, P5, P6, P7, P9 docs) point to sections of the sib
 [P3-40] PostgreSQL Global Development Group. "PostgreSQL 18 Release Notes" (25 Sep 2025). https://www.postgresql.org/docs/18/release-18.html — verified  
 [P3-41] PostgreSQL Global Development Group. "PostgreSQL 19 Release Notes (devel, beta 4)." accessed 2026-09-30. https://www.postgresql.org/docs/devel/release-19.html — verified  
 [P3-42] Neo4j. "Licensing." https://neo4j.com/licensing/ — verified  
-[P3-43] Neo4j. "Operations Manual — Introduction (edition feature comparison)." https://neo4j.com/docs/operations-manual/current/introduction/ — verified  
+[P3-43] Neo4j. "Operations Manual — Introduction (edition feature comparison; online backup, clustering, RBAC, property/sub-graph access control EE-only; multiple databases in all editions)." https://neo4j.com/docs/operations-manual/current/introduction/ — verified  
 [P3-44] Kùzu. GitHub repository (archived 10 Oct 2025). https://github.com/kuzudb/kuzu — verified  
 [P3-45] Apache Software Foundation. "Apache AGE." https://age.apache.org/ — verified  
 [P3-46] Memgraph. GitHub repository (BSL / MEL licences). https://github.com/memgraph/memgraph — verified  
@@ -1101,13 +1185,17 @@ Cross-document references (P1, P5, P6, P7, P9 docs) point to sections of the sib
 [P3-49] Google Cloud. "Spanner Graph overview." https://docs.cloud.google.com/spanner/docs/graph/overview — verified  
 [P3-50] Constitution of India, Article 141. https://www.constitutionofindia.net/articles/article-141-law-declared-by-supreme-court-to-be-binding-on-all-courts/ — verified  
 [P3-51] Central Board of Dawoodi Bohra Community v. State of Maharashtra, (2005) 2 SCC 673 (SC, 5 judges, decided 17 Dec 2004). https://indiankanoon.org/doc/708017/ — verified  
-[P3-52] Kunhayammed v. State of Kerala, (2000) 6 SCC 359 (SC) — doctrine of merger; non-speaking SLP dismissal. https://indiankanoon.org/search/?formInput=Kunhayammed%20State%20of%20Kerala%20merger — snippet  
-[P3-53] Union Territory of Ladakh v. Jammu and Kashmir National Conference (SC, 6 Sep 2023) — "reference to a larger Bench does not unsettle declared law". https://indiankanoon.org/doc/175104903/ — snippet  
-[P3-54] Shree Chamundi Mopeds Ltd. v. Church of South India Trust Association, (1992) 3 SCC 1 (SC) — effect of stay vs quashing. https://indiankanoon.org/doc/106091339/ — snippet  
+[P3-52] Kunhayammed v. State of Kerala, (2000) 6 SCC 359 (SC) — doctrine of merger; non-speaking SLP dismissal (citation confirmed via citing judgments on Indian Kanoon; judgment text not opened). https://indiankanoon.org/search/?formInput=Kunhayammed%20State%20of%20Kerala%20merger — snippet  
+[P3-53] Union Territory of Ladakh v. Jammu and Kashmir National Conference (SC, 2 judges: Vikram Nath, Ahsanuddin Amanullah JJ., 6 Sep 2023), ¶¶32–33 — pendency of a reference to a larger Bench does not stay other proceedings; courts decide on existing law. https://indiankanoon.org/doc/175104903/ — verified  
+[P3-54] Shree Chamundi Mopeds Ltd. v. Church of South India Trust Association, (1992) 3 SCC 1 (SC) — effect of stay vs quashing; passage verified only as quoted in [P3-62] (the earlier URL indiankanoon.org/doc/106091339 is Najma Khatun, not this case). — snippet  
 [P3-55] In re: Interplay between Arbitration Agreements under the Arbitration and Conciliation Act, 1996 and the Indian Stamp Act, 1899, 2023 INSC 1066 (SC, 7 judges, 13 Dec 2023) — overrules N.N. Global (2023); SMS Tea Estates and Garware Wall Ropes "wrongly decided". https://indiankanoon.org/doc/139003074/ — verified  
 [P3-56] Shreya Singhal v. Union of India (SC, 24 Mar 2015) [reporter cite (2015) 5 SCC 1 unverified]. https://indiankanoon.org/doc/110813550/ — verified  
-[P3-57] National Insurance Co. Ltd. v. Pranay Sethi (SC, Constitution Bench, 31 Oct 2017) — coordinate benches / per incuriam (for 21_india; not cited in P3 body). https://indiankanoon.org/doc/139996215/ — snippet  
-[P3-58] State of U.P. v. Synthetics and Chemicals Ltd. (SC, 18 Jul 1991) — per incuriam / sub silentio (for 21_india; not cited in P3 body). https://indiankanoon.org/doc/1488034/ — snippet  
+[P3-57] National Insurance Co. Ltd. v. Pranay Sethi (SC, 5 judges, 31 Oct 2017) — a co-equal bench is bound and must refer to a larger bench if it disagrees; per incuriam. https://indiankanoon.org/doc/139996215/ — verified  
+[P3-58] State of U.P. v. Synthetics and Chemicals Ltd. (SC, 2 judges: T.K. Thommen, R.M. Sahai JJ., 18 Jul 1991), ¶¶93–94 — per incuriam and sub silentio. https://indiankanoon.org/doc/1488034/ — verified  
 [P3-59] L. Chandra Kumar v. Union of India (SC, 7 judges, 18 Mar 1997) — tribunals and High Court jurisdiction. https://indiankanoon.org/doc/1152518/ — snippet  
-[P3-60] Wikipedia. "Bharatiya Nyaya Sanhita" (commencement 1 Jul 2024; 358 sections vs IPC 511; 20 new offences, 19 provisions dropped; secondary). https://en.wikipedia.org/wiki/Bharatiya_Nyaya_Sanhita — verified  
+[P3-60] Wikipedia. "Bharatiya Nyaya Sanhita" (commencement 1 Jul 2024; 20 chapters, 358 sections; 20 new offences, 19 IPC provisions dropped; secondary). https://en.wikipedia.org/wiki/Bharatiya_Nyaya_Sanhita — verified  
 [P3-61] Indian Kanoon. Bharatiya Nyaya Sanhita, 2023 — ss.103 "Punishment for murder", 104 "Punishment for murder by life-convict", 105 "Punishment for culpable homicide not amounting to murder" (section headings). https://indiankanoon.org/search/?formInput=punishment%20for%20murder%20Bharatiya%20Nyaya%20Sanhita%202023%20doctypes:laws — verified  
+[P3-62] Najma Khatun v. State of West Bengal, 2026 INSC 691 (SC, Dipankar Datta and Augustine George Masih JJ., 13 Jul 2026), ¶40 — quotes Shree Chamundi Mopeds on stay of operation vs quashing. https://indiankanoon.org/doc/106091339/ — verified  
+[P3-63] Constitution of India, Article 145(3) — minimum five judges for a substantial question of law as to the interpretation of the Constitution or an Art. 143 reference. https://www.constitutionofindia.net/articles/article-145-rules-of-court-etc/ — verified  
+[P3-64] Bharatiya Nagarik Suraksha Sanhita, 2023 — s.531 "Repeal and savings" ("The Code of Criminal Procedure, 1973 is hereby repealed"); 531 sections; commenced 1 Jul 2024. Indian Kanoon https://indiankanoon.org/search/?formInput=Bharatiya%20Nagarik%20Suraksha%20Sanhita%202023%20repeal%20and%20savings%20doctypes:laws and Wikipedia https://en.wikipedia.org/wiki/Bharatiya_Nagarik_Suraksha_Sanhita — verified  
+[P3-65] Wikipedia. "Bharatiya Sakshya Adhiniyam" (170 sections vs 167 in IEA 1872; s.170 "Repeal and savings"; commenced 1 Jul 2024; secondary). https://en.wikipedia.org/wiki/Bharatiya_Sakshya_Adhiniyam — verified
