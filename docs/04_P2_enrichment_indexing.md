@@ -110,8 +110,8 @@ This doc follows the spine v1.0 decision record (D1–D21; D19–D21 disposition
 |---|---|---|
 | `doc.parsed.v1` (spine §G) + `ParsedDocument` JSON at `parsed_doc_uri` (spine §H) | P1 | Chunking, headers, summaries, all representations |
 | `graph.delta.v1` (P2 as consumer, §2.0 #3) | P3 | (a) Index `Proposition` nodes as retrieval units. (b) Update the status-mirror index (an `AuthorityView` projection) from `status_changes[].{subject_id, new, definitive, reason_codes, valid_from}`, stamped with `graph_watermark`. (c) Refresh `cited_work_ids` when citation resolution changes. (d) Refresh `binding_scope_tags[]` when P3 changes a forum's binding universe (D21.2, §5.11a). |
-| Binding-scope table (P3 Graph Query API `GET /v1/binding-scopes?since_watermark=`) | P3 | Values for `binding_scope_tags[]`: rows `{court_id, bench_id?, decided_from?, decided_to?, tags[], graph_watermark}` (§5.11a) |
-| `reprocess.requested.v1` | P4/P9/ops | Re-chunk, re-embed or re-summarise a scope, or build a new generation |
+| Binding-scope table (P3 Graph Query API `GET /v1/binding-scopes?after_watermark=`, 05_P3 §5.12) | P3 | Values for `binding_scope_tags[]`: rows `{court_id, bench_id?, decided_from?, decided_to?, min_bench_strength?, tags[], rule_ids[]}` plus the response `graph_watermark` (§5.11a) |
+| `reprocess.requested.v1` (schema owner P4, D21.15) | P4 campaigns / P9-global / ops | Re-chunk, re-embed or re-summarise a scope, or build a new generation |
 | `doc.redacted.v1` (D4/D16; `data` = `RedactionOverlay`) | P0/P1/ops/legal | Mandatory removal or masking of text (court masking orders, victim-identity protection) across all generations, caches and snapshots. Indexes hold only the masked rendition (§5.11). De-duplicated on `overlay_id`; acknowledged with `redaction.applied.v1` (D19.3) |
 | `identity.merged.v1` / `identity.split.v1` (D4/D16) | P1 | Re-key chunks, cards and summaries from `from_id` to `to_id` (§5.11) |
 | Private `ParsedDocument` (`pdoc_…` IDs, anchors `{pdoc_id}/{pver}#{fragment}`), tenant mode only, signalled by `pdoc.parsed.v1` (D16) | P1 in tenant mode / P7 | Same pipeline, per-tenant indexes, no shared caches. `trust_label` is taken from P7's document record |
@@ -190,7 +190,7 @@ Chunk {
   in_force?: bool, enacted_on?: date,       // ➕ statutes: uncommenced text has in_force=false, valid_from=null (§5.9)
   // denormalised stable metadata for filtering
   court_id, court_level, bench_strength?, decision_date?, doc_type, jurisdiction_state?,
-  binding_scope_tags: string[],             // ➕ D21.2: P2-owned field, values from P3's binding-scope table (§5.11a), e.g.
+  binding_scope_tags: string[],             // ➕ D21.2: P2-owned field, values from P3's binding-scope table (§5.11a); illustrative:
                                             //   ["ALL_INDIA"] for SC; ["STATE:IN-MH","STATE:IN-GA","HC:crt_IN_HC_BOM"] for Bombay HC;
                                             //   ["TRIBUNAL:NCLT-ALL"]; bench-qualified tags "…:bench>=N". Empty on TPL chunks
   valid_from?: date, valid_to?: date,       // statutes/Constitution: provision-version interval (coalesced, §5.9)
@@ -1205,6 +1205,8 @@ An adversarial review (legal-tech architecture + Indian legal research) re-fetch
 - As-of status correctness (with P3/P4): on a gold set of overruled/partly overruled precedents, the mirror returns the same `AuthorityView` status/`definitive`/`reason_codes` as P3 for `as_of_legal_date` before and after the overruling date: 100%.
 - Duplicate exposure: share of top-10 result lists containing two Works flagged near-dup of each other, or two revisions of one judgment: < 0.5%.
 - Filtered-ANN recall at 0.1% / 1% / 10% selectivity ≥ 0.95 of unfiltered (§5.6.3 Ops).
+- Binding-scope integrity (§5.11a): 100% of judgment chunks from courts in P3's table carry ≥ 1 `binding_scope_tags` value (invariant I6). BIND-leg recall per tag is ≥ 0.95 of exact scoring, and tag staleness after a registry change is ≤ 24 h materialised (≤ 2 min effective).
+- Redaction acks: 100% of overlays acknowledged with `redaction.applied.v1` within `purge_sla`, and zero masked-span leaks in the redaction-leak sentinel suite.
 
 **Summaries**
 - Sentence entailment pass rate, and lawyer-audited faithfulness at ≥ 98% of sentences with no material error on the audit sample.

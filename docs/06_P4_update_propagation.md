@@ -585,7 +585,7 @@ tenant_severity(impact, deps, applicability):              # adjustment contract
   if any(dep.kind ∈ {OWN_CASE, CITED_IN_OUR_DRAFT}): sev = max(floor, sev-1)          # escalate one level
   if applicability ∈ {PRE_CHANGE, SAVED} and any(dep.kind == GOVERNING_PROVISION):
       sev = min(3, sev+1); actions += "prospective change – check transitional/saving clause"   # downgrade one level
-  if impact.root.scope_anchor_ids ≠ ∅ and all(dep.anchor_ids known)
+  if applicability ≠ UNCERTAIN and impact.root.scope_anchor_ids ≠ ∅ and all(dep.anchor_ids known)
      and ∪dep.anchor_ids ∩ impact.root.scope_anchor_ids = ∅: sev = 3       # partial overruling; cited paras untouched
                                                                           # (e.g. Garware paras other than 22/29)
   if applicability == UNCERTAIN: actions += "confirm the relevant date"   # UNCERTAIN never downgrades (D21.14)
@@ -595,7 +595,7 @@ tenant_severity(impact, deps, applicability):              # adjustment contract
            | INFO otherwise
   return (sev, polarity, actions)
 ```
-Contract tests for `tenant_severity()` ship with the library and are the same fixtures as P7's conformance suite (09_P7 §11.13). They cover: OWN_CASE on a machine sev-2 impact stays 2 (floor); OWN_CASE on a definitive sev-2 impact → 1; GOVERNING_PROVISION + SAVED on sev-1 → 2; UNCERTAIN on sev-1 stays 1; NOT_APPLICABLE_* → recorded only.
+Contract tests for `tenant_severity()` ship with the library and are the same fixtures as P7's conformance suite (09_P7 §11 item 13, run on each `impact-match-core` semver bump). They cover: OWN_CASE on a machine sev-2 impact stays 2 (floor); OWN_CASE on a definitive sev-2 impact → 1; GOVERNING_PROVISION + SAVED on sev-1 → 2; UNCERTAIN on sev-1 stays 1; NOT_APPLICABLE_* → recorded only.
 The **opportunity** polarity [NOVEL — unvalidated as a product rule] turns "the opponent's notice relies on s.66A" or "the adverse authority in our memo was just overruled" into an action item. Stance is private, so it is computed only in the tenant.
 
 ### 5.7 Severity, coalescing and storms

@@ -16,7 +16,7 @@ This document has five jobs:
 
 **Order of precedence for cross-phase contracts:**
 1. The decision record [01a_spine_decision_record.md](01a_spine_decision_record.md) (D1–D21) **together with** this document's §5–§9. The two are one baseline: this document incorporates every ruling D1–D21. If a passage here still disagrees with a D-ruling, the D-ruling wins and the passage is an editorial defect to be fixed.
-2. The resolutions marked ✱ in §14 that are still OPEN (not yet ruled in D1–D21).
+2. The ✱ resolutions of this document that no D-ruling covers (listed in §14 with owner and status).
 3. Each phase document's §2 (its "Spine v1.0 conformance" subsection records its dispositions).
 4. Spine v0.1 (reproduced as 01a Appendix A; historical).
 
@@ -74,7 +74,7 @@ Phase documents remain authoritative for their *internal* design (§5 of each).
 
 **Binding rules** (each is enforced by a test or a gate, cited in brackets):
 - **R1 One-way reference.** TPL rows may hold PLC IDs. No PLC table, index, event, cache or log line holds a TPL ID, TPL text or a TPL-derived hash (09_P7 §5.1 INV-1; canary tenants per 13_cross_cutting §5.5).
-- **R2 Single TPL→PLC path.** The only path is the P9 Privacy Gate. It releases closed-vocabulary codes about public objects only, in sensitivity classes S0/S1/S2_AGG; S3 never crosses (D9; 11_P9 §5.5). Gate-caused PLC events carry `tenantid=null`, a fresh trace root and a global `causationid` (D2).
+- **R2 Single TPL→PLC path.** The only path is the P9 Privacy Gate. It releases closed-vocabulary codes about public objects only, in sensitivity classes S0/S1/S2_AGG; S3 never crosses (D9; 11_P9 §5.5). Gate-caused PLC events carry `tenantid=null`, a fresh trace root and a global `causationid` (D2). The only other TPL-originated PLC messages are `redaction.applied.v1` receipts, which carry just the public `overlay_id` and a consumer code (D19.3; §6.2).
 - **R3 PLC read path is stateless for tenants.** The Graph Query API, IAL and Anchor Read API log no tenant-attributable IDs outside the tenant audit store; ops telemetry is tenant-redacted (D3). D1 and D2 cells read the shared PLC through this stateless read path in the same region (a local replica is optional for D2). D3, D4 and D4h deployments MUST read a local PLC replica, with a replica-lag SLO of ≤24 h (D19.7).
 - **R4 Broadcast, never register.** P4 broadcasts impacts; each tenant matches locally. P4 never stores tenant dependency sets, and no PLC-side component knows which Works tenants rely on (D3). Anything PLC-side that needs "importance" uses public signals only, e.g. the real-time lane rule (§4.1; D19.4).
 - **R5 TEC required.** Any access to TPL data by P5, P6, P8, the Model Gateway or index shards carries a signed Tenant Execution Context valid for ≤5 min (D9; 09_P7 §5.2).
@@ -167,7 +167,7 @@ The dashed arrows are read-only synchronous calls into the PLC. D1 and D2 cells 
 | Store | Engine | Single writer | Contents | Plane | Key facts |
 |---|---|---|---|---|---|
 | Raw CAS + WARC | S3 ap-south-1, Object Lock (governance); MinIO on-prem | P0 | Fetched bytes by `sha256`; WARC request/response/metadata; daily WACZ + signed Merkle root; archived ToU/robots pages | PLC | Content-addressed and immutable; DR RPO 0 (CRR) (02_P0 §2.4; 13_cross_cutting §8.2) |
-| Acquisition SoR | PostgreSQL | P0 | `source`, `legal_profile`, `crawl_run`, `source_record`, `capture`, `acquisition_request`, `suppression`, `expected_record`, outbox | PLC | `acquisition_request` has no tenant columns by design |
+| Acquisition SoR | PostgreSQL | P0 | `source`, `legal_profile`, `crawl_run`, `source_record`, `capture`, `acquisition_request`, `suppression`, `expected_record` (`jex_`), `redaction_ledger` (acks from `redaction.applied.v1`, D19.3), outbox | PLC | `acquisition_request` has no tenant columns by design |
 | Parse artefacts | S3 `plc-derived/`, `plc-parsed/` | P1 | Page images and OCR JSON; `ParsedDocument` (zstd JSON, immutable per `parse_id`) | PLC | |
 | Identity & anchor store | PostgreSQL (anchor table hash-partitioned by `work_id`) | P1 | `work`, `legal_case`, `work_case`, `expression`, `manifestation`, `identifier_alias`, `anchor`, `anchor_alias`, `expression_alignment`, `parse_run`, `citation_mention`, `review_task` | PLC | ≈300M paragraph anchors at 5M docs (estimate; 03_P1 §5.14) |
 | Chunk SoR + indexes | PostgreSQL (`expression_state`, `chunk`, `status_mirror`, outbox) + OpenSearch (BM25 + k-NN per `index_generation`, cards, `plc-status` mirror) | P2 | Chunks, summaries, embeddings refs, status projection | PLC | ≈36.5M chunks and ≈60M vectors at 5M works (04_P2 cost figures) |
@@ -939,7 +939,7 @@ interface ParsedDocument {
   metadata: { court: { court_id: string; conf: number }; jurisdiction_kind: string; case_numbers: object[]; cnr?: string; diary_no?: string;
               neutral_citation?: { scheme: string; value: string }; decision_date: string; coram: { judge_id: string; role: string }[];
               bench_strength: number; opinions: { opinion_id: string /* o1… */; author_judge_ids: string[]; kind: string; anchor_range: [string, string] }[];
-              authoritative_expression_key: string /* ✱ required by 05_P3 input rule 5 */;
+              authoritative_expression_key: string /* required by 05_P3 input rule 5; R-15, adopted in 03_P1 */;
               parties: object; advocates: object[]; reportable?: boolean; impugned: object[];
               disposition: { label: string; anchor_id: string; conf: number }; field_provenance: Record<string, string[]> };
   nodes: ParsedNode[]; citations: CitationMention[]; statute_mentions: StatuteMention[];
@@ -1856,6 +1856,7 @@ Each row compares the alternatives on accuracy, cost, latency, maintainability a
 5. **IN_ONLY model mix.** No in-India Claude processing is available [MA-13][MA-14]. The IN_ONLY quality gap must be measured by P8 before IN_ONLY onboarding.
 6. **Label supply.** The partner firm must supply lawyer-hours and consent (≈3k treatment labels, ≈1.5k graded issues, G-Claim 2,000). The P3, P5 and P8 calibration all depend on it.
 7. **Unverified HC neutral-citation formats.** The formats for five HCs, and whether single-bench and DB judgments share a number sequence, are unverified. The `NEUTRAL_HC` normaliser must stay data-driven (21_india).
+8. **Unvalidated public-signal thresholds.** The real-time `significance` threshold (D19.4) and the P9 exposure signal (D21.19) are [NOVEL — unvalidated]. P4 and P9 calibrate them on the M1 D2 cell against the `rt` ≤15% target and the review-queue SLAs; the unattributed k≥5 union watch-list stays a post-GA option.
 
 ---
 
