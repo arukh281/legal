@@ -439,7 +439,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  CB[[Command bar Ctrl-K / "/" — global]]
+  CB[["Command bar Ctrl-K / #quot;/#quot; — global"]]
   T[Today] --- M[Matters] --- R[Research] --- A[Authorities & Citator] --- S[Statutes point-in-time] --- W[Watchlists] --- AL[Alerts inbox] --- D[Digest] --- ADM[Admin]
   M --> M1[Matter cockpit: Overview · Strategy memo · Authorities for/against · Documents · Timeline · Deadlines & hearings · Alerts · Drafts]
   R --> R1[Research workspace: issues · evidence cards · verified answer · coverage]

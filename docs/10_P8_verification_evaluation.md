@@ -442,7 +442,7 @@ flowchart LR
   G -->|VerificationReport| P6
   G -->|verification.completed.v1| P9[P9 tenant plane]
   G --> P10[P10 render / export appendix]
-  P3[(P3 graph)] -. graph.delta.v1 .-> INV[cache invalidation + gold staleness + sentinel generation]
+  P3[(P3 graph)] -.->|graph.delta.v1| INV[cache invalidation + gold staleness + sentinel generation]
 ```
 
 ### 5.2 Verification tiers

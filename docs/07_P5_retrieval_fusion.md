@@ -488,14 +488,14 @@ Legal relevance is often *reasoning-intensive*: is this ratio applicable to thes
 ```mermaid
 flowchart TB
   RQ[ResearchQuery + MatterContext ref] --> S0[S0 Admission<br/>tenant/ACL, mode, budget,<br/>as-of & forum resolution]
-  S0 --> QU[S1 Query Understanding<br/>lang/script, citation+provision parser (P1 lib),<br/>entity linking, intent router, premise check]
+  S0 --> QU["S1 Query Understanding<br/>lang/script, citation+provision parser (P1 lib),<br/>entity linking, intent router, premise check"]
   QU --> DEC[S2 Issue Decomposer<br/>issues, PRO/CONTRA/PROVISION/FACT sub-queries]
   DEC --> PLAN[S3 Plan Compiler<br/>intent → operator DAG + weights]
   PLAN --> LEX[LEX leg<br/>BM25 para+work, legal analyzers]
   PLAN --> DEN[DENSE leg<br/>para embeddings, cross-lingual]
   PLAN --> GR[GRAPH legs<br/>lookup, INTERPRETS, treatment,<br/>crosswalk, propositions, PPR]
   PLAN --> BIND[BINDING-SET leg<br/>SC + jurisdictional HC + larger benches]
-  PLAN --> TPL[TPL leg (tenant boundary)<br/>matter docs, opponent-cited authorities]
+  PLAN --> TPL["TPL leg (tenant boundary)<br/>matter docs, opponent-cited authorities"]
   LEX & DEN & GR & BIND & TPL --> FUSE[S4 Union, anchor-level dedup,<br/>weighted RRF → top-N per sub-query]
   FUSE --> FEAT[S5 Feature assembly<br/>P3 authority_batch, chunk meta, OCR conf]
   FEAT --> GATE[S6 Hard legal gates<br/>as-of validity, as_known_at, ACL, exclusions]

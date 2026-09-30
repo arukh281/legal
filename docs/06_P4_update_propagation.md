@@ -243,11 +243,11 @@ P6 prints `law_current_to` on every memo (08_P6 §2), P5 sets `CORPUS_STALE(cour
 
 | Operation | Key | Why |
 |---|---|---|
-| impact | `p4|impact|{root_target}|sha256(sorted(reason_assertion_ids) ‖ old.status ‖ new.status ‖ new.definitive ‖ lifecycle)|v{impact_version}` | replaying the same delta yields the same key; a different lifecycle yields a new key |
-| recompute | `p4|recompute|{target_id}|{graph_watermark}|{doctrine_version}` | a stale recompute is ignored if a newer watermark has been computed |
-| reprocess shard | `p4|reprocess|{campaign_id}|{shard}|{sha256(target_pipeline_version)}` | re-issuing a shard does not double-spend |
-| status commit | `p4|status|{recompute_batch_id}` | exactly-once effect in P3's writer |
-| tenant alert (P7) | `p7|alert|{impact_id}|{matter_id}` plus `impact_version` for in-place update | one alert per matter per impact, updated in place |
+| impact | `p4\|impact\|{root_target}\|sha256(sorted(reason_assertion_ids) ‖ old.status ‖ new.status ‖ new.definitive ‖ lifecycle)\|v{impact_version}` | replaying the same delta yields the same key; a different lifecycle yields a new key |
+| recompute | `p4\|recompute\|{target_id}\|{graph_watermark}\|{doctrine_version}` | a stale recompute is ignored if a newer watermark has been computed |
+| reprocess shard | `p4\|reprocess\|{campaign_id}\|{shard}\|{sha256(target_pipeline_version)}` | re-issuing a shard does not double-spend |
+| status commit | `p4\|status\|{recompute_batch_id}` | exactly-once effect in P3's writer |
+| tenant alert (P7) | `p7\|alert\|{impact_id}\|{matter_id}` plus `impact_version` for in-place update | one alert per matter per impact, updated in place |
 
 Because `impact_version` is part of the impact key, it must be assigned deterministically. P4 first looks up `(impact_id, decision_hash)`, using the unique constraint in §5.14. A crash-replay finds the existing decision and re-publishes the *same* version rather than minting v+1.
 
@@ -258,7 +258,7 @@ Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_
 | # | Target | Change | Justification |
 |---|---|---|---|
 | SP4-1 | §G `impact.detected.v1` | Endorse P7 §2.5-1: public broadcast with `tenantid=null` (D2 envelope name); drop "P7 registers dependency fingerprints with P4". Add the fields shown in O1 (`impact_version`, `lifecycle`, `supersedes_impact_id`, `change_kind`, `cause_kind`, `root`, `trigger_authority`, `affected[]` with rings, `affected_count`, `manifest_uri`/`sha256`, `temporal_scope`, `significance`, `verification`, `coalesce_key`, `graph_watermark`, `doctrine_version`, `p4_logic_version`, `storm`) | Retractions need versions (U-3). As-of matching needs `temporal_scope`: prospective overruling (*CORE*, 2024 [P4-39]) and conditional effect (*MADA*, 2024 [P4-38]) are real. Registration would put tenant reliance sets into the PLC, which violates spine §A. |
-| SP4-2 | §G `reprocess.requested.v1` | Adopt the O2 schema (`campaign_id`, `shard`, `stages`, `mode SHADOW|APPLY`, `output_namespace`, `lane`, `priority`, `budget`, `impact_policy`) | The spine leaves the scope selector undefined. Shadow runs and budgets need fields (§5.11). |
+| SP4-2 | §G `reprocess.requested.v1` | Adopt the O2 schema (`campaign_id`, `shard`, `stages`, `mode SHADOW\|APPLY`, `output_namespace`, `lane`, `priority`, `budget`, `impact_policy`) | The spine leaves the scope selector undefined. Shadow runs and budgets need fields (§5.11). |
 | SP4-3 | §G `graph.delta.v1` (P3 S3-3) | Add `cause.kind ∈ {RECOMPUTE, SCHEDULED}`. P3 exposes `commit_status_batch` to P4. | This keeps P3 as the single writer while P4 drives higher-order and bulk recompute. |
 | SP4-4 | §H | New sync object `Freshness` (O4), consumed by P5, P6, P8 and P10 | "Law current to" is referenced by P5, P6 and P8 but is undefined. |
 | SP4-5 | §I | Close the bus and workflow decision: the **Apache Kafka 4.x API** (self-managed KRaft or a managed Kafka in an Indian region), with transactional outbox; **Temporal** for durable, long-running workflows (self-hosted, or Temporal Cloud `aws-ap-south-1`/`ap-south-2`/`gcp-asia-south1` [P4-18]) | See §6.2–6.3. This closes P0 §6.6. |

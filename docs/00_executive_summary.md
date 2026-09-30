@@ -19,11 +19,11 @@ The model is not the moat, because general models are near parity on legal resea
 **Commercial legal-AI tools still hallucinate.**
 - Stanford RegLab measured 17% hallucinated answers for Lexis+ AI and 33% for Westlaw AI-Assisted Research.
 - A "hallucination" there includes *misgrounded* answers: a real citation that does not support the claim.
-- The dominant causes were naive retrieval and inapplicable authority ([Magesh et al.](https://arxiv.org/abs/2405.20362); [10_P8 §3](10_P8_verification_evaluation.md)).
+- The leading causes were naive retrieval, inapplicable authority and reasoning errors ([Magesh et al.](https://arxiv.org/abs/2405.20362); [10_P8 §3](10_P8_verification_evaluation.md)).
 
 **Specialist tools barely beat general models.**
-- Vals' October 2025 legal-research benchmark scored specialist tools at 74–78% and ChatGPT at 77%.
-- Specialists led mainly on *authoritativeness* ([VLAIR](https://vals.ai/industry-reports/vlair-10-14-25)).
+- Vals' October 2025 legal-research benchmark (200 US questions) put all four AI products, ChatGPT included, within 74–78% on the weighted score, against a lawyer baseline of 69%. The report does not print ChatGPT's own weighted score.
+- Specialists led mainly on *authoritativeness*, by about 6 points ([VLAIR](https://vals.ai/industry-reports/vlair-10-14-25)). Lexis+ AI and Westlaw did not take part.
 
 **The Indian market lacks the key capabilities.** No Indian product publicly shows typed treatment, point-in-time statutes, propagation into matters, or a published evaluation ([20 §3](20_competitive_teardown.md)).
 
