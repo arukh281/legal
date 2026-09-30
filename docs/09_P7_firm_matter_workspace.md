@@ -29,33 +29,44 @@
 
 ### 2.0 Spine v1.0 conformance
 
-Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spine v0.1 where they differ. This section records how each change P7 proposed in 2.5 was decided. The rest of the document has been edited to follow these decisions.
+Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_decision_record.md) supersedes spine v0.1 where they differ. This section records how each change P7 proposed in 2.5 was decided, and how the later rulings D19–D21 and the 01_master_architecture §14 residuals owned by P7 (R-03, R-07, R-10, R-19, R-20, R-22, R-34, R-35) were applied. The rest of the document has been edited to follow these decisions.
 
 | P7 proposal (2.5) | Disposition | Effect on this document |
 |---|---|---|
 | (1) Tenant-side impact matching, with no fingerprint registration in P4 | **ACCEPTED as D3** | P4 publishes signed `impact.detected.v1` on the public topic `plc.impact.public.v1` with `tenantid`=null and a public `affected[]` closure. Closures over 2,000 IDs go in a manifest (`manifest_uri` + `manifest_sha256`). The **Impact Matcher** runs the P4-owned `impact-match-core@semver` library inside the tenant boundary, on-prem included. Tenants download *whole* manifests and never make per-ID lookups. P4 never stores tenant dependency sets (5.6). |
 | (2) Generalise `matter.alert.v1` | **ACCEPTED-MODIFIED as D5 (merged P4/P7/P10 schema)** | The merged schema adds `impact_version?`, `lifecycle?`, `subject_ids[]`, `definitive`, `revision`, `supersedes_alert_id?` and `requires_ack`. `dedupe_key` = hash(`impact_id`\|`source_event_id`, `matter_id`), which replaces P7's hash(alert_kind, matter_id, source_event_id). `explanation.text` is a deterministic template. Alerts update in place, and retractions reach every original channel (2.5 (2), 5.12). |
 | (3) New event `matter.document.ingested.v1` | **ACCEPTED as D4** (P7 → P6, P10) | The payload field `trust` is replaced by `trust_label` (D9). The event is emitted after P1's tenant-mode `pdoc.parsed.v1` (D16). |
-| (4) Private anchor grammar `{pdoc_id}/{pver}#{fragment}` + new media fragments | **ACCEPTED-MODIFIED as D8** | The grammar and the fragments `m12`, `m12.att2`, `hdr.*`, `sheet2.r15.c4`, `pg3.rg2` and `t…-…` are accepted. **Machine translations are NOT Expressions** (D8/D16): `v1.mt-en` is a *display rendition*. It may be shown and aligned but is never a support anchor, so claims anchor to the original-language `v1`. A certified human translation (`v1.ht-en`) may back a claim only when it is flagged `authoritative` (D8 "official-translation" rule). P1's `pg{n}` / `pg{n}.l{m}` fallback locators never suffice for tier-1 claims (D16). |
-| (5) `MatterContext` extensions | **ACCEPTED-MODIFIED as D9 (+ D16)** | Added: `procedural_events[]{event_type, date, certainty, alt_dates, anchor, confirmed_by?, source EXTRACTED\|LAWYER}` is the raw record, and `key_dates` becomes a **derived view** of it. Also added: derived `temporal_context{…}` (D16), `facts{}` for P4 scope predicates, `residency_policy` (IN_ONLY\|IN_PREFERRED\|ANY), `documents[].trust_label`, and `privilege_flags.basis` (D16, IN C9). Fact `status` uses **PROPOSED**\|CONFIRMED\|DISPUTED; P7's `MACHINE` is renamed PROPOSED. |
+| (4) Private anchor grammar `{pdoc_id}/{pver}#{fragment}` + new media fragments | **ACCEPTED-MODIFIED as D8** | The grammar and the fragments `m12`, `m12.att2`, `hdr.*`, `sheet2.r15.c4`, `pg3.rg2` and `t…-…` are accepted. **Machine translations are NOT Expressions** (D8/D16): `v1.mt-en` is a *display rendition*. It may be shown and aligned but is never a support anchor, so claims anchor to the original-language `v1`. A certified human translation (`v1.ht-en`) may back a claim only when it is flagged `authoritative` (D8 "official-translation" rule). P1's `pg{n}` / `pg{n}.l{m}` fallback locators never suffice for tier-1 claims (D16). **Final (D21.17, resolves R-10):** a private certified translation `v1.ht-en` is `authoritative=true` only when P7 records a lawyer attestation of the certificate (`pdoc_rendition`, 2.3.2); it may then support **RECORD_FACT claims only, never public-law claims**. `mt-` renditions never support any claim. |
+| (5) `MatterContext` extensions | **ACCEPTED-MODIFIED as D9 (+ D16)** | Added: `procedural_events[]{event_type, date, certainty, alt_dates, anchor, confirmed_by?, source EXTRACTED\|LAWYER}` is the raw record, and `key_dates` becomes a **derived view** of it. Also added: derived `temporal_context{…}` (D16), `facts{}` for P4 scope predicates, `residency_policy` (IN_ONLY\|IN_PREFERRED\|ANY), `documents[].trust_label`, and `privilege_flags.basis` (D16, IN C9). Fact `status` uses **PROPOSED**\|CONFIRMED\|DISPUTED; P7's `MACHINE` is renamed PROPOSED (R-07). `deadlines[].status` is renamed **`lifecycle`** (PROPOSED\|CONFIRMED\|DONE\|WAIVED\|MISSED) so it no longer clashes with P6 `Deadline.status` (R-22). The `procedural_events[].event_type` vocabulary is **owned by P6** and versioned with its RuleSpecs; P7 only stores it (D21.7). |
 | (6) Extra `impact.detected.v1` fields for tenant matching | **ACCEPTED-MODIFIED as D5** | `RETRACTED` moves from `change_kind` to `lifecycle` (PROVISIONAL\|CONFIRMED\|UPDATED\|RETRACTED), alongside `impact_version` and `supersedes_impact_id`. `effective_from`/`retrospective` are replaced by `temporal_scope{effect RETROSPECTIVE\|PROSPECTIVE\|FROM_DATE\|CONDITIONAL, legal_effect_from, date_basis, scope_predicates…}`. `review_state` moves into `verification{definitive, review_state}`. P4 publishes a public `significance`. **Tenant severity (1 = most severe) and applicability are computed only by `impact-match-core`** (`tenant_severity()`, `applicability()`), which replaces P7's local mapping table. |
-| (7) Private items in `EvidenceBundle.items[]` | **ACCEPTED-MODIFIED as D9** | The field is `source_layer: PLC\|TPL` (not `source: PUBLIC\|PRIVATE`), and each item carries `trust_label`. TPL items have `work_id`=null and `authority`=null. `privilege_class`/`provenance` are *not* item fields in v1.0; P8 obtains them from the P7 private-anchor API (O4). |
+| (7) Private items in `EvidenceBundle.items[]` | **ACCEPTED-MODIFIED as D9** | The field is `source_layer: PLC\|TPL` (not `source: PUBLIC\|PRIVATE`), and each item carries `trust_label`. TPL items have `work_id`=null and `authority`=null. **Final (D21.13 + 01_master §7.9, resolves R-34):** TPL items carry a `private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` sub-object, filled by P5 from P7's index metadata under the TEC, so P8's leak check needs no per-item P7 lookup. The private-anchor API (O4) stays the source for anchor text and for re-checks. |
 | Envelope example (tenant_id, causation_id, …) | **ACCEPTED-MODIFIED as D2** | The CloudEvents extension names are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (PUBLIC\|TENANT_CONFIDENTIAL\|PRIVILEGED), plus `traceparent`. Payload fields keep snake_case. |
+| Trust label for privately held court records (R-20, previously open) | **RULED D21.12** | `trust_label` gains `TENANT_COURT_RECORD` for certified copies of court records held by the firm. It is data-only for control flow but may support RECORD_FACT claims. The provenance → `trust_label` mapping below and the `pdoc.trust_label` CHECK are updated. |
+| `impact-match-core.tenant_severity()` adjustment contract (5.6; previously a P7 requirement only) | **RULED D21.14** (P4 owns the library) | OWN_CASE / CITED_IN_OUR_DRAFT raise urgency by one level (never past P4's severity-1 rule); GOVERNING_PROVISION with PRE_CHANGE/SAVED lowers it by one; UNCERTAIN never downgrades. P7's conformance tests (11.13) now test a ratified contract. |
+| `ConsentRecord` ownership (O11; previously "schema in 11_P9") | **RULED D21.16** | `ConsentRecord` (`cns_`) is a **P7-owned core object** consumed by P9 (Privacy Gate) and P8 (Design Partner Program). Its normative schema is now in 2.3.8. |
+| Erasure receipts (O8; previously one `erasure.completed.v1` per component) | **RULED D20.15 + D21.3** | Every consumer of `erasure.requested.v1` (P2, P5 caches, P6 memory, P8, P9) acks with `erasure.applied.v1 {erasure_id, consumer, applied_at, scope}`. **P7 alone produces `erasure.completed.v1`**, once, after all acks and its own verification sweep (5.10). |
+| Redaction acknowledgements | **RULED D19.3 + D20.3** | As a consumer of `doc.redacted.v1`, each P7 cell emits `redaction.applied.v1 {overlay_id, consumer: "P7", applied_at, generations_purged[]}` for **every** overlay, whether or not any matter referenced the work (2.4). |
+| Court feeds (I4; previously unnamed) | **RULED D20.1** | P7's Court Sync Matcher consumes the P0 tenant-agnostic events `case.status.observed.v1` and `court.causelist.published.v1`. Daily orders still arrive as `raw.captured.v1` → `doc.parsed.v1` (5.11). |
+| Auto deadline job on new documents | **RULED D21.7** | P6 runs a DEADLINES_ONLY job on each `matter.document.ingested.v1` (tenant-configurable, default on). Trigger dates need lawyer confirmation (`procedural_events[].confirmed_by`) before any deadline becomes definitive (5.11). |
+| PLC read path per deployment | **RULED D19.7** | D2 cells read the shared PLC through the stateless read path (same region), with a local replica optional. D3/D4/D4h **must** use a local replica with a ≤24 h replica-lag SLO (5.13). |
+| Real-time lane | **RULED D19.4** | P4 never knows tenant interest: every impact_tier-1 impact takes the real-time lane, and other impacts are prioritised by public citation footprint only. Matter-level urgency comes solely from the in-cell Impact Matcher (5.6). A tenant-union watch-list is post-GA and only via the Privacy Gate. |
+| Dependency-registration endpoint (R-35) | **RESOLVED (01_master §9.7)** | `POST /t/{ten}/matters/{mat}/dependencies` is a **tenant-internal** P7 endpoint that writes `matter_dependency` (callers: P6 `dependency_ids`, P10 `WATCHED`). Nothing is registered with P4 (D3). Its schema is in 2.2 (O12). |
+| Kafka topic naming | **RULED D20.16** | Tenant topics are `tpl.<tenant>.{domain}.{event}.v{n}` (e.g. `tpl.<tenant>.matter.alert.v1`, `tpl.<tenant>.pdoc.parsed.v1`, `tpl.<tenant>.erasure.v1`); PLC topics are `plc.…` (e.g. `plc.impact.public.v1`). 01_master §6.2 still shows the pre-D20.16 `ten.{t}.` prefix. |
 
 **Renames and decisions this document now follows.**
 - **Envelope attributes (D2):** `tenant_id`/`causation_id`/`idempotency_key`/`schema_version` → `tenantid`/`causationid`/`idempotencykey`/`schemaversion`, and `dataclass` is added. **Privacy-Gate envelope rule:** any PLC-side event caused by tenant activity carries `tenantid`=null, a fresh trace root and no tenant causation chain. This covers `acquire.requested.v1` MATTER_WATCH requests for unresolved identifiers (5.11), which go only via the P9 Privacy Gate (D16).
 - **Deployment names (D17):** D1 pooled SaaS cell · D2 dedicated cell (our India cloud) · D3 customer VPC · D4 on-prem/air-gapped · D4h on-prem stores + in-India cloud LLM endpoints. The `tenant.deployment_mode` values POOLED/DEDICATED_CELL/CUSTOMER_VPC/ON_PREM become `D1`/`D2`/`D3`/`D4`/`D4h`. **MVP = one D2 dedicated cell for the design partner, running the same code as D1**; D1 opens at GA.
 - **ID prefixes (D12):** `iss_` = private matter issue (P7). P3's public issue-topic taxonomy uses `itp_`. `aud_` is reserved for P8's citation audit, so **P7 audit events are renamed `adt_`** (5.8; as in 01_master_architecture §5.2). `ddl_` is shared with P6's `Deadline` object (P6 computes, P7 stores). `alr_`, `mat_`, `pdoc_` and `ten_` are unchanged.
-- **`trust` → `trust_label` (D9).** Mapping: provenance CLIENT → `TENANT_CLIENT_DOC`; OPPOSING_PARTY → `TENANT_OPPOSING_DOC`; correspondence doc types (email, letters, chats) → `TENANT_CORRESPONDENCE`; FIRM_AUTHORED → `TENANT_WORK_PRODUCT`; COURT/THIRD_PARTY/UNKNOWN private uploads → `TENANT_CLIENT_DOC` (data-only). When a court record resolves to a PLC Work, the PLC copy (`PLC_OFFICIAL`) is used. Only `PLC_OFFICIAL`, `TENANT_WORK_PRODUCT` and `USER_INPUT` may influence control flow (INV-4).
+- **`trust` → `trust_label` (D9; mapping per 01_master R-20 + D21.12).** Mapping: provenance CLIENT → `TENANT_CLIENT_DOC`; OPPOSING_PARTY → `TENANT_OPPOSING_DOC`; correspondence doc types (email, letters, chats) → `TENANT_CORRESPONDENCE`; FIRM_AUTHORED → `TENANT_WORK_PRODUCT`; COURT (certified or served copies of orders, decrees, depositions held by the firm) → `TENANT_COURT_RECORD` (D21.12); THIRD_PARTY/UNKNOWN → `TENANT_CORRESPONDENCE`. All of these except `TENANT_WORK_PRODUCT` are data-only. When a court record resolves to a PLC Work, the PLC copy (`PLC_OFFICIAL`) is used for public-law claims, and the private copy may still back RECORD_FACT claims. Only `PLC_OFFICIAL`, `TENANT_WORK_PRODUCT` and `USER_INPUT` may influence control flow (INV-4).
 - **Tenant Execution Context (D9)** includes `residency_policy` (5.2).
-- **Authority display (D6).** Cached authority badges in MatterContext and alerts are taken only from P3's `AuthorityView`, whose status stays 5-valued. "Under review" = CAUTION + `definitive=false` + `NEGATIVE_SIGNAL_UNDER_REVIEW`.
-- **Masking (D16).** P7 consumes `doc.redacted.v1` (RedactionOverlay). Masking is an overlay, with no masked expression_key or pver (2.4, 5.10).
-- **New events P7 produces:** `erasure.requested.v1` / `erasure.completed.v1` (P7 → P9, P2, P5, P6; 5.10).
-- **New events P7 consumes:** `identity.merged.v1` / `identity.split.v1`, `doc.redacted.v1`, `strategy.memo.published.v1` / `strategy.memo.stale.v1`, `pdoc.parsed.v1` (from P1 tenant mode, requested with `ParseRequest`), `alert.state.v1` (from P10), and P0's tenant-agnostic case-status, cause-list and daily-order feeds (2.4).
+- **Authority display (D6, D20.12, D19.5).** Cached authority badges in MatterContext and alerts are taken only from P3's `AuthorityView`, whose status stays 5-valued. "Under review" = CAUTION + `definitive=false` + reason code `NEGATIVE_SIGNAL_UNDER_REVIEW`. `COVERAGE_GAP` is a reason code, never a status: it sets `definitive=false`, and only a gap beyond the per-source threshold (72 h HOT; 7 days WARM/COOL) degrades GOOD to UNKNOWN. Negatives never lose their status on a gap. `Work.integrity_flags[]` (RECALLED, CORRIGENDUM_PENDING, …) reach P7 only through `AuthorityView.reason_codes`.
+- **Masking (D16, D20.3).** P7 consumes `doc.redacted.v1` (RedactionOverlay; canonical field list 01_master §7.13; `overlay_id` prefix `ovl_`). Masking is an overlay, with no masked expression_key or pver (2.4, 5.10). P7 acks each overlay with `redaction.applied.v1` (D19.3).
+- **New events P7 produces:** `erasure.requested.v1` (P7 → P2, P5 caches, P6 memory, P8, P9) and, after all `erasure.applied.v1` acks, the single `erasure.completed.v1` (D20.15, D21.3; 5.10); `redaction.applied.v1` (D19.3); `matter.alert.v1`, `matter.document.ingested.v1` (→ P6, P10; D21.3).
+- **New events P7 consumes:** `identity.merged.v1` / `identity.split.v1`, `doc.redacted.v1`, `strategy.memo.published.v1` / `strategy.memo.stale.v1`, `pdoc.parsed.v1` (from P1 tenant mode, requested with `ParseRequest`; also consumed by P2 tenant mode, D20.13), `alert.state.v1` (from P10), `erasure.applied.v1` (from P2, P5, P6, P8, P9), and P0's tenant-agnostic court feeds `case.status.observed.v1` and `court.causelist.published.v1` (D20.1; daily orders via `doc.parsed.v1`) (2.4).
 - **Crosswalk (D16).** IPC↔BNS dependency expansion follows P3 `CORRESPONDS_TO` rows with the canonical `change_type` enum (SAME_RENUMBERED … OMITTED); these rows are always impact_tier 1.
 - **Vector/lexical engines (D1).** Private indexes are per-tenant OpenSearch indexes (BM25 + k-NN in the same doc) behind P2's Index Access Layer. pgvector is used only for small D4 planes.
 
-All IDs are prefixed ULIDs. New private prefixes introduced by P7: `ten_` (tenant/firm), `usr_`, `grp_` (team), `mat_` (matter), `pdoc_` (private document), `pver_` (document version, internal), `fct_` (fact), `iss_` (private matter issue; D12), `opc_` (opponent claim), `ddl_` (deadline; shared with P6 `Deadline`), `hrg_` (hearing), `alr_` (alert), `adt_` (audit event; renamed from `aud_`, which D12 reserves for P8 citation audits), `hold_` (legal hold), `pasr_` (private assertion). None of these IDs ever appear in PLC stores or events; on the tenant bus they always travel with a non-null `tenantid`.
+All IDs are prefixed ULIDs. New private prefixes introduced by P7: `ten_` (tenant/firm), `usr_`, `grp_` (team), `mat_` (matter), `pdoc_` (private document), `pver_` (document version, internal), `fct_` (fact), `iss_` (private matter issue; D12), `opc_` (opponent claim), `ddl_` (deadline; shared with P6 `Deadline`), `hrg_` (hearing), `alr_` (alert), `adt_` (audit event; renamed from `aud_`, which D12 reserves for P8 citation audits), `hold_` (legal hold), `pasr_` (private assertion), `cns_` (ConsentRecord snapshot; P7-owned, D21.16). None of these IDs ever appear in PLC stores or events; on the tenant bus they always travel with a non-null `tenantid`.
 
 ### 2.1 Inputs
 
@@ -64,11 +75,13 @@ All IDs are prefixed ULIDs. New private prefixes introduced by P7: `ten_` (tenan
 | I1 | Uploaded files / connector pulls (DMS, mailbox, shared drive) | Lawyer via P10; DMS/email connectors | `UploadRequest` (below) + bytes |
 | I2 | Matter create/update, team & wall changes | P10 UI, firm conflicts/walls system, SCIM | `MatterCommand`, `WallPolicy` |
 | I3 | Public impact events | P4 | `impact.detected.v1` (spine G; D5 schema). Consumed on the broadcast topic `plc.impact.public.v1` with `tenantid`=null, plus the whole public closure manifests and the P4-owned `impact-match-core@semver` library (D3; see 2.4) |
-| I4 | Public case records & orders | P0/P1/P3 (PLC) | `cas_…` records, `doc.parsed.v1` for new orders; P0's tenant-agnostic case-status, cause-list and daily-order feeds (D4) (2.3.6) |
+| I4 | Public case records & orders | P0/P1/P3 (PLC) | `cas_…` records, `doc.parsed.v1` for new orders (daily orders/judgments); P0's tenant-agnostic court feeds **`case.status.observed.v1`** (`plc.court.case_status.v1`) and **`court.causelist.published.v1`** (`plc.court.causelist.v1`) (D4, D20.1; schemas 01_master §6.4) (2.3.6, 5.11) |
 | I4b | Tenant-mode parse results | P1 (tenant mode, inside the cell) | `pdoc.parsed.v1` (same payload shape as `doc.parsed.v1`, `tenantid` set), in reply to P7's `ParseRequest` (D16) |
 | I5 | Lawyer confirmations/edits of facts, issues, deadlines, privilege | P10 | `ConfirmationCommand` → also emitted as `feedback.recorded.v1` (TENANT_ONLY) |
 | I6 | Strategy outputs to index as matter dependencies | P6 (`StrategyMemo` via `strategy.memo.published.v1` / `strategy.memo.stale.v1`), P8 (`VerificationReport`) | by reference; P7 extracts cited public anchors (anchors, never chunk_ids; D8) |
 | I7 | Public-ID resolution | P1 citation resolver, P3 identifier_alias (read-only) | `resolve(raw_citation) → {target_id, confidence}` |
+| I8 | Erasure acknowledgements | P2 (tenant indexes), P5 (caches), P6 (memory), P8 (tenant eval/trace items), P9 | `erasure.applied.v1 {erasure_id, consumer, applied_at, scope}` on `tpl.<tenant>.erasure.v1` (D20.15, D21.3); aggregated by the erasure workflow (5.10) |
+| I9 | Public masking / takedown | P0, P1, ops/legal | `doc.redacted.v1` (data = RedactionOverlay, 01_master §7.13) on `plc.doc.redacted.v1` (D16, D20.3) |
 
 ```ts
 // I1
@@ -90,14 +103,16 @@ type Provenance = "CLIENT" | "FIRM_AUTHORED" | "OPPOSING_PARTY" | "COURT" | "THI
 | O1 | `MatterContext` (versioned snapshot) | P5, P6, P8 | spine H object + extensions in 2.5 |
 | O2 | `matter.alert.v1` | P10 | spine G event; merged D5 schema (2.5 (2)) |
 | O3 | `matter.document.ingested.v1` (new) | P6 (auto-trigger "notice arrived" workflow), P10 | 2.5 |
-| O4 | Private anchor resolution API | P6, P8, P10 | `GET /t/{ten}/anchors/{pdoc_anchor}` → text, page, bbox, privilege_class |
+| O4 | Private anchor resolution API | P5, P6, P8, P10 | `GET /t/{ten}/anchors/{pdoc_anchor}` → `{text, text_hash, page, bbox, privilege_class, provenance, trust_label, renditions[{rendition: "mt-en"\|"ht-en", authoritative}]}` (01_master §9.7). Masked spans (RedactionOverlay) are returned masked |
 | O5 | `feedback.recorded.v1` | P9 | FeedbackEvent (D9 merged P9+P10 schema: `actor_ref`, closed `reason_code`, `context{…}`, `consent_snapshot_id`; targets are anchors, never chunk_ids); `share_scope` defaults `TENANT_ONLY` |
 | O6 | Audit stream | tenant SIEM export, P8 (trace replay), regulators on request | `AuditEvent` (5.8) |
 | O7 | Authorization decisions | every service touching TPL data | `check(user, relation, object)`, `list_objects(user, relation, type)` |
-| O8 | `erasure.requested.v1` / `erasure.completed.v1` (D4) | P9, P2, P5 (caches), P6 (memory) | tenant topic; data per 11_P9 §2.4: `{erasure_id, scope TENANT\|MATTER\|CLIENT\|ACTOR, scope_ref, legal_basis, requested_at, deadline}`. Receipt: `{erasure_id, component, rows_deleted, artifacts_rebuilt[], completed_at}`, one per component (5.10) |
+| O8 | `erasure.requested.v1` / `erasure.completed.v1` (D4, D20.15, D21.3) | request → P2, P5 (caches), P6 (memory), P8, P9; completion → P9 (its lineage ledger closes the request), P7 audit chain and the firm's erasure certificate | topic `tpl.<tenant>.erasure.v1`. Request data: `{erasure_id, scope TENANT\|MATTER\|CLIENT\|ACTOR, scope_ref, legal_basis DPDP_S12\|CONTRACT_END\|CONSENT_WITHDRAWN\|COURT_ORDER\|RTBF_MASKING, requested_at, deadline}`. Consumers ack with `erasure.applied.v1` (I8). **P7 is the only producer of `erasure.completed.v1`**, emitted once per `erasure_id` after every ack (schema in 5.10) |
 | O9 | `ParseRequest` (D16) | P1 tenant mode (in-cell) | synchronous or queued; answered by `pdoc.parsed.v1` |
 | O10 | Tenant Execution Context (TEC) | P5, P6, P8, Model Gateway, index shards | signed ≤ 5-min token (D9; 5.2) |
-| O11 | Consent registry (`ConsentRecord`, `cns_`) | P9 (Privacy Gate) | written by the P7 admin console; schema and effective-consent rule defined in 11_P9 §2.4. Snapshots are immutable and a new `consent_snapshot_id` is minted on every change. `privilege_flags.basis` (D16) is shown on the in-house consent screen (11_P9 §5.4) |
+| O11 | Consent registry (`ConsentRecord`, `cns_`) | P9 (Privacy Gate), P8 (Design Partner Program gold-set eligibility) | **P7-owned core object (D21.16)**, written by the P7 admin console; normative schema and effective-consent rule in 2.3.8 (mirrored in 11_P9 §2.4). Snapshots are immutable and a new `consent_snapshot_id` is minted on every change. Read API `GET /t/{ten}/consent/effective?matter=&client=&actor=` → `{consent_snapshot_id, flags}` (p95 ≤ 20 ms, cached per snapshot). `privilege_flags.basis` (D16) is shown on the in-house consent screen (11_P9 §5.4) |
+| O12 | Dependency registration (tenant-internal; R-35) | called by P6 (memo `dependency_ids`), P10 (`WATCHED` watches) | `POST /t/{ten}/matters/{mat}/dependencies` body `{public_id, kind, as_of_legal_date?, source_ref}[]` → `{accepted, rejected[{public_id, reason UNKNOWN_ID\|NOT_PUBLIC\|WALLED}]}`; idempotent on (matter_id, public_id, kind); writes `matter_dependency` (2.3.5). Never forwarded to P4 or any PLC component (D3) |
+| O13 | `redaction.applied.v1` (D19.3) | P0 redaction ledger | `{overlay_id, consumer: "P7", applied_at, generations_purged[]}` per cell, `tenantid`=null, emitted for every overlay (2.4) |
 
 ### 2.3 Core schemas (system of record = PostgreSQL, per-tenant logical DB or schema; see 5.3)
 
@@ -135,7 +150,7 @@ CREATE TABLE pdoc (
   parent_pdoc_id text, doc_type text, provenance text, privilege_class text, privilege_state text
     CHECK (privilege_state IN ('SUGGESTED','CONFIRMED','WAIVED','DISPUTED')),
   trust_label text CHECK (trust_label IN ('TENANT_CLIENT_DOC','TENANT_OPPOSING_DOC','TENANT_CORRESPONDENCE',
-    'TENANT_WORK_PRODUCT')),   -- D9 (was trust UNTRUSTED_EXTERNAL|FIRM_AUTHORED|COURT_RECORD; mapping in 2.0)
+    'TENANT_WORK_PRODUCT','TENANT_COURT_RECORD')),   -- D9 + D21.12 (legacy trust values retired; mapping in 2.0)
   title text, doc_date date, received_on date, lang text[], current_version text,
   dedup_of text /* pdoc_id of exact/near duplicate */, created_by text, created_at timestamptz,
   tombstoned_at timestamptz, PRIMARY KEY (tenant_id, pdoc_id));
@@ -145,6 +160,16 @@ CREATE TABLE pdoc_version (
   byte_size bigint, mime text, parsed_doc_uri text /* ParsedDocument JSON, encrypted */,
   quality jsonb /* ocr_conf, structure_conf, lang, hidden_text_flags[] (D9), needs_review, gate PASS|FLAGGED|QUARANTINED */,
   pipeline_version text, created_at timestamptz, PRIMARY KEY (tenant_id, pdoc_id, pver));
+
+CREATE TABLE pdoc_rendition (          -- display renditions of a pver (D8/D16/D21.17); never Expressions
+  tenant_id text, pdoc_id text, pver text, rendition text CHECK (rendition IN ('mt-en','ht-en')),  -- id = v1.mt-en / v1.ht-en
+  storage_uri text, alignment_uri text /* sentence alignment to the original pver */,
+  authoritative boolean NOT NULL DEFAULT false,  -- true only for 'ht-en' with a recorded attestation (CHECK below)
+  certified_by text /* translator / certifying authority as stated on the certificate */,
+  certificate_anchor text /* private anchor of the certificate page */, attested_by text /* usr_ lawyer */, attested_at timestamptz,
+  CHECK (NOT authoritative OR (rendition = 'ht-en' AND attested_by IS NOT NULL AND certificate_anchor IS NOT NULL)),
+  PRIMARY KEY (tenant_id, pdoc_id, pver, rendition));
+-- An authoritative ht-en rendition may back RECORD_FACT claims only (never public-law claims); mt-en backs nothing (D21.17).
 
 CREATE TABLE private_anchor (          -- same fragment grammar as spine C (D8/D16); MT renditions (v1.mt-en) are NOT anchors
   tenant_id text, anchor_id text /* pdoc_…/v1#p12 */, pdoc_id text, pver text, fragment text,
@@ -163,7 +188,8 @@ CREATE TABLE fact_evidence (tenant_id text, fact_id text, anchor_id text /* pdoc
   span int4range, relation text CHECK (relation IN ('SUPPORTS','CONTRADICTS','MENTIONS')));
 
 CREATE TABLE issue (tenant_id text, matter_id text, issue_id text, text_enc bytea,
-  status text CHECK (status IN ('MACHINE','CONFIRMED','REJECTED')), origin text /* OPPONENT_CLAIM|FIRM|COURT_FRAMED */,
+  status text CHECK (status IN ('PROPOSED','CONFIRMED','REJECTED')),  -- PROPOSED = machine-proposed (was MACHINE; R-07); only CONFIRMED reaches MatterContext.issues
+  origin text /* OPPONENT_CLAIM|FIRM|COURT_FRAMED */,
   PRIMARY KEY (tenant_id, issue_id));
 
 CREATE TABLE opponent_claim (tenant_id text, matter_id text, claim_id text, issue_ids text[],
@@ -206,14 +232,34 @@ CREATE TABLE hearing (tenant_id text, matter_id text, hearing_id text, case_id t
 CREATE TABLE deadline (tenant_id text, matter_id text, deadline_id text, due_on date, due_time time,
   kind text /* LIMITATION|COURT_ORDERED|STATUTORY_REPLY|COMPLIANCE|INTERNAL */, basis jsonb
   /* {anchor_id (statute/order para), computation_trace_id (P6), trigger_date} */,
-  status text CHECK (status IN ('PROPOSED','CONFIRMED','DONE','WAIVED','MISSED')), owner text,
-  reminders jsonb, PRIMARY KEY (tenant_id, deadline_id));
+  lifecycle text CHECK (lifecycle IN ('PROPOSED','CONFIRMED','DONE','WAIVED','MISSED')), owner text,  -- was `status`; renamed so it
+  reminders jsonb, PRIMARY KEY (tenant_id, deadline_id));   -- cannot be confused with P6 Deadline.status (R-22). deadline_id = P6 ddl_ when P6 computed it
 -- 2.3.7 Procedural events (D9: raw record; key_dates and temporal_context{} (D16) are derived views over it)
 CREATE TABLE procedural_event (tenant_id text, matter_id text, event_id text /* matter-local, no registry prefix */, event_type text /* controlled vocab owned by
   P6's Procedural Clock (08_P6 §2 C6 seed list, e.g. NOTICE_RECEIVED_BY_DRAWER, CAUSE_OF_ACTION_138, ORDER_PRONOUNCED) */,
   date date, certainty text CHECK (certainty IN ('EXACT','DEEMED','ESTIMATED')), alt_dates date[],
   anchor text /* pdoc or PLC anchor */, confirmed_by text,
   source text CHECK (source IN ('EXTRACTED','LAWYER')), PRIMARY KEY (tenant_id, matter_id, event_id));
+-- event_type vocabulary: owned by P6 and versioned with its RuleSpecs (D21.7); P7 stores it and rejects unknown values
+-- for the RuleSpec registry version pinned in the matter (vocab_version column omitted for brevity).
+
+-- 2.3.8 ConsentRecord — P7-owned core object (D21.16); consumed by P9 (Privacy Gate) and P8 (Design Partner Program)
+CREATE TABLE consent_record (
+  tenant_id text NOT NULL, consent_snapshot_id text NOT NULL /* cns_<ULID>; new snapshot on every change */,
+  level text NOT NULL CHECK (level IN ('TENANT','PRACTICE_GROUP','MATTER','CLIENT','ACTOR')), level_ref text,
+  flags jsonb NOT NULL,   -- {S0, S1, S2_AGG, DESIGN_PARTNER_GOLD, MEMORY_USER, MEMORY_FIRM, ADAPTER_TRAINING}: booleans (11_P9 §5.4)
+  evidence jsonb NOT NULL,   -- {signed_by_role, document_ref (private anchor of the signed consent artefact), signed_at}
+  valid_from timestamptz NOT NULL, revoked_at timestamptz,
+  PRIMARY KEY (tenant_id, consent_snapshot_id));   -- append-only; a change = new row + revoked_at on the old one
+-- effective(candidate) = AND over all levels that apply (tenant, practice group, matter, client, actor); a missing level
+-- inherits; a missing TENANT record => all flags false. Revocation emits no PLC event; P9 applies it (11_P9 §5.4).
+
+-- 2.3.9 Erasure ledger (5.10)
+CREATE TABLE erasure_request (tenant_id text, erasure_id text, scope text, scope_ref text, legal_basis text,
+  requested_at timestamptz, deadline timestamptz, state text CHECK (state IN ('OPEN','BLOCKED_BY_HOLD','AWAITING_ACKS',
+  'VERIFYING','COMPLETED','FAILED')), PRIMARY KEY (tenant_id, erasure_id));
+CREATE TABLE erasure_ack (tenant_id text, erasure_id text, consumer text /* P2|P5|P6|P7|P8|P9 */, applied_at timestamptz,
+  scope text, rows_deleted bigint, artifacts_rebuilt text[], PRIMARY KEY (tenant_id, erasure_id, consumer));
 ```
 
 ### 2.4 Consumed events (exact spine names)
@@ -221,11 +267,12 @@ CREATE TABLE procedural_event (tenant_id text, matter_id text, event_id text /* 
 - `impact.detected.v1` is consumed from the **public broadcast topic `plc.impact.public.v1`** (`tenantid`=null; D3). P7's Impact Matcher runs P4's `impact-match-core`. It intersects `data.affected[].id` (inline when the closure has ≤ 2,000 IDs, otherwise from the *whole* downloaded manifest, checked against `manifest_sha256`) with `matter_dependency.match_key` inside each tenant boundary. `lifecycle` PROVISIONAL\|CONFIRMED\|UPDATED\|RETRACTED and `impact_version` drive in-place alert updates (5.6).
 - `doc.parsed.v1` for public orders/judgments where `case_id` ∈ tracked cases → links the order into the matter (the public order remains a PLC Work; the matter gets a `CASE_OF`/`ORDER_IN` overlay edge and a pdoc *shadow* only if the firm annotates it).
 - `graph.delta.v1` is optional, used only to refresh cached authority badges in MatterContext. Badges are re-read from P3's `AuthorityView` (D6), which is their only input; P7 never derives status from raw deltas.
-- `pdoc.parsed.v1` comes from P1 tenant mode in reply to `ParseRequest` (D16) and triggers private anchor persistence and `matter.document.ingested.v1`.
+- `pdoc.parsed.v1` comes from P1 tenant mode in reply to `ParseRequest` (D16) on `tpl.<tenant>.pdoc.parsed.v1` (D20.16) and triggers private anchor persistence and `matter.document.ingested.v1`. P2 (tenant mode) consumes the same event to index the pdoc (D20.13); P7 emits `matter.document.ingested.v1` only after P2's index write is acknowledged, so P6 never starts on an unsearchable document.
 - `identity.merged.v1` / `identity.split.v1` (P1, D4) re-key `matter_dependency.public_id`/`match_key` and `matter_case_link.case_id` from `from_id` to `to_id`. Old keys are kept as aliases until the next nightly re-canonicalisation.
-- `doc.redacted.v1` (D4/D16, data = RedactionOverlay) applies the overlay to every PLC text P7 caches or renders: MatterContext authority excerpts, alert explanations, exports and pdoc shadows of public orders. SUPPRESS_ALL → the text is purged within `purge_sla`, while the IDs stay as dependency keys. MASK_SPANS / NAME_SEARCH_SUPPRESSED / COURT_PROHIBITION → the masked rendition is used for snippets, exports and quote checks. P7 never creates a masked `pver` or expression_key. The same overlay model is used when a firm must mask names in its *own* pdocs (e.g. a court prohibition on naming a victim).
+- `doc.redacted.v1` (D4/D16, data = RedactionOverlay) applies the overlay to every PLC text P7 caches or renders: MatterContext authority excerpts, alert explanations, exports and pdoc shadows of public orders. SUPPRESS_ALL → the text is purged within `purge_sla`, while the IDs stay as dependency keys. MASK_SPANS / NAME_SEARCH_SUPPRESSED / COURT_PROHIBITION → the masked rendition is used for snippets, exports and quote checks. P7 never creates a masked `pver` or expression_key. The same overlay model is used when a firm must mask names in its *own* pdocs (e.g. a court prohibition on naming a victim). Overlays are de-duplicated on `overlay_id` (D20.3). **Acknowledgement (D19.3):** after applying an overlay, each cell emits `redaction.applied.v1 {overlay_id, consumer: "P7", applied_at, generations_purged[]}` to P0's redaction ledger on `plc.redaction.applied.v1` with `tenantid`=null and a fresh trace root (D2 Privacy-Gate rule). The ack is sent for **every** overlay, including those for works no matter depends on, so the ack stream reveals nothing about tenant reliance (INV-1). The SLO follows `purge_sla` (serving ≤ 1 h, derived ≤ 24 h); D3/D4/D4h cells ack when the overlay arrives in the next PLC bundle (`replica: NEXT_BUNDLE`), with `consumer` = `REPLICA:<cell_id>` for the replica and `P7` for the workspace.
 - `strategy.memo.published.v1` / `strategy.memo.stale.v1` (P6, D4) feed the memo-derived `IN_MEMO_*` dependencies (I6) and STALE bookkeeping.
-- P0 tenant-agnostic case-status / cause-list / daily-order feeds (D4) feed the Court Sync Matcher (5.11).
+- P0 tenant-agnostic court feeds (D4, ratified as D20.1) feed the Court Sync Matcher (5.11): `case.status.observed.v1` `{case_ref{scheme, value}, case_id?, court_id, status, next_date?, purpose?, observed_at, source_ref}` and `court.causelist.published.v1` `{court_id, bench_id?, list_date, items[{item_no, court_no, case_refs[], advocates_norm[], purpose}], source_raw_id}` (01_master §6.4). Daily orders and judgments arrive as `doc.parsed.v1`. `court.calendar.published.v1` is consumed by P6's Procedural Clock, not by P7.
+- `erasure.applied.v1` (P2, P5, P6, P8, P9; D20.15) closes each consumer's leg of an erasure; P7 aggregates the acks and then emits `erasure.completed.v1` (5.10).
 - `alert.state.v1` (P10, D4) carries the delivery, ack and escalation state per `alert_id` × recipient. P7 writes it to the audit chain (`ALERT_SENT`, ack) and to the alert record. P10's Notification Orchestrator runs the escalation timers, and P7 owns the escalation *policy* and the `requires_ack` flag (5.12).
 
 ### 2.5 Proposed spine changes
@@ -246,31 +293,33 @@ CREATE TABLE procedural_event (tenant_id text, matter_id text, event_id text /* 
   revision: number, supersedes_alert_id?,            // alerts update in place; retractions reach every original channel
   requires_ack: boolean, due_at?, recipients: string[] /* usr_ */,
   explanation: { text /* deterministic template, no free LLM text */, anchors: string[] },
+  polarity?: "RISK"|"OPPORTUNITY"|"INFO",            // from impact-match-core.tenant_severity() (01_master §6.3)
   sensitivity: "STANDARD"|"RESTRICTED" }
 ```
 Severity 1 on a *machine-detected* impact is allowed only when P4's rule is met (explicit cue, doctrinally competent bench, confidence ≥ 0.9, official source). `impact-match-core` enforces this and P7 never escalates past it (D5).
 3. **New event `matter.document.ingested.v1`** (tenant-scoped, TPL-internal bus; **v1.0: ACCEPTED as D4**): `{tenant_id, matter_id, pdoc_id, pver, doc_type, provenance, trust_label, privilege_class, received_on, parsed_doc_uri, quality}` → P6 auto-starts the "notice/petition/order arrived" workflow; P10 notifies.
-4. **Private anchor grammar extension:** `{pdoc_id}/{pver}#{fragment}` where `pver` ∈ `v1..vn` (plays the role of `expression_key`); translations are derived expressions keyed ASCII-only as `v1.mt-en` (machine translation of v1 into English; `v1.ht-en` for a human/certified translation) — the arrow form `v1.hi→en` used in drafts is display-only, never an ID (non-ASCII IDs break URLs, log scrubbers and bloom keys). New fragment kinds for non-judgment media: `m12` (message 12 in a chat/email thread), `m12.att2` (attachment), `hdr.from|to|cc|date|subject` (email headers), `r15.c4` / `sheet2.r15.c4` (spreadsheet cell), `pg3.rg2` (region 2 of page 3 for images/handwriting), `t00:03:15-00:03:40` (audio/video time range). **v1.0: ACCEPTED-MODIFIED as D8.** The grammar and fragments are accepted, but machine translations are *not* Expressions: `v1.mt-en` is a display rendition that is aligned and shown, never a support anchor, so claims anchor to `v1`. `v1.ht-en` may back claims only when flagged `authoritative` (certified translation).
+4. **Private anchor grammar extension:** `{pdoc_id}/{pver}#{fragment}` where `pver` ∈ `v1..vn` (plays the role of `expression_key`); translations are derived expressions keyed ASCII-only as `v1.mt-en` (machine translation of v1 into English; `v1.ht-en` for a human/certified translation) — the arrow form `v1.hi→en` used in drafts is display-only, never an ID (non-ASCII IDs break URLs, log scrubbers and bloom keys). New fragment kinds for non-judgment media: `m12` (message 12 in a chat/email thread), `m12.att2` (attachment), `hdr.from|to|cc|date|subject` (email headers), `r15.c4` / `sheet2.r15.c4` (spreadsheet cell), `pg3.rg2` (region 2 of page 3 for images/handwriting), `t00:03:15-00:03:40` (audio/video time range). **v1.0: ACCEPTED-MODIFIED as D8.** The grammar and fragments are accepted, but machine translations are *not* Expressions: `v1.mt-en` is a display rendition that is aligned and shown, never a support anchor, so claims anchor to `v1`. `v1.ht-en` may back claims only when flagged `authoritative` (certified translation). **Final (D21.17):** an authoritative `v1.ht-en` (lawyer-attested certificate recorded in `pdoc_rendition`) may support RECORD_FACT claims only, never public-law claims.
 5. **`MatterContext` extensions** (backward-compatible additions):
 ```ts
 interface MatterContext /* spine H, plus: */ {
   context_version: number; context_hash: string;            // P6/P8 record which snapshot they used
   as_of_legal_date_default: string;                          // = key_dates.cause_of_action unless overridden
   case_links: { case_id?: string; scheme: string; value: string; role: string }[];
-  documents: { pdoc_id: string; pver: string; type: PdocType; provenance: Provenance; trust_label: TrustLabel /* D9 */;
+  documents: { pdoc_id: string; pver: string; type: PdocType; provenance: Provenance; trust_label: TrustLabel /* D9 + D21.12 TENANT_COURT_RECORD */;
                privilege_class: PrivilegeClass; doc_date?: string; received_on?: string; parsed_doc_uri: string }[];
   fact_timeline: { fact_id: string; date: string; date_precision: string; statement: string;
                    asserted_by: "CLIENT"|"OPPONENT"|"COURT"|"THIRD_PARTY"|"FIRM";
                    status: "PROPOSED"|"CONFIRMED"|"DISPUTED" /* D9; was MACHINE */; anchors: string[]; contradicted_by?: string[] }[];
-  procedural_events: { event_type: string /* P6 controlled vocab */; date: string; certainty: "EXACT"|"DEEMED"|"ESTIMATED";
-                       alt_dates?: string[]; anchor: string; confirmed_by?: string; source: "EXTRACTED"|"LAWYER" }[];  // D9 raw record
+  procedural_events: { event_type: string /* P6-owned controlled vocab, versioned with RuleSpecs (D21.7) */; date: string; certainty: "EXACT"|"DEEMED"|"ESTIMATED";
+                       alt_dates?: string[]; anchor?: string /* absent for LAWYER-entered events without a document */; confirmed_by?: string; source: "EXTRACTED"|"LAWYER" }[];  // D9 raw record
   // key_dates{} (spine H) is now a DERIVED view of procedural_events (incl. date_basis-matched keys for impact-match-core)
   temporal_context?: { substantive_event_date?: string; proceedings: { stage: string; initiated_on: string;
                        initiation_kind: "JUDICIAL"|"MINISTERIAL"; concluded_on?: string }[]; filing_date?: string };  // D16, derived
   facts: Record<string, string|number|boolean>;     // D9: machine-checkable facts for P4 temporal_scope.scope_predicates
   residency_policy: "IN_ONLY"|"IN_PREFERRED"|"ANY"; // D9/D15; matter override of tenant default
   opponent_claims: { claim_id: string; text: string; anchors: string[]; issue_ids: string[]; cited_public_ids: string[] }[];
-  deadlines: { deadline_id: string; due_on: string; kind: string; status: string; basis_anchor?: string }[];
+  deadlines: { deadline_id: string /* ddl_ */; due_on: string; kind: string;
+               lifecycle: "PROPOSED"|"CONFIRMED"|"DONE"|"WAIVED"|"MISSED" /* R-22: was `status`; P6 Deadline.status is separate */; basis_anchor?: string }[];
   privilege_flags: { outbound_forbidden_anchors_bloom: string /* for P8 leak check */; walled: boolean;
                      basis: "ADVOCATE_S132"|"NONE_IN_HOUSE"|"LITIGATION_WORK_PRODUCT_UNTESTED";  // D16 / IN C9 (2025 INSC 1275)
                      advocate_ids?: string[]; asserted_by?: string; asserted_at?: string };
@@ -289,7 +338,7 @@ Base spine-H fields that v0 left untyped, made concrete (no semantic change):
 ```
 
 6. **`impact.detected.v1` — additional `data` fields needed by tenant-side matching** (added by independent review): `change_kind: OVERRULED|PARTIALLY_OVERRULED|REVERSED|STAYED|AMENDED|REPEALED|STRUCK_DOWN|RETRACTED`, `effective_from` (legal date; spine E `valid_from`), `retrospective: boolean|null`, `review_state` of the reason assertions (so P7 can label MACHINE-state tier-1 impacts "provisional"), `supersedes_impact_id?` (for retractions/corrections), and a documented **severity scale** (P7 assumes `1 = most severe … 3 = informational`, same as `matter.alert.v1`; if P4 chooses otherwise, P7 maps via a versioned table). Without `effective_from` and `RETRACTED`, P7 cannot suppress prospective amendments for old causes of action nor withdraw a false "overruled" alert. **v1.0: ACCEPTED-MODIFIED as D5.** `RETRACTED` is a `lifecycle` value (with `impact_version`, `supersedes_impact_id`), not a `change_kind`. `effective_from`/`retrospective` become `temporal_scope{effect RETROSPECTIVE|PROSPECTIVE|FROM_DATE|CONDITIONAL, legal_effect_from, date_basis, scope_predicates, territory}`. `review_state` becomes `verification{definitive, review_state}`. The severity scale is settled because tenant severity (1 = most severe) is computed only by P4's `impact-match-core.tenant_severity()`, so P7's versioned mapping table is retired.
-7. **`EvidenceBundle.items[]` must admit private items.** Spine H items carry `work_id` and `authority{…}`, which do not exist for `pdoc_` anchors. Proposed: `item.source: PUBLIC|PRIVATE`; for PRIVATE items `work_id=null`, `pdoc_id`, `pver`, `privilege_class`, `trust`, `provenance`, `authority=null`, and the `authz_consistency` token used for the post-filter (5.7 rule 3). P8 uses `privilege_class` for the outbound-leak check (5.9.3). *(Divergence found in review: v0 relied on P5 putting private items in the bundle without saying how.)* **v1.0: ACCEPTED-MODIFIED as D9.** The field is `source_layer: PLC|TPL`, each item carries `trust_label`, and TPL items have `work_id`=null and `authority`=null. `privilege_class`/`provenance` are not item fields, so P8 resolves them through the private-anchor API (O4) under the same TEC.
+7. **`EvidenceBundle.items[]` must admit private items.** Spine H items carry `work_id` and `authority{…}`, which do not exist for `pdoc_` anchors. Proposed: `item.source: PUBLIC|PRIVATE`; for PRIVATE items `work_id=null`, `pdoc_id`, `pver`, `privilege_class`, `trust`, `provenance`, `authority=null`, and the `authz_consistency` token used for the post-filter (5.7 rule 3). P8 uses `privilege_class` for the outbound-leak check (5.9.3). *(Divergence found in review: v0 relied on P5 putting private items in the bundle without saying how.)* **v1.0: ACCEPTED-MODIFIED as D9.** The field is `source_layer: PLC|TPL`, each item carries `trust_label`, and TPL items have `work_id`=null and `authority`=null. `privilege_class`/`provenance` are not item fields, so P8 resolves them through the private-anchor API (O4) under the same TEC. **Superseded by D21.13 (R-34):** TPL items now carry `private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` (01_master §7.9), which is essentially this proposal; `trust_label` stays a top-level item field.
 
 **Event envelope example** (spine G with D2 CloudEvents-conformant extension names; TPL-internal bus only):
 ```json
@@ -356,7 +405,7 @@ The inbound `impact.detected.v1` has `tenantid`=null. The `causationid` link run
 
 | System/paper | What went wrong | Evidence | How we avoid it |
 |---|---|---|---|
-| Microsoft 365 Copilot (EchoLeak) | Untrusted external email entered the same LLM context as privileged enterprise data; model output provided an exfiltration channel; zero-click | CVE-2025-32711, CVSS 9.3 [P7-18] | All uploads `trust=UNTRUSTED_EXTERNAL` unless firm-authored; extraction LLM calls are tool-less, schema-constrained, per-document (5.4.4); UI renders model output with no auto-loaded external URLs/images and strict CSP; outbound network egress from inference sandbox = deny |
+| Microsoft 365 Copilot (EchoLeak) | Untrusted external email entered the same LLM context as privileged enterprise data; model output provided an exfiltration channel; zero-click | CVE-2025-32711, CVSS 9.3 [P7-18] | Every upload except firm-authored work product gets a data-only `trust_label` (`TENANT_CLIENT_DOC`/`TENANT_OPPOSING_DOC`/`TENANT_CORRESPONDENCE`/`TENANT_COURT_RECORD`; D9, D21.12) that can never influence control flow; extraction LLM calls are tool-less, schema-constrained, per-document (5.4.4); UI renders model output with no auto-loaded external URLs/images and strict CSP; outbound network egress from inference sandbox = deny |
 | AI tools before wall integration (e.g., Harvey pre-2026) | Walls enforced in DMS/conflicts systems did not automatically carry into the AI platform (enforcement then rests on users — our inference) | [P7-13][P7-14] | Walls are a native authorization primitive (5.7), enforced at retrieval, generation, sharing, export, alerting and search suggestions; fail closed when the wall source is unreachable |
 | LLM API providers | Global prompt-cache sharing across users → timing side channel | Gu et al. 2025 [P7-23] | Model Gateway only uses routes with per-org cache isolation; self-hosted prefix caches keyed/salted by `tenant_id+matter_id`; semantic answer caches are per-matter |
 | Pooled vector DBs with metadata filters | Forgotten filter leaks; filtered HNSW gives tenant-dependent recall/latency | [P7-27]; OWASP LLM08 [P7-19] | Per-tenant physical partitions (per-tenant HNSW / index) + authz-derived filter + RLS; large tenants promoted to dedicated shards/cells [P7-28] |
@@ -517,7 +566,7 @@ flowchart TD
 4. *No exfil channels.* Model outputs rendered in P10 never auto-fetch URLs/images; links in outputs must resolve to PLC anchors or pdoc anchors; inference sandboxes have egress deny (lesson of EchoLeak [P7-18]).
 5. *Injection signal as evidence.* An injection attempt inside an opponent's document is itself a fact for the lawyer (possible misconduct) → `DOCUMENT_RECEIVED` alert carries a "suspicious embedded instructions" flag.
 
-**5.4.5 Language handling.** Keep the original-language text as the authoritative version (`v1`). Store machine translation as the display rendition `v1.mt-en` (2.5 (4); per D8/D16 an MT rendition is *not* an Expression and never a support anchor), with sentence alignment, so every English statement used by P6 still resolves to an original-language anchor. P8 fails any claim anchored to MT. Hindi/Marathi FIRs and notices are common in district-court matters; OCR quality gates apply per script.
+**5.4.5 Language handling.** Keep the original-language text as the authoritative version (`v1`). Store machine translation as the display rendition `v1.mt-en` (2.5 (4); per D8/D16 an MT rendition is *not* an Expression and never a support anchor), with sentence alignment, so every English statement used by P6 still resolves to an original-language anchor. P8 fails any claim anchored to MT. A certified human translation uploaded with its certificate becomes the rendition `v1.ht-en`; it is `authoritative` only after a lawyer attests the certificate (`pdoc_rendition.attested_by`), and even then it may back RECORD_FACT claims only, never public-law claims (D21.17). Hindi/Marathi FIRs and notices are common in district-court matters; OCR quality gates apply per script.
 
 **5.4.6 Throughput & SLOs.** 50-page native PDF → searchable p50 ≤ 60 s, p95 ≤ 3 min; 50-page scan → p95 ≤ 6 min; 10 GB PST → fully processed ≤ 12 h with incremental availability (first messages searchable within 15 min). Back-pressure per tenant (fair queuing) so one firm's PST cannot starve another's urgent notice.
 
@@ -567,7 +616,7 @@ on matter.document.ingested.v1 or confirmation or case-sync change:
 
 **Dependency sources** (`matter_dependency.kind`): own case lineage (`OWN_CASE`: `cas_` for this matter and its lower-court/appeal links), authorities in firm drafts (`CITED_IN_OUR_DRAFT`), authorities in opponent pleadings (`CITED_BY_OPPONENT`), memo favourable/adverse items (`IN_MEMO_*`, from StrategyMemo claims' anchors), governing provisions with as-of dates (`GOVERNING_PROVISION`), lawyer watches (`WATCHED`). Expansion rule: store the exact anchor *and* its parents (`anchor → work_id`, `proposition_id`), so an impact on a proposition or on the whole work both match.
 
-**Matching algorithm** (runs per tenant, on each broadcast `impact.detected.v1` from `plc.impact.public.v1`). Under v1.0 (D3/D5) the applicability and severity steps are calls into P4's deterministic `impact-match-core@semver`, which P7 embeds and must not re-implement (P4 U-1). The rules P7 contributed (escalation for our own case and drafts, prospective-change downgrade, retraction handling) are the behaviour P7 requires of that library and verifies in its conformance tests:
+**Matching algorithm** (runs per tenant, on each broadcast `impact.detected.v1` from `plc.impact.public.v1`). Under v1.0 (D3/D5) the applicability and severity steps are calls into P4's deterministic `impact-match-core@semver`, which P7 embeds and must not re-implement (P4 U-1). The rules P7 contributed (escalation for our own case and drafts, prospective-change downgrade, retraction handling) were ratified as the library's `tenant_severity()` contract in **D21.14**; P7 verifies them in its conformance tests. Under **D19.4** P4 never knows which works any tenant relies on: every impact_tier-1 impact takes the real-time lane, and other impacts are ordered by public citation footprint only. All matter-level urgency is therefore computed here, after the broadcast arrives:
 ```
 for impact in stream("plc.impact.public.v1"):              # tenantid = null; verify P4 signature
    ids  = impact.affected[].id if impact.affected_count <= 2000
@@ -717,8 +766,9 @@ Root of trust: cloud KMS HSM (SaaS) | customer KMS/HSM (VPC) | on-prem HSM or so
 **Erasure procedure** (idempotent workflow, resumable; a Temporal workflow per D1):
 ```
 0. emit erasure.requested.v1 {erasure_id, scope TENANT|MATTER|CLIENT|ACTOR, scope_ref, legal_basis, requested_at,
-   deadline} on the tenant topic (D4; consumers P9, P2, P5 caches, P6 memory); envelope tenantid set, dataclass
-   TENANT_CONFIDENTIAL. Court-ordered masking of PUBLIC text is NOT an erasure: it travels as doc.redacted.v1 (D16)
+   deadline} on tpl.<tenant>.erasure.v1 (D4, D20.16; consumers P2, P5 caches, P6 memory, P8, P9 — D21.3); envelope
+   tenantid set, dataclass TENANT_CONFIDENTIAL. Court-ordered masking of PUBLIC text is NOT an erasure: it travels
+   as doc.redacted.v1 (D16)
 1. lineage = closure(derived_from, roots = pdocs/facts of scope)   # chunks, vectors, facts, assertions,
                                                                      # snapshots, traces, caches, P9 TENANT_ONLY items, feedback payloads
 2. assert no legal hold on any node in lineage
@@ -726,9 +776,16 @@ Root of trust: cloud KMS HSM (SaaS) | customer KMS/HSM (VPC) | on-prem HSM or so
 4. destroy matter DEK versions (if whole matter) -> backups unreadable
 5. force index compaction/segment merge; expire index snapshots
 6. verification sweep: search private indexes for erased text_hash shingles and canary phrases -> must be 0
-7. collect per-component receipts; emit erasure.completed.v1 {erasure_id, component, rows_deleted,
-   artifacts_rebuilt[], completed_at} per component (P7, P2, P5, P6, P9)
-8. write ERASE audit event + issue erasure certificate to firm (lists every component receipt)
+7. collect erasure.applied.v1 {erasure_id, consumer, applied_at, scope} acks from P2, P5, P6, P8, P9 (D20.15) into
+   erasure_ack (2.3.9), plus P7's own leg; a missing ack at deadline - 24 h -> re-send erasure.requested.v1 (same
+   erasure_id; consumers are idempotent) and page the owner; at deadline -> state FAILED + Sev-2
+8. when every expected consumer has acked AND step 6 passed: emit ONE erasure.completed.v1 (producer P7 only; D21.3)
+   {erasure_id, scope, scope_ref, consumers[{consumer, applied_at, rows_deleted?, artifacts_rebuilt[]?}],
+    verification{sweep_passed, residual_hits: 0}, retained[{kind: AUDIT_LOG|PROCESSING_LOG|LEGAL_HOLD, basis}],
+    completed_at, certificate_uri}
+   (01_master §6.4's per-component shape {erasure_id, component, rows_deleted, artifacts_rebuilt[], completed_at}
+    survives as the consumers[] entries)
+9. write ERASE audit event + issue erasure certificate to firm (lists every consumer ack)
 ```
 **Content vs processing logs (review addition).** Erasure destroys *content* (text, blobs, vectors, derived summaries, traces with prompts) but does **not** delete `audit_event` rows, which are content-free by design (IDs, hashes, actions) — they are the "processing logs" DPDP Rule 8 requires to be kept ≥ 1 year from the date of processing [P7-2] (and CERT-In's 180-day ICT-log duty [P7-7]). Audit rows carry only opaque ULIDs, so they are never rewritten (a rewrite would break the hash chain); once the matter's content is erased the IDs no longer resolve to anything. Audit segments are expired whole (per chain, per month) after the longer of these periods and firm policy, keeping only their Merkle roots. The erasure certificate states exactly what was retained and why. If a firm's DPO classifies any audit field as personal data of the data principal (e.g., a party's name leaked into a `reason` string), the log scrubber (5.14) is the control and a violation is a Sev-2 bug.
 
@@ -738,7 +795,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 
 **Identifier linking.** A matter links to one or more proceedings via `matter_case_link`: CNR (16-character, district courts and HCs on CIS [P7-15]), SC diary number, HC/tribunal case number (court + type + number + year), eCourts URL. Resolution to `cas_…` uses P3's `identifier_alias` (spine D). Unresolved identifiers create a *tenant-anonymous* tracking request to P0. Under v1.0 this is `acquire.requested.v1` with reason `MATTER_WATCH`, sent **only via the P9 Privacy Gate** (D16). The envelope carries `tenantid`=null, a fresh trace root and no `causationid` chain back to the tenant (D2 Privacy-Gate envelope rule), and the request is batched into the unattributed watch-registry union below.
 
-**Division of labour (keeps INV-1):** P0 owns every connector to court portals (CAPTCHA handling, rate limits, outage detection — [P7-15]); P7 never scrapes in SaaS mode. P0 publishes public, tenant-agnostic feeds keyed by `cas_`/identifier: case-status snapshots, cause-list entries (court, date, bench, item no., case no., parties, advocates), and new orders (`doc.parsed.v1`). P7's **Court Sync Matcher** consumes these inside the tenant cell and matches locally.
+**Division of labour (keeps INV-1):** P0 owns every connector to court portals (CAPTCHA handling, rate limits, outage detection — [P7-15]); P7 never scrapes in SaaS mode. P0 publishes public, tenant-agnostic feeds keyed by `cas_`/identifier: case-status snapshots (`case.status.observed.v1` on `plc.court.case_status.v1`), cause-list entries (`court.causelist.published.v1` on `plc.court.causelist.v1`: court, date, bench, item no., case refs, normalised advocates), and new orders (`doc.parsed.v1`) (event names ratified in D20.1). P7's **Court Sync Matcher** consumes these inside the tenant cell and matches locally: `case_ref` / `case_refs[]` are canonicalised the same way as `matter_case_link.value_normalized` and looked up in that table's index; a hit writes a `hearing` observation and, where the date or status changed, raises `HEARING_LISTED` / `HEARING_CHANGED` / `NEW_ORDER`.
 
 **Interest-hiding watch registry [NOVEL — unvalidated].** Per-CNR status polling needs *some* signal of which CNRs to poll. The registry P0 sees is the **union** of identifiers watched by all tenants, with no tenant attribution, refreshed by the same crawler that sweeps cause lists and orders in bulk (which already covers most active cases). For `sensitive_tracking` matters (e.g., a firm representing a target of an investigation, or pre-filing caveats), no per-identifier request is registered at all: tracking relies only on bulk cause-list/orders matching, or on a tenant-side fetcher using the firm's own egress (VPC/on-prem).
 
@@ -752,7 +809,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 
 **Disagreement handling.** Sources can disagree (e.g., case-status "next date" vs. a later cause list). P7 stores every observation (`hearing.source`, `observed_at`) and shows both, with the most recent authoritative listing on top; the precedence rule (cause list > case-status for dates within 48 h) is a *heuristic to validate with the design partner*. A hearing date is never displayed without source and observation time.
 
-**Orders → deadlines.** When a new order arrives, P1 parses it (public), P7 links it and runs deadline-candidate extraction over the operative part (`#ord` anchor): "reply within four weeks", "rejoinder within two weeks thereafter", "list after 6 weeks", "interim order to continue". Candidates are `PROPOSED` until a lawyer confirms. Statutory deadlines (limitation, notice-reply periods) are computed by P6's deterministic procedural engine with statutory anchors (spine StrategyMemo `deadlines`), and stored here as `deadline` rows with `basis.computation_trace_id`.
+**Orders → deadlines.** When a new order arrives, P1 parses it (public), P7 links it and runs deadline-candidate extraction over the operative part (`#ord` anchor): "reply within four weeks", "rejoinder within two weeks thereafter", "list after 6 weeks", "interim order to continue". Candidates are `PROPOSED` until a lawyer confirms. Statutory deadlines (limitation, notice-reply periods) are computed by P6's deterministic procedural engine with statutory anchors (spine StrategyMemo `deadlines`), and stored here as `deadline` rows with `basis.computation_trace_id`. Under **D21.7**, P6 runs an automatic DEADLINES_ONLY job on every `matter.document.ingested.v1` (tenant-configurable, default on). Its `Deadline`s reach P7 in `strategy.memo.published.v1.deadlines[]`; P7 mirrors them as `deadline` rows with `lifecycle=PROPOSED` and raises `DEADLINE_PROPOSED` alerts. A deadline becomes definitive only after a lawyer confirms the trigger date (`procedural_events[].confirmed_by` set, `source=LAWYER` or a confirmed `EXTRACTED` row).
 
 **Onboarding aid.** Matching cause-list `advocates` fields against the firm's advocate roster surfaces listed matters not yet linked in the workspace ("12 listings tomorrow for your advocates that aren't in any matter") — lawyer confirms linkage.
 
@@ -773,12 +830,12 @@ Names follow spine v1.0 D17. XC's A/B/C naming maps A→D1, B→D2/D3, C→D4 an
 |---|---|---|---|---|---|
 | Target | small/mid firms, solo chambers | large firms (e.g., top-20) | firms/in-house teams with cloud mandates; banks/PSUs | government, PSUs, firms with strict mandates | firms that require client data on their premises but accept in-India cloud inference |
 | Control plane | ours | ours | ours (management channel, no content) or customer-run | customer-run (bundled) | customer-run (bundled) |
-| PLC | shared, India region | shared, India region | read replica in customer VPC, daily signed delta | local replica; signed delta bundles via network pull or removable media (weekly if air-gapped) | local replica; daily signed delta bundles via network pull |
+| PLC | shared, India region, via the stateless read path (D3) | shared, India region, via the stateless read path; local replica optional (D19.7) | **required** read replica in customer VPC, daily signed delta (D19.7) | local replica; signed delta bundles via network pull or removable media (weekly if air-gapped) | local replica; daily signed delta bundles via network pull |
 | TPL stores | pooled cluster, schema per tenant + RLS | dedicated DB, indexes, buckets | customer account | customer DC | customer DC |
 | Keys | per-tenant KMS key (platform) | BYOK; HYOK optional [P7-34] | customer KMS | customer HSM/KMS | customer HSM/KMS |
 | LLM | Model Gateway → India-region frontier APIs with ZDR + per-org cache isolation; self-hosted fallback | same, or dedicated GPU pool | customer's cloud LLM endpoints in India region, or self-hosted open-weight | self-hosted open-weight only (e.g., Sarvam-M 24B Apache-2.0 [P7-36] and other models per 13_cross_cutting) | on-prem Model Gateway → in-India cloud LLM endpoints (D15 IN_ONLY routes) with ZDR; self-hosted open-weight fallback; only per-call prompt context leaves the premises, never stores or indexes |
 | Court sync | P0 feeds | P0 feeds | P0 feeds, or customer-egress fetcher | customer-egress fetcher or none (air-gapped → manual/uploaded cause lists) | P0 feeds via bundle/pull, or customer-egress fetcher |
-| Freshness | P4 SLOs (06_P4_update_propagation.md) | same | ≤ 24 h lag | 24 h (connected) / ≤ 7 days (air-gapped) — stated in UI | ≤ 24 h lag — stated in UI |
+| Freshness | P4 SLOs (06_P4_update_propagation.md) | same | replica lag ≤ 24 h (D19.7 SLO) | replica lag ≤ 24 h when connected (D19.7 SLO); air-gapped removable-media delivery (≤ 7 days) is a contractual exception accepted by the customer — stated in UI | replica lag ≤ 24 h (D19.7 SLO) — stated in UI |
 | Our operator access | break-glass only | break-glass only | none by default | none | none |
 | Updates | continuous | continuous, tenant canary | monthly signed releases | quarterly signed releases + eval report | monthly signed releases |
 
@@ -797,6 +854,7 @@ Names follow spine v1.0 D17. XC's A/B/C naming maps A→D1, B→D2/D3, C→D4 an
 - Storage per firm ≈ raw × (1 + 2.5) + audit (~1 KB/event × events).
 - Platform-wide at 1,000 firms: TPL storage ~10³ × 1 TB ≈ 1 PB worst case → object storage tiering (cold for closed matters) dominates cost; compute is bursty (PST loads) → autoscaled workers with per-tenant fair queues.
 - Impact matching and court-sync matching are negligible (index lookups).
+- Platform context: serving costs of record are ≈$0.105 per verified Q&A and ≈$2.16 per strategy memo, with ≈$77K (5M corpus) / ≈$89K (20M) per month at 2,000 seats (D19.1; 13_cross_cutting is the canonical model). These are planning estimates pending P1's 10K-document measurement sample (D19.8). P7's private-ingestion cost (above) is per firm and one-off per upload, so it sits outside those per-query figures.
 
 **Latency targets.**
 | Operation | Target |
@@ -923,7 +981,8 @@ Names follow spine v1.0 D17. XC's A/B/C naming maps A→D1, B→D2/D3, C→D4 an
 - INV-1 scanner: automated scan of PLC stores, topics and logs for TPL ID prefixes/canary strings = 0 findings.
 - Prompt-injection red-team suite on uploaded documents (hidden text, instruction-in-exhibit, exfil links): attack success rate target < 1% on extraction, 0 successful exfiltrations.
 - Audit chain verification: 100% nightly; time-to-detect a tampered row ≤ 24 h.
-- Erasure completeness: post-erasure sweep finds 0 residual shingles; erasure SLO ≤ 7 days.
+- Erasure completeness: post-erasure sweep finds 0 residual shingles; erasure SLO ≤ 7 days; 100% of `erasure.completed.v1` events list an `erasure.applied.v1` ack from every expected consumer (P2, P5, P6, P8, P9).
+- Redaction acknowledgement: `redaction.applied.v1` from every cell for 100% of `doc.redacted.v1` overlays; serving-surface purge ≤ 1 h and derived ≤ 24 h (RedactionOverlay `purge_sla`), measured from `effective_at`.
 
 **9.2 Ingestion & understanding (gold sets from the design partner, under consent)**
 - Format success rate by type (PDF/scan/EML/MSG/PST/WhatsApp/XLSX) ≥ 99% items parsed or explicitly quarantined with reason.
@@ -958,14 +1017,14 @@ Names follow spine v1.0 D17. XC's A/B/C naming maps A→D1, B→D2/D3, C→D4 an
 | Keys | per-tenant KMS key + per-matter DEK | + BYOK/HYOK, matter-scoped disclosure export |
 | Court tracking | SC + the partner's primary HC + district courts via CNR (P0 feeds); cause-list matching; manual entry | all HCs/tribunals, interest-hiding registry, advocate-roster discovery |
 | Impact matching | broadcast-and-match via P4's `impact-match-core` v1 (RETROSPECTIVE/FROM_DATE applicability; PROSPECTIVE/CONDITIONAL → UNCERTAIN) for `OWN_CASE`, `CITED_*`, memo dependencies; merged D5 alerts with in-place updates | proposition-level partial matches, STALE propagation into memos, opportunity polarity |
-| Retention | legal hold + manual matter purge with lineage sweep; `erasure.requested.v1`/`erasure.completed.v1` emitted from day one (P9 cascade depends on them); `doc.redacted.v1` overlay applied to cached PLC text | policy engine, DPDP request workflow, erasure certificates |
+| Retention | legal hold + manual matter purge with lineage sweep; `erasure.requested.v1`, `erasure.applied.v1` ack aggregation and the single P7 `erasure.completed.v1` from day one (P9 cascade depends on them; D20.15); `doc.redacted.v1` overlay applied to cached PLC text and acked with `redaction.applied.v1` (D19.3); `ConsentRecord` registry (D21.16) | policy engine, DPDP request workflow, erasure certificates |
 | LLM | India-region API routes with ZDR per the TEC `residency_policy` (D15) + one self-hosted fallback | full on-prem model pack with eval gates |
 
 ---
 
 ## 11. Open questions and risks
 
-1. **Vendor staff and s.132(3).** Does "clerks or employees of advocates" [P7-8] extend privilege protection to a SaaS vendor's staff/processors? Unsettled → we minimise operator access; needs Indian counsel opinion (feed 21/23).
+1. **Vendor staff and s.132(3).** Does "clerks or employees of advocates" [P7-8] extend privilege protection to a SaaS vendor's staff/processors? Unsettled → we minimise operator access; needs Indian counsel opinion (feed 21/23). This is 01_master §14.2 open question 4; the answer drives the default topology (D2 dedicated cell with BYOK vs D1 pooled) offered at GA.
 2. **DPDP applicability to advisory matters.** s.17(1)(a) [P7-3] clearly covers enforcing claims; advisory/transactional work may not be exempt → full notice/consent/rights obligations may fall on firms from ~12–13 May 2027 [P7-1][P7-2]. Confirm with counsel; design supports both.
 3. **Rule 8 erasure mechanics** (48-hour intimation, classes covered) — verify against gazette text [P7-1].
 4. **BSA s.63 Schedule hash requirements** — verify text; decide whether we offer a hash report template for certificates.
@@ -977,7 +1036,7 @@ Names follow spine v1.0 D17. XC's A/B/C naming maps A→D1, B→D2/D3, C→D4 an
 10. **Alert fatigue** — thresholds need partner calibration; wrong defaults will train lawyers to ignore severity-1.
 11. **Anchor stability for edited private documents** — firm drafts change daily; `pver` versioning + alias records (spine C) may create heavy churn; consider anchoring drafts only at "filed/sent" checkpoints.
 12. **Pre-2027 regime.** Until the DPDP substantive rules and the Act's s.44 amendments take effect, the IT Act s.43A / SPDI Rules 2011 regime may govern sensitive personal data (financial, health) in case files *(unverified — hand to 21 for confirmation)*; our controls (encryption, access control, audit, ISO 27001 posture) are designed to satisfy either.
-13. **P4 severity scale and impact fields** (2.5 (6)): *resolved by spine v1.0 D3/D5.* Tenant severity and applicability come from `impact-match-core.tenant_severity()`/`applicability()`, and a missing `temporal_scope.legal_effect_from` → `UNCERTAIN` → "unknown — do not downgrade". The remaining risk is that the library's escalation/downgrade behaviour must match 5.6. P7 keeps conformance tests on each `impact-match-core` semver bump.
+13. **P4 severity scale and impact fields** (2.5 (6)): *resolved by spine v1.0 D3/D5.* Tenant severity and applicability come from `impact-match-core.tenant_severity()`/`applicability()`, and a missing `temporal_scope.legal_effect_from` → `UNCERTAIN` → "unknown — do not downgrade". The escalation/downgrade behaviour of 5.6 is now the ratified `tenant_severity()` contract (D21.14); the remaining risk is regression in a library P7 does not own, so P7 keeps conformance tests on each `impact-match-core` semver bump and pins the version per cell.
 
 ---
 

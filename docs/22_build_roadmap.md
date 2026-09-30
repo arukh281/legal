@@ -1,13 +1,27 @@
 # Build Roadmap: from foundations to a full Indian legal-intelligence platform
 
-**Abstract.** This roadmap turns the phase blueprints (02–12), the cross-cutting design (13), the competitive teardown (20) and the India data study (21) into a sequenced build. There are five milestones. **M0 Foundations** (months 1–2) covers legal opinions, the partner agreements, the gold-set protocol, source legal profiles and infrastructure. **M1 Partner demo** (month 6) is a thin vertical slice through all eleven phases, on a narrow corpus and three matter types. **M2 Pilot** (months 7–12) is daily use on live matters at the design partner, in a D2 dedicated cell. **M3 GA** (month 18) opens D1 pooled SaaS. **M4 Full** (month 30) adds D4 on-prem, the PLC Access API/MCP and the 20M-document corpus. The critical path runs through tier-1 human review and calibrated verification, not through model choice: legal gate → P0 capture → P1 anchors → P3 AuthorityView with human-reviewed tier-1 edges → P5 → P6 → P8 calibration on natural claims → P10. Each milestone has entry and exit criteria, P8 evaluation gates, and the five competitive minimums from 20_competitive_teardown §7.2 as hard gates. The team grows from about 19 FTE to about 70 FTE (estimates). People are about 70% of a 30-month programme cost of about US$8.6–14M (estimate). Corpus-build and run figures come from decision D18. The document ends with what not to build early, the schedule risks, the decision points and the kill criteria.
+**Abstract.** This roadmap turns the phase blueprints (02–12), the cross-cutting design (13), the competitive teardown (20) and the India data study (21) into a sequenced build. There are five milestones. **M0 Foundations** (months 1–2) covers legal opinions, the partner agreements, the gold-set protocol, source legal profiles and infrastructure. **M1 Partner demo** (month 6) is a thin vertical slice through all eleven phases, on a narrow corpus and three matter types. **M2 Pilot** (months 7–12) is daily use on live matters at the design partner, in a D2 dedicated cell. **M3 GA** (month 18) opens D1 pooled SaaS. **M4 Full** (month 30) adds D4 on-prem, the PLC Access API/MCP and the 20M-document corpus. The critical path runs through tier-1 human review and calibrated verification, not through model choice: legal gate → P0 capture → P1 anchors → P3 AuthorityView with human-reviewed tier-1 edges → P5 → P6 → P8 calibration on natural claims → P10. Each milestone has entry and exit criteria, P8 evaluation gates, and the five competitive minimums from 20_competitive_teardown §7.2 as hard gates. The team grows from about 19 FTE to about 70 FTE (estimates). People are about 70% of a 30-month programme cost of about US$8.6–14M (estimate). Corpus-build and run figures come from decisions D18 and D19.1 (figures of record: ≈$0.105 per verified Q&A, ≈$2.16 per strategy memo, ≈$77K/month at S-5M and ≈$89K/month at S-20M for 2,000 seats). The document ends with what not to build early, the schedule risks, the decision points and the kill criteria.
 
 **Conventions.**
 - Month 1 = October 2026. This document is dated 30 September 2026.
 - "Estimate" marks planning numbers with no external source. "Proposal" marks targets introduced here that the owning phase must confirm.
 - Tags such as [XC-4] or [P8-74] point to the reference list of the named phase doc. [RM-n] points to this document's list.
-- D1–D18 are the spine v1.0 decisions (01_master_architecture.md). Where a phase doc differs, they win.
+- D1–D21 are the spine v1.0 decisions (01a_spine_decision_record.md; catalogues in 01_master_architecture.md §5–§9). Where a phase doc differs, they win. Deployment names follow D17 (D1 pooled cell, D2 dedicated cell, D3 customer VPC, D4 on-prem/air-gapped, D4h on-prem with in-India cloud LLMs). Design-partner **data classes** are written DC0–DC4 (10_P8 §5.13) so that they never clash with deployment names.
 - INR conversions use the **assumed** ₹88/USD rate from 13_cross_cutting §3 (not verified).
+
+**Spine rulings D19–D21 that change this plan** (where each lands):
+- **D19.1 cost figures of record** (§4.4): ≈$0.105 per verified Q&A, ≈$2.16 per memo, ≈$77K (S-5M) / ≈$89K (S-20M) per month at 2,000 seats. The uncorrected $0.086/$1.66 are list-price lower bounds only; 08_P6's ≈$2.7/memo is a sensitivity upper bound; 13_cross_cutting is the canonical cost model.
+- **D19.8** P1 owns the 10K-document stratified measurement sample in M0 (§3.2 item 6); DP-2 rebases this roadmap on it.
+- **D17 / D19.10 sequencing:** MVP/M1 = one D2 cell running the D1 code; the deployment menu D1–D4h is published at GA (M3), with D4/D4h delivered in M4 behind DP-10; the PLC Access API/MCP (D13) ships only after M2 coverage (M4 here, scoped by DP-11).
+- **D19.7** the D2 cell reads the shared PLC through the stateless read path, so M0–M2 need no replica. D3/D4/D4h MUST run a local replica with a ≤24 h lag SLO (M3/M4 exit criteria).
+- **D19.4** real-time lane admission without tenant knowledge (all impact_tier-1 impacts; larger/constitution-bench `judgment.expected.v1`; public citation footprint for the rest): M1 P4.
+- **D19.2** `VerificationReport.degradations[]`, disclosed by P10 next to the answer: M1 P8/P10.
+- **D19.3 / D20.3** `doc.redacted.v1` with `redaction.applied.v1` acks from every consumer and the P0 redaction ledger: M2, together with opinion (f).
+- **D20.1** court feeds `case.status.observed.v1`, `court.causelist.published.v1`, `court.calendar.published.v1` (P0, tenant-agnostic): M1 for the SC, M2 for the slice HCs.
+- **D20.8** doctrine registry `rul_IN_PREC_01..24` (M0 item 7); **D20.16** topic naming `{plane}.{domain}.{event}.v{n}` (M0 contracts).
+- **D20.15** erasure path (`erasure.applied.v1` acks → P7 emits `erasure.completed.v1`): M2 P7/P9.
+- **D21.1** P5 shows "treatment pending" from the P4 Freshness API and never emits PLC events: M1 P5.
+- **D21.7** auto DEADLINES_ONLY job on `matter.document.ingested.v1` (tenant-configurable, default on; trigger dates need lawyer confirmation): M1 P6.
 
 ---
 
@@ -136,10 +150,10 @@ P9 is intentionally late. Its MVP needs the P3 queue and the P8 runner. Only the
 | Milestone | Window | Deployment | Corpus | Users | One-line exit test |
 |---|---|---|---|---|---|
 | **M0 Foundations** | Months 1–2 (Oct–Nov 2026) | infra + D2 cell template + canary tenant | 10K measurement sample; AWS CC-BY SC dataset loaded | internal | Legal gate green for every M1 source; partner papers signed; gold α pilot run |
-| **M1 Partner demo** | Months 3–6 (Dec 2026–Mar 2027) | one D2 cell (the D1 code) | Slice S-M1 (§3.3): SC + 3 HCs + ≈15 central Acts + criminal codes with crosswalk head | partner lawyers in supervised sessions on D0 questions and ≤5 consented D2 matters | Three notice→memo workflows, citator, one alert loop and cite-check run end to end; zero-tolerance gates pass |
-| **M2 Pilot** | Months 7–12 (Apr–Sep 2027) | same D2 cell | phase-§10 MVP corpus: SC + 5–6 HCs + NCLT/NCLAT/ITAT + ≈50 central Acts (≈1–1.5M works; 04_P2 §10) | 20–40 partner seats on live D3 opt-in matters (proposal) | P8 MVP-column targets met over ≥ 8 weekly audits; the partner converts to paid |
-| **M3 GA** | Months 13–18 (Oct 2027–Mar 2028) | D1 pooled SaaS cell + D2/D3 offers | S-5M core, all 25 HCs (dataset + delta), major tribunals | 5–10 paying firms (proposal) | P8 trust metrics at the m18 column; SOC 2 Type I + ISO 27001; benchmark published |
-| **M4 Full** | Months 19–30 (Apr 2028–Mar 2029) | + D4 / D4h on-prem, PLC Access API/MCP | S-20M incl. district orders and state gazettes | ≈2,000 seats (D18 planning load) | D4 replicas at eval parity; API live under `rights_class`; phase metrics at the m18 column |
+| **M1 Partner demo** | Months 3–6 (Dec 2026–Mar 2027) | one D2 cell (the D1 code) | Slice S-M1 (§3.3): SC + 3 HCs + ≈15 central Acts + criminal codes with crosswalk head | partner lawyers in supervised sessions on DC0 questions and ≤5 consented DC2 matters | Three notice→memo workflows, citator, one alert loop and cite-check run end to end; zero-tolerance gates pass |
+| **M2 Pilot** | Months 7–12 (Apr–Sep 2027) | same D2 cell | phase-§10 MVP corpus: SC + 5–6 HCs + NCLT/NCLAT/ITAT + ≈50 central Acts (≈1–1.5M works; 04_P2 §10) | 20–40 partner seats on live DC3 opt-in matters (proposal) | P8 MVP-column targets met over ≥ 8 weekly audits; the partner converts to paid |
+| **M3 GA** | Months 13–18 (Oct 2027–Mar 2028) | D1 pooled SaaS cell + D2/D3 offers; full deployment menu D1–D4h published (D19.10; D4/D4h delivered in M4) | S-5M core, all 25 HCs (dataset + delta), major tribunals | 5–10 paying firms (proposal) | P8 trust metrics at the m18 column; SOC 2 Type I + ISO 27001; benchmark published |
+| **M4 Full** | Months 19–30 (Apr 2028–Mar 2029) | + D4 / D4h on-prem, PLC Access API/MCP | S-20M incl. district orders and state gazettes | ≈2,000 seats (D18/D19.1 planning load) | D4 replicas at eval parity; API live under `rights_class`; phase metrics at the m18 column |
 
 ```mermaid
 gantt
@@ -190,11 +204,11 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
 2. **Partner papers** (10_P8 §5.13):
    - Design Partnership Agreement (seats, annotation commitment of ≥15 lawyer-hours/week, IP, exit);
    - DPA;
-   - Evaluation Data Contribution Schedule (classes D0–D4);
+   - Evaluation Data Contribution Schedule (data classes DC0–DC4);
    - annotator notice;
    - written **S0/S1 consent** for the Public Corpus Improvement Programme (11_P9 §5.4: on by default for the design partner, but only with explicit written consent);
    - named R3 panel and steering committee;
-   - a draft client-consent template for D2 matters.
+   - a draft client-consent template for DC2 matters.
 
    Also survey the partner's DMS and Office estate. This decides the P7 connector priority and the Word add-in path (09_P7 Q5; 12_P10 Q5).
 3. **Source legal profiles.** APPROVED profiles for every M1 source: sci.gov.in judgments, daily orders and cause lists; the three slice HCs; India Code; the central e-Gazette; the AWS CC-BY datasets; the IK API with a spend cap. Each profile records its archived ToU and robots snapshots, `permitted_access_modes` and a kill switch. A profile flips to PROVISIONAL automatically on a new CAPTCHA signature (02_P0 §5).
@@ -211,9 +225,9 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
    - Gateway v1: `ModelTaskContract`, ≥ 2 qualified endpoints per extraction task, fail-closed `residency_policy` (D1, D15).
    - OTel and self-hosted Langfuse.
    - A D2 cell template with a canary tenant.
-   - Spine v1.0 JSON Schemas and contract tests in CI.
-6. **Measurement.** A 10K-document stratified sample (tokens/doc, pages/doc, OCR share, citations/doc, Indic share) rebases the cost model and P3 base rates (13_cross_cutting Q1, Q11; 05_P3 §11 Q4).
-7. **Doctrine seed.** Import `rul_IN_PREC_01..22` and the binding table for SC + slice HCs into the P3 registry (D16). Contested rules return UNDETERMINED.
+   - Spine v1.0 JSON Schemas and contract tests in CI, including the Kafka topic map `{plane}.{domain}.{event}.v{n}` (v1.0 D20.16).
+6. **Measurement** (owner P1, v1.0 D19.8). A 10K-document stratified sample (tokens/doc, pages/doc, OCR share, citations/doc, Indic share) rebases the cost model and P3 base rates (13_cross_cutting Q1, Q11; 05_P3 §11 Q4).
+7. **Doctrine seed.** Import `rul_IN_PREC_01..24` (the canonical registry, v1.0 D20.8; earlier drafts said 01..22) and the binding table for SC + slice HCs into the P3 registry (D16). Contested rules return UNDETERMINED.
 
 **Exit criteria (end of month 2):**
 - (a)–(d) delivered, or explicitly risk-accepted by the founders with interim constraints recorded in the legal profiles.
@@ -267,17 +281,17 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
 
 | Phase | M1 scope (narrower than the phase's §10 MVP) |
 |---|---|
-| P0 | Sources as in S-M1. Temporal + Postgres + S3; httpx/warcio adapters with WARC-fixture CI; `nfp` change detection; outbox → Kafka; legal gate; mass-change breakers. `raw.captured.v1` with the D16 fields incl. `rights_class`. CourtCalendar for SC + slice HCs (feeds the P6 clock). Case-status/cause-list feed for SC only. |
+| P0 | Sources as in S-M1. Temporal + Postgres + S3; httpx/warcio adapters with WARC-fixture CI; `nfp` change detection; outbox → Kafka; legal gate; mass-change breakers. `raw.captured.v1` with the D16 fields incl. `rights_class`. CourtCalendar for SC + slice HCs as `court.calendar.published.v1` (feeds the P6 clock). Case-status/cause-list feed for SC only (`case.status.observed.v1`, `court.causelist.published.v1`; v1.0 D20.1). `judgment.expected.v1` records (`jex_`). |
 | P1 | Born-digital path + one self-hosted OCR-VLM + Tesseract second reader. Judgment parser (header, opinions, paragraphs, footnotes, `ord`). Anchor protocol v1 **frozen** (D8, D16 grammar). Citation grammar for SCC, SCC OnLine, AIR, SCR, INSC, DHC/Bombay neutral, SCALE, JT, Cri LJ; resolver + STUB works. Statute hierarchy parser. English + Hindi text layers. Quality gates + review UI. Tenant-mode `ParseRequest`. |
 | P2 | Chunk invariants I1–I5, deterministic headers, BM25 (exact/light/Hindi). One dense embedder: the bake-off winner if ready, else Qwen3-Embedding-4B base (D1) flagged provisional. OpenSearch with generations and aliases **from day 1**. IAL. TPL index for the partner. |
 | P3 | Postgres bitemporal assertion store. Predicates CITES, POSITIVE, DISTINGUISHES, OVERRULES(_IN_PART), PER_INCURIAM, REFERS_TO_LARGER_BENCH, direct history, INTERPRETS, CORRESPONDS_TO (head). Doctrine rules for SC + slice HCs. `AuthorityView` API. Cascade L1 + L3 + HITL; R1/R2 queues. SC 4-business-hour SLA for hard negatives. |
-| P4 | Kafka + outbox, RT lane, DLQ. Status recompute at depth 1. Impact kinds STATUS, DIRECT_HISTORY, PROVISION_TEXT. Lifecycle PROVISIONAL/CONFIRMED/RETRACTED. `impact-match-core` v1. Freshness API. Time-travel drill harness. |
-| P5 | Intents I1–I4, I6, I7. Legs LEX + DENSE + BIND + G_treatment + crosswalk + opponent-cited. Hand-tuned weighted RRF. Off-the-shelf bge-reranker-v2-m3, gated vs no-rerank. Mandatory adverse sweep with attestation. Per-issue coverage and sufficiency. `/revalidate`. |
-| P6 | W1–W3 as above. S0–S9 with one T1 family and a different family for the Bench. One rebuttal round. English memos; Hindi triggers flagged for translation. Manual REVERIFY. |
+| P4 | Kafka + outbox, RT lane (admission per v1.0 D19.4: every impact_tier-1 impact and larger/constitution-bench `judgment.expected.v1`; public citation footprint for the rest), DLQ. Status recompute at depth 1. Impact kinds STATUS, DIRECT_HISTORY, PROVISION_TEXT. Lifecycle PROVISIONAL/CONFIRMED/RETRACTED. `impact-match-core` v1. Freshness API. Time-travel drill harness. |
+| P5 | Intents I1–I4, I6, I7. Legs LEX + DENSE + BIND + G_treatment + crosswalk + opponent-cited. Hand-tuned weighted RRF. Off-the-shelf bge-reranker-v2-m3, gated vs no-rerank. Mandatory adverse sweep with attestation. Per-issue coverage and sufficiency. `/revalidate`. "Treatment pending" from the P4 Freshness API (v1.0 D21.1). |
+| P6 | W1–W3 as above. S0–S9 with one T1 family and a different family for the Bench. One rebuttal round. English memos; Hindi triggers flagged for translation. Manual REVERIFY. Auto DEADLINES_ONLY job on `matter.document.ingested.v1` (v1.0 D21.7). |
 | P7 | D2 cell + canary tenant. Ingestion of PDF, DOCX, EML/MSG. pdocs + private anchors. MatterContext v1 with lawyer-confirmed facts, dates and `procedural_events[]`. OpenFGA matter/team walls + SSO. Per-tenant KMS key + per-matter DEKs. Audit hash chain. Impact Matcher. Hearings by manual entry. |
-| P8 | Deterministic checks C0–C3, C3b, C5–C10, C12. Off-the-shelf small checker + one heterogeneous judge. Statuses and section gates (tier-1 deadline sections BLOCK). Citation Audit. L0/L1 gates. **No calibrated bands yet**: statuses only, labelled "uncalibrated preview". |
+| P8 | Deterministic checks C0–C3, C3b, C5–C10, C12. Off-the-shelf small checker + one heterogeneous judge. Statuses and section gates (tier-1 deadline sections BLOCK). Citation Audit. L0/L1 gates. `degradations[]` on every report (v1.0 D19.2). **No calibrated bands yet**: statuses only, labelled "uncalibrated preview". |
 | P9 | `FeedbackEvent` capture (explicit actions + reason chips) and `retrieval.served.v1` into the tenant store. No Privacy Gate releases yet; editors triage flags by hand. |
-| P10 | S2 Matter cockpit (streamed memo, deadlines), S3 Research, S4 Authority page, S5 Source viewer (click-to-source), S7 Alerts inbox + email. Citation Audit upload screen. Interaction log. |
+| P10 | S2 Matter cockpit (streamed memo, deadlines), S3 Research, S4 Authority page, S5 Source viewer (click-to-source), S7 Alerts inbox + email. Citation Audit upload screen. Interaction log. Degradation disclosure next to every answer (v1.0 D19.2) and "status current to <law_current_to>" (D20.12). |
 | XC | Gateway v1 in production. Injection controls 1–5 incl. hidden-text detection. Per-tenant caches and keys. OTel traces across P5/P6/P8. |
 
 **Exit criteria (end of month 6):**
@@ -332,14 +346,15 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
 
 **Scope:**
 - D1 pooled cell with the cell router.
-- D2 and D3 (customer VPC with a local PLC replica fed by signed daily deltas, replica lag ≤ 24 h; 13_cross_cutting §9).
+- D2 (reads the shared PLC through the stateless read path; a local replica is optional) and D3 (customer VPC with a mandatory local PLC replica fed by signed daily deltas, replica lag ≤ 24 h; v1.0 D19.7; 13_cross_cutting §9).
+- The deployment menu D1–D4h is published (v1.0 D19.10); D4/D4h are delivered in M4 behind DP-10.
 - S-5M core corpus: all 25 HCs by dataset backfill and delta, major tribunals, and state gazettes for the partners' states.
 - P6 trigger set widened to arbitration s.34, consumer complaints and BNSS bail/default-bail clocks, each gated on anchors. BNSS s.187(3) carries its contested reading (08_P6 §3.7).
 - Automatic impact-driven REVERIFY.
 - Exclusionary walls; BYOK.
 - Statute timeline and crosswalk explorer.
 - Per-residency quality scores published by P8 (D15).
-- Open Indian verification benchmark published from D0, subject to opinion (g) and partner consent (20_competitive_teardown I10).
+- Open Indian verification benchmark published from DC0, subject to opinion (g) and partner consent (20_competitive_teardown I10).
 
 **Exit criteria (end of month 18):**
 - 5–10 paying firms (proposal).
@@ -361,7 +376,7 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
 - SOC 2 Type II, 6–9 months after Type I (13_cross_cutting §5.8).
 
 **Exit criteria:**
-- D4 replicas byte-identical to SaaS at a given `index_generation` (Merkle-verified), so P8 results transfer. Replica lag ≤ 48 h.
+- D4 replicas byte-identical to SaaS at a given `index_generation` (Merkle-verified), so P8 results transfer. Replica lag ≤ 24 h for D4/D4h (v1.0 D19.7; the earlier ≤ 48 h target is superseded).
 - Per-leg recall monitors hold at every 2× growth step to 20M.
 - Phase quality metrics at the P8 m18 column.
 - API metering and the `rights_class` filter pass a legal audit.
@@ -372,15 +387,15 @@ M1 scope is in §3.3. M2 is each doc's §10 "MVP" column; M4 is its "Full" colum
 
 | Phase | M2 Pilot (phase-§10 MVP) | M3 GA additions | M4 Full additions |
 |---|---|---|---|
-| **P0** | SC HOT; 6–8 HCs own-site delta; NCLT (allowed paths), NCLAT, ITAT; IK gap-fill capped; SC pronouncement watch; `acquire.requested.v1` for UNRESOLVED_CITATION | All 25 HCs; tribunals and regulators; `source.health.v1` → P8/P10; reconciliation ledger; capture console (human-assisted, logged); fixture-gated LLM repair | e-Jagriti browser mode; state gazettes; signed WACZ + Merkle roots; on-prem feed; MoU feeds as they materialise |
+| **P0** | SC HOT; 6–8 HCs own-site delta; NCLT (allowed paths), NCLAT, ITAT; IK gap-fill capped; SC pronouncement watch; `acquire.requested.v1` for UNRESOLVED_CITATION; court feeds for the slice HCs (v1.0 D20.1); `doc.redacted.v1` producer + redaction ledger joining `redaction.applied.v1` acks, with `purge_sla` breach alarms (D19.3, D20.3) | All 25 HCs; tribunals and regulators; `source.health.v1` → P8/P10; reconciliation ledger; capture console (human-assisted, logged); fixture-gated LLM repair | e-Jagriti browser mode; state gazettes; signed WACZ + Merkle roots; on-prem feed; MoU feeds as they materialise |
 | **P1** | 5 HCs; RR model on public data + 150-judgment gold; alias-seeded resolver; review UI; EN + HI | Third reader for critical-token consensus; IC-OCR-Bench internal; tribunal grammars; impact-weighted review queue | All 22 scheduled languages (progressively); native Indic RR/NER; round-trip point-in-time for all central + major state Acts; Constitution history |
-| **P2** | 3-way embedder bake-off winner; LLM case cards (SC/HC reportable), verified; nightly reconciliation; redaction runbook | ap-south-2 DR snapshots; split indexes by doc_type; per-tier TPL clusters; automated promotion gate; automated redaction purge with SLO | Indian fine-tuned embedder; learned-sparse arm if ≥ 2 pts; MT shadow; on-prem package; small-install pgvector |
+| **P2** | 3-way embedder bake-off winner; LLM case cards (SC/HC reportable), verified; nightly reconciliation; redaction runbook; `redaction.applied.v1` acks (serving ≤1 h, derived ≤24 h; D19.3) | ap-south-2 DR snapshots; split indexes by doc_type; per-tier TPL clusters; automated promotion gate; automated redaction purge with SLO | Indian fine-tuned embedder; learned-sparse arm if ≥ 2 pts; MT shadow; on-prem package; small-install pgvector |
 | **P3** | ~50 central Acts; doctrine rules B0–B2, B4–B6, B9–B14; propositions for Constitution Benches and 3+ judge SC benches; L2 once gold ≥ 3k; partner editors | Full role ladder and SLAs; reliance risk; circuit breakers; HC-wide tier-1 coverage for GA practice areas | Full ontology (RELIES_ON, CONFLICTS_WITH miner, ATTESTS, PRECEDENT_CARRIES_TO, IN_FORCE_IN); corpus-wide propositions; signed snapshots |
 | **P4** | SC + 5 HCs + NCLAT ledger; impact kinds + TEXT_CORRECTED, IDENTITY_REMAPPED; runbook campaigns with shadow + diff; manual commencements | Depth-2 recompute; UPDATED coalescing; storm automation; impact dry-run gate; severity calibrated on partner feedback | Crosswalk carry-over; automatic COMMENCES and ordinance-lapse timers; prospective applicability; on-prem signed bundles |
 | **P5** | I9 added; C1/C2/C4 caches; G1–G8 guards; 300-issue gold, trap suites | Tuned per-slice fusion weights; fine-tuned Qwen3 reranker; perspective-flip stance; Hindi cue lexicon | PPR and proposition legs; HyDE (DEEP); monotone LambdaMART with IPS; online interleaving; 1,500-issue gold |
 | **P6** | Three trigger families; ≈40 RuleSpecs; SC + 5 HC calendars; drafts for all three | Arbitration, consumer, BNSS bail clocks; heterogeneous T1 for Advocate/Opponent; automatic REVERIFY; DEEP mode | 300+ RuleSpecs; all HC/district calendars; firm playbooks; Hindi and regional output; on-prem open-weight T1 (quality-flagged) |
-| **P7** | Court tracking (SC + primary HC + district via CNR); legal hold + manual purge with lineage sweep; India-region ZDR routes + one self-hosted fallback | D1/D3 cell router; exclusionary walls; break-glass; BYOK; DPDP request workflow; erasure certificates | D4 with full model pack; HYOK; PST/WhatsApp/XLSX/audio ingestion; DMS connectors; privilege-log export |
-| **P8** | Pooled isotonic calibration, 3 bands; 100 audits/week; gold v0 complete; L2 manual | Stratified calibration + conformal thresholds; trust ledger per tenant; automated L2; ≥ 300 audits/week across consenting tenants | `minicheck-in` (EN+HI); C11 coherence; cross-lingual judge; academic D0 partner; self-maintaining gold at Year-1 sizes |
+| **P7** | Court tracking (SC + primary HC + district via CNR); legal hold + manual purge with lineage sweep; India-region ZDR routes + one self-hosted fallback; erasure aggregation: `erasure.applied.v1` acks → P7 emits `erasure.completed.v1` (v1.0 D20.15, D21.3) | D1/D3 cell router; exclusionary walls; break-glass; BYOK; DPDP request workflow; erasure certificates | D4 with full model pack; HYOK; PST/WhatsApp/XLSX/audio ingestion; DMS connectors; privilege-log export |
+| **P8** | Pooled isotonic calibration, 3 bands; 100 audits/week; gold v0 complete; L2 manual | Stratified calibration + conformal thresholds; trust ledger per tenant; automated L2; ≥ 300 audits/week across consenting tenants | `minicheck-in` (EN+HI); C11 coherence; cross-lingual judge; academic DC0 partner; self-maintaining gold at Year-1 sizes |
 | **P9** | S0/S1 gate with ledger; proposals + urgent bad-law path; TENANT_PRIVATE eval; USER/MATTER memory; lineage + erasure cascade | Micro-review; alert feedback; auto outcome tracking via CNR; per-tenant regression dashboards | S2 aggregates (k ≥ 5, DP noise) if cleared; IPS LTR; PRACTICE_GROUP/FIRM memory with KM approval; opt-in LoRA after bake-off |
 | **P10** | S1 Today; 06:30 digest; watchlists; WhatsApp MINIMAL; PWA triage; Word add-in v1.1 | Statute timeline/diff, crosswalk explorer; KM dashboards; storm analytics; native push/SMS fallback | PLC Access API/MCP; graph view; Hindi digest; memo→draft tracked changes; client-facing digests (after opinion g) |
 | **XC** | DPDP-ready controls; CERT-In 6-h incident runbooks, 180-day in-India logs [XC-38]; honeytoken canaries | ISO 27001 + SOC 2 Type I; shadow/canary automation; red-team CI corpus (500+ docs) | SOC 2 Type II; ISO 27701; learned routers; distillation to self-hosted bulk models; B/C topologies |
@@ -501,33 +516,33 @@ The schedule assumes Indian notice periods of about 60–90 days for experienced
 | Legal and data ops | $0.27–0.47M (11.75) | $0.44–0.76M (19) | $0.24–0.42M (10.5) | same |
 | Product/GTM/leadership | $0.29–0.54M (4.1) | $0.71–1.32M (10.1) | $0.42–0.78M (6) | same |
 | **People subtotal** | **$1.6–2.7M** | **$2.9–4.8M** | **$1.6–2.7M** | |
-| Corpus build, LLM cascade | ≈$20–30K (≈1–1.5M works, pro-rata) | ≈$60–70K (to S-5M; D18 total ≈$90K) | ≈$270K (to S-20M; D18 total ≈$360K) | **D18**; all-premium would be $285K / $1.14M |
+| Corpus build, LLM cascade | ≈$20–30K (≈1–1.5M works, pro-rata) | ≈$60–70K (to S-5M; D18 total ≈$90K) | ≈$270K (to S-20M; D18 total ≈$360K) | **D18** (build figures unchanged by D19.1); all-premium would be $285K / $1.14M |
 | Reprocessing campaigns | ≈$40–80K | ≈$0.2–0.4M (3–6 re-runs at S-5M) | ≈$0.2–0.4M | 13_cross_cutting §3.5; 06_P4 cost ($41–285K per full 5M re-run) |
-| Run: pilot (one D2 cell + PLC pipeline + eval + GPUs) | ≈$25–45K/month → $0.3–0.54M | — | — | estimate from 13_cross_cutting §9 (B: $8–15K/tenant), 02_P0 ($2–5K/month compute), 10_P8 ($1.6–3.3K/month GPU) |
-| Run: D1 at scale | — | ramp to ≈$77K/month at 2,000 seats and S-5M; ≈$0.4–0.65M for the year (estimate: 40–70% of steady state) | ≈$89K/month at S-20M → ≈$0.53M | **D18** (corrected figures) |
+| Run: pilot (one D2 cell + PLC pipeline + eval + GPUs) | ≈$25–45K/month → $0.3–0.54M | — | — | estimate from 13_cross_cutting §9 (D2/D3, formerly B: $8–15K/tenant), 02_P0 ($2–5K/month compute), 10_P8 ($1.6–3.3K/month GPU) |
+| Run: D1 at scale | — | ramp to ≈$77K/month at 2,000 seats and S-5M; ≈$0.4–0.65M for the year (estimate: 40–70% of steady state) | ≈$89K/month at S-20M → ≈$0.53M | **D18 / D19.1** (figures of record) |
 | Other: counsel opinions; ISO/SOC audits; pen tests; IK gap-fill ($9–35K/yr, 02_P0); paid partner annotation hours; D4 reference lab (8×H100 at E2E list ≈₹15 lakh/month [XC-26], ~6 months) | ≈$0.15–0.3M | ≈$0.15–0.3M | ≈$0.15–0.2M | estimate |
 | **Programme total** | **≈$2.1–3.7M** | **≈$3.7–6.2M** | **≈$2.8–4.1M** | **≈$8.6–14M over 30 months** |
 
-D18 per-unit serving costs are ≈$0.086 per Q&A and ≈$1.66 per strategy memo. With the tokenizer correction in 13_cross_cutting §3.4, the upper bound is ≈$0.105 and ≈$2.16. On either figure, pilot LLM serving for 40 seats is ≈$1–1.2K/month: the pilot's run cost is infrastructure and evaluation, not tokens. From GA, serving is ≈73% of monthly run cost (13_cross_cutting top risk). The seat-usage assumptions behind it must be replaced with P10 telemetry within 90 days of GA (Q9).
+Per-unit serving costs of record (v1.0 D19.1; 13_cross_cutting §3.4) are **≈$0.105 per verified Q&A and ≈$2.16 per strategy memo** (tokenizer-corrected). The uncorrected D18 values, ≈$0.086 and ≈$1.66, are list-price lower bounds only, and 08_P6's ≈$2.7/memo is a sensitivity upper bound. At the figures of record, pilot LLM serving for 40 seats (200 Q&As + 4 memos per seat-month) is ≈$1.2K/month (≈$1K at the lower bounds): the pilot's run cost is infrastructure and evaluation, not tokens. From GA, serving is ≈78% of monthly run cost at S-5M (≈$60K of ≈$77K; 13_cross_cutting Q9). The seat-usage assumptions behind it must be replaced with P10 telemetry within 90 days of GA (Q9).
 
 ---
 ## 5. Design-partner programme timeline
 
-This timeline follows the programme in 10_P8 §5.13: data classes D0–D4, gold room, consent instruments and incentives. It also follows the P9 consent model (11_P9 §5.4). Consent milestones are marked **C#** and gold milestones **G#**.
+This timeline follows the programme in 10_P8 §5.13: data classes DC0–DC4 (renamed from D0–D4 in 10_P8 so they do not clash with the D17 deployment names), gold room, consent instruments and incentives. It also follows the P9 consent model (11_P9 §5.4). Consent milestones are marked **C#** and gold milestones **G#**.
 
 | Month | Gold construction | Feedback loop activation | Consent and governance |
 |---|---|---|---|
 | 1–2 (M0) | Guidelines v0; 50-item pilot; α per label family; Gold Store with EXAM seal and canary strings; Sentinel v0 | none (no product) | **C1** Design Partnership Agreement + DPA + Contribution Schedule. **C2** written S0/S1 consent. **C3** annotator notice. R3 panel named. Steering committee chartered (monthly). Ethics review (opinion g) commissioned |
-| 3 | Calibration workshop; guidelines v1; weekly 2-hour gold room (3–4 lawyers) starts; G-Deadline authored with legal engineers | — | **C4** client-consent template for D2 approved by the partner GC and our counsel |
-| 4–6 (M1) | **G1** by month 6: G-Memo 20, G-Deadline 300, G-Temporal 150, G-Crosswalk 200, Sentinels 200, G-QA ≥ 150, G-Audit ≥ 150, G-Treat ≥ 500; monthly α reports | `FeedbackEvent` + `retrieval.served.v1` captured in supervised sessions; D1 adjudications of our outputs on public queries | **C5** first D2 client consents: target 5 closed matters by month 6 (10_P8 §10). Quarterly consent re-confirmation starts (month 5) |
-| 7–9 (M2) | Natural-claim adjudication (G-Claim 2,000) → **bands on by about month 8.5**. **G2** gold v0 complete by month 9 (G-QA 300; G-Treat 1,000); weekly 100-claim PPI audit | **Stage 1 (month 7):** Privacy Gate S0/S1 live, S1 with its 72-h delay (11_P9 top risk); `kg.proposal.v1` → P3; urgent bad-law path; `feedback.resolved.v1` fan-out; auto TENANT_PRIVATE eval cases | **C6** D3 matter-level opt-ins by responsible partners (live matters). **C7** DPDP re-papering complete before the about-May-2027 commencement (month 8). Partner 2 in negotiation |
-| 10–12 (M2) | G-Claim → 4,000; G-QA → 500; first verification nudges (≤ 1 per memo) | **Stage 2 (month 10):** global reranker trained on gold + LLM-judge labels (11_P9 §10); severity priors recalibrated on alert feedback (06_P4 §11 Q5); used-in-filing and manual outcome capture | **C8** partners 2 and 3 signed by months 9–12 (10_P8 top-risk mitigation); their gold rooms start on D0 only |
+| 3 | Calibration workshop; guidelines v1; weekly 2-hour gold room (3–4 lawyers) starts; G-Deadline authored with legal engineers | — | **C4** client-consent template for DC2 approved by the partner GC and our counsel |
+| 4–6 (M1) | **G1** by month 6: G-Memo 20, G-Deadline 300, G-Temporal 150, G-Crosswalk 200, Sentinels 200, G-QA ≥ 150, G-Audit ≥ 150, G-Treat ≥ 500; monthly α reports | `FeedbackEvent` + `retrieval.served.v1` captured in supervised sessions; DC1 adjudications of our outputs on public queries | **C5** first DC2 client consents: target 5 closed matters by month 6 (10_P8 §10). Quarterly consent re-confirmation starts (month 5) |
+| 7–9 (M2) | Natural-claim adjudication (G-Claim 2,000) → **bands on by about month 8.5**. **G2** gold v0 complete by month 9 (G-QA 300; G-Treat 1,000); weekly 100-claim PPI audit | **Stage 1 (month 7):** Privacy Gate S0/S1 live, S1 with its 72-h delay (11_P9 top risk); `kg.proposal.v1` → P3; urgent bad-law path; `feedback.resolved.v1` fan-out; auto TENANT_PRIVATE eval cases | **C6** DC3 matter-level opt-ins by responsible partners (live matters). **C7** DPDP re-papering complete before the about-May-2027 commencement (month 8). Partner 2 in negotiation |
+| 10–12 (M2) | G-Claim → 4,000; G-QA → 500; first verification nudges (≤ 1 per memo) | **Stage 2 (month 10):** global reranker trained on gold + LLM-judge labels (11_P9 §10); severity priors recalibrated on alert feedback (06_P4 §11 Q5); used-in-filing and manual outcome capture | **C8** partners 2 and 3 signed by months 9–12 (10_P8 top-risk mitigation); their gold rooms start on DC0 only |
 | 13–18 (M3) | Year-1 sizes by month 15: G-QA 800, G-Claim 8,000, G-Temporal 500, G-Crosswalk 500, G-Deadline 800, G-Memo 60, G-Treat 3,000; stratified calibration; EXAM rotation 20%/quarter | **Stage 3:** micro-review; per-tenant regression dashboards; ≥ 300 audits/week across consenting tenants | **C9** consent for co-authorship and publication of the open benchmark subset (after opinion g). **C10** new-tenant consent screen with defaults off |
-| 19–30 (M4) | Self-maintaining gold (auto temporal traps from definitive negatives); academic D0 partner | **Stage 4 (conditional):** S2 aggregates (k ≥ 5, DP noise) after a formal privacy analysis; IPS LTR once traffic suffices (not before 12–18 months, 11_P9 Q3) | Annual D2 consent review; audit rights exercised by partners |
+| 19–30 (M4) | Self-maintaining gold (auto temporal traps from definitive negatives); academic DC0 partner | **Stage 4 (conditional):** S2 aggregates (k ≥ 5, DP noise) after a formal privacy analysis; IPS LTR once traffic suffices (not before 12–18 months, 11_P9 Q3) | Annual DC2 consent review; audit rights exercised by partners |
 
 **Invariants across all months.**
-- Vendor staff never see D2/D3 content. Annotation Studio runs inside the tenant plane.
-- D4 raw privileged documents are never used for global evaluation or training.
+- Vendor staff never see DC2/DC3 content. Annotation Studio runs inside the tenant plane.
+- DC4 raw privileged documents are never used for global evaluation or training.
 - Withdrawing consent triggers removal of derived items and retraining exclusions through P9's unlearning path (10_P8 §5.13).
 
 **Incentives on the same clock:** free seats in M1–M2 and founding pricing from M2 exit; free Citation Audit of the partner's filings from M1; firm-private eval dashboards from month 9; paid annotation hours; a seat on the steering committee.
@@ -616,4 +631,4 @@ External sources consulted for this document (all other facts are cited to the p
 - [RM-1] Hyring. "Machine Learning Engineer Salary in Bengaluru" (Hyring India Salary Model 2026; updated 20 Jun 2026). https://hyring.com/jobseeker-toolkit/salary/machine-learning-engineer-salary-in-bengaluru — verified
 - [RM-2] Bar & Bench. "Spice Route Legal announces associate salary scales for 2024." 10 Oct 2023. https://www.barandbench.com/news/spice-route-legal-announces-associate-salary-scales-2024 — verified
 
-Internal sources: 02_P0 … 12_P10 (§10 and §11 of each), 13_cross_cutting (§3, §5.8, §9, §11), 20_competitive_teardown (§7), 21_india_specific_legal_data (§10), the spine v1.0 decision record D1–D18 (01_master_architecture.md), and the P8 Design Partner Program (10_P8 §5.13). Tags such as [XC-4], [XC-26], [XC-36], [XC-38], [P4-49], [P6-43] and [P8-74] resolve in those documents' reference lists.
+Internal sources: 02_P0 … 12_P10 (§10 and §11 of each), 13_cross_cutting (§3, §5.8, §9, §11), 20_competitive_teardown (§7), 21_india_specific_legal_data (§10), the spine v1.0 decision record D1–D21 (01a_spine_decision_record.md; 01_master_architecture.md), and the P8 Design Partner Program (10_P8 §5.13). Tags such as [XC-4], [XC-26], [XC-36], [XC-38], [P4-49], [P6-43] and [P8-74] resolve in those documents' reference lists.

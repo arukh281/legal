@@ -36,7 +36,7 @@
 
 ### 2.0 Spine v1.0 conformance
 
-This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 text differs, v1.0 wins. §2.5 is kept as the record of P8's proposals.
+This document follows the spine v1.0 decision record (D1–D21). Where the v0.1 text differs, v1.0 wins. §2.5 is kept as the record of P8's proposals.
 
 | # (§2.5) | Proposed change | v1.0 disposition |
 |---|---|---|
@@ -45,9 +45,9 @@ This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 
 | S8-3 | Events `verification.completed.v1`, `eval.run.completed.v1`, `eval.case.adjudicated.v1` | **ACCEPTED as D4** (P8-owned). `eval.case.proposed.v1` (P9) is also accepted in D4. |
 | S8-4 | New objects `CitationAuditReport`, `EvalCase`, `EvalRun`, `GateDecision` | **ACCEPTED as D9.** |
 | S8-5 | Non-inferiority gate with δ_s = max(1 pt, 2·SE_diff,s) + zero-tolerance sentinels | **ACCEPTED as D11**, with **rolling 3-release windows** added. It replaces "no regression > 1 pt" everywhere, including P9 and XC. |
-| S8-6 | Section-level gates and memo aggregation (memo BLOCK if any section BLOCK) | **ACCEPTED-MODIFIED as D9.** The gate is computed per section and carried in `section_gates`, and the **P8 aggregation rule** is normative: P6 copies it and no longer derives it. **Change:** a tier-1 section failure (deadline, limitation, maintainability) BLOCKs *that section*, and the memo is then **PARTIAL with a withheld list**, not BLOCK. The memo-level rule is rewritten in §5.4. |
+| S8-6 | Section-level gates and memo aggregation (memo BLOCK if any section BLOCK) | **ACCEPTED-MODIFIED as D9.** The gate is computed per section and carried in `section_gates`, and the **P8 aggregation rule** is normative: P6 copies it and no longer derives it. **Change:** a tier-1 section failure (deadline, limitation, maintainability) BLOCKs *that section*, and the memo is then **PARTIAL with a withheld list**, not BLOCK. The memo-level rule is rewritten in §5.4: memo BLOCK = no displayable section OR a memo-level integrity failure — **ratified in D21.6** (closes §14 R-21). |
 | S8-7 | Eval/verification ID naming: `evc_`, `gld_`, `evr_`, `vrp_`, `aud_`; never bare `case_id` | **ACCEPTED-MODIFIED as D12.** `evc_`, `gld_`, `evr_` and `aud_` are adopted. The verification-report prefix is **`vr_`** (registry), not `vrp_`. |
-| S8-8 | Consume P3's `NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, `definitive`, with a fallback onto the 5 values | **RESOLVED by D6.** The status enum stays 5-valued, and `AuthorityView` carries `definitive` + `reason_codes[]`. "Under review" = `CAUTION` + `definitive = false` + reason `NEGATIVE_SIGNAL_UNDER_REVIEW`; coverage gap = `UNKNOWN` + reason `COVERAGE_GAP`. The former fallback is now the normative mapping. `AuthorityView` is P8's **only** status input. |
+| S8-8 | Consume P3's `NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, `definitive`, with a fallback onto the 5 values | **RESOLVED by D6.** The status enum stays 5-valued, and `AuthorityView` carries `definitive` + `reason_codes[]`. "Under review" = `CAUTION` + `definitive = false` + reason `NEGATIVE_SIGNAL_UNDER_REVIEW`. **Coverage gap (refined by D20.12):** reason `COVERAGE_GAP` + `definitive = false` on the *unchanged* status; only when the gap exceeds P3's per-source threshold (72 h HOT, 7 days WARM/COOL binding sources) does a GOOD status degrade to `UNKNOWN`; negatives never lose their status on a gap. The former fallback is now the normative mapping. `AuthorityView` is P8's **only** status input. |
 | S8-9 | Anchor API exposes per-expression `authoritative` | **ACCEPTED as D8/D16** (`is_authoritative_expression`, plus the Expression attributes `authoritative`, `derived`, `verification ROUNDTRIP_OK\|UNVERIFIED`, `translation_of`, `authority_basis`). **MT is never an Expression.** A claim anchored to an MT rendition fails P8, and only official or `ROUNDTRIP_OK` text may back tier-1 claims. |
 
 **Obligations adopted from v1.0 (not in the original proposals):**
@@ -62,6 +62,31 @@ This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 
 - The D2 envelope extension names.
 - D17 deployment names.
 
+**Rulings D19–D21 applied in this document (final pass):**
+
+| Ruling | Effect on P8 | Where |
+|---|---|---|
+| D19.1 cost of record | ≈ $0.105 per verified Q&A and ≈ $2.16 per memo end-to-end (verification included); 13_cross_cutting is canonical | §5.14 |
+| D19.2 + §14 R-08 `degradations[]` | ACCEPTED on `VerificationReport`: `degradations[]{kind BUDGET\|SOURCE_STALE\|MODEL_FALLBACK\|RESIDENCY_FALLBACK\|INDEX_LAG\|COVERAGE_GAP, detail, affected_claim_ids[]}`, merged from P5 `warnings[]` entries of a D19.2 kind and P8's own; P10 must disclose them next to the answer | §2.3 O1 |
+| D19.3 / D20.3 / D21.3 redaction | P8 is a named consumer of `doc.redacted.v1` (producers P0, P1, ops/legal); de-duplicates on `overlay_id` (`ovl_`) and acks with `redaction.applied.v1` (consumer `P8`) after cache and gold-item purge | §2.2, §2.3 O4 |
+| D19.6 `CitationMention.pin.method` | `PAGE_SPAN_ALIGN` alone is never sufficient for VERIFIED: the pinpoint warrant is at most WARN and the band at most VERIFIED_WITH_CAVEAT | §5.3 C3 |
+| D19.7 D2 cells | D2 reads the shared PLC via the stateless read path; D3/D4/D4h read a local replica (≤ 24 h lag) | §2.1, §5.14 |
+| D19.9 `LLMCallRecord` | P8 consumes Gateway `LLMCallRecord`s for audit replay and per-residency quality scores | §2.1 |
+| D20.12 COVERAGE_GAP | Reason code on an unchanged status + `definitive = false`; GOOD → UNKNOWN only past the per-source threshold | §2.0 S8-8, §5.4 |
+| D20.15 / D21.3 erasure | P8 consumes `erasure.requested.v1` and acks with `erasure.applied.v1`; only P7 emits `erasure.completed.v1` | §2.2, §2.3 O4, §5.14 |
+| D20.16 topic naming | `tpl.<tenant>.verification.completed.v1`; GLOBAL eval events on `plc.eval.run.completed.v1` / `plc.eval.case.adjudicated.v1`; TENANT_PRIVATE eval events on `tpl.<tenant>.…` | §2.3 O4 |
+| D21.1 FRESH_CITER rejected | A P5 `TREATMENT_PENDING` warning on a supporting item is treated like `definitive = false` (status_ok WARN, band ≤ VERIFIED_WITH_CAVEAT) | §5.4 |
+| D21.3 consumer lists + §14 R-31 | P8 consumes `identity.merged/split.v1`, `index.generation.promoted.v1`, `doc.redacted.v1`, `erasure.requested.v1`, and the control-plane `model.endpoint.candidate.v1` (Gateway → P8 offline gate; registered as an `ops.*` event with `release.candidate.v1`) | §2.2 |
+| D21.4 `opinion_role` | MAJORITY\|CONCURRING\|DISSENT\|REFERENCE_ORDER\|UNKNOWN; UNKNOWN makes the role warrant `UNKNOWN`, never PASS, for holding claims | §2.1, §5.3 C4 |
+| D21.6 memo gate | Ratified: memo BLOCK = no displayable section OR memo-level integrity failure | §5.4 |
+| D21.8 reason-code registry | P8 owns the verification reason-code registry (incl. MT_ANCHOR, LOCATOR_ONLY_ANCHOR, DERIVED_TEXT_TIER1, MASKED_SPAN_QUOTED, SUMMARY_AS_SUPPORT, UNCONFIRMED_FACT, RESIDENCY_NO_QUALIFIED_ENDPOINT); authority reason codes stay P3's; P9 and P10 consume both | §5.4 |
+| D19.5 `Work.integrity_flags[]` | RECALLED / SUPPRESSED / AI_GENERATION_ALLEGED / WITHDRAWN_FROM_SOURCE / CORRIGENDUM_PENDING handled in C6 via AuthorityView reason codes | §5.3 C6 |
+| D21.12 `TENANT_COURT_RECORD` | May support RECORD_FACT claims; data-only for control flow | §5.3 C1 |
+| D21.13 + §14 R-34 | P8's outbound-leak check reads `EvidenceBundle.items[].private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` instead of per-item P7 lookups | §2.1 |
+| D21.16 `ConsentRecord` (`cns_`) | P7-owned; P8's Design Partner Program and `EvalCase.provenance.consent_ref` reference `cns_` ids | §2.3 O3, §5.13 |
+| D21.17 + §14 R-10 certified translations | A private `v1.ht-en` rendition (lawyer-attested, `authoritative = true`, certification recorded by P7) may support RECORD_FACT claims only; as support for any public-law claim it fails; `mt-` never | §5.3 C1 |
+| §14 R-05 / R-28 / R-35 | `authority_snapshot` keyed on `subject_id`; verification prefix `vr_`; paths `POST /p8/v1/verify`, `/p8/v1/reverify`, `/p8/v1/audits`; Anchor Read API owned by P1 at `/plc/v1/anchors/…` | §2.1, §2.3, §2.4 |
+
 **Renames this document now follows:**
 - `vrp_` → `vr_`.
 - `NEGATIVE_SIGNAL_UNDER_REVIEW` / `COVERAGE_GAP` as statuses → `reason_codes` on `CAUTION` / `UNKNOWN`.
@@ -73,7 +98,7 @@ This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 
 
 ### 2.1 Synchronous inputs
 
-**I1 — `VerifyRequest`** (P6 → P8; also P10 for draft edits, via P6). Implements P6's `POST /verify` (P6 doc §2).
+**I1 — `VerifyRequest`** (P6 → P8; also P10 for draft edits, via P6). Served at `POST /p8/v1/verify` (01_master §9.6; P6 formerly wrote `/verify`, §14 R-28); re-verification at `POST /p8/v1/reverify` `{report_id | claim_ids[], as_known_at} → VerificationReport` with `supersedes_report_id`.
 ```ts
 type VerifyRequest = {
   request_id: string;                       // ULID; idempotency key
@@ -90,13 +115,13 @@ type VerifyRequest = {
   jurisdiction_state?: string;
   lang_ui: string;                          // for narrowed_text language
   budget: { latency_ms: number; max_llm_calls?: number };
-  residency_policy: "IN_ONLY"|"ANY";        // D9/D15; from the TEC; every judge/checker call is routed fail-closed
+  residency_policy: "IN_ONLY"|"IN_PREFERRED"|"ANY";   // D9/D15 (01_master §7.8); from the TEC; every judge/checker call is routed fail-closed
   mode_flags?: { strict_export?: boolean }  // EXPORT: re-run C6/C7 at graph head, no cache
 };
 ```
 `Claim` (spine §H + D9) is used as P6 emits it, including `support[{anchor_id, quote, span, support_type, computed_ref?}]`, `contrary[]`, `confidence` (P6 raw; P8 replaces it) and `depends_on_claim_ids[]`. A request that touches private anchors or a `TENANT_PRIVATE` suite must carry a valid **Tenant Execution Context** (TEC, D9). P8 resolves `pdoc_…/{pver}#frag` anchors (D8) only inside the tenant boundary.
 
-**I2 — `AuditRequest`** (P10/P6/P7 → P8), new. Used to audit an arbitrary document's citations (§5.8).
+**I2 — `AuditRequest`** (P10/P6/P7 → P8), new. Used to audit an arbitrary document's citations (§5.8). Served at `POST /p8/v1/audits` → `202 {audit_id}`; the report is fetched with `GET /p8/v1/audits/{audit_id}` (01_master §9.6).
 ```ts
 type AuditRequest = { request_id: string; tenant_id: string; matter_id?: string; pdoc_id?: string;
                       parsed_doc_uri: string;              // P1/P7 ParsedDocument
@@ -110,14 +135,17 @@ type AuditRequest = { request_id: string; tenant_id: string; matter_id?: string;
 **Read dependencies** (all read-only; P8 holds no write rights on PLC)
 | Dependency | Owner | Fields P8 needs |
 |---|---|---|
-| Anchor read API `GET /anchors/{anchor_id}?as_of=` (D8) | P1/P2 | `text` (the **masked rendition** when a `doc.redacted.v1` overlay applies, D16), `text_hash`, `lang`, `rhetorical_role`, **`speaker`/`opinion_role`** (MAJORITY/CONCURRING/DISSENT/REFERENCE_ORDER), page+bbox, **`ocr_conf`**, `structure_conf`, alias/tombstone resolution, sibling expressions (e.g. `hi`↔`en`), `is_authoritative_expression` and the Expression attributes `derived`/`verification`, and a locator-only flag for `pg{n}` fallback anchors |
+| Anchor Read API `GET /plc/v1/anchors/{anchor_ref}` (point-in-time via `?date=&territory=`) and `POST /plc/v1/anchors:batch` (≤ 500 refs) (D8; 01_master §9.2) | **P1** (owner fixed, §14 R-35; private anchors via P7's private-anchor API under a TEC) | `text` (the **masked rendition** when a `doc.redacted.v1` overlay applies, D16), `text_hash`, `lang`, `rhetorical_role`, **`speaker`/`opinion_role`** (MAJORITY/CONCURRING/DISSENT/REFERENCE_ORDER/UNKNOWN, D21.4), page+bbox, **`ocr_conf`**, `structure_conf`, alias/tombstone resolution, sibling expressions (e.g. `hi`↔`en`), `is_authoritative_expression` and the Expression attributes `derived`/`verification`, and a locator-only flag for `pg{n}` fallback anchors |
 | Graph Query API (`AuthorityView`, provision-at-date, `CORRESPONDS_TO` crosswalk with the D16 `change_type` enum, propositions) | P3 | `status`, `definitive`, `reason_codes`, `status_confidence`, `binding_on_forum`, `binding_basis`, `court_level`, `bench_strength`, `decision_date`, `graph_watermark` (P3 doc §2.2; D6: the only status input) |
-| Citation parser + alias resolver (library + service) | P1 | parse citation strings in claim text; `identifier_alias` lookups |
+| Citation parser + alias resolver (library + `POST /plc/v1/citations:resolve`) | P1 | parse citation strings in claim text; `identifier_alias` lookups; `CitationMention.pin{kind, value, cited_anchor, method SAME_NUMBERING\|QUOTE_ALIGN\|PAGE_SPAN_ALIGN\|UNRESOLVED, confidence}` (D19.6) for audited documents |
 | Rule engine `RuleSpec`/`Deadline` (R-handles) | P6 | deterministic recomputation of PROCEDURAL claims |
-| MatterContext / private anchors | P7 | fact `asserted_by` and `status` (PROPOSED/CONFIRMED/DISPUTED), `trust_label` (D9: `TENANT_OPPOSING_DOC`, etc.), privilege flags, derived `temporal_context` (D16) |
+| MatterContext / private anchors | P7 | fact `asserted_by` and `status` (PROPOSED/CONFIRMED/DISPUTED), `trust_label` (D9 + D21.12: `TENANT_OPPOSING_DOC`, `TENANT_COURT_RECORD`, etc.), privilege flags incl. `outbound_forbidden_anchors_bloom`, derived `temporal_context` (D16), certification records for `v1.ht-en` renditions (D21.17) |
+| `EvidenceBundle` (by `evidence_bundle_ref`) | P5 | coverage/adverse attestation; `warnings[]` incl. the D19.2 degradation kinds and `TREATMENT_PENDING` (D21.1); TPL items' `private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` for the outbound-leak check (D21.13, §14 R-34) |
+| `Freshness` `GET /p4/v1/freshness/forum?court_id=` | P4 | `law_current_to` for the watermark chip and `SOURCE_STALE`/`INDEX_LAG` degradations |
+| `LLMCallRecord` (Gateway) | XC | audit replay of judge/checker calls and per-residency quality scores (D19.9) |
 | Model Gateway tasks `p8.entail_small@n`, `p8.entail_judge@n`, `p8.role_judge@n`, `p8.decompose@n` (`ModelTaskContract`s, D1) | XC | typed outputs; `pipeline_version` lineage (D10); fail-closed `residency_policy` routing |
 
-All P8 reads of PLC services from a tenant context follow the **PLC read-path rule** (D3). They are stateless, tenant-attributable IDs are logged only in the tenant-scoped audit store, and D3/D4 deployments read a local PLC replica.
+All P8 reads of PLC services from a tenant context follow the **PLC read-path rule** (D3). They are stateless, tenant-attributable IDs are logged only in the tenant-scoped audit store; D2 cells read the shared PLC in-region, and D3/D4/D4h deployments read a local PLC replica with ≤ 24 h lag (D19.7).
 
 ### 2.2 Asynchronous inputs (events)
 | Event | Producer | P8 use |
@@ -125,10 +153,13 @@ All P8 reads of PLC services from a tenant context follow the **PLC read-path ru
 | `graph.delta.v1` (with `graph_watermark`, `status_changes[].definitive/reason_codes`, per P3 S3-3) | P3 | invalidate the verification cache; mark gold items stale (§5.10.6); generate temporal-trap sentinels from new definitive NEGATIVE statuses (§7) |
 | `eval.case.proposed.v1` (`EvalCaseCandidate`) *(ACCEPTED, D4; P9-owned)* | P9 | adjudication queue → gold/regression suites |
 | `retrieval.served.v1` *(D4; schema owned by P5)* | P5, P6 (tenant plane) | online evaluation (interleaving, position-debiased metrics), joined to `verification.completed.v1` for failure attribution |
-| `source.health.v1` *(D16)* | P0 | coverage context for `UNKNOWN`/`COVERAGE_GAP` rates; excludes degraded-source windows from drift alarms |
-| `doc.redacted.v1` *(D16)* | P0/P1/ops | invalidate cached verifications and gold items whose anchors fall under a `RedactionOverlay`; quote checks use the masked rendition |
-| `model.endpoint.candidate.v1` / registry change *(XC-owned name, not in the D4 catalogue; until it is added, P8 polls the registry)* | Model Gateway | trigger offline gate runs |
-| `release.candidate.v1` (CI) | build system | trigger L1/L2 suites (§5.11) |
+| `source.health.v1` *(D16)* | P0 | coverage context for `UNKNOWN` rates and `COVERAGE_GAP` reason-code rates; excludes degraded-source windows from drift alarms |
+| `doc.redacted.v1` *(D16; P8 named consumer in D21.3)* | P0 (source suppression, court orders), P1 (statutory identity masking), ops/legal (D20.3) | invalidate cached verifications and gold items whose anchors fall under a `RedactionOverlay` (01_master §7.13); quote checks use the masked rendition; idempotent on `overlay_id`; ack with `redaction.applied.v1` |
+| `identity.merged.v1` / `identity.split.v1` *(D21.3)* | P1 | re-key gold `depends_on_ids` and verification-cache dependency rows (`vcache_dep`) |
+| `index.generation.promoted.v1` *(D21.3)* | P2 | run the anchor-stability and retrieval regression canaries against the new generation; record `anchor_generation` |
+| `erasure.requested.v1` *(D21.3)* | P7 | purge `TENANT_PRIVATE` gold suites, verification caches and reports for the scope; ack with `erasure.applied.v1` (D20.15) |
+| `model.endpoint.candidate.v1` *(control plane; named in D21.3, registered as an `ops.*` event per §14 R-31)* | Model Gateway | trigger offline gate runs; the result feeds `qualified_tasks` per residency class |
+| `release.candidate.v1` *(control plane, `ops.*`, §14 R-31)* (CI) | build system | trigger L1/L2 suites (§5.11) |
 | `doc.parsed.v1` with a changed `pipeline_version` | P1 | anchor-stability canary checks on gold works |
 
 ### 2.3 Outputs
@@ -150,6 +181,10 @@ type VerificationReport = {
   withheld_claim_ids: string[];
   withheld_sections?: string[];              // D9: the withheld list that accompanies a PARTIAL memo
   coverage: { checked: number; verifiable_share: number; unverifiable_by_reason: Record<string, number> };
+  degradations?: { kind: "BUDGET"|"SOURCE_STALE"|"MODEL_FALLBACK"|"RESIDENCY_FALLBACK"|"INDEX_LAG"|"COVERAGE_GAP";
+                   detail: string; affected_claim_ids: string[] }[];   // D19.2 (§14 R-08): merged from the P5 bundle's
+                                             // warnings[] of a D19.2 kind and P8's own (judge fallback, residency queueing, budget);
+                                             // empty ⇒ no degradation; P10 must disclose any entry next to the answer
   created_at: string;
   supersedes_report_id?: string;             // set when a re-run at a newer watermark replaces an earlier report (§5.9)
   context_warnings?: string[];               // e.g. "FORUM_MISMATCH_WITH_MATTER", "AS_OF_DATE_MISMATCH_WITH_MATTER" (§8.R)
@@ -171,7 +206,7 @@ type ClaimVerification = {
   reason_codes: string[];                    // §5.4 taxonomy, e.g. "WRONG_PINPOINT", "ROLE_ARGUMENT_AS_HOLDING"
   narrowed_text?: string;                    // PARTIAL: entailed portion only
   suggested_anchor_ids?: string[];           // pinpoint re-anchoring hits in the same work (§5.3 C3b)
-  authority_snapshot?: { target_id: string; status: string; definitive: boolean; reason_codes: string[];
+  authority_snapshot?: { subject_id: string; status: string; definitive: boolean; reason_codes: string[];   // AuthorityView key subject_id (D6, §14 R-05)
                          binding_on_forum?: string; status_confidence: number }[];   // AuthorityView subset (D6)
   human_review?: { required: boolean; queue: "TIER1_CLAIM"|"CROSS_LINGUAL"|"LOW_OCR" };
 };
@@ -218,7 +253,7 @@ type EvalCase = {                            // superset of P9 EvalCaseCandidate
   expected: { must_include_anchors?: string[]; must_include_adverse?: string[]; must_not_include?: string[];
               label?: string; status?: string; deadline?: string; rubric_ref?: string };
   provenance: { authored_by_role: string; source: "GOLD_ROOM"|"RETRO_MATTER"|"SHADOW"|"P9_FEEDBACK"|"PERTURBATION"|"PUBLIC_BENCH"|"SENTINEL_AUTO";
-                consent_ref?: string; adjudication: { annotators: number; alpha_batch?: number; adjudicator_role: string } };
+                consent_ref?: string /* cns_… P7 ConsentRecord (D21.16) */; adjudication: { annotators: number; alpha_batch?: number; adjudicator_role: string } };
   depends_on_ids: string[];                  // works/provisions/propositions: gold subscribes to graph.delta (§5.10.6)
   stale: boolean; canary_string: string;     // contamination detection
 };
@@ -233,9 +268,11 @@ type GateDecision = { gate_id; run_id; decision: "PROMOTE"|"REJECT"|"WAIVED"; ru
 **O4 — Events (new)**
 | Event | Producer → Consumers | data (minimum) |
 |---|---|---|
-| `verification.completed.v1` | P8 → P9 (tenant plane), P10 telemetry | report_id, subject, gate, section_gates?, per-claim {claim_id, status, band, reason_codes}, verifier_version, tenant_id |
+| `verification.completed.v1` | P8 → P9 (tenant plane), P10 telemetry; topic `tpl.<tenant>.verification.completed.v1` (D20.16) | report_id, subject, gate, section_gates?, per-claim {claim_id, status, band, reason_codes}, verifier_version, degradation kinds[] (D19.2); tenant carried in the `tenantid` envelope attribute |
 | `eval.run.completed.v1` | P8 → Model Gateway registry, P4 (backfill decisions), CI | run_id, candidate, gate decision, summary metrics, `residency_scores` (D15) |
 | `eval.case.adjudicated.v1` | P8 → P9 | candidate_id, decision ACCEPTED/REJECTED/MERGED, eval_case_id? (closes P9's loop) |
+| `redaction.applied.v1` (D19.3; ack) | P8 → P0 redaction ledger | `{overlay_id, consumer: "P8", applied_at, generations_purged[]}`; PLC plane, `tenantid` = null |
+| `erasure.applied.v1` (D20.15; ack) | P8 → P7 | `{erasure_id, consumer: "P8", applied_at, scope}`; tenant plane; P7 alone emits `erasure.completed.v1` |
 
 All O4 events use the CloudEvents 1.0 envelope with the D2 extension attributes (`tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass`, `traceparent`). `tenantid` is set for `verification.completed.v1` and for eval runs over `TENANT_PRIVATE` suites (`dataclass = TENANT_CONFIDENTIAL`). It is `null` for GLOBAL eval events (`dataclass = PUBLIC`); a GLOBAL event caused by tenant activity (e.g. a P9 candidate adjudicated into a GLOBAL suite) also carries a fresh trace root and no tenant `causationid` (D2 Privacy-Gate rule). `idempotencykey` = `report_id` / `run_id` / `candidate_id`. Example:
 ```json
@@ -250,8 +287,8 @@ All O4 events use the CloudEvents 1.0 envelope with the D2 extension attributes 
 `data` carries IDs, statuses and reason codes only — never claim text or quotes (§5.9).
 
 ### 2.4 Handoffs
-- **P6** calls `/verify` for each section. It uses `status`, `reason_codes`, `narrowed_text` and `suggested_anchor_ids` in its repair loop (P6 §5.7), streams only sections whose gate allows it, and copies `gate`/`section_gates` into the memo (D9; P6 no longer aggregates).
-- **P10** renders `display_band` with reason chips and click-to-source. It shows `gate_reasons` in the diagnostic view, and embeds the signed report in exports.
+- **P6** calls `POST /p8/v1/verify` for each section. It uses `status`, `reason_codes`, `narrowed_text` and `suggested_anchor_ids` in its repair loop (P6 §5.7), streams only sections whose gate allows it, and copies `gate`/`section_gates` into the memo (D9; P6 no longer aggregates).
+- **P10** renders `display_band` with reason chips and click-to-source. It shows `gate_reasons` in the diagnostic view, **discloses every `degradations[]` entry next to the answer or memo section (D19.2)**, and embeds the signed report in exports.
 - **P9** receives `verification.completed.v1` as machine labels (P9 §2), sends `eval.case.proposed.v1`, and receives adjudication outcomes.
 - **Model Gateway (XC §4.6)** references `gold_set_id`s owned by P8. P8's `eval.run.completed.v1` updates `qualified_tasks` per endpoint **and per residency class** (D15), so fail-closed routing for `IN_ONLY` tenants selects only endpoints qualified on their own scores.
 
@@ -369,11 +406,11 @@ All details are as recorded in the database [P8-8]. We have not read the underly
 ### 5.1 Components
 | Component | Responsibility | Tech |
 |---|---|---|
-| **Verify API** | `/verify`, `/revalidate`, `/audit`; idempotent on `request_id`; streams per-claim results | Stateless service (Go/Python), horizontally scaled; runs **inside the tenant trust boundary** when private anchors are involved (spine §A) |
+| **Verify API** | `POST /p8/v1/verify`, `POST /p8/v1/reverify`, `POST /p8/v1/audits` + `GET /p8/v1/audits/{audit_id}` (01_master §9.6); idempotent on `request_id`; streams per-claim results | Stateless service (Go/Python), horizontally scaled; runs **inside the tenant trust boundary** when private anchors are involved (spine §A) |
 | **Deterministic checker** | C0–C2, C5–C10 (existence, quote, metadata, status, binding, temporal, numeric, attribution, dependencies) | Library shared with P6's pre-check (same code, same version) |
 | **Entailment engine** | C3 support, C4 role (model-assisted), intra-claim decomposition | Small checker on GPU (Triton/vLLM); LLM judge via Model Gateway tasks |
 | **Calibrator** | Features → `calibrated_confidence`; conformal band thresholds per stratum | Versioned model artefact; nightly refit job; stored in model registry |
-| **Verification cache** | `(claim_hash, anchor text_hashes, as_of, forum) → entailment results`; status checks keyed additionally by `graph_watermark` | Redis + Postgres; entailment results reusable across tenants **only for public anchors with no private text in the claim** |
+| **Verification cache** | `(claim_hash, anchor text_hashes, as_of, forum) → entailment results`; status checks keyed additionally by `graph_watermark` | Redis + Postgres; **isolated per tenant+matter (D9)** — no cross-tenant reuse even for public-only claims, because a cache hit's latency would reveal that another tenant verified the same claim. The only shared entailment artefacts are P8's offline, tenant-independent results over PLC content (e.g. gold and sentinel runs) |
 | **Citation Auditor** | Parses any ParsedDocument's citations and runs a subset of the ladder | Uses P1 citation parser + ladder |
 | **Gold Store** | `EvalCase`, gold-set manifests, splits, signatures, staleness | Postgres + object store; signed manifests; 2-reviewer change control (XC threat model) |
 | **Eval Runner** | Executes suites against candidates; records `EvalRun`; computes CIs | Batch workers; deterministic replay; OSS eval harnesses may be used as runners *(feature fit unverified)* |
@@ -420,7 +457,7 @@ Every claim gets a **verification tier** (VT). The tier sets which checks are ma
 ### 5.3 The check ladder (algorithms and initial thresholds)
 Thresholds are *initial values*. The Calibrator re-fits them on adjudicated data (§5.6), and each change is versioned in `verifier_version`.
 
-**C0 — Schema and type rules.** Enforces spine §H ("all other types need ≥1 anchor"): LEGAL_PROPOSITION ≥1 DIRECT support from a PLC anchor (an R-handle alone is *not* sufficient); RECORD_FACT ≥1 private anchor; PROCEDURAL ≥1 R-handle **and** ≥1 statutory/rule anchor that the R-handle's `RuleSpec` cites (spine: deadlines "with statutory anchor"), so every PROCEDURAL claim is still anchor-traceable; STRATEGIC_OPINION non-empty `depends_on_claim_ids`, acyclic. Every `support.anchor_id` must be in the P6 ledger, which enforces the closed world. Failure → UNSUPPORTED (`SCHEMA`/`OUT_OF_LEDGER`). Cost ≈0. *(v1.0, D9)* The PROCEDURAL rule above is exactly D9's: `computed_ref` to a Deadline computation **and** ≥ 1 statutory anchor. A `sum_` summary id used as support → FAIL (`SUMMARY_AS_SUPPORT`). A RECORD_FACT resting on a MatterContext fact whose `status ≠ CONFIRMED` must carry the "unconfirmed" label; otherwise it gets WARN (`UNCONFIRMED_FACT`) and band ≤ VERIFIED_WITH_CAVEAT.
+**C0 — Schema and type rules.** Enforces spine §H ("all other types need ≥1 anchor"): LEGAL_PROPOSITION ≥1 DIRECT support from a PLC anchor (an R-handle alone is *not* sufficient); RECORD_FACT ≥1 private anchor; PROCEDURAL ≥1 R-handle **and** ≥1 statutory/rule anchor that the R-handle's `RuleSpec` cites (spine: deadlines "with statutory anchor"), so every PROCEDURAL claim is still anchor-traceable; STRATEGIC_OPINION non-empty `depends_on_claim_ids`, acyclic. Every `support.anchor_id` must be in the P6 ledger, which enforces the closed world. Failure → UNSUPPORTED (`SCHEMA`/`OUT_OF_LEDGER`). Cost ≈0. *(v1.0, D9)* The PROCEDURAL rule above is exactly D9's: `computed_ref` to a Deadline (`ddl_`) or MaintainabilityCheck (`mck_`, D21.5) computation **and** ≥ 1 statutory anchor. A `sum_` summary id used as support → FAIL (`SUMMARY_AS_SUPPORT`). A RECORD_FACT resting on a MatterContext fact whose `status ≠ CONFIRMED` must carry the "unconfirmed" label; otherwise it gets WARN (`UNCONFIRMED_FACT`) and band ≤ VERIFIED_WITH_CAVEAT. RECORD_FACT support may come from any private anchor, including `TENANT_COURT_RECORD` documents (privately held certified court records, D21.12) and certified translation renditions (below).
 
 **C1 — Existence, alias and point-in-time.** Resolve each `anchor_id` through the anchor store. Follow `anchor_alias` records and tombstone forward pointers. For statute anchors, resolve `@as_of_legal_date` to the valid expression. Outcomes: `PASS`; `WARN` (resolved via alias, confidence <0.95); `FAIL` (no such anchor → `FABRICATED_ANCHOR`, which should be impossible and is logged as a P6 defect); `UNKNOWN` (anchor store unavailable → the claim becomes UNVERIFIABLE and is never PASSed).
 *(v1.0 anchor-form rules, D8/D16.)*
@@ -428,6 +465,7 @@ Thresholds are *initial values*. The Calibrator re-fits them on adjudicated data
 - A **`pg{n}` / `pg{n}.l{m}` fallback locator** (QUARANTINED parse) supporting a VT1 / impact-tier-1 claim → UNVERIFIABLE (`LOCATOR_ONLY_ANCHOR`); for VT2 it is WARN.
 - Statute text with `derived = true` that is not `ROUNDTRIP_OK` supporting a VT1 claim → UNVERIFIABLE (`DERIVED_TEXT_TIER1`); only official or `ROUNDTRIP_OK` text may back tier-1 claims.
 - A private anchor must use the D8 form `{pdoc_id}/{pver}#{fragment}`; a bare `pdoc_…#frag` is resolved to the matter's current `pver` with WARN.
+- **Certified human translations (D21.17; closes §14 R-10 for P8).** A private rendition `v1.ht-en` passes C1 only if P7 has recorded its certification (lawyer attestation, `authoritative = true`) **and** the claim is a RECORD_FACT. The same rendition cited for a LEGAL_PROPOSITION or any public-law claim → FAIL (`CERTIFIED_TRANSLATION_PUBLIC_LAW`); an uncertified `ht-` rendition → FAIL (`MT_ANCHOR`), because it is then indistinguishable from MT. `mt-` renditions never pass.
 
 **C2 — Quote fidelity with OCR trust.**
 ```
@@ -465,6 +503,8 @@ for s in subclaims:
    if label == NOT_ENTAILED: c = contradiction_prob(premise, s)   # same model heads
         label = CONTRADICTED if c ≥ 0.80 else NEUTRAL
 ```
+**Pinpoint provenance (D19.6).** When a support anchor came from a reporter-style pinpoint that P1 aligned to court numbering (`CitationMention.pin.method`), `SAME_NUMBERING` and `QUOTE_ALIGN` are accepted as normal. `PAGE_SPAN_ALIGN` **alone is never sufficient for VERIFIED**: `pinpoint_support` is at most WARN (`PINPOINT_PAGE_ALIGN_ONLY`) and the band at most VERIFIED_WITH_CAVEAT, unless C3 independently entails the claim from the aligned paragraph and C2 matches a quote in it. `UNRESOLVED` → C3b re-anchoring runs.
+
 Claim-level result: all sub-claims ENTAILED → PASS. Some ENTAILED → PARTIAL, with `narrowed_text` built only from the entailed sub-claims (P6 accepts or rewrites it). None → go to **C3b**.
 
 **C3b — Pinpoint re-anchoring.** Addresses the wrong-pinpoint failure [P8-4]. Search the *same work* (and the same expression) for paragraphs that entail the claim. Retrieval is BM25 + dense within the work; the top 5 go to the small checker. If a paragraph passes, return `suggested_anchor_ids`, set reason `WRONG_PINPOINT` and status PARTIAL. P6 repair can re-point. **The original pinpoint is never silently accepted.** If nothing passes → UNSUPPORTED (`MISREPRESENTS_SOURCE`). If the cited anchor is NEUTRAL and another paragraph of the same work *contradicts* the claim → CONTRADICTED.
@@ -478,6 +518,8 @@ Claim-level result: all sub-claims ENTAILED → PASS. Some ENTAILED → PARTIAL,
 | same | DISSENT / separate minority opinion | FAIL (`DISSENT_AS_HOLDING`) unless the claim says dissent |
 | same | a paragraph *quoting* an earlier judgment | WARN (`QUOTED_AUTHORITY`): the claim should cite the original as well; P3 resolves the quoted source |
 | any | role confidence < 0.7 | `p8.role_judge` (LLM) decides; disagreement → UNKNOWN → band CHECK |
+| "the Court held" | `opinion_role = UNKNOWN` (multi-opinion judgment not segmented, D21.4) | `role_ok` UNKNOWN (never PASS) → band ≤ CHECK for VT1, VERIFIED_WITH_CAVEAT for VT2 |
+| "the Court held" | `opinion_role = REFERENCE_ORDER` | FAIL (`ROLE_ARGUMENT_AS_HOLDING`): a reference order states a question, not a holding |
 
 Most tools do not check this, but it is a characteristic Indian-judgment trap. Long judgments recite submissions at length before the analysis, so a "supporting" paragraph is often counsel's argument.
 
@@ -491,10 +533,13 @@ Most tools do not check this, but it is a characteristic Indian-judgment trap. L
 | NEGATIVE, `definitive=true` | **BAD_LAW** | PASS |
 | NEGATIVE, `definitive=false` | WARN, VT1 → human queue | WARN |
 | PARTIAL_NEGATIVE | proposition match: if the claim's proposition (NLI vs `prp_…` text, p≥0.8) is the negated one → BAD_LAW, else WARN | as above |
-| UNKNOWN (incl. reason `COVERAGE_GAP`) | UNKNOWN → UNVERIFIABLE for VT1; WARN for VT2 | UNVERIFIABLE |
+| UNKNOWN (incl. a GOOD status degraded because a coverage gap exceeded P3's per-source threshold, reason `COVERAGE_GAP`, D20.12) | UNKNOWN → UNVERIFIABLE for VT1; WARN for VT2 | UNVERIFIABLE |
+| Any status with reason `COVERAGE_GAP` and `definitive=false`, gap below threshold (D20.12), **or** a P5 `TREATMENT_PENDING` warning on the item (D21.1) | treat as the underlying status, then cap: WARN (`COVERAGE_GAP` / `STATUS_UNDER_REVIEW`) → band ≤ VERIFIED_WITH_CAVEAT with chip "status current to <law_current_to>"; never upgrades a negative | as the underlying status |
 | GOOD, but direct-history caution: a `STAYS` assertion, a pending appeal/SLP recorded on the case lineage, or `REFERS_TO_LARGER_BENCH` on the relied-on proposition | WARN (`UNDER_APPEAL_OR_STAYED` / `REFERRED_TO_LARGER_BENCH`) → band ≤ VERIFIED_WITH_CAVEAT; VT1 → chip mandatory in exports. Never BAD_LAW | PASS if the claim states the pendency |
 
-`NEGATIVE_SIGNAL_UNDER_REVIEW` and `COVERAGE_GAP` are **reason codes** on `AuthorityView`, not statuses: the status enum stays 5-valued (D6, which resolves S8-8). The direct-history caution row matters in Indian practice. HC judgments are routinely stayed or kept under challenge in SLPs, and a reference to a larger bench unsettles a proposition without overruling it. None of these is "negative treatment", but a lawyer must be told.
+**Integrity flags (D19.5).** `Work.integrity_flags[]` reach P8 as P3 authority reason codes: `RECALLED` on a support work → BAD_LAW for support claims; `SUPPRESSED` → UNVERIFIABLE (the text must not be re-exposed); `AI_GENERATION_ALLEGED` or `WITHDRAWN_FROM_SOURCE` → WARN, band ≤ CHECK for VT1 and ≤ VERIFIED_WITH_CAVEAT otherwise; `CORRIGENDUM_PENDING` → C2 quote checks are re-run when the corrected expression (`.rN`) lands, band ≤ VERIFIED_WITH_CAVEAT meanwhile.
+
+`NEGATIVE_SIGNAL_UNDER_REVIEW` and `COVERAGE_GAP` are **reason codes** on `AuthorityView` (P3's authority reason-code registry, D21.8), not statuses: the status enum stays 5-valued (D6, which resolves S8-8), and under D20.12 a gap changes the status only for GOOD past the threshold; negatives never lose their status on a gap. When `COVERAGE_GAP` affects a claim, P8 also adds a `degradations[]` entry of kind `COVERAGE_GAP` (D19.2). The direct-history caution row matters in Indian practice. HC judgments are routinely stayed or kept under challenge in SLPs, and a reference to a larger bench unsettles a proposition without overruling it. None of these is "negative treatment", but a lawyer must be told.
 
 **C7 — Binding on the forum.** If the claim text asserts bindingness ("binding on this Court", "the High Court is bound"), or the claim sits in `favourable_authorities` with a binding label, then `AuthorityView.binding_on_forum` for `forum` must equal BINDING. PERSUASIVE → FAIL (`NOT_BINDING_ON_FORUM`). UNDETERMINED → WARN. Bench-strength language is checked against `bench_strength` (C5). **Context sanity:** if `VerifyRequest.forum` or `as_of_legal_date` differs from the `MatterContext` forum or `temporal_context.substantive_event_date` (D16; `key_dates.cause_of_action` is now a derived view of it) when a matter is attached, the report adds `context_warnings[]` (`FORUM_MISMATCH_WITH_MATTER`, `AS_OF_DATE_MISMATCH_WITH_MATTER`) and every C7/C8 verdict carries reason `CONTEXT_MISMATCH` until a user confirms. A wrong forum silently flips binding verdicts, so this is not left to the user to notice.
 
@@ -535,9 +580,9 @@ status(claim) =
   PARTIAL       if some sub-claims entailed, or C3b re-anchored, or C4/C12 WARN requiring narrowed wording
   VERIFIED      otherwise
 ```
-**Reason codes** (stable enum, used by P6 repair, P9 analytics and eval attribution). `SCHEMA`, `OUT_OF_LEDGER`, `FABRICATED_ANCHOR`, `MISQUOTE`, `MINOR_QUOTE_VARIANCE`, `QUOTE_FROM_LOW_OCR`, `WRONG_PINPOINT`, `MISREPRESENTS_SOURCE`, `PARTIAL_SUPPORT`, `ROLE_ARGUMENT_AS_HOLDING`, `OBITER_AS_HOLDING`, `DISSENT_AS_HOLDING`, `QUOTED_AUTHORITY`, `NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`, `NEGATIVE_STATUS_DEFINITIVE`, `STATUS_UNDER_REVIEW`, `NOT_BINDING_ON_FORUM`, `BINDING_UNDETERMINED`, `SUPERSEDED_PROVISION`, `CROSSWALK_MISMATCH`, `NUMERIC_MISMATCH`, `DEADLINE_MISMATCH`, `ATTRIBUTION`, `UNGROUNDED_PROPOSITION_IN_OPINION`, `OVERCLAIM`, `ADVERSE_UNACKNOWLEDGED`, `COVERAGE_GAP`, `CROSS_LINGUAL_UNVERIFIED`, `CHECKER_DISAGREEMENT`, `INJECTION_SUSPECT`, `HIDDEN_TEXT_SUSPECT`, `UNDER_APPEAL_OR_STAYED`, `REFERRED_TO_LARGER_BENCH`, `CONTEXT_MISMATCH`, `BUDGET_EXHAUSTED`; added for spine v1.0: `MT_ANCHOR`, `LOCATOR_ONLY_ANCHOR`, `DERIVED_TEXT_TIER1`, `MASKED_SPAN_QUOTED`, `SUMMARY_AS_SUPPORT`, `UNCONFIRMED_FACT`, `RESIDENCY_NO_QUALIFIED_ENDPOINT`.
+**Reason codes** (stable enum, used by P6 repair, P9 analytics and eval attribution). `SCHEMA`, `OUT_OF_LEDGER`, `FABRICATED_ANCHOR`, `MISQUOTE`, `MINOR_QUOTE_VARIANCE`, `QUOTE_FROM_LOW_OCR`, `WRONG_PINPOINT`, `MISREPRESENTS_SOURCE`, `PARTIAL_SUPPORT`, `ROLE_ARGUMENT_AS_HOLDING`, `OBITER_AS_HOLDING`, `DISSENT_AS_HOLDING`, `QUOTED_AUTHORITY`, `NAME_MISMATCH`, `CITATION_STRING_MISMATCH`, `BENCH_MISMATCH`, `NEGATIVE_STATUS_DEFINITIVE`, `STATUS_UNDER_REVIEW`, `NOT_BINDING_ON_FORUM`, `BINDING_UNDETERMINED`, `SUPERSEDED_PROVISION`, `CROSSWALK_MISMATCH`, `NUMERIC_MISMATCH`, `DEADLINE_MISMATCH`, `ATTRIBUTION`, `UNGROUNDED_PROPOSITION_IN_OPINION`, `OVERCLAIM`, `ADVERSE_UNACKNOWLEDGED`, `COVERAGE_GAP`, `CROSS_LINGUAL_UNVERIFIED`, `CHECKER_DISAGREEMENT`, `INJECTION_SUSPECT`, `HIDDEN_TEXT_SUSPECT`, `UNDER_APPEAL_OR_STAYED`, `REFERRED_TO_LARGER_BENCH`, `CONTEXT_MISMATCH`, `BUDGET_EXHAUSTED`; added for spine v1.0: `MT_ANCHOR`, `LOCATOR_ONLY_ANCHOR`, `DERIVED_TEXT_TIER1`, `MASKED_SPAN_QUOTED`, `SUMMARY_AS_SUPPORT`, `UNCONFIRMED_FACT`, `RESIDENCY_NO_QUALIFIED_ENDPOINT`; added in the final pass: `PINPOINT_PAGE_ALIGN_ONLY` (D19.6), `CERTIFIED_TRANSLATION_PUBLIC_LAW` (D21.17). **Registry ownership (D21.8):** this enum is the P8-owned verification reason-code registry, versioned with `verifier_version`; authority reason codes (`NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, `TEXT_AWAITED`, …) belong to P3's registry and appear here only when copied from `AuthorityView`. P9 and P10 consume both registries.
 
-**Budget semantics.** `VerifyRequest.budget.max_llm_calls` and `latency_ms` are hard caps. The deterministic checks (C0–C2, C5–C10) always run, because they cost nothing. Judge calls are then allocated in priority order: VT1 first, then claims with 0.10 < p < 0.90, then cross-lingual claims. Any claim whose *mandatory* model check did not run becomes UNVERIFIABLE (`BUDGET_EXHAUSTED`), never PASS. A per-tenant daily judge-call quota (default 50× the tenant's seat count, set in XC) protects against runaway cost. When it is exhausted, the verifier degrades to *small checker only* and caps bands at VERIFIED_WITH_CAVEAT; it does not keep spending.
+**Budget semantics.** `VerifyRequest.budget.max_llm_calls` and `latency_ms` are hard caps. The deterministic checks (C0–C2, C5–C10) always run, because they cost nothing. Judge calls are then allocated in priority order: VT1 first, then claims with 0.10 < p < 0.90, then cross-lingual claims. Any claim whose *mandatory* model check did not run becomes UNVERIFIABLE (`BUDGET_EXHAUSTED`), never PASS. A per-tenant daily judge-call quota (default 50× the tenant's seat count, set in XC) protects against runaway cost. When it is exhausted, the verifier degrades to *small checker only* and caps bands at VERIFIED_WITH_CAVEAT; it does not keep spending. Every such degradation is recorded in `VerificationReport.degradations[]` (D19.2): `BUDGET` for a cap or quota hit, `MODEL_FALLBACK` when the Gateway served a judge task from a second qualified endpoint, `RESIDENCY_FALLBACK` when an `IN_PREFERRED` tenant's task left the preferred pool, `SOURCE_STALE`/`INDEX_LAG`/`COVERAGE_GAP` copied from the P5 bundle or detected from P4 `Freshness`; each lists `affected_claim_ids[]`.
 
 **Gate** (per section, reported in `section_gates`; P8 aggregates to memo level below, and P6 copies the result, D9):
 - **BLOCK** if any VT1 claim is not VERIFIED/PARTIAL-with-accepted-narrowing; or if >50% of the section's claims are withheld (a *vacuous* section is worse than an honest "needs review" [P8-28]); or if `strict_export` and any displayed claim is below band VERIFIED_WITH_CAVEAT.
@@ -547,7 +592,7 @@ status(claim) =
 **Memo gate** (S8-6 as modified by D9; computed by P8 when P6 sends the final `subject.kind="EXPORT"` call, or on demand):
 - **PASS** if every section is PASS.
 - **PARTIAL** if any section is PARTIAL or BLOCK while at least one section is displayable. `withheld_sections` lists the BLOCKed sections, and `gate_reasons` names them. In particular, a **tier-1 section failure (deadlines, limitation, maintainability) BLOCKs that section and makes the memo PARTIAL with a withheld list**. It does not BLOCK the whole memo, which v0.1 did.
-- **BLOCK** only if no section is displayable, or a memo-level integrity check fails (signature, ledger closure, or `as_known_at`/`graph_watermark` inconsistency across sections). D9 does not define memo-level BLOCK; this is P8's reading (§11).
+- **BLOCK** only if no section is displayable, or a memo-level integrity check fails (signature, ledger closure, or `as_known_at`/`graph_watermark` inconsistency across sections). **Ratified in D21.6** (closes §14 R-21).
 
 Export rule (unchanged in substance): a BLOCKed section is never exported. A memo whose `deadlines` section is BLOCK can never be exported, even with a waiver. Exports of other PARTIAL memos embed the withheld list and the signed report.
 
@@ -619,10 +664,10 @@ Rules:
 **Trust ledger** [NOVEL — unvalidated as a product mechanism]. A monthly in-app page per tenant (and globally) showing, for each band × stratum, the audited error rate with a 95% CI (PPI estimate, §5.12), the audit sample size, the withheld rate, and the top reason codes. It turns calibration into a public commitment. Competitors report hallucination rates only when outsiders measure them [P8-1].
 
 ### 5.8 Citation Audit service and signed exports
-**Citation Audit** (`/audit`). The input is any ParsedDocument: the firm's own draft, an opponent's filing, or a lower-court/tribunal order. For every `CitationMention` and `StatuteMention`:
+**Citation Audit** (`POST /p8/v1/audits`, asynchronous; ≤ 60 s for a 50-page order). The input is any ParsedDocument: the firm's own draft, an opponent's filing, or a lower-court/tribunal order. For every `CitationMention` and `StatuteMention`:
 1. Resolve via `identifier_alias`. Unresolvable → `NOT_FOUND` if the citation string is well-formed for a scheme we cover completely (e.g. the SC neutral citation `INSC` range we hold), else `UNVERIFIABLE`. Coverage-aware, as the oracle-coverage study requires [P8-6].
 2. Case-name/citation consistency (C5).
-3. If the document states a proposition or quote next to the citation (sentence window from P1), run C2, C3 and C3b against the cited pinpoint, or against the whole work if no pinpoint is given (weaker; flagged).
+3. If the document states a proposition or quote next to the citation (sentence window from P1), run C2, C3 and C3b against the cited pinpoint, or against the whole work if no pinpoint is given (weaker; flagged). Reporter pinpoints (e.g. an SCC page) are used through P1's `CitationMention.pin{cited_anchor, method, confidence}` (D19.6): a pinpoint resolved only by `PAGE_SPAN_ALIGN` yields at most `OK` with reason `PINPOINT_PAGE_ALIGN_ONLY`, never a clean `OK`, unless C2/C3 confirm it on the aligned paragraph; `UNRESOLVED` → `WRONG_PINPOINT` is never asserted, only `UNVERIFIABLE` (whether a reporter pinpoint can be mapped without storing the reporter's arrangement is 01_master §14.2 Q3).
 4. Status (C6) at the document's date *and* today. Binding (C7) for the document's forum. Provision-in-force (C8) at the document's date.
 
 The output is a `CitationAuditReport`. For **incoming orders**, findings of `NOT_FOUND`/`MISREPRESENTS`/`SUPERSEDED_PROVISION` become a P6 input ("possible ground: impugned order relies on non-existent/misrepresented authority"), always framed as *to be confirmed by the lawyer*. Indian appellate courts have set aside orders on this basis (§3.8) [P8-8]. For the firm's own drafts, the audit is a pre-filing check.
@@ -630,9 +675,9 @@ The output is a `CitationAuditReport`. For **incoming orders**, findings of `NOT
 **Signed verification appendix.** Every export (DOCX/PDF, P6 §5.8) embeds an appendix listing, for each cited authority: anchor, quote hash, status as of the export time and `graph_watermark`, binding verdict, `verifier_version` and report signature. Export always re-runs C6–C8 at graph head (`strict_export`). A later re-verification (living memo) can prove what was known when. This matches the spine's bitemporal audit goal (§E).
 
 ### 5.9 Re-verification, caching and idempotency
-- **Cache keys.** Entailment: `(claim_hash, sorted anchor text_hashes, checker/judge versions)`. Status/binding/temporal: also `graph_watermark` and `(as_of_legal_date, forum)`. Entailment results never depend on graph state, so they survive status changes. Only C6–C8 are recomputed.
-- **Invalidation.** On `graph.delta.v1`, cached status entries for affected `target_id`s are invalidated. P8 does *not* push alerts to matters. That path belongs to the D3 topology: P4's public `impact.detected.v1` is matched by the tenant cell's Impact Matcher (run by P7), which triggers P6 `REVERIFY` (P6 §5.7). P8 answers `/revalidate` in ≤5 s p95 for ≤200 claims, because only C6–C8 run.
-- **Delta storms.** A single Constitution Bench overruling, or a P3 backfill after an ontology change, can touch 10⁴–10⁶ cached status entries. Invalidation is O(affected keys) via a reverse index `target_id → cache keys` (Postgres table `vcache_dep(target_id, cache_key)`), so it is not a scan. Revalidation work is queued with priority:
+- **Cache keys.** All keys are prefixed by `(tenant_id, matter_id)` (D9 cache isolation). Entailment: `(claim_hash, sorted anchor text_hashes, checker/judge versions)`. Status/binding/temporal: also `graph_watermark` and `(as_of_legal_date, forum)`. Entailment results never depend on graph state, so they survive status changes. Only C6–C8 are recomputed.
+- **Invalidation.** On `graph.delta.v1`, cached status entries for affected `subject_id`s (AuthorityView key, D6; P3's older `target_id`, §14 R-05) are invalidated. P8 does *not* push alerts to matters. That path belongs to the D3 topology: P4's public `impact.detected.v1` is matched by the tenant cell's Impact Matcher (run by P7), which triggers P6 `REVERIFY` (P6 §5.7). P8 answers `POST /p8/v1/reverify` in ≤5 s p95 for ≤200 claims, because only C6–C8 run.
+- **Delta storms.** A single Constitution Bench overruling, or a P3 backfill after an ontology change, can touch 10⁴–10⁶ cached status entries. Invalidation is O(affected keys) via a reverse index `subject_id → cache keys` (Postgres table `vcache_dep(subject_id, cache_key)`, one per tenant partition, D9), so it is not a scan. Revalidation work is queued with priority:
   1. claims in open matters with an export pending or a hearing ≤7 days away (from `MatterContext.procedural_events[]` / `deadlines[]`; `key_dates` is now a derived view, D9);
   2. VT1 claims in open matters;
   3. everything else, lazily on next read.
@@ -761,7 +806,7 @@ Gold items list `depends_on_ids` (works, provisions, propositions). P8 consumes 
    - *Pools.* The `IN_ONLY` pool contains the in-India endpoints: Bedrock "in." OpenAI GPT-5.6 profiles, Azure `southindia` deployments, and self-hosted Sarvam-105B / Qwen3. The `ANY` pool also includes global endpoints such as Claude. D4 on-prem deployments use their own self-hosted set.
    - *Gating.* Non-inferiority (rule 2) is applied within each pool against that pool's incumbent. An endpoint is `qualified` only for the pools in which it passed.
    - *Publication.* The gap between pools is published on the trust ledger's internal twin and in `eval.run.completed.v1.residency_scores`, so an `IN_ONLY` tenant sees the quality of the models it actually uses.
-   - *No qualified endpoint.* If a task has no qualified endpoint in a tenant's pool, the Gateway fails closed. The dependent claims become UNVERIFIABLE (`RESIDENCY_NO_QUALIFIED_ENDPOINT`), and they never silently fall back to a global endpoint.
+   - *No qualified endpoint.* If a task has no qualified endpoint in a tenant's pool, the Gateway fails closed. The dependent claims become UNVERIFIABLE (`RESIDENCY_NO_QUALIFIED_ENDPOINT`), and they never silently fall back to a global endpoint; the report carries a `RESIDENCY_FALLBACK` degradation entry naming them (D19.2) so P10 can disclose it.
 
 ### 5.12 Production monitoring, audit sampling and drift
 - **Online signals** (per model/prompt/tenant/stratum, daily): first-pass verification rate (P6 metric); status mix; withheld rate; judge escalation rate; checker–judge disagreement rate; C3b re-anchor rate; UNVERIFIABLE by reason; lawyer flags per 100 displayed claims (P9); Citation Audit finding rates.
@@ -802,7 +847,8 @@ Gold items list `depends_on_ids` (works, provisions, propositions). P8 consumes 
 - Annotation Studio for DC2/DC3 runs **inside the firm's tenant plane** (or, for dedicated deployments, their D2 dedicated cell or D3 customer VPC per D17). Vendor staff have no content access (P7 operator model).
 - Restatements are checked by the P9 Privacy Gate lint (identifiers, PAN/Aadhaar-like patterns via India recognisers) and then by the firm's designated privacy partner.
 - Ethical walls (P7) apply to annotation assignment. An annotator never labels items derived from matters they are walled from.
-- Withdrawal: deleting a consent triggers removal of derived eval items and retraining exclusions via P9's unlearning path.
+- **Consent records (D21.16).** Every consent (client written consent for DC2, partner sign-off, contribution schedules) is a P7-owned `ConsentRecord` (`cns_…`) in the tenant plane; P8 and P9 consume it. Each `EvalCase.provenance.consent_ref` points at the `cns_` id that authorised it, and adjudication refuses DC2/DC3 candidates without a live `cns_` reference.
+- Withdrawal: deleting a consent (revoking the `cns_` record) triggers removal of derived eval items and retraining exclusions via P9's unlearning path; P8 locates the items by `consent_ref`.
 
 **Annotation protocol**
 - *Roles:* Contributors (associates 2–6 yrs), Adjudicators (senior associates/partners), and optionally supervised law-student annotators (NLU clinic) for DC0 first-pass and perturbation spot-checks.
@@ -834,8 +880,8 @@ A competitor can copy the *method* in months. The *adjudicated data, the partner
 
 ### 5.14 Cross-cutting: security, cost at scale (≈5M+ docs), latency, observability, model-agnostic design
 **Security.**
-- The Verifier runs inside the tenant boundary for private claims, under a TEC (D9). Egress goes only to the Gateway, the P1/P3 read APIs (PLC read-path rule, D3; a local PLC replica in D3/D4 deployments) and the tenant store. The verification cache and any judge prompt/prefix cache are isolated per tenant+matter (D9).
-- `TENANT_PRIVATE` gold suites, verification caches and reports are purged on the tenant's `erasure.requested.v1`. P8 is not yet in the D4 consumer list for that event (§11).
+- The Verifier runs inside the tenant boundary for private claims, under a TEC (D9). Egress goes only to the Gateway, the P1/P3 read APIs (PLC read-path rule, D3; shared in-region PLC for D2 cells, a local PLC replica with ≤ 24 h lag in D3/D4/D4h deployments, D19.7) and the tenant store. The verification cache and any judge prompt/prefix cache are isolated per tenant+matter (D9).
+- `TENANT_PRIVATE` gold suites, verification caches and reports are purged on the tenant's `erasure.requested.v1` (P8 is a named consumer, D21.3), and P8 acks with `erasure.applied.v1` (D20.15); P7 aggregates the acks and alone emits `erasure.completed.v1`.
 - Gold Store: signed manifests, 2-reviewer changes, access logging on the EXAM split, canary strings to detect training contamination.
 - Eval calls to external LLMs use only ZDR/no-training endpoints (XC registry `zdr`, `trains_on_data=false`), and EXAM items are never sent to endpoints without those guarantees.
 - Judge prompt-injection controls are in §5.3.
@@ -852,9 +898,9 @@ A competitor can copy the *method* in months. The *adjudicated data, the partner
 | Calibration, report assembly, signing | 50 ms | 50 ms |
 | **Total** | **≈3.5 s (target ≤4 s)** | **≈5.3 s (target ≤8 s; ≤20 s incl. one repair round-trip)** |
 
-Revalidation (C6–C8 only): ≤5 s p95 for 200 claims. Citation Audit of a 50-page order: ≤60 s p95 (async).
+Re-verification via `POST /p8/v1/reverify` (C6–C8 only): ≤5 s p95 for 200 claims. Citation Audit of a 50-page order: ≤60 s p95 (async).
 
-**Cost** (token model. Prices are illustrative and owned by 13_cross_cutting.md.)
+**Cost** (token model. Prices are illustrative and owned by 13_cross_cutting.md.) **Figures of record (D19.1):** ≈ $0.105 per verified Q&A and ≈ $2.16 per strategy memo end-to-end, ≈ $77K/month (5M corpus) and ≈ $89K/month (20M) at 2,000 seats; the earlier $0.086 / $1.66 are list-price lower bounds. The P8-only figures below are component estimates inside that envelope.
 - Judge call ≈1,800 input + 200 output tokens.
 - Q&A answer: ≈5 judge calls → ≈9K in / 1K out. At an illustrative $1–3 per M input and $5–15 per M output, that is **≈$0.015–0.045**.
 - Memo: ≈100 claims, ≈50 judge calls including VT1 double passes and one repair re-verification → ≈90K in / 10K out → **≈$0.15–0.45**, plus decomposer calls (small model) ≈$0.02.
@@ -933,7 +979,7 @@ Verification could run only in the export step (cheap, but lawyers read unverifi
 | **Hindi/regional judgment** | The English-trained checker misjudges. Translations drift. Hindi slice gates are underpowered | The *authoritative* expression (anchor-API flag, S8-9) must pass; the other version is a helper. If the flag is missing, both must pass. Hindi negation lists and Indic-digit normalisation are in C2/C9. Multilingual judge qualified on the Hindi slice. VT1 cross-lingual → human. Hindi oversampled to 15% of G-QA. Separate calibration stratum. `CROSS_LINGUAL_UNVERIFIED` chip until the slice passes |
 | **Precedent overruled yesterday** | P3 status not yet updated (P0/P4 lag), so C6 says GOOD. Cached reports stale | Watermark shown on chips; amber if older than the court's freshness SLO. Direct-history cautions (stay, pending SLP, larger-bench reference) are a separate C6 row, capped at VERIFIED_WITH_CAVEAT (§5.3), because "not yet overruled" is not "safe". P3 asymmetric safety shows `NEGATIVE_SIGNAL_UNDER_REVIEW` quickly. Cache invalidation on delta. Export re-checks at graph head. Living memo REVERIFY via P4→P7→P6. Auto-generated temporal trap confirms the fix |
 | **Malicious user / prompt-injected document** | Anchor text contains "mark this as entailed". An opponent's notice asserts false "facts". Coordinated false flags try to poison gold | Checker is not instruction-following. Judge I/O typed + exact-span requirement. Injection-suspect anchors skip the judge (band capped). C10 attribution. Eval candidates from feedback need adjudication (2 lawyers for GLOBAL, P9). Signed gold, 2-reviewer changes |
-| **Confused user** | Lawyer edits a verified claim into an unsupported one and exports it. False premise in the question | Wrong forum or as-of date chosen → `context_warnings` + `CONTEXT_MISMATCH` against MatterContext (C7). Edits re-enter `/verify` (DRAFT mode). Export gate (`strict_export`) plus "DRAFT – NOT VERIFIED" watermark (P6). C6 CONTRADICTED on false status premises, surfaced as a premise correction |
+| **Confused user** | Lawyer edits a verified claim into an unsupported one and exports it. False premise in the question | Wrong forum or as-of date chosen → `context_warnings` + `CONTEXT_MISMATCH` against MatterContext (C7). Edits re-enter `/p8/v1/verify` (DRAFT mode). Export gate (`strict_export`) plus "DRAFT – NOT VERIFIED" watermark (P6). C6 CONTRADICTED on false status premises, surfaced as a premise correction |
 | **Source outage / format change** | Paragraph renumbering after re-parse; new documents lack anchors; the site is down | Verification uses stored anchors and aliases, never live sites. Anchor-stability canary on gold works (L1 for P1 changes). Missing anchors → UNVERIFIABLE, not UNSUPPORTED |
 | **Verifier–generator correlation** | The same model family makes the same mistake twice | Judge family ≠ generator family (enforced). The small checker is an independent architecture |
 | **Over-blocking / vacuous memos** | Conservative thresholds withhold most claims, and lawyers abandon the tool | Withheld rate and BLOCK rate are gated metrics (§9). C3b and `narrowed_text` convert failures into PARTIAL. Informativeness tracked [P8-28] |
@@ -941,7 +987,7 @@ Verification could run only in the export step (cheap, but lawyers read unverifi
 | **Goodhart / contamination** | Tuning to gold, or gold leaking to providers or training sets | Sealed EXAM split, quarterly rotation, canary strings, ZDR-only eval endpoints, public benchmarks non-gating |
 | **Gold goes stale** | Law changes make "expected" answers wrong, punishing a correct system | Self-maintaining gold (§5.10.6) |
 | **Single-partner bias** | Metrics reflect one firm's practice and style | Strata quotas, ≤50% share cap, additional partners by months 9–12 |
-| **Cost blow-up** | A 2,000-page paper book with thousands of citations sent to `/audit`; a tenant scripting `/verify`; judge price rise | `AuditRequest.budget.max_mentions` (default 2,000) with `truncated=true`, not silent drops. Per-request `max_llm_calls`. Per-tenant daily judge quota, after which the verifier degrades to small-checker-only with capped bands. `BUDGET_EXHAUSTED` → UNVERIFIABLE, never PASS (§5.4). Cost-per-claim gate (§9.1) |
+| **Cost blow-up** | A 2,000-page paper book with thousands of citations sent to `/p8/v1/audits`; a tenant scripting `/p8/v1/verify`; judge price rise | `AuditRequest.budget.max_mentions` (default 2,000) with `truncated=true`, not silent drops. Per-request `max_llm_calls`. Per-tenant daily judge quota, after which the verifier degrades to small-checker-only with capped bands. `BUDGET_EXHAUSTED` → UNVERIFIABLE, never PASS (§5.4). Cost-per-claim gate (§9.1) |
 | **Hidden-text / Unicode tricks in uploaded PDFs** | Invisible text-layer spans or zero-width/homoglyph characters make a quote "match", or smuggle instructions into premises | P1 invisible-span flags plus C2 normalisation logging → `HIDDEN_TEXT_SUSPECT`. These spans are excluded from premises and need a page-image check (§5.3) |
 | **Delta storm** | A Constitution Bench overruling or a P3 backfill invalidates 10⁴–10⁶ cached statuses at once | Reverse-index invalidation, priority revalidation (export or hearing ≤7 days first), per-tenant concurrency caps, lazy recompute-on-read, `bulk=true` deltas do not spawn sentinels (§5.9) |
 
@@ -971,7 +1017,7 @@ An independent adversarial review (30 Sep 2026) re-fetched about 35 of the highe
 3. Authoritative-language determination instead of assuming the original is English (S8-9).
 4. Forum and as-of-date mismatch with MatterContext (confused user).
 5. Hidden-text-layer and Unicode/homoglyph injection in uploaded PDFs.
-6. Hard budget semantics (`BUDGET_EXHAUSTED` → UNVERIFIABLE), `/audit` mention caps and per-tenant judge quotas (cost blow-up).
+6. Hard budget semantics (`BUDGET_EXHAUSTED` → UNVERIFIABLE), `/p8/v1/audits` mention caps and per-tenant judge quotas (cost blow-up).
 7. Delta-storm invalidation and priority revalidation.
 8. Case-name matching rule for Indian cause titles.
 9. The DPDP s.17(1)(a) exemption is no longer assumed to cover evaluation use, and the DPDP commencement date (~May 2027) is flagged.
@@ -1053,11 +1099,13 @@ Targets come from the phase docs where they exist; P8 adds gate type and gold se
 8. **Judge dependence on frontier providers.** If a provider retires a judge model, recalibration is needed. The self-hosted checker limits the blast radius.
 9. **Charlotin-listed Indian incidents are secondary descriptions.** Before any marketing or product copy cites them, the underlying orders must be read and anchored (feed to 21/23).
 10. **DPDP timing and basis.** Most substantive DPDP obligations commence around May 2027 [P8-74], during the full-version build. Whether any eval use of client personal data can rely on s.17(1)(a) is doubtful (§5.13). The DPP is designed not to need it, which costs lawyer restatement time.
-11. **Spine v1.0 follow-ups (open).**
-    - (a) D9 says a tier-1 section failure makes the memo PARTIAL, but it does not define memo-level BLOCK. §5.4 uses "no displayable section, or a memo-level integrity failure"; the principal architect should ratify this.
-    - (b) P8 consumes `doc.redacted.v1`, `erasure.requested.v1`, `identity.merged.v1` / `identity.split.v1` (to re-key gold `depends_on_ids`) and `source.health.v1`, but D4 does not list P8 as a consumer of the first three.
-    - (c) `model.endpoint.candidate.v1` is not in the D4 catalogue, so P8 polls the Gateway registry until XC names the event.
-    - (d) The new reason codes (`MT_ANCHOR`, `LOCATOR_ONLY_ANCHOR`, `DERIVED_TEXT_TIER1`, `MASKED_SPAN_QUOTED`, `SUMMARY_AS_SUPPORT`, `UNCONFIRMED_FACT`, `RESIDENCY_NO_QUALIFIED_ENDPOINT`) extend the closed enum, and P9/P10 reason chips must adopt them.
+11. **Spine v1.0 follow-ups — all ruled (D19–D21).**
+    - (a) Memo-level BLOCK = no displayable section, or a memo-level integrity failure: **ratified (D21.6)**; §5.4 is normative (closes §14 R-21).
+    - (b) Consumer lists: **D21.3** names P8 as a consumer of `doc.redacted.v1`, `erasure.requested.v1`, `identity.merged.v1` / `identity.split.v1` and `index.generation.promoted.v1`; P8 acks the first two with `redaction.applied.v1` / `erasure.applied.v1` (§2.2, §2.3 O4).
+    - (c) `model.endpoint.candidate.v1`: **named in D21.3** (Gateway → P8 offline gate) and registered with `release.candidate.v1` as control-plane `ops.*` events (§14 R-31); P8 no longer polls the registry.
+    - (d) Reason codes: **D21.8** makes this enum the P8-owned verification reason-code registry (authority reason codes remain P3's); P9/P10 reason chips consume both.
+    - (e) `VerificationReport.degradations[]`: **accepted (D19.2, §14 R-08)** with kinds BUDGET | SOURCE_STALE | MODEL_FALLBACK | RESIDENCY_FALLBACK | INDEX_LAG | COVERAGE_GAP and `affected_claim_ids[]`; the older XC kinds (`RESIDENCY_QUEUED`, `QUALIFIED_FALLBACK`) map to RESIDENCY_FALLBACK and MODEL_FALLBACK (01_master §7.19 now carries the D19.2 kinds).
+    - (f) Remaining legal question: whether a reporter pinpoint can be mapped to a court-numbered anchor without storing the reporter's arrangement (01_master §14.2 Q3) limits how often `PAGE_SPAN_ALIGN` pinpoints can reach VERIFIED (§5.3 C3).
 
 ---
 ## References

@@ -57,13 +57,13 @@ Because repeated and low-value alerts measurably reduce the rate at which people
 
 ### 2.0 Spine v1.0 conformance
 
-This doc follows the spine v1.0 decision record (D1–D18). Where the rest of this doc says "proposed", read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` means a spine v1.0 decision. The matcher variable `D` in §5.6 pseudo-code is a matter date. `D_MAX` in §5.4 is a depth bound.
+This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 dispositions follow the first table, and the open points they closed are marked *ruled*). Where the rest of this doc says "proposed", read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` means a spine v1.0 decision. The matcher variable `D` in §5.6 pseudo-code is a matter date. `D_MAX` in §5.4 is a depth bound.
 
 | # | P4 proposal (§2.4) | Disposition |
 |---|---|---|
-| SP4-1 | `impact.detected.v1` as a public broadcast (`tenantid`=null) + O1 fields; drop "P7 registers dependency fingerprints with P4" | **ACCEPTED as D3 + D5** (merged with P7 §2.5-2 and P10 S10-3). <br/>• The topic is **`plc.impact.public.v1`**. <br/>• Each tenant cell's Impact Matcher (P4-owned `impact-match-core`, run by P7, also on-prem) matches it against the private `matter_dependency` index. Tenants download whole manifests and never do per-ID lookups. P4 stores no tenant dependency sets. <br/>• Modified: `verification` is `{definitive, review_state}` per D5 (was `state`). `affected[]` is `{id, ring, via, weight}`; `via_assertion_id` stays as a P4 extra. |
-| SP4-2 | Concrete `reprocess.requested.v1` schema | **ACCEPTED** (D4: the producer owns the schema; not contested). Modified: the campaign prefix is **`camp_`** (D12; was `cmp_`). |
-| SP4-3 | `graph.delta.v1` `cause.kind ∈ {RECOMPUTE, SCHEDULED}`; P3 `commit_status_batch` | **ACCEPTED as D4.** The full enum is `EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL`. P3 emits a delta, possibly empty, for every `doc.parsed.v1`. |
+| SP4-1 | `impact.detected.v1` as a public broadcast (`tenantid`=null) + O1 fields; drop "P7 registers dependency fingerprints with P4" | **ACCEPTED as D3 + D5** (merged with P7 §2.5-2 and P10 S10-3). <br/>• The topic is **`plc.impact.public.v1`**. <br/>• Each tenant cell's Impact Matcher (P4-owned `impact-match-core`, run by P7, also on-prem) matches it against the private `matter_dependency` index. Tenants download whole manifests and never do per-ID lookups. P4 stores no tenant dependency sets. <br/>• Modified: `verification` is `{definitive, review_state}` per D5 (was `state`). 01_master §6.3 and §14 R-19 still write `verification.state`, so for every `schemaversion` 1.x P4 also emits `state` as a read alias with the same value. P7 matchers written to either name keep working, and the alias is dropped at v2. `affected[]` is `{id, ring, via, weight}`; `via_assertion_id` stays as a P4 extra. <br/>• The signature carrier is the CloudEvents extension **`datasig`** (Ed25519 JWS over `data`; 01_master §6.1 E6, §14 R-32). |
+| SP4-2 | Concrete `reprocess.requested.v1` schema | **ACCEPTED; schema owner P4 (D21.15)**, with the reason enum of O2 (incl. `FEEDBACK`). Modified: the campaign prefix is **`camp_`** (D12; was `cmp_`). **`FRESH_CITER` is not a reason:** P5's fresh-citer reprocess was REJECTED (D21.1), and 01_master §6.3's listing of it is superseded. Producers beyond P4 campaigns are P3 (one `work_id`, lane RT, ≤ 1 per work per hour, `reason=QUALITY_ALERT`; 01_master §14 R-27), P9-global and ops. The P4 ledger observes every request. |
+| SP4-3 | `graph.delta.v1` `cause.kind ∈ {RECOMPUTE, SCHEDULED}`; P3 `commit_status_batch` | **ACCEPTED as D4; signature ratified D20.17.** The full enum is `EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL\|IDENTITY` (D4 set + `IDENTITY`, 01_master §6.3, §14 R-17). P3 emits a delta, possibly empty, for every `doc.parsed.v1`. |
 | SP4-4 | New sync object `Freshness` | **ACCEPTED as D9** (P4-owned): `law_current_to`, `capture_frontier`, `propagation_frontier`, `stage_lag`, `known_gaps`, `source_health` (O4). |
 | SP4-5 | Kafka 4.x API + transactional outbox; Temporal | **ACCEPTED as D1** (Kafka 4.x KRaft + Postgres outbox + Debezium; retry/DLQ topics; Temporal, with a DBOS fallback for small on-prem). D16 adds that Redpanda is acceptable as API-compatible. P4's licence caveat for anything shipped on-prem (§5.2) still applies. |
 | SP4-6 | `matter.alert.v1` carries `impact_version`, `lifecycle`; updated in place | **ACCEPTED-MODIFIED as D5.** `dedupe_key = hash(impact_id\|source_event_id, matter_id)`. The full `matter.alert.v1` schema (`alert_kind`, `revision`, `supersedes_alert_id`, `requires_ack`, `explanation{text, anchors[]}`, …) is P7-owned. Retractions reach every original channel. |
@@ -74,7 +74,9 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 **Renames and semantics this doc now follows:**
 - Envelope extension attributes (D2) are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (`PUBLIC` on every PLC topic). Payload fields keep snake_case.
 - `cmp_` → `camp_`.
-- `verification.state` → `verification.review_state`.
+- `verification.state` → `verification.review_state` (D5). A `state` read alias is emitted through v1.x because 01_master §6.3 still uses that name.
+- `judgment.expected.v1` fields per 01_master §6.4 (`pronounced_on`, `bench{strength, judge_ids[]}`, `evidence_raw_id`, `source_kind`; was `expected_on`, `bench_strength`, `evidence{kind}`).
+- Court IDs use the canonical `crt_IN_…` form (01_master §14 R-09), e.g. `crt_IN_SC`, `crt_IN_HC_DEL` (was `crt_sc`, `crt_dhc`).
 - The redaction input is the single event **`doc.redacted.v1`** (`data` = `RedactionOverlay`). This replaces "redaction / suppression records".
 - `raw.captured.v1` `change_kind` gains `SUPPRESSED` and `METADATA_CHANGED` (D16).
 - Deployments are named D1 pooled · D2 dedicated cell · D3 customer VPC · D4 on-prem/air-gapped (signed daily PLC delta bundles) · D4h (D17).
@@ -92,9 +94,28 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 - The **PLC read-path rule** (D3, §5.6). It resolves this doc's side-channel concern §8.R (f).
 - The `impact-match-core` library also runs in D4/D4h.
 
-**Open cross-phase points** (flagged, not resolved here):
-- P0 and P1 do not yet name their Kafka topics with P4's `plc.` prefix convention. The topic table in §5.2 is P4's proposal.
-- `stage_lag` keeps P4's `p95_min` breakdown as a sub-object.
+**D19–D21 dispositions affecting P4**
+
+| Ruling | What P4 does |
+|---|---|
+| D19.1 cost figures of record | P4 quotes no per-unit serving cost. Campaign budgets use D18 build figures (which D19.1 leaves standing) and the 13_cross_cutting cost model (§5.11). |
+| D19.3 `redaction.applied.v1` | P4 acks each `doc.redacted.v1` overlay `{overlay_id, consumer: "P4", applied_at, generations_purged[]}` after the `CONTENT_SUPPRESSED` impact is published and impact manifests and explanations containing masked text are rewritten (§5.9). |
+| D19.4 real-time lane | **All impact_tier-1 changes take the RT lane.** So do `judgment.expected.v1` events for larger or constitution benches. Other changes are laned by public citation footprint only (§5.7.1). P4 never uses tenant interest; an unattributed Privacy-Gate union watch-list is post-GA. This resolves 01_master §14 R-36 for P4. |
+| D19.7 replicas | D2 cells read the Freshness API through the shared stateless read path. D3/D4/D4h read a local replica under the ≤ 24 h replica-lag SLO, and their Freshness is `min(central frontier, replica bundle cutoff)`. |
+| D20.1 court feeds | `case.status.observed.v1`, `court.causelist.published.v1` and `court.calendar.published.v1` are P0 → P7/P6/P10. P4 does not consume them; `LINEAGE_WATCH` outcomes reach P4 through `doc.parsed.v1` → `graph.delta.v1`. |
+| D20.2 `acquire.requested.v1` | P4 emits only `COVERAGE_GAP` (with `sub_reason` ∈ {`FRONTIER_STALL`, `EXPECTED_OVERDUE`, `SOURCE_WITHDRAWN`}) and `LINEAGE_WATCH` (O3). There is no `PRONOUNCEMENT_EXPECTED`. |
+| D20.5 prefixes | `judgment.expected.v1.expected_id` uses `jex_`. Campaigns use `camp_`, and overlays use `ovl_`. |
+| D20.12 COVERAGE_GAP | P3 applies the refined rule (O4 note). P4 supplies `known_gaps`, `source_health` and per-source lag to it. |
+| D20.16 topic naming | P4's topic table (§5.2) conforms to `{plane}.{domain}.{event}.v{n}`, and 01_master publishes the topic map. |
+| D21.1 FRESH_CITER rejected | P4 guarantees that every new judgment is extracted by P3: the propagation frontier stalls until `GRAPHED`. P5 shows "treatment pending" from the Freshness API's `propagation_frontier`. |
+| D21.3 consumer lists | `plc.impact.public.v1` → P7 Impact Matcher, P6 RuleSpec registry, P10 (non-matter watches), P8, and P5 (optional). P4 consumes `index.generation.promoted.v1` and `identity.merged/split.v1`. |
+| D21.14 `tenant_severity()` | Implemented to P7's adjustment contract (§5.6). |
+| D21.15 `reprocess.requested.v1` | Schema owner P4 (O2). |
+| D21.18 `referenced_authorities[]` | P4 may raise a PROVISIONAL "text awaited" impact on each named authority at any bench size (§5.7.1). |
+
+**Cross-phase points raised by earlier drafts:**
+- *Ruled D20.16:* topic names follow `{plane}.{domain}.{event}.v{n}`, and all producers, including P0, adopt them.
+- `stage_lag` keeps P4's `p95_min` breakdown as a sub-object (`stage_lag.p95_min.{parse, index, graph, impact}`). 01_master §7.14 names it `stage_lag_p95_min`, and P4 serves that flat name as an alias in v1.
 
 ### 2.1 Inputs
 
@@ -103,14 +124,14 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 | I1 | `raw.captured.v1` | P0 | ledger start (`captured_at`, `source_id`, `change_kind`, `crawl_run_id`, `capture_id`, `provenance_tier`); DELETED/REAPPEARED policy (§5.9). `change_kind` also carries `METADATA_CHANGED` and `SUPPRESSED` (D16). P4 acts on `SUPPRESSED` only through `doc.redacted.v1` |
 | I2 | `doc.parsed.v1` | P1 | ledger stage; `quality.gate`; `supersedes_parse_id`; `anchor_changes{}` → `TEXT_CORRECTED` impacts; `work_id_status` |
 | I3 | `doc.indexed.v1`, `index.generation.promoted.v1` (D4) | P2 | ledger stage; campaign completion; rollback deadline |
-| I4 | `graph.delta.v1` (D4 fields `graph_watermark`, `cause{kind EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL, ref}`, `status_changes[].definitive/reason_codes/valid_from`, `manifest_uri`). **One delta, possibly empty, per `doc.parsed.v1`** | P3 | recompute seeds; impact detection; retraction handling; ledger `GRAPHED` stage (propagation frontier) |
+| I4 | `graph.delta.v1` (D4 fields `graph_watermark`, `cause{kind EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL\|IDENTITY, ref}`, `status_changes[].subject_id`, `status_changes[].definitive/reason_codes/valid_from`, `manifest_uri`). **One delta, possibly empty, per `doc.parsed.v1`** | P3 | recompute seeds; impact detection; retraction handling; ledger `GRAPHED` stage (propagation frontier) |
 | I5 | `identity.merged.v1` / `identity.split.v1` `{kind WORK\|CASE\|ALIAS, from_id, to_id, reason, confidence}` (D4/D16) | P1 | `IDENTITY_REMAPPED` impacts |
 | I6 | `source.health.v1` `{source_id, status OK\|DEGRADED\|DOWN\|BLOCKED, freshness_lag_p95, last_success_at, coverage_estimate, expected_pending, backing, incident_id}` (D16) | P0 | capture frontier; `COVERAGE_GAP` |
-| I7 | `doc.redacted.v1` (D4/D16; `data` = `RedactionOverlay` `{overlay_id, scope, kind, spans[], legal_basis, ordered_by?, effective_at, purge_sla}`; the single name, which replaces "plc.redaction.v1" and the separate redaction records. P0 emits it for every applied `SuppressionOrder`) | P0 / P1 / ops / legal | `CONTENT_SUPPRESSED` impacts + purge campaign |
+| I7 | `doc.redacted.v1` (D4/D16; `data` = `RedactionOverlay` `{overlay_id, scope, kind, spans[], legal_basis, ordered_by?, effective_at, purge_sla}`; the single name, which replaces "plc.redaction.v1" and the separate redaction records. P0 emits it for every applied `SuppressionOrder`; full field list = 01_master §7.13, `overlay_id` = `ovl_`) | P0 / P1 / ops / legal (D20.3) | `CONTENT_SUPPRESSED` impacts + purge campaign; de-duplicated on `overlay_id`; acknowledged with `redaction.applied.v1` (D19.3) |
 | I8 | Graph Query API (read): `AuthorityView`, justification children, `RELIES_ON` in-edges, case lineage, `ProvisionVersion`, `MADE_UNDER`, `CORRESPONDS_TO`, citation in-degree | P3 | closure and significance |
-| I9 | Campaign requests (ops, P9 manifests, P8 regression failures, P3 `reprocess.requested.v1` suggestions) | ops/P3/P8/P9 | campaigns (§5.11) |
+| I9 | Campaign requests (ops, P9 manifests, P8 regression failures, P3 `reprocess.requested.v1` single-work requests) | ops/P3/P8/P9 | campaigns (§5.11); P3's single-work RT requests are observed, rate-checked (≤ 1 per work per hour) and folded into a campaign when > 50 per court per day. P5 is **not** a producer (D21.1) |
 | I10 | Model Gateway price table and budgets | 13_cross_cutting | campaign cost estimates (D18 planning figures) |
-| I11 | `judgment.expected.v1` `{expected_id, court_id, expected_on, case_ref, bench{coram_as_listed, bench_strength}, evidence{kind CAUSE_LIST\|DAILY_ORDER\|OFFICIAL_NOTICE}, state PENDING\|MATCHED\|OVERDUE\|CANCELLED}` (D16) | P0 | PROVISIONAL "text awaited" impacts for constitution-bench and larger-bench pronouncements (§5.5.1); the frontier's `expected_pending` |
+| I11 | `judgment.expected.v1` `{expected_id (jex_), court_id, case_ref{scheme, value, parties?}, bench{strength, judge_ids[]}, pronounced_on, evidence_raw_id, source_kind CAUSE_LIST\|DAILY_ORDER\|OFFICIAL_NOTICE, expected_by?, state PENDING\|MATCHED\|OVERDUE\|CANCELLED, matched_work_id?, referenced_authorities[]?}` (01_master §6.4; D16, D21.18) | P0 | PROVISIONAL "text awaited" impacts for constitution-bench and larger-bench pronouncements (§5.5.1); the frontier's `expected_pending` |
 
 ### 2.2 Outputs
 
@@ -123,6 +144,7 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
   "causationid": "<graph.delta event id>",
   "idempotencykey": "p4|impact|wrk_A|9f2c…|v2",                       // §2.3
   "schemaversion": "1.1",
+  "datasig": "eyJhbGciOiJFZERTQSJ9..…",                                 // Ed25519 JWS over data (01_master E6; R-32); matchers reject unsigned events
   "data": {
     "impact_id": "imp_01J…", "impact_version": 2,
     "lifecycle": "PROVISIONAL|CONFIRMED|UPDATED|RETRACTED",
@@ -155,6 +177,7 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
     },
     "severity": 1, "significance": 0.91,                             // public-only (§5.7)
     "verification": { "review_state": "MACHINE|PENDING_REVIEW|VERIFIED", "definitive": false,   // D5 (was "state")
+                      "state": "MACHINE|PENDING_REVIEW|VERIFIED",   // v1.x read alias of review_state for 01_master §6.3 / R-19 readers
                       "status_confidence": 0.93, "review_task_id": "rvw_…", "review_sla_due": "2026-10-01T18:00:00+05:30" },
     "explanation": { "template_id": "OVERRULED_BY_LARGER_BENCH@2",
                      "text": "Overruled by a 7-judge Bench of the Supreme Court on 13 Dec 2023 …",
@@ -165,9 +188,10 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
   }
 }
 ```
-Consumers:
+Consumers (D21.3):
 - **P7**: the Impact Matcher runs `impact-match-core` inside each tenant cell (and in D4/D4h) against the private `matter_dependency` index. It produces `matter.alert.v1` (D5; `alert_kind=AUTHORITY_CHANGE`) and memo STALE marks (`strategy.memo.stale.v1` is emitted by P6).
-- **P10**: the public "legal change feed", statute and judge watchlists evaluated tenant-side, and the daily digest.
+- **P6**: the RuleSpec registry intersects `affected_ids` with RuleSpec anchors (08_P6 C8) to mark procedural rules for review.
+- **P10**: the public "legal change feed", non-matter statute and judge watchlists evaluated tenant-side, and the daily digest.
 - **P8**: re-verification of PLC-level derived artefacts.
 - **P5**: cache keys, optional; P5 already invalidates from `graph.delta.v1`.
 - **P9**: alert-precision labels via `ALERT` feedback.
@@ -178,8 +202,8 @@ Consumers:
   "idempotencykey": "p4|reprocess|camp_01J…|shard-017|tv:8d1e…",
   "data": {
     "request_id": "rpq_…", "campaign_id": "camp_01J…", "shard": { "index": 17, "of": 256 },
-    "scope": { "selector": { "court_id": ["crt_sc"], "decided_between": ["1950-01-01","2026-09-30"],
-                             "pipeline_component": "P1.rr-labeller<3.0", "quality.structure_conf_lt": 0.7 },
+    "scope": { "selector": { "court_ids": ["crt_IN_SC"], "decided_between": ["1950-01-01","2026-09-30"],
+                             "pipeline_component": "P1.rr-labeller<3.0", "quality_lt": { "structure_conf": 0.7 } },   // 01_master §6.3 field names
                "explicit_ids_uri": "s3://p4-campaigns/camp_01J…/shard-017.ids" },   // frozen at plan time
     "stages": ["P1.segment", "P1.citations", "P2.chunk", "P2.embed", "P3.treatment", "P3.proposition"],
     "reason": "PARSER_UPGRADE|MODEL_UPGRADE|PROMPT_UPGRADE|BUGFIX|DOCTRINE_CHANGE|ONTOLOGY_CHANGE|IDENTITY|SOURCE_BACKFILL|QUALITY_ALERT|FEEDBACK|REDACTION",
@@ -187,15 +211,16 @@ Consumers:
     "mode": "SHADOW|APPLY", "output_namespace": "shadow/camp_01J…|live",
     "lane": "BULK|RT", "priority": 4,                                  // Temporal priority 1 (highest) … 5 [P4-19]
     "budget": { "usd_cap": 1200, "deadline": "2026-10-07T00:00:00+05:30" },
-    "impact_policy": "NORMAL|CONSOLIDATE|SUPPRESS_BELOW_S1" } }
+    "impact_policy": "NORMAL|CONSOLIDATE|SUPPRESS_BELOW_S1",
+    "requested_by": "ops:<role>|p3|p9-global|p4-campaign-manager" } }   // never a tenant or user id (D2 Privacy-Gate rule)
 ```
 
-**O3 — `acquire.requested.v1`** (ACCEPTED as D4/D16; `tenantid` always null). P4 emits it with reason `COVERAGE_GAP` when a court frontier stalls. It also uses the reason `LINEAGE_WATCH` (proposed here, accepted in D16): when a status-relevant decision is appealed (a `REVIEW_OF` or `APPEAL_OF` edge to a pending SC or HC case), P4 asks P0 to poll that case.
+**O3 — `acquire.requested.v1`** (ACCEPTED as D4/D16; `tenantid` always null; P4's reasons are limited by D20.2). P4 emits it with reason `COVERAGE_GAP` and `sub_reason=FRONTIER_STALL` when a court frontier stalls (no capture for > 2× the source's expected cadence, or `completeness_basis` gaps), and with `sub_reason=EXPECTED_OVERDUE` for overdue expected judgments. It also uses the reason `LINEAGE_WATCH` (proposed here, accepted in D16): when a status-relevant decision is appealed (a `REVIEW_OF` or `APPEAL_OF` edge to a pending SC or HC case), P4 asks P0 to poll that case.
 
 **O4 — Freshness API** (sync, read-only; the `Freshness` object is ACCEPTED as D9, P4-owned):
 ```http
-GET /p4/v1/freshness?court_id=crt_dhc
-→ { "court_id": "crt_dhc", "law_current_to": "2026-09-30T04:10:00+05:30",
+GET /p4/v1/freshness?court_id=crt_IN_HC_DEL
+→ { "court_id": "crt_IN_HC_DEL", "law_current_to": "2026-09-30T04:10:00+05:30",
     "capture_frontier": "2026-09-30T05:00:00+05:30",       // from P0 source.health + crawl completion
     "propagation_frontier": "2026-09-30T04:10:00+05:30",   // min captured_at of docs not yet IMPACT_EVALUATED
     "stage_lag": { "p95_min": { "parse": 22, "index": 41, "graph": 63, "impact": 4 } },   // D9 field name (was stage_lag_p95_min)
@@ -204,13 +229,13 @@ GET /p4/v1/freshness?court_id=crt_dhc
     "expected_pending": 3,                                             // judgment.expected.v1 rows in PENDING/OVERDUE (text awaited)
     "completeness_basis": "ENUMERATED|SERIAL_GAP_CHECK|HEURISTIC|UNKNOWN",   // §5.3; UNKNOWN ⇒ law_current_to = null
     "p4_logic_version": "1.3.0" }
-GET /p4/v1/freshness/forum?court_id=crt_dhc   // min over the forum's binding hierarchy (SC + DHC + its tribunals)
+GET /p4/v1/freshness/forum?court_id=crt_IN_HC_DEL   // min over the forum's binding hierarchy (SC + DHC + its tribunals)
 ```
-P6 prints `law_current_to` on every memo (08_P6 §2), P5 sets `CORPUS_STALE(court)` warnings, and P8 lowers confidence in "no negative treatment found" claims when the frontier lags. P3 reads `known_gaps`/`source_health` to attach the `COVERAGE_GAP` reason code to `AuthorityView` (D6: an otherwise GOOD status becomes `UNKNOWN` + `COVERAGE_GAP`). The Freshness API is tenant-less and falls under the D3 PLC read-path rule.
+P6 prints `law_current_to` on every memo (08_P6 §2), P5 sets `CORPUS_STALE(court)` warnings, and P8 lowers confidence in "no negative treatment found" claims when the frontier lags. P3 reads `known_gaps`/`source_health` to attach the `COVERAGE_GAP` reason code to `AuthorityView`. Under **D20.12**, a gap adds `COVERAGE_GAP` and sets `definitive=false` without changing status. Only when the gap exceeds the per-source threshold (72 h HOT; 7 days WARM/COOL sources that can bind the forum) does a GOOD status degrade to `UNKNOWN`, and negatives never lose their status. P10 shows "status current to <law_current_to>". P5 shows "treatment pending" for works captured after `propagation_frontier` (D21.1). The Freshness API is tenant-less and falls under the D3 PLC read-path rule.
 
 **O5 — Status commits (D4).** P4 calls the P3 KG Writer's `commit_status_batch({batch_id, cause{kind: RECOMPUTE|SCHEDULED, ref}, computed_at_watermark, doctrine_version, rows[]})` (signature in 05_P3 §2.2 O5). The writer stays the only holder of write credentials (05_P3 §5.1). Rows that are stale against `computed_at_watermark` are rejected and recomputed. Rows equal under the D6 equivalence are dropped. The writer emits a follow-on `graph.delta.v1` with `status_changes` and `cause.kind=RECOMPUTE` (or `SCHEDULED`), with `cause.ref = batch_id`.
 
-**O6 — `impact-match-core@semver`.** This is a deterministic library (Rust core with a Python binding) that P7 embeds in every tenant cell (D1/D2/D3) and every D4/D4h on-prem install. It exposes `applicability(impact, matter_dates, matter_facts, jurisdiction) → APPLIES|PRE_CHANGE|SAVED|UNCERTAIN|NOT_APPLICABLE_TERRITORY|NOT_APPLICABLE_SCOPE` and `tenant_severity(impact, dependency_kinds[], stance?) → 1|2|3 + polarity RISK|OPPORTUNITY|INFO` (§5.6).
+**O6 — `impact-match-core@semver`.** This is a deterministic library (Rust core with a Python binding) that P7 embeds in every tenant cell (D1/D2/D3) and every D4/D4h on-prem install. It exposes `applicability(impact, matter_dates, matter_facts, jurisdiction) → APPLIES|PRE_CHANGE|SAVED|UNCERTAIN|NOT_APPLICABLE_TERRITORY|NOT_APPLICABLE_SCOPE` and `tenant_severity(impact, dependency_kinds[], stance?) → 1|2|3 + polarity RISK|OPPORTUNITY|INFO + actions[]`, implementing P7's adjustment contract (D21.14; §5.6). P7 must call these functions and not re-implement their logic (01_master §14 R-19). The functions read only the v1.0 field names `lifecycle`, `temporal_scope.{effect, legal_effect_from, retrospective_flag, date_basis, scope_predicates}` and `verification.{review_state, definitive}`.
 
 ### 2.3 Idempotency-key grammar
 
@@ -232,7 +257,7 @@ Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_
 
 | # | Target | Change | Justification |
 |---|---|---|---|
-| SP4-1 | §G `impact.detected.v1` | Endorse P7 §2.5-1: public broadcast with `tenant_id=null`; drop "P7 registers dependency fingerprints with P4". Add the fields shown in O1 (`impact_version`, `lifecycle`, `supersedes_impact_id`, `change_kind`, `cause_kind`, `root`, `trigger_authority`, `affected[]` with rings, `affected_count`, `manifest_uri`/`sha256`, `temporal_scope`, `significance`, `verification`, `coalesce_key`, `graph_watermark`, `doctrine_version`, `p4_logic_version`, `storm`) | Retractions need versions (U-3). As-of matching needs `temporal_scope`: prospective overruling (*CORE*, 2024 [P4-39]) and conditional effect (*MADA*, 2024 [P4-38]) are real. Registration would put tenant reliance sets into the PLC, which violates spine §A. |
+| SP4-1 | §G `impact.detected.v1` | Endorse P7 §2.5-1: public broadcast with `tenantid=null` (D2 envelope name); drop "P7 registers dependency fingerprints with P4". Add the fields shown in O1 (`impact_version`, `lifecycle`, `supersedes_impact_id`, `change_kind`, `cause_kind`, `root`, `trigger_authority`, `affected[]` with rings, `affected_count`, `manifest_uri`/`sha256`, `temporal_scope`, `significance`, `verification`, `coalesce_key`, `graph_watermark`, `doctrine_version`, `p4_logic_version`, `storm`) | Retractions need versions (U-3). As-of matching needs `temporal_scope`: prospective overruling (*CORE*, 2024 [P4-39]) and conditional effect (*MADA*, 2024 [P4-38]) are real. Registration would put tenant reliance sets into the PLC, which violates spine §A. |
 | SP4-2 | §G `reprocess.requested.v1` | Adopt the O2 schema (`campaign_id`, `shard`, `stages`, `mode SHADOW|APPLY`, `output_namespace`, `lane`, `priority`, `budget`, `impact_policy`) | The spine leaves the scope selector undefined. Shadow runs and budgets need fields (§5.11). |
 | SP4-3 | §G `graph.delta.v1` (P3 S3-3) | Add `cause.kind ∈ {RECOMPUTE, SCHEDULED}`. P3 exposes `commit_status_batch` to P4. | This keeps P3 as the single writer while P4 drives higher-order and bulk recompute. |
 | SP4-4 | §H | New sync object `Freshness` (O4), consumed by P5, P6, P8 and P10 | "Law current to" is referenced by P5, P6 and P8 but is undefined. |
@@ -318,7 +343,7 @@ Consumers keep an **inbox** table `processed(consumer, idempotency_key, payload_
 | Naive paging | Paging on causes, not actionable symptoms | [P4-31] | Severity 1 only when doctrine-valid, high-confidence and ring 0 |
 | Lambda-style dual pipelines | Two codebases must agree | [P4-27] | One pipeline per phase. Reprocessing replays the same code with a new `pipeline_version` into a shadow namespace |
 | Blocking retries | One poison message stalls a partition | [P4-28] | Retry topics with backoff, per-consumer DLQ, ledger-visible gaps that hold back the frontier |
-| Semantic answer caches | Serve stale answers after document change | [P4-7] | Impacts carry the public IDs that P6/P7 use as dependency fingerprints. Caches key on `graph_watermark` |
+| Semantic answer caches | Serve stale answers after document change | [P4-7] | Impacts carry the public IDs that P6/P7 match locally against their own dependency keys (broadcast-and-match, D3); nothing is registered with P4. Caches key on `graph_watermark` |
 | "Newest fact wins" temporal graphs | Later ≠ authoritative in law | 05_P3 §4 | P4 never decides authority. It calls `authority-core`, which ignores doctrine-invalid "overrulings" |
 
 ---
@@ -375,14 +400,14 @@ Coordination style: phases **choreograph** over events. Each phase is an idempot
 
 | Topic | Key (ordering) | Partitions | Retention | Notes |
 |---|---|---|---|---|
-| `plc.raw.captured.v1.{rt,bulk}` | `source_record_key` | 12 | 30 d (+ S3 archive) | P0 routes SC and "cites-active-work" captures to `rt` (13_cross_cutting §6.2) |
+| `plc.raw.captured.v1.{rt,bulk}` | `source_record_key` | 12 | 30 d (+ S3 archive) | P0 routes captures from HOT sources (SC, HC judgment feeds, e-Gazette) and targeted `acquire.requested.v1` fetches to `rt`. 13_cross_cutting §6.2's "cites a work referenced in an active matter" trigger is **not** used: it would put tenant reliance sets into the PLC (D3, D19.4; 01_master §14 R-36) |
 | `plc.doc.parsed.v1.{rt,bulk}` | `work_id` | 24 | 30 d | |
 | `plc.doc.indexed.v1` | `work_id` | 12 | 14 d | |
-| `plc.graph.delta.v1.{rt,bulk}` | `subject` (P3 per-subject order by `graph_watermark`) | 24 | 90 d | `bulk` = reprocess-caused deltas |
+| `plc.graph.delta.v1.{rt,bulk}` | `subject` (P3 per-subject order by `graph_watermark`) | 24 | 90 d | `rt` = any delta with an impact_tier-1 assertion or a status change, plus EXPECTED stubs of benches ≥ 5 (D19.4; 05_P3 O1). `bulk` = other reprocess-caused deltas |
 | `p4.recompute.v1.{rt,bulk}` (internal) | `target_id` | 24 | 7 d | re-keying gives a per-target mutex |
 | `plc.impact.public.v1` | `root.target_id` | 12 | **365 d**, compacted archive in S3 | retractions share the key, so they are ordered after the original |
 | `plc.reprocess.requested.v1` | `campaign_id` | 6 | 30 d | |
-| `plc.identity.v1`, `plc.source.health.v1`, `plc.index.generation.v1`, `plc.judgment.expected.v1`, `plc.doc.redacted.v1` | id | 3–6 | 90 d | the last two are D16 events (P0 producer; topic naming is P4's proposal) |
+| `plc.identity.v1`, `plc.source.health.v1`, `plc.index.generation.v1`, `plc.judgment.expected.v1`, `plc.doc.redacted.v1`, `plc.redaction.applied.v1`, `plc.acquire.requested.v1` | id | 3–6 | 90 d | Naming ratified by D20.16 (`{plane}.{domain}.{event}.v{n}`); 01_master publishes the canonical topic map |
 | `*.retry.{5m,1h,6h}`, `*.dlq` per consumer group | same as source | — | 30 d | Uber pattern [P4-28] |
 
 - **Lanes.** Kafka has no priorities, so each lane is a separate topic with its own consumer groups and quotas. Inside Temporal, lanes map to Task Queue priority (RT=1–2, daily=3, bulk=4–5) and to a fairness key per campaign [P4-19]. **Invariant:** bulk work can never starve RT, because they use different partitions, different consumer groups and a reserved worker pool.
@@ -524,7 +549,7 @@ The rules are computed deterministically from assertion qualifiers (P3 S3-1 `eff
 - **L1.** No per-ID callbacks. A tenant that needs the full closure downloads the *whole* manifest, which is immutable, content-hashed and public. It never queries "is `wrk_X` affected?". Per-ID lookups would reveal reliance through access patterns. **[NOVEL — unvalidated]** as a stated rule.
 - **L2.** Manifest downloads go through a CDN or bucket, and access logs are aggregated without tenant correlation. Tenant cells fetch *every* manifest (≈ MBs per day), not only the ones they need.
 - **L3.** Alert feedback (P9 #10) returns to the PLC only through the Privacy Gate.
-- **L4.** The public topic is signed: an Ed25519 JWS over `data`, verified by the matcher. A compromised broker cannot inject a fake "overruled" alert into firms.
+- **L4.** The public topic is signed: an Ed25519 JWS over `data`, carried in the CloudEvents extension attribute `datasig` (01_master §6.1 E6, §14 R-32), verified by the matcher against P4's published key set (rotated quarterly; two keys valid during rotation). A compromised broker cannot inject a fake "overruled" alert into firms.
 - **L5. PLC read-path rule (spine v1.0 D3; closes §8.R (f)).** Synchronous PLC read APIs called from tenant contexts are **stateless**. This covers P3's Graph Query API, P2's Index Access Layer, P1's anchor API and P4's Freshness API. No tenant-attributable ID logs (requested IDs, query text, forum and date combinations) are kept outside the tenant-scoped audit store. Ops telemetry is tenant-redacted, so per-ID access patterns cannot reconstruct reliance from PLC logs. D3/D4/D4h deployments read from a local PLC replica, so their access patterns never reach the central PLC.
 - **L6. Privacy-Gate envelope rule (D2).** Any PLC-side event caused by tenant activity carries `tenantid`=null, a fresh trace root and no tenant causation chain. Examples are a campaign triggered by P9 manifests, or a status change following an accepted `kg.proposal.v1`.
 
@@ -550,20 +575,27 @@ applicability(impact, matter):
                    if D ≥ s.legal_effect_from: return APPLIES
                    return s.retrospective_flag ? APPLIES : PRE_CHANGE      # "law changed after your cause of action"
     CONDITIONAL:   return UNCERTAIN                                          # human reads conditions_anchor_ids
-tenant_severity(impact, deps, applicability):
-  sev = impact.severity
-  if any(dep.kind ∈ {OWN_CASE, CITED_IN_OUR_DRAFT}): sev = max(1, sev-1)
-  if applicability ∈ {SAVED, PRE_CHANGE, NOT_APPLICABLE_TERRITORY, NOT_APPLICABLE_SCOPE}: sev = 3
+tenant_severity(impact, deps, applicability):              # adjustment contract ratified in D21.14 (P7 §5.6)
+  sev   = impact.severity                                   # 1 = most severe
+  floor = 1 if impact.verification.definitive or impact.severity == 1 else 2
+                                                            # never past the D5 severity-1 rule for machine-detected impacts
+  actions = []
+  if applicability ∈ {NOT_APPLICABLE_TERRITORY, NOT_APPLICABLE_SCOPE}:
+      return (3, INFO, ["recorded only"])                   # P7 records, does not alert
+  if any(dep.kind ∈ {OWN_CASE, CITED_IN_OUR_DRAFT}): sev = max(floor, sev-1)          # escalate one level
+  if applicability ∈ {PRE_CHANGE, SAVED} and any(dep.kind == GOVERNING_PROVISION):
+      sev = min(3, sev+1); actions += "prospective change – check transitional/saving clause"   # downgrade one level
   if impact.root.scope_anchor_ids ≠ ∅ and all(dep.anchor_ids known)
      and ∪dep.anchor_ids ∩ impact.root.scope_anchor_ids = ∅: sev = 3       # partial overruling; cited paras untouched
                                                                           # (e.g. Garware paras other than 22/29)
-  if applicability == UNCERTAIN and sev == 1: sev = 2 (+ "confirm the relevant date" action)
+  if applicability == UNCERTAIN: actions += "confirm the relevant date"   # UNCERTAIN never downgrades (D21.14)
   polarity = RISK if dep.kind ∈ {CITED_IN_OUR_DRAFT, IN_MEMO_FAVOURABLE, GOVERNING_PROVISION}
              and impact.root.direction == DOWNGRADE
            | OPPORTUNITY if dep.kind ∈ {CITED_BY_OPPONENT, IN_MEMO_ADVERSE} and direction == DOWNGRADE
            | INFO otherwise
-  return (sev, polarity)
+  return (sev, polarity, actions)
 ```
+Contract tests for `tenant_severity()` ship with the library and are the same fixtures as P7's conformance suite (09_P7 §11.13). They cover: OWN_CASE on a machine sev-2 impact stays 2 (floor); OWN_CASE on a definitive sev-2 impact → 1; GOVERNING_PROVISION + SAVED on sev-1 → 2; UNCERTAIN on sev-1 stays 1; NOT_APPLICABLE_* → recorded only.
 The **opportunity** polarity [NOVEL — unvalidated as a product rule] turns "the opponent's notice relies on s.66A" or "the adverse authority in our memo was just overruled" into an action item. Stance is private, so it is computed only in the tenant.
 
 ### 5.7 Severity, coalescing and storms
@@ -589,22 +621,33 @@ severity = 1 if significance ≥ 0.75 and ring = 0
 
 Otherwise it is capped at 2 and labelled "machine-detected — under review". This meets the 6 h provisional-alert SLO without paging on guesses (13_cross_cutting §6.2).
 
+**Lane selection (spine v1.0 D19.4; resolves 01_master §14 R-36 for P4).** P4 never knows tenant interest, so the lane is chosen from public facts only.
+- **RT lane, always:**
+  - every change whose root or reason assertion is impact_tier 1: status changes on works and propositions, provision text and validity changes, crosswalk changes and direct history;
+  - every `judgment.expected.v1` for a constitution bench (≥ 5 judges) or a bench larger than the decision under reference;
+  - every `judgment.expected.v1` that names `referenced_authorities[]` (D21.18).
+- **Otherwise, by public citation footprint:** RT if `cited_by(root) ≥ 25`, or if the root's PPR centrality is in the top 1% of its court level. Everything else goes to the bulk lane. Both thresholds are **[NOVEL — unvalidated]** and are tuned on the §9 time-to-flag metrics.
+- An unattributed union watch-list via P9's Privacy Gate (k ≥ 5 tenants, decoy-padded) is a post-GA optimisation, not MVP (D19.4).
+- Tenants still get matter-level urgency from their own Impact Matcher (`tenant_severity`, §5.6).
+
 **Operative order now, reasons later.** Indian courts sometimes pronounce an operative order with "reasons to follow" (frequency not quantified here).
 - The operative order is official text. It may seed a PROVISIONAL impact if its wording is explicit, for example "set aside" or "overruled".
 - The scope is marked `contested=true`, and the explanation says the reasons are awaited.
 - The reasoned judgment later yields an UPDATED version under the same `coalesce_key`.
 - News reports (LiveLaw, Bar & Bench) never seed impacts. They may only trigger `acquire.requested.v1{reason: LINEAGE_WATCH}` so that P0 polls the official source.
 
-**Pronounced, text awaited (`judgment.expected.v1`, spine v1.0 D16).** P0 emits `judgment.expected.v1` only on official evidence: a cause list, a daily order or an official notice. When it names a constitution bench or a bench larger than the relevant earlier decision (`bench.bench_strength`), and P3's EXPECTED stub links it to a pending reference, appeal or review, P4 may raise an impact with these properties:
+**Pronounced, text awaited (`judgment.expected.v1`, spine v1.0 D16).** P0 emits `judgment.expected.v1` only on official evidence: a cause list, a daily order or an official notice. When it names a constitution bench or a bench larger than the relevant earlier decision (`bench.strength`), and P3's EXPECTED stub links it to a pending reference, appeal or review, P4 may raise an impact with these properties:
 - `change_kind=JUDGMENT_PRONOUNCED_TEXT_AWAITED`, `lifecycle=PROVISIONAL` and `text_awaited=true`;
 - `root.direction=LATERAL` and `temporal_scope.contested=true`;
 - explanation "Pronounced on D; text awaited";
 - severity capped at 2, because there is no explicit cue, so the D5 severity-1 rule cannot be met.
 
+**Named authorities (D21.18).** When `judgment.expected.v1.referenced_authorities[]` names precedents, for example the decisions placed before a larger bench in a reference order, P4 may raise the same PROVISIONAL, text-awaited, severity ≤ 2 impact on each named authority **at any bench size**. The root is the named authority, and `root.new.reason_codes` includes `PENDING_REFERENCE` and `TEXT_AWAITED` from P3's `RECOMPUTE` delta (05_P3 §5.8 item 10).
+
 It then follows the expected record:
 - `state=MATCHED`, and the parsed judgment yields its real treatments: the impact moves to UPDATED or CONFIRMED under the same `coalesce_key`, and `text_awaited` becomes false.
 - `CANCELLED`, or no status change once the text is processed: RETRACTED.
-- `OVERDUE`: the explanation is refreshed, and `acquire.requested.v1{reason: COVERAGE_GAP}` is emitted.
+- `OVERDUE`: the explanation is refreshed, and `acquire.requested.v1{reason: COVERAGE_GAP, sub_reason: EXPECTED_OVERDUE}` is emitted (D20.2: there is no `PRONOUNCEMENT_EXPECTED` reason). P3 or P4 emits it, whichever sees the transition first; the shared `idempotencykey` `acq|jex_…|OVERDUE` de-duplicates.
 
 #### 5.7.2 Lifecycle and coalescing
 ```mermaid
@@ -651,15 +694,16 @@ Commencement notifications, sunset clauses, ordinance lapse dates, and stays "un
   - Retractions are broadcast like originals, so they reach exactly the original audience without P4 knowing it (U-3, U-4).
 - **Knowledge correction versus law change.** Impacts caused by reprocessing or reclassification carry `cause_kind=RECLASSIFICATION` or `KNOWLEDGE_CORRECTION`. *Mapping from the root delta's D4 `cause.kind`:*
   - `EXTRACTION` from a new official document → `LAW_CHANGE`.
-  - `EXTRACTION` with a `camp_…` ref, or `RECOMPUTE` after a doctrine-rule change → `RECLASSIFICATION`.
+  - `EXTRACTION` of a re-parse caused by a campaign (the `doc.parsed.v1` `causationid` chains to a `reprocess.requested.v1`), or `RECOMPUTE` with a `camp_…`, `rul_…@ver` or `court_registry@ver` ref → `RECLASSIFICATION` (R-17 mapping).
+  - `IDENTITY` (merge or split re-pointing) → `KNOWLEDGE_CORRECTION`, with change_kind `IDENTITY_REMAPPED`.
   - `RETRACTION`, a `HUMAN_REVIEW` that rejects or corrects an earlier assertion, and `PROPOSAL` → `KNOWLEDGE_CORRECTION`.
   - `SCHEDULED` → `SCHEDULED`.
   - A `HUMAN_REVIEW` that *verifies* a PROVISIONAL impact produces a CONFIRMED version and keeps the original `cause_kind`. P10 phrases them as "our analysis changed", not "the law changed". The rules for such impacts:
   - they are consolidated per campaign;
   - they become severity 1 only for newly discovered, HITL-verified tier-1 negatives.
 - **Corrigenda.** A `TEXT_CORRECTED` impact names the anchors whose `text_hash` changed. Tenants whose memos quote those anchors get a severity-3 "quoted paragraph corrected" item. P8 re-checks quotes.
-- **Source DELETED.** Removal from a portal does not remove law (P1 §2.1). After a 14-day grace period with no replacement manifestation, the work gets `SOURCE_WITHDRAWN` (info, severity 3), and P0 receives `acquire.requested.v1{reason: COVERAGE_GAP}`. A court **recall** is a legal event (`RECALLS` → `DIRECT_HISTORY`), not a deletion.
-- **Suppression or redaction.** A `doc.redacted.v1` (D16; `data` = `RedactionOverlay`) triggers a purge campaign (P1/P2 reprocess with the overlay; masking is an overlay, so no masked `expression_key` exists) and a `CONTENT_SUPPRESSED` impact. P0's `raw.captured.v1` `change_kind=SUPPRESSED` reaches P4 as the same event. Tenants must purge pinned excerpts or replace them with the masked rendition within the overlay's `purge_sla`; this is P7's DPDP workflow.
+- **Source DELETED.** Removal from a portal does not remove law (P1 §2.1). After a 14-day grace period with no replacement manifestation, the work gets `SOURCE_WITHDRAWN` (info, severity 3), P3 sets `Work.integrity_flags += WITHDRAWN_FROM_SOURCE` (D19.5), and P0 receives `acquire.requested.v1{reason: COVERAGE_GAP, sub_reason: SOURCE_WITHDRAWN}` (D20.2). A court **recall** is a legal event (`RECALLS` → `DIRECT_HISTORY`), not a deletion.
+- **Suppression or redaction.** A `doc.redacted.v1` (D16; `data` = `RedactionOverlay`) triggers a purge campaign (P1/P2 reprocess with the overlay; masking is an overlay, so no masked `expression_key` exists) and a `CONTENT_SUPPRESSED` impact. P0's `raw.captured.v1` `change_kind=SUPPRESSED` reaches P4 as the same event. Tenants must purge pinned excerpts or replace them with the masked rendition within the overlay's `purge_sla`; this is P7's DPDP workflow. P4 itself rewrites any impact explanation or closure manifest that quotes masked spans. It re-publishes them as an `UPDATED` version whose explanation is regenerated from the masked rendition, and the old manifest object is deleted. P4 then emits `redaction.applied.v1 {overlay_id, consumer: "P4", applied_at, generations_purged: []}` (D19.3) within `purge_sla.serving_h`. Replays are de-duplicated on `overlay_id`.
 
 ### 5.10 Ordering, idempotency and exactly-once *effect*
 - Delivery is at least once (spine §G). Effects are made exactly-once by the inbox and the §2.3 keys.
@@ -778,6 +822,9 @@ CREATE TABLE outbox (id text PRIMARY KEY, topic text, msg_key text, payload json
 | RT lane latency degradation during campaigns | < +10% |
 | Duplicate tenant alerts per impact per matter | < 0.1% |
 | Kafka/consumer outage recovery (RPO / RTO) | 0 events lost (outbox + replay) / ≤ 2 h (13_cross_cutting T1) |
+| `doc.redacted.v1` → P4 impact explanations/manifests purged + `redaction.applied.v1` | ≤ `purge_sla.serving_h` (1 h) (D19.3) |
+| `judgment.expected.v1` (bench ≥ 5, or with `referenced_authorities[]`) → PROVISIONAL text-awaited impact | ≤ 30 min (RT lane, D19.4) |
+| D3/D4/D4h replica: impacts and Freshness in the signed daily bundle | replica lag ≤ 24 h (D19.7); bundle cutoff reported as the replica's `law_current_to` cap |
 
 ### 5.16 Cross-cutting: security, cost at scale, latency, observability, model-agnostic design
 - **Security.** P4 holds only public data. It has no tenant IDs, and a CI lint on P4 schemas forbids `ten_`, `mat_` and `pdoc_` prefixes.
@@ -894,7 +941,7 @@ Options compared:
 | **Identity merge error** (two works wrongly merged) | Impacts on the wrong work; tenants re-point dependencies wrongly | `IDENTITY_REMAPPED` impacts are reversible (`identity.split.v1` → reversal impact); P1 `reversible_until`; merges affecting tier-1 statuses go to review | Brief mis-alerting window |
 | **Malicious user / prompt-injected document** | Tenant uploads a fake "judgment"; a public page contains injected text | Tenant documents never enter the PLC (spine §A); PLC tier-1 only from official sources; P4 runs no LLM; signed public topic (L4) | Compromised official portal (P0 provenance/hash monitoring) |
 | **Confused user** | Reads provisional as definitive, or ignores PRE_CHANGE nuance | Explicit labels ("machine-detected — under review"; "law changed after your cause-of-action date"); `UNCERTAIN` asks for the missing matter date | Residual over-trust; P10 UX testing |
-| **Source site outage / format change** | Capture stalls; parser breaks; silent gaps | Frontier falls behind → `CORPUS_STALE(court)` in P5/P6/P10; `acquire.requested.v1{COVERAGE_GAP}`; parser fix → campaign for the affected window | Extended outages delay alerts (visible, not silent) |
+| **Source site outage / format change** | Capture stalls; parser breaks; silent gaps | Frontier falls behind → `CORPUS_STALE(court)` in P5/P6/P10; `acquire.requested.v1{COVERAGE_GAP, sub_reason: FRONTIER_STALL}`; P3 adds `COVERAGE_GAP` to affected statuses (D20.12); parser fix → campaign for the affected window | Extended outages delay alerts (visible, not silent) |
 | **Temporal or Kafka outage** | Campaigns and timers pause; event delivery stops | Daily path does not depend on Temporal (choreography); Kafka outage → outbox accumulates, replay on recovery (RPO 0); scheduled events re-evaluated on recovery (catch-up fire) | RTO ≤ 2 h |
 | **Clock / time-zone errors** | Scheduled events fire on the wrong day; frontier skew | All legal dates are `date` in IST semantics; timestamps in UTC with IST rendering; scheduled fire at 00:00 IST | Commencement "from the date of publication" ambiguity → review task |
 | **Runaway campaign cost** | Budget blown by a mis-scoped selector | Frozen ID list; cost estimate; approval threshold; hard cap auto-pause; minimality filter | Estimate error on new model pricing |
@@ -934,7 +981,7 @@ This review was adversarial. It re-fetched about 22 high-stakes sources: Indian 
 
 **Still open.**
 - (a) `commit_status_batch` and `cause.kind=RECOMPUTE|SCHEDULED` are not yet in the P3 doc. They need P3's acknowledgement (SP4-3). **Resolved:** adopted in spine v1.0 D4 and specified in 05_P3 §2.2 O5 and §5.12.
-- (b) P3 must extract `date_basis` and `scope_predicates`, and nobody has measured whether it can.
+- (b) P3 must extract `date_basis` and `scope_predicates`, and nobody has measured whether it can (01_master §14.2 Q1). Until P3's gold set shows ≥ 0.9 precision, these qualifiers are PENDING_REVIEW, and `impact-match-core` returns `UNCERTAIN` and asks the lawyer for the governing date (05_P3 §11 Q10).
 - (c) The later PUCL 66A orders (2021–2022) and the BSA commencement date were not re-verified.
 - (d) The early-cutoff equivalence and the severity weights (§5.7.1) are unvalidated priors.
 - (e) The "reasons to follow" frequency in Indian courts is unquantified.
@@ -994,7 +1041,7 @@ This review was adversarial. It re-fetched about 22 high-stakes sources: Indian 
    - a k-anonymous, noised aggregate via the P9 Privacy Gate (minimum 5 tenants per bucket);
    - public proxies only (citation in-degree).
 
-   Decision needed from P9/P7.
+   *Ruled:* D19.4, D21.19 and 01_master §14 R-13. Exposure derives only from Privacy-Gate releases (`n_tenants_bucket`) or S2 aggregates (k ≥ 5 tenants, DP noise), plus public proxies (citation in-degree and recency). P4 holds none of it and never uses it for lanes; P3 uses it for HITL priority (05_P3 §5.10).
 5. **Severity calibration.** The §5.7.1 weights are priors. Without partner feedback volume, severity-2 precision is unknown.
 6. **CloudEvents attribute naming.** 13_cross_cutting S11 proposes lower-case envelope names (e.g. `idempotencykey`). P4 follows whichever the principal architect adopts; the key grammar is unaffected. *(Resolved by spine v1.0 D2. This doc now uses `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`.)*
 7. **P3 inline status latency.** If the KG Writer's inline first-order status slows commits at peak, move all status computation to P4 recompute. The contract is unchanged, because `status_changes` arrive in a follow-on delta.

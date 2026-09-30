@@ -45,7 +45,7 @@ P0 is cheap in compute (well under 1 TB/yr of new raw data). Its real cost is ad
 
 ### 2.0 Spine v1.0 conformance
 
-This section records how the principal architect's spine v1.0 decision record (D1–D18) disposed of the §2.5 proposals, and which v1.0 names this doc now uses. Where the body of this doc and v1.0 differ, v1.0 wins.
+This section records how the principal architect's spine v1.0 decision record (D1–D21, [01a_spine_decision_record.md](01a_spine_decision_record.md)) disposed of the §2.5 proposals, and which v1.0 names this doc now uses. Where the body of this doc and v1.0 differ, v1.0 wins.
 
 | §2.5 # | Proposal | Disposition |
 |---|---|---|
@@ -54,11 +54,20 @@ This section records how the principal architect's spine v1.0 decision record (D
 | 3 | New event `source.health.v1` | **ACCEPTED as D4/D16**, with #7 folded in. |
 | 4 | Bus and workflow posture | **ACCEPTED-MODIFIED as D1/D16.** Final, not "co-decision with P4": Apache Kafka 4.x (KRaft) / MSK in ap-south-1 is the reference bus; Redpanda is acceptable because it is Kafka-API-compatible. A Postgres transactional outbox with Debezium runs in every producer. Real-time and bulk lanes use separate topics, each with retry and DLQ topics. Temporal (self-hosted, or Temporal Cloud in an India region) runs P0 schedules, sweeps and backfills. |
 | 5 | `URL` / `CITATION_STRING` are request-only schemes | **ACCEPTED as D16.** They are never written to `identifier_alias`. |
-| 6 | Takedown = `change_kind=DELETED` + `suppression{}` | **REJECTED (D16).** Takedowns and suppression orders use the explicit kind **`SUPPRESSED`**. This was the doc's own fallback proposal. P0 also emits **`doc.redacted.v1`** carrying a **RedactionOverlay**, and every consumer must tombstone and purge according to that overlay. `DELETED` now means only withdrawal at source. |
+| 6 | Takedown = `change_kind=DELETED` + `suppression{}` | **REJECTED (D16).** Takedowns and suppression orders use the explicit kind **`SUPPRESSED`**. This was the doc's own fallback proposal. P0 also emits **`doc.redacted.v1`** carrying a **RedactionOverlay**, and every consumer must tombstone and purge according to that overlay. `DELETED` now means only withdrawal at source. On the wire P0 carries `redaction_overlay_id` (§2.2) and **no** `suppression` object; the `suppression?` field still shown in 01_master §6.3 is read as that pointer (D16 forbids DELETED + `suppression{}`). |
 | 7 | `source.health.v1` adds `expected_pending`, `backing` | **ACCEPTED as D16.** |
 | — | Open question 14 (`expected_record` → P4 interface) | **Resolved by D16:** new event **`judgment.expected.v1`** (P0 → P3, P4, P10), §2.2A. |
 | — | (new input) `source.recheck.requested.v1` | **D4:** P9/P3 → P0 targeted recheck. It is now listed as input (c2) in §2.1. |
 | — | (new obligation) Court-portal feeds | **D4/D16:** P0 owns every court-portal connector and publishes **tenant-agnostic** feeds: `CourtCalendar` (holidays, vacations, sitting days; consumed by P6's Procedural Clock), case status by CNR, cause lists and daily orders. The watch registry is an unattributed union, and P7 matches locally (§2.2A, §5.9). |
+| — | Court-feed event names (01_master §14 R-11) | **RATIFIED (D20.1).** `case.status.observed.v1`, `court.causelist.published.v1` and `court.calendar.published.v1` are spine events, producer P0, tenant-agnostic, consumed by P7 (Impact/Case Matcher, i.e. the Court Sync Matcher), P6 (Procedural Clock) and P10. Daily orders and judgments still flow `raw.captured.v1` → `doc.parsed.v1`. Payloads are finalised in §2.2A d. |
+| — | `acquire.requested.v1` producers and `PRONOUNCEMENT_EXPECTED` (R-26) | **Ruled (D20.2):** no `PRONOUNCEMENT_EXPECTED` value, not even as optional; use `COVERAGE_GAP` + P0-internal `sub_reason`. Producers: P1 (UNRESOLVED_CITATION, CORRIGENDUM_SUSPECTED, LOW_QUALITY_COPY), P3/P4 (COVERAGE_GAP, LINEAGE_WATCH), P9 Privacy Gate (MATTER_WATCH, unattributed), ops (OPS). P0 rejects (DLQ + ops alert) any request whose `reason` is not allowed for its producer's `source` attribute. R-26's "add as an optional value" is superseded. |
+| — | `doc.redacted.v1` producers, consumers, acks (R-14) | **Ruled (D19.3, D20.3, D21.3).** Producers: P0 (source suppression, captured court orders), P1 (statutory identity masking found in parsing; tombstone on `SUPPRESSED`), ops/legal (manual). Consumers: P1 (anchor read API), P2, P3, P4, P5 caches, P7, P8, P9, P10, replicas. Consumers de-duplicate on `overlay_id` and each acks with **`redaction.applied.v1`**; **P0 keeps the redaction ledger** and pages on any `purge_sla` breach (§2.1 c3, §2.4, §5.10). The canonical overlay field list is 01_master §7.13. |
+| — | EXPECTED stub works | **Ruled (D20.4):** P1 is the sole writer of Work/Case identity. On `judgment.expected.v1`, P3 asks P1's identity service to mint `work.status=EXPECTED`; P0 never mints Work IDs. |
+| — | `judgment.expected.v1` lane and payload | **D19.4:** `judgment.expected.v1` for larger or constitution benches takes the **real-time lane**; P0 publishes the whole (small) stream on one topic with real-time relay priority, and P4 routes `bench.strength ≥ 3` rows to its RT lane. **D21.18:** optional `referenced_authorities[]` (precedents named in a reference order) is added; P4 may raise PROVISIONAL impacts on them at any bench size (§2.2A b). |
+| — | P0 signals behind `Work.integrity_flags[]` | **D19.5 (owner P3).** P0 supplies the raw signals only: `change_kind=DELETED` → `WITHDRAWN_FROM_SOURCE`, `change_kind=SUPPRESSED` → `SUPPRESSED`, `flags.suspected_replacement` / `CORRIGENDUM_SUSPECTED` captures → `CORRIGENDUM_PENDING`. P3 derives and owns the flags. |
+| — | ID prefixes | **D20.5:** `cap_`, `crun_`, `acq_`, `lp_`, `cal_` registered; the judgment-expected record is **`jex_`** (formerly `exp_`, renamed to avoid confusion with Expressions). |
+| — | Topic naming | **D20.16:** `{plane}.{domain}.{event}.v{n}`, plane ∈ `plc` \| `tpl.<tenant>`; P0 topics are listed in §2.2A e. P0 publishes only on `plc.*`. |
+| — | Replica read path | **D19.7:** D2 cells read PLC (including P0's read API, §2.3) through the stateless same-region read path; D3/D4/D4h use a local replica under the ≤24 h replica-lag SLO; P0 contributes the raw-blob and event-mirror portion of the signed bundle (§5.7, §10). |
 
 **Renames and conventions this doc now follows**
 - CloudEvents extension attributes are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (PUBLIC for every P0 event), plus `traceparent` (D2). Payload fields keep snake_case.
@@ -66,7 +75,7 @@ This section records how the principal architect's spine v1.0 decision record (D
 - Takedown and masking travel on `doc.redacted.v1` with a RedactionOverlay (D4/D16). No `plc.redaction.v1` or `work.access_restricted.v1` event exists.
 - `rights_class` appears on `raw.captured.v1` and Manifestation (D9).
 - Deployments use the D17 names: the on-prem PLC replica feed serves **D4** (air-gapped: signed daily PLC delta bundles) and **D4h**. **D3** tenants use a local PLC replica (D3 read-path rule). The MVP is one **D2** dedicated cell.
-- ID prefixes follow D12. The P0-internal prefixes `acq_`, `crun_`, `cap_`, `lp_`, `cal_` and `exp_` do not collide with the registry.
+- ID prefixes follow D12/D20.5. The P0 prefixes `acq_`, `crun_`, `cap_`, `lp_`, `cal_` and `jex_` (judgment-expected record; formerly `exp_`) are registered and do not collide. Court IDs use the canonical registry form `crt_IN_…` (e.g. `crt_IN_SC`, `crt_IN_HC_DEL`; 01_master §5.2, R-09).
 
 ### 2.1 Inputs
 
@@ -75,14 +84,14 @@ This section records how the principal architect's spine v1.0 decision record (D
 ```yaml
 source_id: in.sc.judgments            # stable, dotted
 display_name: "Supreme Court of India — Judgments"
-issuing_authority: crt_sc             # court/ministry registry id (P1 owns registry; P0 references)
+issuing_authority: crt_IN_SC          # court/ministry registry id, canonical crt_IN_… form (P3 registry; P1/P0 reference)
 provenance_tier: OFFICIAL_PRIMARY     # see 2.4
 adapter: {kind: declarative|code, name: sci_judgments, version: 1.4.2}
 discovery:
   mode: listing_by_date               # listing_by_date | rss | sitemap | json_api | bulk_dataset | licensed_api
   window: {rescan_days_daily: 7, rescan_days_weekly: 60, full_sweep: quarterly}
 schedule_class: HOT                   # HOT | WARM | COOL | COLD (see 5.4)
-calendar: cal_sc                      # court working-day calendar for yield model
+calendar: {court_id: crt_IN_SC}         # CourtCalendar series (cal_ + ULID per year/version) used by the yield model
 politeness: {max_concurrency: 1, min_delay_ms: 2000, daily_request_budget: 20000, night_window_ist: "23:00-07:00"}
 egress_pool: in-mum-static-a          # India-resident, fixed, declared IPs
 legal_profile_ref: lp_in.sc.judgments@2026-09-01   # must be APPROVED and < 180 days old
@@ -122,10 +131,19 @@ reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
 {"type":"acquire.requested.v1","tenantid":null,"dataclass":"PUBLIC",
  "data":{"request_id":"acq_01J…","reason":"UNRESOLVED_CITATION|MATTER_WATCH|CORRIGENDUM_SUSPECTED|COVERAGE_GAP|LINEAGE_WATCH|LOW_QUALITY_COPY|OPS",
   "target":{"scheme":"CNR|NEUTRAL_INSC|NEUTRAL_HC|CASE_NO|SC_DIARY_NO|GAZETTE_ID|URL|CITATION_STRING",
-            "value":"DLHC010012342023","court_hint":"crt_dhc","date_hint":"2024-03-11"},
+            "value":"DLHC010012342023","court_hint":"crt_IN_HC_DEL","date_hint":"2024-03-11"},
   "priority":"P1|P2|P3","deadline":"2026-10-01T12:00:00+05:30",
   "allowed_access_modes":["OPEN","LICENSED_API"]}}
 ```
+
+*Producer → reason (D20.2; enforced by P0's consumer, violations go to the DLQ with an ops alert).*
+
+| Producer (`source` attribute) | Allowed `reason` |
+|---|---|
+| P1 | `UNRESOLVED_CITATION`, `CORRIGENDUM_SUSPECTED`, `LOW_QUALITY_COPY` |
+| P3, P4 | `COVERAGE_GAP`, `LINEAGE_WATCH` |
+| P9 Privacy Gate (global plane) | `MATTER_WATCH` (unattributed, hourly-batched) |
+| ops console | `OPS` (and any reason, with a named operator in the audit log) |
 
 *v1.0 reason semantics (D16).*
 - `LINEAGE_WATCH` (from P4, 06_P4 SP4-7) asks P0 to poll a pending appeal or review of a status-relevant decision (a `REVIEW_OF`/`APPEAL_OF` edge to a pending SC or HC case). P0 serves it through the case-status and daily-order feeds (§2.2A), adding the identifier to the unattributed watch union.
@@ -141,6 +159,12 @@ reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
 - The payload schema is owned by P9. P0 consumes the fields listed in 01_master_architecture §6.4: `{request_id, court_ids[], target{work_id?, citation_text?, public_url?}, reason BAD_LAW_FLAG|UNOFFICIAL_ONLY_COPY|OPS, priority, dedupe_window_h}`.
   - `BAD_LAW_FLAG` is handled as a `COVERAGE_GAP` targeted acquisition, and `UNOFFICIAL_ONLY_COPY` as `LOW_QUALITY_COPY`.
   - `public_url` is untrusted. It is fetched only if its host is on a registered source's allowlist.
+
+**(c3) `redaction.applied.v1` (every consumer of `doc.redacted.v1` → P0 ledger; spine v1.0 D19.3)**: `{overlay_id, consumer P1|P2|P3|P4|P5|P7|P8|P9|P10|REPLICA:<id>, applied_at, generations_purged[]}`.
+- P0 records each ack in `redaction_ledger` (§2.4) against the overlay's expected consumer set (D21.3: P1, P2, P3, P4, P5 caches, P7, P8, P9, P10 and every registered replica).
+- The ledger check runs every 5 min. Missing acks at `effective_at + purge_sla.serving_h` (serving surfaces: P1 anchor API, P2, P5 caches, P10) or at `+ purge_sla.derived_h` (derived stores: P3, P4, P8, P9) open a SEV-2 incident and page legal-ops. A replica that has not acked by the next signed bundle plus 24 h is reported to the tenant's admin and to legal-ops.
+- Acks are idempotent on `(overlay_id, consumer)`. A second ack updates `applied_at` and unions `generations_purged[]`.
+- Tenant cells ack for their cell-local stores as `P7` (and `REPLICA:<cell_id>` for a D3/D4/D4h replica). Every cell must apply every overlay, because overlays are broadcast, so an ack reveals no tenant interest in the Work (D3). Acks carry `tenantid=null`.
 
 **(d) Operator directives**: `BackfillRequest{source_id, date_range, access_mode, budget}`, `SuppressionOrder{target, authority_ref(order anchor/URL), scope, effective_at}`, `PauseSource{source_id, reason}`. *(v1.0: an applied `SuppressionOrder` produces a `raw.captured.v1` with `change_kind=SUPPRESSED` and a `doc.redacted.v1` RedactionOverlay; `authority_ref` → `RedactionOverlay.legal_basis`/`ordered_by`, `effective_at` → `effective_at`; see §2.2A and §5.10.)*
 
@@ -207,7 +231,7 @@ It never implies the law changed, and P1 treats it as `manifestation.withdrawn_a
 
 **Mass-delete guard (review addition).** If more than `breakers.max_deleted_frac` of a source's LIVE records would become DELETED in one sweep window, no DELETED events are released. They are written to the outbox with `held_reason='MASS_DELETE'` and an incident opens. This is the signature of a URL-scheme redesign (every old URL 404s), not of mass withdrawal. The human either releases the events or re-keys the records via an adapter fix.
 
-**Suppression** is different from DELETED. In spine v1.0 (D16), a court-ordered suppression or verified takedown is emitted as **`change_kind=SUPPRESSED`**, not as DELETED + `suppression{…}`. In the same outbox transaction P0 emits **`doc.redacted.v1`**, whose `data` is the RedactionOverlay (§2.2A). Downstream phases (P2, P3, P4, P5 caches, P7) must tombstone and purge derived text according to that overlay (§5.10). The mass-delete breaker does **not** hold SUPPRESSED events, because a legal order must never wait behind an adapter incident.
+**Suppression** is different from DELETED. In spine v1.0 (D16), a court-ordered suppression or verified takedown is emitted as **`change_kind=SUPPRESSED`**, not as DELETED + `suppression{…}`. In the same outbox transaction P0 emits **`doc.redacted.v1`**, whose `data` is the RedactionOverlay (§2.2A). Every `doc.redacted.v1` consumer (D21.3: P1, P2, P3, P4, P5 caches, P7, P8, P9, P10, replicas) must tombstone and purge derived text according to that overlay and ack with `redaction.applied.v1` (§2.1 c3, §5.10). The mass-delete breaker does **not** hold SUPPRESSED events, because a legal order must never wait behind an adapter incident.
 
 ### 2.2A Additional outputs required by spine v1.0
 
@@ -222,25 +246,29 @@ Every event below uses the CloudEvents envelope with `tenantid=null` and `datacl
          "backing":"LIVE_DELTA|DATASET_ONLY","incident_id":null}}
 ```
 
-**(b) `judgment.expected.v1` (P0 → P3, P4, P10; new in D16)**: a "pronounced, text awaited" signal from the pronouncement watch (§5.4). It is emitted on each `expected_record` state transition. The `idempotencykey` is `expected_id|state`. Field names follow 01_master_architecture §6.4.
+**(b) `judgment.expected.v1` (P0 → P3, P4, P10; new in D16)**: a "pronounced, text awaited" signal from the pronouncement watch (§5.4). It is emitted on each `expected_record` state transition, and again (same state, `schemaversion` unchanged, new `revision`) when `referenced_authorities[]` is filled. The `idempotencykey` is `p0|judgment.expected|{expected_id}|{state}|r{revision}` (01_master §6.1 E3). Field names follow 01_master_architecture §6.4 plus D21.18. **Lane (D19.4):** the stream is small (tens of rows per court-day), so it has one topic, `plc.judgment.expected.v1` (01_master §6.2), and P0's outbox relay always publishes it with real-time priority, never batched. Rows for larger or constitution benches (`bench.strength ≥ 3`, i.e. above a division bench, at the SC or a HC full bench) are the ones D19.4 puts on the real-time lane: P4 routes them to its RT workers on receipt. Target: cause-list capture → event ≤ 30 min.
 ```json
 {"type":"judgment.expected.v1","tenantid":null,"dataclass":"PUBLIC",
- "data":{"expected_id":"exp_01J…","court_id":"crt_IN_SC",
+ "data":{"expected_id":"jex_01J…","court_id":"crt_IN_SC",           // jex_ (D20.5; formerly exp_)
          "case_ref":{"scheme":"CASE_NO|SC_DIARY_NO|CNR","value":"C.A. No. 1234/2020","parties":"A v. B"},
          "bench":{"strength":5,"judge_ids":["jdg_…"]},          // strength drives P4's larger-bench PROVISIONAL rule
          "pronounced_on":"2026-10-01",                           // expected_record.expected_on
          "evidence_raw_id":"sha256:…","source_kind":"CAUSE_LIST|DAILY_ORDER|OFFICIAL_NOTICE",
          "expected_by":"2026-10-02T10:00:00+05:30",             // D+24h overdue threshold
          "state":"PENDING|MATCHED|OVERDUE|CANCELLED",
-         "matched_work_id":null}}                                // set (via P1 identity) when MATCHED
+         "matched_work_id":null,                                 // set (via P1 identity) when MATCHED
+         "referenced_authorities":[                              // D21.18, optional: precedents named in a reference order
+           {"citation_text":"(2017) 10 SCC 1","resolved_work_id":"wrk_01J…|null","evidence_anchor_id":"wrk_…/en#p4|null"}],
+         "revision":1}}
 ```
+- *How `referenced_authorities[]` is filled.* P0 never parses legal text. When the evidence document is a daily order or reference order (`source_kind=DAILY_ORDER`), P0 waits for P1's `doc.parsed.v1` for that capture (joined on `raw_ids`) and, if that parse has `metadata.disposition.label=REFERRED_TO_LARGER_BENCH` or an opinion mapped to `opinion_role=REFERENCE_ORDER` (03_P1 §2.3, §2.4A), copies every case-law `CitationMention` of the order into the field, then re-emits the event. P4 decides which of them are actually doubted. If P1 has not parsed the order within 6 h, the event goes out without the field. Unresolved mentions keep `resolved_work_id=null`.
 - Consumers:
-  - P3 records an EXPECTED stub Work.
-  - For constitution-bench or larger-bench pronouncements, P4 may raise a PROVISIONAL impact flagged "text awaited".
+  - P3 asks P1's identity service to mint a Work with `work.status=EXPECTED` (D20.4; P1 is the sole identity writer).
+  - For constitution-bench or larger-bench pronouncements, P4 may raise a PROVISIONAL impact flagged "text awaited"; for authorities named in `referenced_authorities[]`, at any bench size (D21.18).
   - P10 shows "pronounced, text not yet available".
 - Only official evidence (cause list, daily order, official notice) produces this event. Expected records created or refreshed only by a `SIGNAL_ONLY` news item stay P0-internal until official evidence appears, consistent with P4's rule that news never seeds impacts.
 
-**(c) `doc.redacted.v1` (P0/P1/ops/legal → P2, P3, P4, P5 caches, P7; D4/D16)**: P0 produces it for every applied `SuppressionOrder` (court takedown, anonymisation or suppression order; verified takedown; source-side re-masking, §5.10). Its `data` is the spine **RedactionOverlay**:
+**(c) `doc.redacted.v1` (P0/P1/ops/legal → P1, P2, P3, P4, P5 caches, P7, P8, P9, P10, replicas; D4/D16/D20.3/D21.3)**: P0 produces it for every applied `SuppressionOrder` (court takedown, anonymisation or suppression order; verified takedown; source-side re-masking, §5.10). Its `data` is the spine **RedactionOverlay**:
 ```json
 {"type":"doc.redacted.v1","tenantid":null,"dataclass":"PUBLIC",
  "data":{"overlay_id":"ovl_…","work_id":"wrk_…","expression_key":null,   // work_id resolved via P1's manifestation lookup before emit (topic partition key)
@@ -250,12 +278,15 @@ Every event below uses the CloudEvents envelope with `tenantid=null` and `datacl
          "legal_basis":{"type":"COURT_ORDER|STATUTE|SOURCE_TAKEDOWN|DPDP_REQUEST","ref":"<order anchor/URL or provision>","anchor_id":null},
          "ordered_by":"crt_…|null","effective_at":"2026-10-01T00:00:00+05:30",
          "purge_sla":{"serving_h":1,"derived_h":24,"replica":"NEXT_BUNDLE"},
-         "review_state":"PENDING_REVIEW|VERIFIED", "valid_from":"…", "recorded_at":"…"}}
+         "review_state":"PENDING_REVIEW|VERIFIED", "valid_from":"…", "valid_to":null, "recorded_at":"…", "superseded_at":null,
+         "acks":{"INDEX":null,"EMBEDDINGS":null,"CACHE":null,"TRACE_STORE":null,"REPLICA":null,"GRAPH":null}}}  // always null on the wire; P0's ledger fills the view
 ```
+- *Topic and keys.* Topic `plc.doc.redacted.v1`, partition key `work_id`, `idempotencykey` = `p0|doc.redacted|{overlay_id}|{review_state}`. A `PENDING_REVIEW → VERIFIED` transition, or a superseding overlay, is a new event with the same `overlay_id`; consumers de-duplicate on `overlay_id` and apply the latest `recorded_at` (D20.3).
+- *Acks and ledger (D19.3).* Every consumer answers with `redaction.applied.v1` (§2.1 c3). The `acks` map of 01_master §7.13 is materialised from those acks in P0's `redaction_ledger` and served at `GET /v1/redactions/{overlay_id}` (§2.3); it is not updated on the event. Ledger kinds map to consumers as INDEX = P2 lexical/dense, EMBEDDINGS = P2 vectors, CACHE = P5/P10 caches, TRACE_STORE = P8/P9, GRAPH = P3/P4, REPLICA = each replica.
 Field names follow the RedactionOverlay in 01_master_architecture §7.13. P0's own target keys (`raw_id`s, `record_key`s) stay in the `suppression` table (§2.4) and are not put on the event.
 Masking is an overlay. No masked `expression_key` is minted (D16). Indexes, snippets, exports and quote checks use the masked rendition.
 
-**(d) Tenant-agnostic court feeds (D4/D16)**: P0 owns every court-portal connector and publishes public feeds keyed by court and public identifier. No feed carries tenant attribution.
+**(d) Tenant-agnostic court feeds (D4/D16; events ratified in D20.1)**: P0 owns every court-portal connector and publishes public feeds keyed by court and public identifier. No feed carries tenant attribution.
 
 | Feed (object) | Content | Consumers | Cadence |
 |---|---|---|---|
@@ -265,12 +296,49 @@ Masking is an overlay. No masked `expression_key` is minted (D16). Indexes, snip
 | **Daily orders** | Ordinary `raw.captured.v1` captures, which P1 turns into `doc.parsed.v1` with doc_type ORDER | P1 → P3, P4, P7 (`NEW_ORDER`) | As the parent source's schedule class |
 
 - *Watch registry.* Per-identifier polling covers the **unattributed union** of identifiers from Privacy-Gate `MATTER_WATCH` and `LINEAGE_WATCH` requests (table `watch_identifier`, §2.4). It has no tenant columns. P7 matches feeds against its private watch list inside the tenant cell. Sensitive matters register nothing and rely on bulk cause-list and order sweeps (09_P7 §5.11).
-- *Event names.* D4 fixes these feeds and their ownership but does not name their events. This doc uses the names proposed in 01_master_architecture §6.4, all marked ✱ there as beyond the decision record:
-  - `court.calendar.published.v1` on topic `plc.court.calendar.v1`;
-  - `court.causelist.published.v1` on topic `plc.court.causelist.v1`;
-  - `case.status.observed.v1` on topic `plc.court.case_status.v1`.
-  
-  The objects in the table above are the P0-side records behind those events.
+- *Event payloads (ratified D20.1; finalised here, closing 01_master §14 R-11).* Field names are the 01_master §6.4 set; fields marked `+` are P0 additions that consumers may ignore. All three carry `tenantid=null`, `dataclass=PUBLIC`, and are published through the outbox.
+
+```jsonc
+// case.status.observed.v1 — topic plc.court.case_status.v1, key case_ref.scheme|case_ref.value
+{"case_ref":{"scheme":"CNR|CASE_NO|SC_DIARY_NO","value":"DLHC010012342023"}, "case_id":"cas_…|null",
+ "court_id":"crt_IN_HC_DEL", "status":"PENDING|DISPOSED|UNKNOWN",        // normalised; the portal's text stays in status_as_published
+ "next_date":"2026-10-14|null", "purpose":"FOR_ORDERS|null", "observed_at":"2026-09-30T21:10:00+05:30",
+ "source_ref":{"raw_id":"sha256:…","capture_id":"cap_…"},
+ "+status_as_published":"Pending", "+stage_as_published":"Arguments", "+last_order_date":"2026-09-29|null",
+ "+access_mode":"OPEN|HUMAN_ASSISTED", "+changed_fields":["next_date"]}   // emitted only when a field changed vs the prior snapshot
+
+// court.causelist.published.v1 — topic plc.court.causelist.v1, key court_id|list_date
+{"court_id":"crt_IN_SC", "bench_id":"bnc_…|null", "list_date":"2026-10-01",
+ "+list_type":"DAILY|ADVANCE|SUPPLEMENTARY|MISC", "+revision":1,          // a supplementary or corrected list re-emits with revision+1
+ "items":[{"item_no":"12","court_no":"1","case_refs":[{"scheme":"CASE_NO","value":"C.A. No. 1234/2020","case_id":"cas_…|null"}],
+           "advocates_norm":["…"], "purpose":"FOR_PRONOUNCEMENT|FOR_HEARING|FOR_ORDERS|FOR_ADMISSION|OTHER",
+           "+coram_as_listed":"HON'BLE …", "+parties_as_listed":"A v. B"}],
+ "source_raw_id":"sha256:…"}                                               // the listing capture (WARC-backed)
+
+// court.calendar.published.v1 — topic plc.court.calendar.v1, key court_id
+{"court_id":"crt_IN_HC_BOM", "year":2026, "sitting_days_rule":"MON-FRI;2ND_4TH_SAT_OFF",   // illustrative values, not a verified calendar
+ "holidays":[{"date":"2026-10-02","name":"Gandhi Jayanti","+basis":"NOTIFICATION"}],
+ "vacations":[{"from":"2026-10-19","to":"2026-10-24","vacation_bench":"bnc_…|null"}],
+ "source_raw_id":"sha256:…", "valid_from":"2026-01-01", "+calendar_id":"cal_…", "+version":3}
+```
+- *Topics (D20.16).* The names above follow `{plane}.{domain}.{event}.v{n}` with domain `court` and are the ones listed in 01_master §6.2. The objects in the table above are the P0-side records behind those events.
+- *Quality gates.* A cause list whose parsed item count deviates by more than 30% from the court's trailing 20-list median is held (outbox `held_reason='CAUSELIST_PARSE'`) for adapter review, because P7 raises `HEARING_LISTED` alerts from it. `case.status.observed.v1` is emitted only on change, and `next_date` values in the past or more than 2 years ahead are dropped with a parse alert.
+
+**(e) P0 topic map (D20.16; names as in 01_master §6.2)**
+
+| Direction | Event | Topic | Partition key |
+|---|---|---|---|
+| out | `raw.captured.v1` | `plc.raw.captured.v1.rt` (delta sweeps, targeted) / `.bulk` (backfill) | `source_id\|source_record_key` |
+| out | `source.health.v1` | `plc.source.health.v1` | `source_id` |
+| out | `judgment.expected.v1` | `plc.judgment.expected.v1` | `court_id\|case_ref` |
+| out | `doc.redacted.v1` | `plc.doc.redacted.v1` | `work_id` |
+| out | `case.status.observed.v1`, `court.causelist.published.v1`, `court.calendar.published.v1` | `plc.court.case_status.v1`, `plc.court.causelist.v1`, `plc.court.calendar.v1` | as in (d) |
+| in | `acquire.requested.v1` | `plc.acquire.requested.v1` | `target.scheme\|target.value` |
+| in | `source.recheck.requested.v1` | `plc.source.recheck.v1` | `court_id` |
+| in | `redaction.applied.v1` | `plc.redaction.applied.v1` (replicas relay acks through the bundle channel) | `overlay_id` |
+| in | `doc.parsed.v1` (for `referenced_authorities[]` and `work_id` look-up only) | `plc.doc.parsed.v1.{rt,bulk}` | `work_id` |
+
+Each consumer group has `.retry.{5m,1h,6h}` and `.dlq` topics (01_master §6.1 E7). P0 never reads or writes a `tpl.*` topic.
 
 ### 2.3 Synchronous read API (for P1, P4, P8 and ops)
 
@@ -285,6 +353,9 @@ GET  /v1/court-calendars/{court_id}?year=  -> CourtCalendar (v1.0 D16; P6 Proced
 GET  /v1/cause-lists/{court_id}?date=      -> CauseListEntry[] (tenant-agnostic; whole-list download, no per-case lookup logging)
 GET  /v1/case-status?scheme=&value=       -> latest CaseStatusSnapshot (stateless; no tenant-attributable logs, D3 read-path rule)
 GET  /v1/expected?court_id=&state=        -> expected_record rows (mirrors judgment.expected.v1)
+GET  /v1/redactions/{overlay_id}          -> RedactionOverlay + ledger view (acks per consumer, purge_sla status); legal-ops and P8 audit
+GET  /v1/sources/{source_id}              -> descriptor summary {schedule_class, court_id, backing, provenance_tier, can_bind_forums[]}
+                                             (P3/P4 apply the D20.12 COVERAGE_GAP thresholds: 72 h for HOT, 7 days for WARM/COOL)
 ```
 
 ### 2.4 Internal system of record (PostgreSQL)
@@ -309,11 +380,11 @@ CREATE TABLE acquisition_request (request_id text PRIMARY KEY, reason text, targ
   status text /*OPEN|FOUND|NOT_FOUND|BLOCKED_LEGAL*/, attempts jsonb, resolved_capture_id text); -- no tenant columns, by design
 CREATE TABLE suppression (suppression_id text PRIMARY KEY, target jsonb, authority_ref text, scope text, effective_at timestamptz, created_by text);
 CREATE TABLE outbox (event_id text PRIMARY KEY, partition_key text, payload jsonb, created_at timestamptz, published_at timestamptz,
-  held_reason text /*NULL|MASS_CHANGE|MASS_DELETE|MASS_BACKDATED_NEW*/, incident_id text);  -- relay skips held rows
+  held_reason text /*NULL|MASS_CHANGE|MASS_DELETE|MASS_BACKDATED_NEW|CAUSELIST_PARSE*/, incident_id text);  -- relay skips held rows
 -- review additions:
 ALTER TABLE source_record ADD COLUMN key_quality text DEFAULT 'STRONG';  -- STRONG|WEAK (§5.5 rule 2)
 CREATE TABLE expected_record (          -- §5.4 pronouncement watch: items we know SHOULD appear at source
-  expected_id text PRIMARY KEY, source_id text, court_id text, case_ref jsonb /*as listed: case no, diary no, parties*/,
+  expected_id text PRIMARY KEY /* jex_ (D20.5) */, revision int DEFAULT 1, referenced_authorities jsonb /* D21.18 */, source_id text, court_id text, case_ref jsonb /*as listed: case no, diary no, parties*/,
   expected_on date, evidence_raw_id text /*cause-list capture*/, state text /*PENDING|MATCHED|OVERDUE|CANCELLED*/,
   matched_capture_id text, created_at timestamptz, overdue_at timestamptz);
 -- spine v1.0 additions (D9, D16):
@@ -329,6 +400,9 @@ CREATE TABLE cause_list_entry (court_id text, list_date date, list_type text, it
   purpose text, listing_raw_id text, PRIMARY KEY (court_id, list_date, list_type, item_no));
 CREATE TABLE case_status_snapshot (scheme text, value text, observed_at timestamptz, court_id text, body jsonb, raw_id text,
   PRIMARY KEY (scheme, value, observed_at));
+CREATE TABLE redaction_ledger (overlay_id text, consumer text /*P1|P2|P3|P4|P5|P7|P8|P9|P10|REPLICA:<id>*/,
+  expected_by timestamptz /*effective_at + purge_sla per consumer class*/, applied_at timestamptz, generations_purged text[],
+  breach_incident_id text, PRIMARY KEY (overlay_id, consumer));   -- D19.3: filled from redaction.applied.v1; 5-min breach check
 CREATE INDEX ON capture (source_id, fetched_at);          -- capture is range-partitioned by month on fetched_at (§8)
 ```
 
@@ -628,7 +702,7 @@ flowchart LR
   5. A `SIGNAL_ONLY` news item naming a pronounced judgment creates or refreshes an expected record with lower confidence (`evidence_raw_id` = the RSS capture). It never creates content.
   6. Rows are CANCELLED when the next cause list shows the matter adjourned, or after D+14 with an ops note.
 
-  P4 can use MATCHED-vs-PENDING to show "judgment pronounced, text not yet available", instead of silently answering with stale law. *(Spine v1.0 D16 resolved the former open question: the interface is the spine event `judgment.expected.v1`, keyed by `expected_id`, to P3, P4 and P10. P3 records an EXPECTED stub Work, and P4 may raise a PROVISIONAL "text awaited" impact for larger-bench pronouncements.)*
+  P4 can use MATCHED-vs-PENDING to show "judgment pronounced, text not yet available", instead of silently answering with stale law. *(Spine v1.0 D16 resolved the former open question: the interface is the spine event `judgment.expected.v1`, keyed by `expected_id`, to P3, P4 and P10. P3 asks P1's identity service to mint an EXPECTED stub Work (D20.4), and P4 may raise a PROVISIONAL "text awaited" impact for larger-bench pronouncements, or for any authority named in `referenced_authorities[]` (D21.18). Larger-bench rows take P4's real-time lane (D19.4).)*
 - **Priority lanes** map onto P1's lanes. Anything captured by the HOT class, or by a `MATTER_WATCH` or `UNRESOLVED_CITATION` request, is marked `priority: P1` in `fetch_context`, and P1 routes it to `L0-urgent`.
 - **Budgets.**
   - Backfill and delta use separate Temporal task queues and separate per-host budgets.
@@ -815,7 +889,7 @@ The court website sees only our generic crawler fetching a public record.
 **Capacity ceiling for watched cases (review finding).** HC case status and district-court orders sit behind CAPTCHAs (§3.1). Automated capture for watched matters is therefore bounded by HUMAN_ASSISTED capacity: 200 captures/day/source by default, one operator ≈ 60–100 captures/hour *(assumption)*. P0 must not promise automated interim-order tracking for thousands of watched cases.
 - Beyond the cap, `MATTER_WATCH` requests return `BLOCKED_LEGAL` with `retry_via: TENANT_UPLOAD`.
 - P7 then asks the firm, which has its own lawful access as counsel on record, to upload the order. It flows back to the PLC only through the Privacy Gate as `PARTNER_CONTRIBUTED`, and only if it is a public order.
-- The request queue is ordered by the number of distinct watching tenants (known only to the gate), then by age.
+- The HUMAN_ASSISTED queue is ordered by `priority`, then by age. The Privacy Gate may raise `priority` only when at least k = 5 tenants watch the identifier (a bucketed signal, as for D19.4's post-GA union watch-list); in the MVP every `MATTER_WATCH` request carries `P2`. P0 never receives a tenant count, and P4 never learns tenant interest (D3, D19.4).
 
 ### 5.10 Suppression, takedown and personal data
 
@@ -825,7 +899,8 @@ The court website sees only our generic crawler fetching a public record.
     - *v1.0 mapping:* a DISPLAY-scope candidate becomes a `doc.redacted.v1` overlay with `kind=MASK_SPANS` (or `SUPPRESS_ALL` when the spans are unknown) and `review_state=PENDING_REVIEW` (01_master §7.13). Serving is masked at once; derived-text purge and raw legal-hold follow `review_state=VERIFIED`. P1 may also emit the overlay directly (D4).
   - Each entry targets `raw_id`s, `record_key`s or `work_id`s.
   - On creation, P0 emits `raw.captured.v1` with **`change_kind=SUPPRESSED`** (v1.0 D16; formerly `DELETED` + `suppression{reason, authority_ref, scope}`) and, in the same outbox transaction, **`doc.redacted.v1`** carrying the RedactionOverlay (§2.2A c).
-    - Downstream phases must tombstone and purge their derived text, embeddings, snippets and index entries per the overlay, within its `purge_sla`.
+    - Downstream phases must tombstone and purge their derived text, embeddings, snippets and index entries per the overlay, within its `purge_sla`, and ack with `redaction.applied.v1` (D19.3).
+    - P0's `redaction_ledger` tracks every expected ack (D21.3 consumer set plus registered replicas). A missing ack past its SLA (serving ≤ 1 h, derived ≤ 24 h, replicas by the next bundle) opens a SEV-2 incident owned by legal-ops. The ledger is the evidence that a court order was complied with.
     - Name-search-only restrictions (e.g. *Laksh Vir Singh Yadav*, 21_india §2.5) use `kind=NAME_SEARCH_SUPPRESSED` and do **not** change `change_kind`, because the text stays retrievable by case number and citation.
   - Raw bytes move to a restricted legal-hold prefix and remain retrievable only by the legal role.
 - **Source-side masking.** If a court re-publishes a judgment with names masked, we see `CHANGED` and a suspected replacement. The newer masked version becomes canonical, and the unmasked prior version is automatically suppressed from display (`scope: DISPLAY`), because the court's re-publication expresses a masking intent. In v1.0 this is a `doc.redacted.v1` overlay with `legal_basis.type=SOURCE_TAKEDOWN` (re-masked at source) on the prior version. No masked `expression_key` is created (D16).
@@ -861,7 +936,7 @@ The court website sees only our generic crawler fetching a public record.
 
 Each ratio has a learned "normal" band, since the sources measure different things (disposals vs uploaded judgments). A sustained deviation is a coverage incident. Items present in (b) but absent in (a) are enqueued as `COVERAGE_GAP` targeted requests.
 
-**`source.health.v1`** is emitted on every status transition and hourly for HOT sources. P10 renders "current as of" per court. P8 uses it to downgrade "no adverse authority found" statements when a relevant source is `DEGRADED` or `DOWN`.
+**`source.health.v1`** is emitted on every status transition and hourly for HOT sources. P10 renders "current as of" per court. P8 uses it to downgrade "no adverse authority found" statements when a relevant source is `DEGRADED` or `DOWN`. P4 folds it into the `Freshness` object (01_master §7.14). P3 uses that to add the `COVERAGE_GAP` reason code (definitive=false). A GOOD status degrades to UNKNOWN only when the gap exceeds the per-source threshold, by default 72 h for HOT and 7 days for WARM/COOL sources that can bind the forum (D20.12); P0 exposes `schedule_class` for this through `GET /v1/sources/{source_id}` (§2.3). `COVERAGE_GAP` is a reason code, never a status value.
 
 ### 5.13 Cross-cutting: security, cost at scale (≈5M+ docs), latency targets, observability, model-agnostic design
 
@@ -887,6 +962,7 @@ Each ratio has a learned "normal" band, since the sources measure different thin
   - at an *assumed* 5–10% breakage per month ⇒ 5–10 repairs/month ⇒ **1.5–2 FTE** of crawler engineering;
   - plus about 0.25 FTE legal review (legal-profile renewals every 180 days).
 - **At 10M+ documents** P0 cost grows only with storage. Adapter count, not document count, drives cost.
+- **Relation to the platform cost of record.** P0 is a small line in the canonical cost model (13_cross_cutting; D18/D19.1: ≈$77K/month at 5M docs and ≈$89K/month at 20M for 2,000 seats; ≈$0.105 per verified Q&A, ≈$2.16 per strategy memo). The P0 figures above are inputs to that model, not a separate estimate.
 - **Cost guardrails** (review addition). The realistic blow-ups are downstream costs triggered by P0, not P0's own cost.
   - IK: a hard daily spend cap per purpose (reconciliation / gap-fill / targeted), default ₹5k/day total, beyond which calls are refused and an alert fires.
   - Browser workers: a per-source minute budget (default 120 browser-minutes/day).
@@ -1036,7 +1112,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 | **Confused tenant user** | A request to fetch a sealed or in-camera case, or one under a victim-identity bar | Targeted acquisition fetches only publicly listed material; suppression-register and statutory-bar checks run before any capture is exposed; NOT_FOUND is reported honestly. |
 | **Source outage or format change** | Zero yield, soft errors, redesign | Error taxonomy (§5.8); auto-pause; last-good replay; rolling re-scan recovers the gap; LLM-assisted repair; MTTR SLO. |
 | **Court upgrades to hCaptcha or blocks cloud ASNs** | OPEN adapters for that court die | The ladder degrades to MoU, IK and human-assisted; the coverage incident is visible to users via `source.health.v1`; business escalation. |
-| **Takedown or anonymisation order** | Derived copies persist in indexes and caches | Suppression emits `change_kind=SUPPRESSED` plus `doc.redacted.v1` (RedactionOverlay; v1.0 D16, replacing the earlier `DELETED+suppression`). P2, P3, P4, P5 caches and P7 must tombstone and purge within `purge_sla` (contract test in P8's regression suite). |
+| **Takedown or anonymisation order** | Derived copies persist in indexes and caches | Suppression emits `change_kind=SUPPRESSED` plus `doc.redacted.v1` (RedactionOverlay; v1.0 D16, replacing the earlier `DELETED+suppression`). Every consumer (D21.3: P1, P2, P3, P4, P5 caches, P7, P8, P9, P10, replicas) must tombstone and purge within `purge_sla` and ack with `redaction.applied.v1`; P0's redaction ledger pages on any missing ack (D19.3), and a contract test sits in P8's zero-tolerance sentinel suite (D11). |
 | **Open dataset withdrawn or relicensed** | Loss of the backfill basis | Bytes already captured under CC-BY remain licensed. The provenance upgrade (§5.11) steadily replaces `OPEN_DATASET` manifestations with official ones. |
 | **Regulatory shift** (MeitY rules on scraping, DPDP rules) | The legal basis changes | Legal profiles have a `review_due`; a TermsWatch workflow diffs ToU and robots weekly; a kill-switch per source. |
 | **Clock/timezone errors** | "Freshness" and `first_seen_at` off by 5.5 h | All timestamps are RFC 3339 with offset. Source dates are stored as published strings (P1 normalises). NTP monitoring. |
@@ -1111,6 +1187,8 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 | Expected-record match precision (review) | Correct MATCHED joins ÷ all MATCHED (audited 100/month) | ≥ 98% |
 | Breaker trips (review) | Held-event incidents per source per month; share later released unchanged | Track; > 50% released unchanged ⇒ thresholds too tight |
 | Text-layer probe accuracy (review) | Precision/recall of `LEGACY_FONT_SUSPECT` on a labelled set | Precision ≥ 0.9, recall ≥ 0.8 before P1 relies on it |
+| Redaction-ack compliance (v1.0 D19.3) | Overlays with every expected `redaction.applied.v1` inside `purge_sla` ÷ all overlays | 100% serving (≤ 1 h); ≥ 99% derived (≤ 24 h); every breach has an incident |
+| Court-feed accuracy (v1.0 D20.1) | Audited `court.causelist.published.v1` items and `case.status.observed.v1.next_date` values matching the portal (100/court/month) | ≥ 99% cause-list items; ≥ 98% `next_date` |
 
 ---
 
@@ -1125,7 +1203,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
   - NCLT (allowed paths), NCLAT, ITAT;
   - IK API for gap-fill.
 - **Platform**: Temporal, Postgres, S3 (ap-south-1), httpx + warcio, declarative adapters with fixture CI, `nfp` change detection, outbox (Debezium) → Kafka bus, legal gate, a basic yield alert, `raw.captured.v1` with the v1.0 extensions (incl. `rights_class`, `change_kind=SUPPRESSED`), and `doc.redacted.v1` for takedowns.
-- **Spine v1.0 obligations in the MVP** (the MVP is one D2 dedicated cell, D17): `judgment.expected.v1` from the SC pronouncement watch; `CourtCalendar` for the SC and the partner's HCs (needed by P6's Procedural Clock); SC cause-list and daily-order feeds; `source.health.v1`. HC case-status feeds only for the watch union and within the HUMAN_ASSISTED cap.
+- **Spine v1.0 obligations in the MVP** (the MVP is one D2 dedicated cell, D17): `judgment.expected.v1` from the SC pronouncement watch; `court.calendar.published.v1` for the SC and the partner's HCs (needed by P6's Procedural Clock); `court.causelist.published.v1` for the SC and the partner's HCs; daily-order captures; `source.health.v1`; the `redaction_ledger` consuming `redaction.applied.v1` (D19.3). HC case-status feeds only for the watch union and within the HUMAN_ASSISTED cap.
 - **Review additions to the MVP** (all cheap):
   - mass-change and mass-delete breakers;
   - the text-layer quality probe;
@@ -1173,7 +1251,8 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 13. **Real volumes** (review). The SC and HC daily figures rest on one secondary NJDG summary with ambiguous wording [P0-14]. Replace them with measured counts in month 1; until then capacity is sized at 3×.
 14. **Pronouncement watch → P4 interface** (review). `expected_record` is P0-internal. P4 must decide whether a "pronounced, text pending" state needs a spine event (candidate: extend `source.health.v1` or add `judgment.expected.v1`). **Resolved by spine v1.0 D16:** `judgment.expected.v1` (P0 → P3, P4, P10) is accepted (§2.2A b).
 15. **Defunct fora** (review). Archives of abolished tribunals (e.g. IPAB, CLB, BIFR) may be offline or moved. 21_india should confirm the abolition dates and successor custodians before Tier C.
-16. **Court-feed event names and HUMAN_ASSISTED ceiling** (v1.0). D4 assigns P0 the tenant-agnostic case-status, cause-list, daily-order and `CourtCalendar` feeds, but the decision record does not name their events. §2.2A d uses the ✱-marked names proposed in 01_master_architecture §6.4, which the principal architect still has to ratify. CAPTCHA-gated case-status pages still cap per-CNR coverage (§5.9), so P7's `HEARING_CHANGED` SLO for district courts depends on the tenant-upload route.
+16. **Court-feed event names and HUMAN_ASSISTED ceiling** (v1.0). ~~The decision record does not name the court-feed events.~~ **Resolved by D20.1:** `case.status.observed.v1`, `court.causelist.published.v1` and `court.calendar.published.v1` are ratified and their payloads are finalised in §2.2A d. The remaining risk is capacity: CAPTCHA-gated case-status pages still cap per-CNR coverage (§5.9), so P7's `HEARING_CHANGED` SLO for district courts depends on the tenant-upload route.
+17. **Redaction-ack compliance from replicas** (v1.0 D19.3). An air-gapped D4 replica can ack only through its next bundle exchange. If the customer delays bundle import, P0's ledger shows a breach that P0 cannot fix. The contract with D4 customers must make bundle import within 24 h a condition of the takedown-compliance warranty.
 
 ---
 

@@ -47,7 +47,7 @@ Recommended stack:
 
 ### 2.0 Spine v1.0 conformance
 
-This doc follows the spine v1.0 decision record (D1–D18). Where the rest of this section says **proposed**, read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` in §2.0 and in v1.0 annotations elsewhere means a spine v1.0 decision. The bold **D1.–D8.** headings in §6 are this doc's own local decision labels.
+This doc follows the spine v1.0 decision record (D1–D21; D19–D21 dispositions are rows 11–18 below and the updated notes). Where the rest of this section says **proposed**, read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` in §2.0 and in v1.0 annotations elsewhere means a spine v1.0 decision. The bold **D1.–D8.** headings in §6 are this doc's own local decision labels.
 
 | # | P2 proposal (§2.6) | Disposition |
 |---|---|---|
@@ -55,17 +55,25 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 | 2 | Extend `doc.indexed.v1` (`removed_chunk_ids`, `enrichment_level`, `summary_ids`, `doc_seq`, `parse_id`, `content_digest`) | **ACCEPTED** (D4: producer owns the schema; nothing contests it). Modified only by the D2 envelope names. `chunk_ids` are allowed in this *transient* event. D8 forbids them only in durable cross-phase records. |
 | 3 | P2 consumes `graph.delta.v1` | **ACCEPTED-MODIFIED (D4, D6).** P3 is the single writer of status (`commit_status_batch`). P4 triggers recomputes but does not own status. The `plc-status` mirror is therefore a verbatim projection of the forum-independent fields of P3's **`AuthorityView`** (`status`, `definitive`, `reason_codes[]`, `status_confidence`, valid-time segment, `graph_watermark`), not of a P4 `AuthorityStatus`. `binding_on_forum` and `binding_basis` depend on the forum, so they are never mirrored; callers get them from P3. P2 never derives a status of its own. It consumes the v1.0 delta fields `graph_watermark`, `cause{kind, ref}` and `status_changes[].{definitive, reason_codes, valid_from}`. |
 | 4 | New `index.generation.promoted.v1` | **ACCEPTED as D4** (owner P2). |
-| 5 | New `doc.redacted.v1` | **ACCEPTED-MODIFIED (D4, D16).** This is the single event name. `data` = **`RedactionOverlay`** `{overlay_id, scope WORK\|EXPRESSION\|ANCHOR_SPANS, kind SUPPRESS_ALL\|MASK_SPANS\|NAME_SEARCH_SUPPRESSED\|COURT_PROHIBITION, spans[], legal_basis, ordered_by?, effective_at, purge_sla}`. Producers are P0/P1/ops/legal; consumers are P2, P3, P4, P5 caches and P7. Masking is an **overlay**: every P2 projection (lexical, dense, cards, summaries, snippets, MT shadow) is built from the *masked rendition*. There is **no masked `expression_key`**. P0's `raw.captured.v1` `change_kind = SUPPRESSED` reaches P2 only through `doc.redacted.v1`. |
+| 5 | New `doc.redacted.v1` | **ACCEPTED-MODIFIED (D4, D16).** This is the single event name. `data` = **`RedactionOverlay`** `{overlay_id, scope WORK\|EXPRESSION\|ANCHOR_SPANS, kind SUPPRESS_ALL\|MASK_SPANS\|NAME_SEARCH_SUPPRESSED\|COURT_PROHIBITION, spans[], legal_basis, ordered_by?, effective_at, purge_sla}`. Producers are P0/P1/ops/legal (D20.3); consumers are P1, P2, P3, P4, P5 caches, P7, P8, P9, P10 and replicas (D21.3), de-duplicating on `overlay_id` (`ovl_`, D20.5). The full overlay field list is 01_master §7.13 (D20.3). P2 acknowledges every overlay with **`redaction.applied.v1`** (D19.3; §5.11). Masking is an **overlay**: every P2 projection (lexical, dense, cards, summaries, snippets, MT shadow) is built from the *masked rendition*. There is **no masked `expression_key`**. P0's `raw.captured.v1` `change_kind = SUPPRESSED` reaches P2 only through `doc.redacted.v1`. |
 | 6 | Add `IndexQuery`/`IndexHit` (IAL) to §H | **ACCEPTED as D9** (new objects) and D1 (OpenSearch is reached only through the IAL). Two additions: the **D3 PLC read-path rule** (§5.12), and D9's rule that tenant index shards require a **TEC** token (§5.13). |
 | 7 | Machine translations are not Expressions | **ACCEPTED (D8, D16).** Public MT lives in `Chunk.mt` (= `nodes[].aux_text['{lang}-x-mt']`, `authoritative=false`). Private MT is a display rendition (`v1.mt-en`). MT is never a support anchor, and P8 fails a claim anchored to MT. |
-| 8 | Statute anchors across coalesced intervals | **ACCEPTED-MODIFIED.** The field is named **`Chunk.expression_keys[]`** (was `covered_expression_keys`). Keys may carry a territory suffix, `lang@YYYY-MM-DD[~TERR]` (D16), so coalescing and as-of rewriting key on *(date, territory)*. The rewrite target must be an Expression that is `authoritative` or `ROUNDTRIP_OK`. Reconstructed text (`derived=true`) stays retrievable but is flagged, because it cannot back tier-1 claims (D16). |
+| 8 | Statute anchors across coalesced intervals | **ACCEPTED-MODIFIED.** The field keeps the canonical 01_master §7.2 name **`Chunk.covered_expression_keys[]`** (an earlier draft of this doc renamed it `expression_keys[]`; that rename is withdrawn so the object matches the catalogue). Keys may carry a territory suffix, `lang@YYYY-MM-DD[~TERR]` (D16), so coalescing and as-of rewriting key on *(date, territory)*. The rewrite target must be an Expression that is `authoritative` or `ROUNDTRIP_OK`. Reconstructed text (`derived=true`) stays retrievable but is flagged, because it cannot back tier-1 claims (D16). |
 | 9 | Work re-keying signal (`replaces_work_ids[]` / `work.rekeyed.v1`) | **ACCEPTED-MODIFIED as `identity.merged.v1` / `identity.split.v1`** (D4, D16) `{kind WORK\|CASE\|ALIAS, from_id, to_id, reason, confidence}`. The two names proposed here are withdrawn. |
 | 10 | Chunk IDs are generation-scoped; anchors are durable | **ACCEPTED as D8.** |
+| 11 | `Chunk.binding_scope_tags[]` for P5's BIND leg (01_master §14 R-12) | **ACCEPTED (D21.2).** P2 owns the field; P3 supplies the values (materialised court-hierarchy scopes, e.g. `ALL_INDIA`, `STATE:IN-MH`, `TRIBUNAL:NCLT-ALL`). Refreshed on `graph.delta.v1`, exposed as IAL filter `binding_scope_tags_any` (§2.2, §2.5, §5.11a). |
+| 12 | `opinion_role` enum | **ACCEPTED (D21.4):** `MAJORITY\|CONCURRING\|DISSENT\|REFERENCE_ORDER\|UNKNOWN`. Per curiam → MAJORITY. `opinion_type` is retired. |
+| 13 | Redaction and erasure acknowledgements | **ACCEPTED (D19.3, D20.15).** P2 emits `redaction.applied.v1` `{overlay_id, consumer: "P2", applied_at, generations_purged[]}` per overlay. In tenant mode it emits `erasure.applied.v1` `{erasure_id, consumer: "P2", applied_at, scope}`. P2 never emits `erasure.completed.v1`: P7 aggregates the acks and emits it (D21.3). |
+| 14 | Parse-ID prefix | **RULED (D20.5):** `parse_id` = `par_…`. `prs_` stays P6's RuleSpec prefix. |
+| 15 | `rights_class` / `provenance_tier` on `doc.parsed.v1` | **ACCEPTED (D20.14):** copied from the Manifestation. P2 reads them from the event, and no longer looks them up via `manifestation_id`. |
+| 16 | `pdoc.parsed.v1` consumer | **RULED (D20.13):** consumers are P7 and P2 (tenant mode), on the tenant-scoped topic `tpl.<tenant>.pdoc.parsed.v1` (D20.16). |
+| 17 | PLC read path by deployment | **RULED (D19.7):** D2 cells query the shared PLC IAL through the stateless read path (same region); a local replica is optional. D3/D4/D4h MUST use a local PLC replica, under a ≤24 h replica-lag SLO. |
+| 18 | `trust_label` enum | **ACCEPTED (D21.12):** it adds `TENANT_COURT_RECORD` for privately held certified court records. The label is data-only for control flow and is set from P7's document record (§5.13). |
 
 **Renames and semantics this doc now follows**
 - Envelope extension attributes (D2) are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (PUBLIC for PLC). Payload fields keep snake_case.
-- `covered_expression_keys` → `expression_keys[]` (D16 territorial keys).
-- `opinion_type` (MAJORITY|CONCURRING|DISSENTING|PER_CURIAM|UNKNOWN) → **`opinion_role`** `MAJORITY|CONCURRING|DISSENT|REFERENCE_ORDER` (D8). A per-curiam opinion maps to MAJORITY. When the role is unknown, the field is absent.
+- Coalesced statute chunks keep the 01_master §7.2 field name `covered_expression_keys[]`; its keys follow D16 territorial form `lang@YYYY-MM-DD[~TERR]`.
+- `opinion_type` (MAJORITY|CONCURRING|DISSENTING|PER_CURIAM|UNKNOWN) → **`opinion_role`** `MAJORITY|CONCURRING|DISSENT|REFERENCE_ORDER|UNKNOWN` (D8, D21.4). A per-curiam opinion maps to MAJORITY; an unattributed opinion is `UNKNOWN`.
 - Status-mirror source "P4 `AuthorityStatus`" → P3 **`AuthorityView`** (D6).
 - `work.rekeyed.v1` / `replaces_work_ids[]` → `identity.merged.v1` / `identity.split.v1`.
 - `pipeline_version` = component@semver + model_id + **model_snapshot + endpoint_region** + prompt_hash (D10).
@@ -73,33 +81,41 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 - Deployments are named D1 pooled SaaS · D2 dedicated cell · D3 customer VPC · D4 on-prem/air-gapped · D4h on-prem + in-India cloud LLM (D17).
 - `ParsedDocument` input shape per D16: `rhetorical_role{label, confidence, source}`, `speaker`, opinion ref, `quality.lang[]`, `quality.gate`, `quality.hidden_text_flags[]`, and optional opinion prefix `o{n}.` in anchors.
 - Private anchors are `{pdoc_id}/{pver}#{fragment}` (D8).
+- `parse_id` prefix `prs_` → **`par_`** (D20.5). `overlay_id` prefix is `ovl_` (D19.3, D20.5).
+- Kafka topics follow `{plane}.{domain}.{event}.v{n}` with plane `plc` or `tpl.<tenant>` (D20.16), e.g. `plc.doc.parsed.v1`, `plc.doc.redacted.v1`, `tpl.<tenant>.pdoc.parsed.v1`.
+- Authority rows are keyed by `subject_id` (D6; 01_master §14 R-05), including P2's `status_mirror`.
 
 **Obligations added by v1.0** (new fields are marked ➕ in §2.2 and §2.5)
 - `trust_label` on every chunk (D9).
 - `rights_class` on every chunk and as an IAL filter for any external/API output (D9, D13).
-- `expression_keys[]` on coalesced statute chunks.
+- `covered_expression_keys[]` on coalesced statute chunks.
+- `binding_scope_tags[]` on every PLC chunk, with values supplied by P3 (D21.2).
+- Acknowledge every overlay with `redaction.applied.v1` (D19.3) and, in tenant mode, every erasure with `erasure.applied.v1` (D20.15).
 - Consume `doc.redacted.v1` and index the masked rendition (§5.11).
 - Consume `identity.merged.v1` / `identity.split.v1` and, in tenant mode, `erasure.requested.v1` (D4).
 - Durable records persist anchors, never `chunk_id` (D8, R1).
 - Publish `index.generation.promoted.v1`.
 - `Summary` is non-citable.
 
-**Open cross-phase points** (flagged, not resolved here)
-- P1 issues `parse_id` as `prs_…`, but D12 assigns `prs_` to P6's procedural RuleSpec. P2 treats `parse_id` as opaque and will follow whatever prefix P1 adopts.
-- `doc.parsed.v1` (D16) does not carry `rights_class` or `provenance_tier`. P2 reads them from P1's Manifestation store via `manifestation_id`.
-- D16 routes `pdoc.parsed.v1` only to P7. P2 in tenant mode also needs it, either as a tenant-bus consumer or through a P7 → P2 call.
+**Cross-phase points raised by earlier drafts, now ruled**
+- `parse_id` prefix: P1 had issued `prs_…`, which collides with P6's RuleSpec. **Ruled D20.5: `par_…`.** P2 still treats `parse_id` as opaque.
+- `doc.parsed.v1` lacked `rights_class` and `provenance_tier`. **Ruled D20.14: both are copied onto the event.** P2 reads them from the event; the Manifestation lookup via `manifestation_id` remains only as a fallback for events with `schemaversion` older than the D20.14 minor.
+- `pdoc.parsed.v1` was routed only to P7. **Ruled D20.13: P2 (tenant mode) also consumes it** on `tpl.<tenant>.pdoc.parsed.v1`.
+- R-16 (rhetorical-role vocabularies): P1 publishes the canonical label set. P2 maps P1's `*_CANDIDATE` labels to their base label (`RATIO_CANDIDATE → RATIO`) and uses labels only for chunk boundaries and as a filter field; it never re-labels (§2.1).
+- R-25 (TOPIC watches in tenant planes): P2 ships daily-delta chunk embeddings in the PLC→TPL bundle (§5.13).
 
 ### 2.1 Inputs
 
 | Input | Producer | Used for |
 |---|---|---|
 | `doc.parsed.v1` (spine §G) + `ParsedDocument` JSON at `parsed_doc_uri` (spine §H) | P1 | Chunking, headers, summaries, all representations |
-| `graph.delta.v1` (P2 as consumer, §2.0 #3) | P3 | (a) Index `Proposition` nodes as retrieval units. (b) Update the status-mirror index (an `AuthorityView` projection) from `status_changes[].{status, definitive, reason_codes, valid_from}`, stamped with `graph_watermark`. (c) Refresh `cited_work_ids` when citation resolution changes. |
+| `graph.delta.v1` (P2 as consumer, §2.0 #3) | P3 | (a) Index `Proposition` nodes as retrieval units. (b) Update the status-mirror index (an `AuthorityView` projection) from `status_changes[].{subject_id, new, definitive, reason_codes, valid_from}`, stamped with `graph_watermark`. (c) Refresh `cited_work_ids` when citation resolution changes. (d) Refresh `binding_scope_tags[]` when P3 changes a forum's binding universe (D21.2, §5.11a). |
+| Binding-scope table (P3 Graph Query API `GET /v1/binding-scopes?since_watermark=`) | P3 | Values for `binding_scope_tags[]`: rows `{court_id, bench_id?, decided_from?, decided_to?, tags[], graph_watermark}` (§5.11a) |
 | `reprocess.requested.v1` | P4/P9/ops | Re-chunk, re-embed or re-summarise a scope, or build a new generation |
-| `doc.redacted.v1` (D4/D16; `data` = `RedactionOverlay`) | P0/P1/ops/legal | Mandatory removal or masking of text (court masking orders, victim-identity protection) across all generations, caches and snapshots. Indexes hold only the masked rendition (§5.11) |
+| `doc.redacted.v1` (D4/D16; `data` = `RedactionOverlay`) | P0/P1/ops/legal | Mandatory removal or masking of text (court masking orders, victim-identity protection) across all generations, caches and snapshots. Indexes hold only the masked rendition (§5.11). De-duplicated on `overlay_id`; acknowledged with `redaction.applied.v1` (D19.3) |
 | `identity.merged.v1` / `identity.split.v1` (D4/D16) | P1 | Re-key chunks, cards and summaries from `from_id` to `to_id` (§5.11) |
 | Private `ParsedDocument` (`pdoc_…` IDs, anchors `{pdoc_id}/{pver}#{fragment}`), tenant mode only, signalled by `pdoc.parsed.v1` (D16) | P1 in tenant mode / P7 | Same pipeline, per-tenant indexes, no shared caches. `trust_label` is taken from P7's document record |
-| `erasure.requested.v1` (D4), tenant mode only | P7 | Purge a tenant's or matter's chunks, embeddings, summaries and caches across all TPL generations. P2 confirms back to P7 so that P7 can emit `erasure.completed.v1` |
+| `erasure.requested.v1` (D4), tenant mode only | P7 | Purge a tenant's or matter's chunks, embeddings, summaries and caches across all TPL generations. P2 acknowledges with `erasure.applied.v1` `{erasure_id, consumer: "P2", applied_at, scope}` (D20.15); P7 aggregates the acks and alone emits `erasure.completed.v1` (D21.3) |
 
 P2 relies on these fields of `ParsedDocument` (P1 must populate them):
 
@@ -123,6 +139,8 @@ quality: { ocr_conf, lang[] /* D16 */, structure_conf, needs_review,
            gate: "PASS"|"FLAGGED"|"QUARANTINED", hidden_text_flags[] }   // D9/D16
 ```
 
+**Label vocabulary (01_master §14 R-16).** P1 owns and publishes the canonical rhetorical-role label set (coarse labels plus `*_CANDIDATE` and fine labels, D16). The 13 labels listed above are P2's *boundary classes*: P2 maps P1's label to them (`X_CANDIDATE → X`; any fine label → its coarse parent; unmapped → `NONE`) and uses them only for chunk boundaries and as a filterable `rhetorical_role` field. P2 never re-labels, and P5 reads the P1 label from the Anchor Read API when it needs the fine label.
+
 If `rhetorical_role` is missing or its `confidence` is below 0.6, P2 falls back to heading-based and paragraph-based boundaries, and sets `role_source = "FALLBACK"` on each chunk.
 
 `quality.gate = QUARANTINED` documents carry only `pg{n}` / `pg{n}.l{m}` locator anchors (D16). P2 indexes them with `quality.flags += QUARANTINED_LOCATORS`. The IAL excludes them by default (`min_quality_gate = FLAGGED`). They are never offered as support for impact_tier-1 claims. `hidden_text_flags[]` are copied into `quality.flags` and feed the `INJECTION_PATTERN` screen (§8).
@@ -137,17 +155,18 @@ Chunk {
                                             // P7 notes, P9 labels) MUST key on anchor_ids, never on chunk_id.
   tenant_id: null | "ten_…",                // null = PLC
   work_id, expression_key, case_id?,        // spine §B. Coalesced statute chunks: expression_key = first version of the interval
-  expression_keys?: string[],               // ➕ (v1.0 name; was covered_expression_keys) statutes: every `lang@date[~TERR]`
+  covered_expression_keys?: string[],       // ➕ (01_master §7.2 name) statutes: every `lang@date[~TERR]`
                                             //   expression whose provision text is identical (§5.9, D16 territorial keys)
   authoritative: bool,                      // ➕ false for vernacular translations published "for the litigant's understanding" (§5.10)
   derived?: bool,                           // ➕ D16: reconstructed point-in-time statute text; cannot back tier-1 claims
   translation_of?: { work_id, expression_key },   // ➕ link to the original-language expression
   trust_label: "PLC_OFFICIAL"|"PLC_THIRD_PARTY"|"TENANT_CLIENT_DOC"|"TENANT_OPPOSING_DOC"|
-               "TENANT_CORRESPONDENCE"|"TENANT_WORK_PRODUCT"|"USER_INPUT",   // ➕ D9. PLC: from Manifestation provenance_tier
+               "TENANT_CORRESPONDENCE"|"TENANT_WORK_PRODUCT"|"TENANT_COURT_RECORD"|"USER_INPUT",
+                                            // ➕ D9 + D21.12. PLC: from doc.parsed.v1.provenance_tier (D20.14)
                                             //   (OFFICIAL_PRIMARY/OFFICIAL_AGGREGATOR → PLC_OFFICIAL, else PLC_THIRD_PARTY);
                                             //   TPL: from P7's document record. Non-control labels are data-only downstream.
   rights_class: "OFFICIAL"|"OPEN_LICENSED"|"THIRD_PARTY_LINK_ONLY"|"LICENSED_RESTRICTED"|"USER_UPLOADED",
-                                            // ➕ D9: from the Manifestation; IAL filter for any external/API output (§2.5)
+                                            // ➕ D9: from doc.parsed.v1.rights_class (D20.14); IAL filter for any external/API output (§2.5)
   redaction?: { overlay_ids: string[], masked: bool },   // ➕ D16: chunk text/vectors built from the masked rendition
   anchor_ids: string[],                     // ordered; every anchor of the expression is covered by ≥1 chunk
   anchor_range: { first: anchor_id, last: anchor_id },
@@ -156,8 +175,9 @@ Chunk {
   node_path: string,                        // e.g. "judgment/analysis/issue-2" or "act/part-II/ch-IV/sec-138/ss-1"
   section_heading?: string,
   rhetorical_role: string, role_source: "P1"|"FALLBACK",
-  opinion_author?: string, opinion_role?: "MAJORITY"|"CONCURRING"|"DISSENT"|"REFERENCE_ORDER", // ➕ D8 enum (was opinion_type;
-                                            //   per-curiam → MAJORITY; unknown → absent). Court's own text only (§3.6)
+  opinion_author?: string, opinion_role?: "MAJORITY"|"CONCURRING"|"DISSENT"|"REFERENCE_ORDER"|"UNKNOWN", // ➕ D8/D21.4
+                                            //   (opinion_type retired; per-curiam → MAJORITY; judgments/orders only, UNKNOWN when
+                                            //   unattributed; absent on statute chunks). Court's own text only (§3.6)
   text: string,                             // exact source text of the covered anchors (never paraphrased)
   text_hash: "sha256:…", token_count: int, lang: "en"|"hi"|…, script: "Latn"|"Deva"|…,
   context_header: string,                   // deterministic (see §5.3)
@@ -170,6 +190,9 @@ Chunk {
   in_force?: bool, enacted_on?: date,       // ➕ statutes: uncommenced text has in_force=false, valid_from=null (§5.9)
   // denormalised stable metadata for filtering
   court_id, court_level, bench_strength?, decision_date?, doc_type, jurisdiction_state?,
+  binding_scope_tags: string[],             // ➕ D21.2: P2-owned field, values from P3's binding-scope table (§5.11a), e.g.
+                                            //   ["ALL_INDIA"] for SC; ["STATE:IN-MH","STATE:IN-GA","HC:crt_IN_HC_BOM"] for Bombay HC;
+                                            //   ["TRIBUNAL:NCLT-ALL"]; bench-qualified tags "…:bench>=N". Empty on TPL chunks
   valid_from?: date, valid_to?: date,       // statutes/Constitution: provision-version interval (coalesced, §5.9)
   recorded_at: timestamp, superseded_at?: timestamp,          // bitemporal (spine §E)
   quality: { ocr_conf, structure_conf, needs_review, flags: string[] }, // ➕ flags e.g. INJECTION_PATTERN, BOILERPLATE_HEAVY,
@@ -218,7 +241,7 @@ A summary is a **navigation aid, never a source** (D9: `sum_` never counts as su
   "tenantid": null,                                   // D2 extension names. PLC; tenant-mode events carry ten_… and never leave the tenant bus
   "dataclass": "PUBLIC",                              // D2: TENANT_CONFIDENTIAL in tenant mode
   "traceparent": "00-…", "causationid": "<id of the doc.parsed.v1 event>", "schemaversion": "1.1",
-  "idempotencykey": "wrk_01J…/en|g7|doc_seq=42|BASE",
+  "idempotencykey": "p2|index|wrk_01J…/en|sha256:<content_digest>|g7:doc_seq=42:BASE",   // 01_master §6.1 E3 grammar
   "data": {
     "expression_ref": {"work_id": "wrk_01J…", "expression_key": "en"},
     "index_generation": "g7",
@@ -228,7 +251,7 @@ A summary is a **navigation aid, never a source** (D9: `sum_` never counts as su
     "enrichment_level": "BASE",                     // ➕ BASE = searchable; FULL = summaries+LLM context+MT done
     "summary_ids": [],                              // ➕ present when FULL
     "doc_seq": 42,                                  // ➕ monotonic per expression
-    "parse_id": "prs_01J…",                         // ➕ lineage back to P1 (opaque; prefix owned by P1 — see §2.0 open points)
+    "parse_id": "par_01J…",                         // ➕ lineage back to P1 (opaque; `par_` per D20.5)
     "content_digest": "sha256:…"                    // ➕ xor-fold of (chunk_id, text_hash, doc_seq) — reconciliation key
   }
 }
@@ -254,6 +277,7 @@ IndexQuery {
              valid_at?: date,             // statutes: valid_from <= D < valid_to
              known_at?: timestamp,        // bitemporal replay: recorded_at <= K < superseded_at
              work_ids?, cited_work_ids_any?, cited_provisions_any?, exclude_quotations?: bool,
+             binding_scope_tags_any?: string[],   // ➕ D21.2: P5 BIND leg; executed per §5.11a (partition or exact scoring)
              min_ocr_conf?,
              territory?: "IN-XX",         // ➕ D16: with valid_at, resolves (date, territory) statute versions
              rights_classes?: string[],   // ➕ D9: MANDATORY for external/API callers (D13 PLC Access API). The IAL
@@ -279,10 +303,10 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 2. **Extend `doc.indexed.v1`** with `removed_chunk_ids`, `enrichment_level`, `summary_ids`, `doc_seq`, `parse_id` and `content_digest`. *Why:* the two-phase freshness SLO (searchable in minutes, enriched in hours), idempotency, and reconciliation all need them. Without `removed_chunk_ids`, P5 caches can serve deleted text.
 3. **Add P2 as a consumer of `graph.delta.v1`**. *Why:* proposition units and the status mirror are text-index projections of graph state. Letting P3 write into search indexes directly would create a second writer and break R2.
 4. **New event `index.generation.promoted.v1`**. *Why:* cache invalidation in P5 and audit replay in P8 need to know which generation answered.
-5. **New event `doc.redacted.v1`** (producers: P1, ops or legal; consumers: P2, P3, P5 caches, P7 tenant caches). *Why:* court masking or takedown orders must purge text, embeddings (embeddings can be inverted into text [P2-54]), summaries, old generations and snapshots within an SLA. The spine has no deletion or redaction event. *(v1.0, D16: producers also include P0, P4 is added as a consumer, `data` = `RedactionOverlay`, and masking is an overlay with no masked `expression_key`.)*
+5. **New event `doc.redacted.v1`** (producers: P1, ops or legal; consumers: P2, P3, P5 caches, P7 tenant caches). *Why:* court masking or takedown orders must purge text, embeddings (embeddings can be inverted into text [P2-54]), summaries, old generations and snapshots within an SLA. The spine has no deletion or redaction event. *(v1.0, D16/D20.3/D21.3: producers are P0, P1 and ops/legal; consumers are P1, P2, P3, P4, P5 caches, P7, P8, P9, P10 and replicas; `data` = `RedactionOverlay` (01_master §7.13); masking is an overlay with no masked `expression_key`; every consumer acks with `redaction.applied.v1` (D19.3).)*
 6. **Add `IndexQuery`/`IndexHit` (IAL) to §H**. *Why:* it decouples P5 from the engine DSL, so an engine swap becomes a P2-internal change.
 7. **Clarify:** machine translations are **not** Expressions. They live in `Chunk.mt`, and anchors always point to the original-language text or to an *official* translation expression. *Why:* an unofficial MT paragraph must never become a citable anchor.
-8. **Clarify statute anchors across coalesced intervals** (added by independent review). Spine §C makes an anchor expression-specific (`wrk/hi@2019-08-09#sec-3`), but P2 indexes one chunk per *distinct text interval* spanning several expressions (§5.9). Rule: the chunk stores `expression_keys[]` (v1.0 name; originally proposed as `covered_expression_keys[]`); for a query with `valid_at = D` the IAL rewrites every returned anchor to the expression valid on D (same fragment; identical `text_hash` by construction), so P6/P8 always cite the point-in-time expression. *Why:* otherwise P5 receives the anchor of the first version in the interval, and the citation shows a version date that was not the one in force on D, even though the text is identical.
+8. **Clarify statute anchors across coalesced intervals** (added by independent review). Spine §C makes an anchor expression-specific (`wrk/hi@2019-08-09#sec-3`), but P2 indexes one chunk per *distinct text interval* spanning several expressions (§5.9). Rule: the chunk stores `covered_expression_keys[]` (the 01_master §7.2 name); for a query with `valid_at = D` the IAL rewrites every returned anchor to the expression valid on D (same fragment; identical `text_hash` by construction), so P6/P8 always cite the point-in-time expression. *Why:* otherwise P5 receives the anchor of the first version in the interval, and the citation shows a version date that was not the one in force on D, even though the text is identical.
 9. **Add a work re-keying signal** (added by independent review). `doc.parsed.v1` allows a *provisional* `work_id`. When P1 later merges it into a resolved Work (or splits a wrongly merged one), P2 must move all chunks, cards and summaries (they are routed by `work_id`). Proposed: `doc.parsed.v1.data.replaces_work_ids[]` (or a separate `work.rekeyed.v1 {from_ids[], to_id, reason}`); **v1.0 adopted `identity.merged.v1` / `identity.split.v1` instead (D4/D16)**. P2 handles it as delete-under-old-id plus index-under-new-id in one outbox transaction. *Why:* without it, provisional IDs leave orphaned duplicates and split citation counts.
 10. **Chunk IDs are generation-scoped, anchors are durable** (clarifies spine §H `Chunk`). Any cross-phase persistence (FeedbackEvent targets, P6 claims, P7 notes) must reference `anchor_ids`, not `chunk_id`.
 
@@ -304,22 +328,23 @@ CREATE TABLE chunk (
 CREATE TABLE outbox (id bigserial PRIMARY KEY, kind text, serial_key text, doc_seq bigint, gens text[],
                      payload jsonb, created_at timestamptz DEFAULT now(), relayed_at timestamptz);
 CREATE TABLE status_mirror (                       -- projection of P3 AuthorityView (D6), bitemporal; P3 is the single writer of status
-  target_id text,                                  -- wrk_… or prp_…
+  subject_id text,                                 -- wrk_… or prp_… (AuthorityView.subject_id, D6; 01_master R-05)
   status text CHECK (status IN ('GOOD','CAUTION','NEGATIVE','PARTIAL_NEGATIVE','UNKNOWN')),  -- D6: stays 5-valued
   definitive boolean NOT NULL,                     -- D6: "under review" = CAUTION + definitive=false + NEGATIVE_SIGNAL_UNDER_REVIEW
-  reason_codes text[] NOT NULL DEFAULT '{}',       -- D6 reason codes, e.g. NEGATIVE_SIGNAL_UNDER_REVIEW, COVERAGE_GAP
+  reason_codes text[] NOT NULL DEFAULT '{}',       -- D6 reason codes (P3 registry, D21.8), e.g. NEGATIVE_SIGNAL_UNDER_REVIEW, COVERAGE_GAP
+                                                   --   (D20.12: a gap sets definitive=false; GOOD→UNKNOWN only past the per-source threshold; copied verbatim)
   status_confidence real,
   valid_from date NOT NULL, valid_to date,         -- legal time: status holds for as_of_legal_date in [from,to)
   recorded_at timestamptz NOT NULL, superseded_at timestamptz,
   reason_assertion_ids text[] NOT NULL, source_delta_id text NOT NULL,
   graph_watermark bigint NOT NULL,                 -- D4: P3 watermark of the delta that produced this row
-  PRIMARY KEY (target_id, valid_from, recorded_at)
+  PRIMARY KEY (subject_id, valid_from, recorded_at)
 );
 ```
 
-`plc-status` OpenSearch mirror doc (one doc per `target_id`, no vectors): `{target_id, kind: WORK|PROPOSITION, current_status, definitive, reason_codes[], intervals: [{status, definitive, reason_codes, valid_from, valid_to}], reason_assertion_ids, last_delta_id, graph_watermark, updated_at}`. **The mirror is a cache of `AuthorityView`, not a second source (D6).** It copies P3's forum-independent fields verbatim and never computes status. `binding_on_forum`/`binding_basis` are forum-specific and are always read from P3 (`/v1/binding`, `authority:batch`). Badges, P5 ranking features and P8 status checks may read it only when its `graph_watermark` ≥ the `graph_watermark` the caller is pinned to. Otherwise they call P3's Graph Query API. A query with `as_of_legal_date = D` selects the interval containing D; `as_known_at` replays go to Postgres `status_mirror` (or P4), never to the mirror index.
+`plc-status` OpenSearch mirror doc (one doc per `subject_id`, no vectors): `{subject_id, kind: WORK|PROPOSITION, current_status, definitive, reason_codes[], intervals: [{status, definitive, reason_codes, valid_from, valid_to}], reason_assertion_ids, last_delta_id, graph_watermark, updated_at}`. **The mirror is a cache of `AuthorityView`, not a second source (D6).** It copies P3's forum-independent fields verbatim and never computes status. `binding_on_forum`/`binding_basis` are forum-specific and are always read from P3 (`/v1/binding`, `authority:batch`). Badges, P5 ranking features and P8 status checks may read it only when its `graph_watermark` ≥ the `graph_watermark` the caller is pinned to. Otherwise they call P3's Graph Query API. A query with `as_of_legal_date = D` selects the interval containing D; `as_known_at` replays go to Postgres `status_mirror` (or P4), never to the mirror index.
 
-`reprocess.requested.v1` scope selector accepted by P2: `{selector: {work_ids?, court_ids?, doc_types?, decided_between?, lang?, parse_pipeline_version?, generation?}, stages: ["CHUNK"|"EMBED"|"ENRICH"|"ALL"], target_pipeline_version, reason, max_cost_usd, requested_by}`. P2 computes an estimate first; if `estimate > max_cost_usd` or `> 1,000 USD` of LLM spend, the job waits for an ops approval (§8, cost blow-up).
+`reprocess.requested.v1` (schema owner P4, D21.15; 01_master §6.3) fields P2 reads: `scope.selector{work_ids?, court_ids?, doc_types?, decided_between?, lang?, parse_pipeline_version?, generation?, quality_lt?}` or `scope.explicit_ids_uri`, `stages` ⊆ {`P2.chunk`, `P2.embed`, `P2.enrich`, `P2.all`}, `target_pipeline_version`, `mode SHADOW|APPLY`, `output_namespace`, `lane`, `reason`, `budget{usd_cap, deadline}`, `requested_by`. P2 ignores stages owned by other phases. It computes an estimate first; if `estimate > budget.usd_cap` or `> 1,000 USD` of LLM spend, the job waits for an ops approval (§8, cost blow-up). In `SHADOW` mode it writes to `output_namespace` (a shadow generation) and never to the live aliases.
 
 ---
 
@@ -488,6 +513,7 @@ flowchart LR
   GEN --> OS
   GEN --> OUT3[index.generation.promoted.v1]:::ev
   E4 --> RED[Redactor<br/>masked rendition; purge all gens, caches, snapshots]
+  RED --> OUT4[redaction.applied.v1]:::ev
   E5 --> ACC
   OS --> IAL[Index Access Layer API] --> P5[P5 Retrieval]
   REC[Reconciler<br/>nightly checksum diff] --> PG
@@ -765,7 +791,7 @@ Fields and semantics:
 
   This implements spine §E for text retrieval.
 - **Serialisation key for statutes is `work_id`, not `expression_ref`.** A new consolidated version (a new `lang@date` expression) changes `valid_to` of the preceding interval's chunk, which belongs to an *older* expression. All statute-family writes for one Work are therefore serialised on `work_id`, and `doc_seq` is per Work. Updating `valid_to` rewrites that vector-bearing doc; this is accepted because amendments are rare (per provision, a handful per decade), unlike treatment changes (R3).
-- **Anchor rewriting for as-of hits** (spine change 8, ACCEPTED-MODIFIED): a coalesced chunk lists `expression_keys[]`, and the IAL returns anchors re-based to the expression in force on `valid_at`. For territorial versions (`lang@YYYY-MM-DD~IN-XX`, D16) the rewrite resolves on *(valid_at, territory)*. Coalescing never merges intervals across territories. If the chosen expression is `derived=true` (reconstructed) and not `ROUNDTRIP_OK`, the hit is flagged so that P5/P6 do not use it as tier-1 support.
+- **Anchor rewriting for as-of hits** (spine change 8, ACCEPTED-MODIFIED): a coalesced chunk lists `covered_expression_keys[]`, and the IAL returns anchors re-based to the expression in force on `valid_at`. For territorial versions (`lang@YYYY-MM-DD~IN-XX`, D16) the rewrite resolves on *(valid_at, territory)*. Coalescing never merges intervals across territories. If the chosen expression is `derived=true` (reconstructed) and not `ROUNDTRIP_OK`, the hit is flagged so that P5/P6 do not use it as tier-1 support.
 - **Judgments:** `decision_date` is indexed. The IAL offers `decided_on_or_before`, but P5 decides whether to apply it. Overruling in India is generally retrospective (the declaratory theory), and prospective overruling is an exception (I.C. Golak Nath v. State of Punjab, 1967 — *unverified here; P3/P4 own this doctrine*). So a naive date filter on judgments can be legally wrong.
 
 ### 5.10 Multilingual and cross-lingual handling
@@ -806,7 +832,7 @@ outbox relay (at-least-once) → indexer:
   refresh-wait (or refresh=wait_for on the last bulk) ⇒ emit doc.indexed.v1 (BASE) via outbox
 ```
 
-The outbox gives "emit only if committed", with duplicates allowed [P2-42]. External versioning makes duplicate and out-of-order index writes harmless. The `idempotencykey` envelope attribute (D2) `= expression_ref|gen|doc_seq|level` lets consumers deduplicate.
+The outbox gives "emit only if committed", with duplicates allowed [P2-42]. External versioning makes duplicate and out-of-order index writes harmless. The `idempotencykey` envelope attribute (D2) follows the 01_master §6.1 E3 grammar, `p2|index|{expression_ref}|{content_digest}|{gen}:doc_seq={n}:{level}`, and lets consumers deduplicate. The acks follow the same grammar: `p2|redaction_ack|{overlay_id}|{sha256(generations_purged)}|{milestone}` and `p2|erasure_ack|{erasure_id}|{scope_hash}|v1`.
 
 **Revisions, corrigenda and re-keying (added by independent review)**
 - A corrigendum or re-issued judgment arrives as a new expression of the same Work and language (`en.r2`). Without a rule, both `en` and `en.r2` stay live, which produces duplicate hits and serves the uncorrected text. Rule: when P2 accepts `lang.rN`, it sets `superseded_at = now` on all chunks, cards and summaries of the previous revision of that language (status `SUPERSEDED_REV`), and default search (`known_at` unset) returns only the latest revision. The old revision stays replayable via `known_at`.
@@ -857,14 +883,36 @@ The outbox gives "emit only if committed", with duplicates allowed [P2-42]. Exte
   4. Hard-delete superseded rows' text (keeping hashes only).
   5. Purge P5 caches via the event.
   6. Rewrite snapshots newer than the redaction horizon, or expire them.
-- SLO: removed from search within 1h, from all artefacts within 24h, or within the overlay's `purge_sla` if that is shorter. Highlights, snippets and IAL `get_*` calls always return the masked rendition, and P8 quote checks run against it (D16).
+  7. Emit **`redaction.applied.v1`** `{overlay_id, consumer: "P2", applied_at, generations_purged[]}` via the outbox (D19.3). It is emitted once the serving purge (steps 1–3) completes, and again with the final `generations_purged[]` when steps 4–6 finish. P0's redaction ledger alerts on any `purge_sla` breach.
+  
+  Replayed overlays are no-ops: P2 de-duplicates on `overlay_id` (D20.3). Overlays with `review_state = PENDING_REVIEW` are applied immediately (fail closed), and a later `VERIFIED` or withdrawn overlay is applied as a new version.
+- SLO (01_master §14 R-24, reconciled with the structured `purge_sla` of §7.13): removed from search within `purge_sla.serving_h` = 1 h, and from all derived artefacts (embeddings, summaries, MT shadow, retained generations, snapshots) within `purge_sla.derived_h` = 24 h, or sooner if the overlay says so. D3/D4/D4h replicas apply it with the next PLC bundle (`REPLICA: NEXT_BUNDLE`), and each replica acks as `REPLICA:<id>`. Highlights, snippets and IAL `get_*` calls always return the masked rendition, and P8 quote checks run against it (D16).
 - Why this is not hypothetical in India: the Supreme Court has directed that no one may print or publish, in print, electronic or social media, the name of a rape victim or any facts that could identify her [P2-56]; and the Delhi High Court has ordered Indian Kanoon to block a judgment from search-engine access pending a right-to-be-forgotten petition [P2-55]. A legal-publishing index must be able to comply within hours, across every derived copy.
+
+### 5.11a Binding-scope tags (D21.2; 01_master §14 R-12)
+
+**Ownership.** P2 owns the `Chunk.binding_scope_tags[]` field and its index mechanics. P3 owns the values: which forums a court's decisions bind is doctrine (05_P3 §5.9, court registry I8 and rules B1–B7), not a P2 lookup table.
+
+**Source table.** P3 publishes a binding-scope table through the Graph Query API (`GET /v1/binding-scopes?after_watermark=`, 05_P3 §5.12). Each row is `{court_id, bench_id?, decided_from?, decided_to?, min_bench_strength?, tags[], rule_ids[], graph_watermark}`. The date bounds handle reorganised High Courts, where pre-bifurcation decisions need an explicit succession rule. P2 mirrors the table into Postgres `binding_scope(court_id, bench_id, decided_from, decided_to, min_bench_strength, tags, graph_watermark)`.
+
+**Materialisation.**
+- At BASE time, each PLC chunk gets `binding_scope_tags = tags_for(court_id, bench_id, decision_date, bench_strength)` from the mirrored table. Statute and Constitution chunks get `["ALL_INDIA"]` or `["STATE:<ISO 3166-2:IN>"]` by territorial extent. TPL chunks get none.
+- *Trigger.* P2 re-pulls the table when a `graph.delta.v1` arrives with `cause.kind = RECOMPUTE` and `cause.ref` naming a court-registry version (`court_registry@ver`) or a `rul_…@ver` doctrine version. It also re-pulls once a day as a safety net.
+- *Update.* When a row's tags change, P2 recomputes the affected chunks and writes partial updates through the same batched path as `cited_work_ids` (§5.11, churn control). No re-embed is needed, because tags never enter the embedding input.
+- *Freshness.* Tags are refreshed within 24 h in the bulk lane. Meanwhile the IAL applies the new table at query time: it expands `binding_scope_tags_any` against the current table into a `court_id` (+ bench-strength) predicate and ORs it with the materialised tags. A registry change is therefore visible to the BIND leg within the `graph.delta` → mirror SLO of ≤ 2 min (§5.15).
+
+**Execution for P5's BIND leg.** One High Court's binding universe is typically a few percent of the corpus, and filtered-HNSW recall degrades at that selectivity (07_P5 §5.6, BIND leg).
+- Per tag, the IAL chooses by tag cardinality, recomputed nightly, not per query.
+  - If the tag covers ≤ 200k vectors, the IAL runs **exact scoring** over the pre-filtered set (script-score k-NN).
+  - Otherwise it uses the filtered ANN path, with `ef_search` raised ×4. The Ops bake-off (§5.6.3) must show recall ≥ 0.95 of unfiltered at the tag's selectivity; any tag below that gets its own sub-index (`plc-chunks-gN-bind-<tag>`).
+- Lexical BIND queries are plain filtered BM25, which has no recall penalty.
+- *Invariant I6.* Every judgment chunk whose court appears in P3's table has ≥ 1 tag. Violations are quarantined and alerted like I1–I5.
 
 ### 5.12 Index Access Layer (IAL)
 
 - It is a stateless gRPC/HTTP service (§2.5) that translates `IndexQuery` into the engine DSL.
 - It enforces `tenant_scope`. A PLC IAL instance physically cannot reach TPL clusters, and a tenant IAL instance runs inside the tenant boundary with read-only PLC credentials. TPL shard access requires a valid TEC token (D9).
-- **PLC read-path rule (D3).** PLC calls made from tenant contexts are stateless. The IAL writes no tenant-attributable query or ID logs outside the tenant-scoped audit store, and its ops telemetry is tenant-redacted (no query text, no `matter_id`, no hit lists). D3/D4/D4h deployments use a local PLC replica.
+- **PLC read-path rule (D3).** PLC calls made from tenant contexts are stateless. The IAL writes no tenant-attributable query or ID logs outside the tenant-scoped audit store, and its ops telemetry is tenant-redacted (no query text, no `matter_id`, no hit lists). Per D19.7, D2 cells call the shared PLC IAL in the same region, with an optional local replica. D3/D4/D4h deployments MUST use a local PLC replica, rebuilt from the signed daily bundle under a ≤ 24 h replica-lag SLO.
 - It enforces `rights_class` (D9) on every external/API request (D13) and returns only the masked rendition of redacted text (D16).
 - It caps `k ≤ 1000` and collapses by work. It attaches `generation` to every hit and returns raw scores with ranks.
 - Any engine swap (e.g. to Vespa) is confined to the IAL and indexer adapters.
@@ -874,13 +922,18 @@ The outbox gives "emit only if committed", with duplicates allowed [P2-42]. Exte
 
 - The same container images are deployed in the tenant boundary: a per-tenant namespace in D1 pooled SaaS, a D2 dedicated cell, a D3 customer VPC, or D4/D4h on-prem (D17). Inputs are private `ParsedDocument`s with `pdoc_…` anchors of the form `{pdoc_id}/{pver}#{fragment}` (D8), signalled by `pdoc.parsed.v1` (D16).
 - Indexes are named `tpl-<tenant>-*-gN`, with one index family per tenant. In D1/D2 they sit in a dedicated cluster per isolation tier; D4/D4h use a single-node OpenSearch.
-- Every private chunk carries the `trust_label` from P7's document record (`TENANT_CLIENT_DOC`, `TENANT_OPPOSING_DOC`, `TENANT_CORRESPONDENCE`, `TENANT_WORK_PRODUCT`, D9) and `rights_class = USER_UPLOADED`. Opposing-party and correspondence chunks are data-only downstream.
+- Every private chunk carries the `trust_label` from P7's document record (`TENANT_CLIENT_DOC`, `TENANT_OPPOSING_DOC`, `TENANT_CORRESPONDENCE`, `TENANT_WORK_PRODUCT`, D9; `TENANT_COURT_RECORD` for privately held certified court records, D21.12) and `rights_class = USER_UPLOADED`. Opposing-party, correspondence and court-record chunks are data-only for control flow downstream.
 - MT of private documents is a display rendition (`v1.mt-en`, D8). It is never an Expression and never an anchor.
-- `erasure.requested.v1` (P7) purges the scoped chunks, embeddings, summaries and caches from all TPL generations and snapshots.
+- `erasure.requested.v1` (P7) purges the scoped chunks, embeddings, summaries and caches from all TPL generations and snapshots. P2 then emits `erasure.applied.v1` `{erasure_id, consumer: "P2", applied_at, scope}` on `tpl.<tenant>.erasure.v1` (D20.15). Only P7 emits `erasure.completed.v1`, after all acks arrive (D21.3). SLO: ≤ 24 h for index and embedding purge; snapshots expire within the tenant's backup-retention window, which is disclosed in the erasure receipt.
 - Access control: `matter_id` plus `acl_principals[]` are stored per chunk and **enforced in the IAL as a mandatory filter** derived from P7's access policy, carried in the caller's TEC (D9). They are never taken from the caller's query.
 - Embeddings are computed by the tenant-local embedder, and the cache is tenant-namespaced (§5.6.4).
 - LLM enrichment for private documents is **off by default**. When a firm enables it, it runs through the tenant's Model Gateway route, and summaries of private documents are stored only in the TPL.
 - Nothing from tenant mode is written to PLC stores. P9's Privacy Gate is the only path.
+- **Daily-delta embeddings for TOPIC watches (01_master §14 R-25).** P10's tenant-side TOPIC watches match the day's new PLC chunks against a watch's stored query vector inside the tenant plane, so no watch text leaves the tenant.
+  - P2 publishes a daily **delta-embedding pack** `{pack_id, cutoff_at, index_generation, embedder model_id+dims+dtype, rows[{chunk_id, work_id, anchor_ids[], court_id, doc_type, decision_date, binding_scope_tags[], vector (int8, 1024-d)}], sha256}`, covering every chunk that reached BASE since the previous cutoff.
+  - It ships PLC→TPL (the permitted direction). D1/D2 cells read it from the shared object store alongside `digest.edition.published.v1`; D3/D4/D4h receive it inside the signed daily PLC bundle.
+  - Size: ≈ 20–50k works/day × ≈ 7 chunks × ≈ 1.1 KB ≈ 150–400 MB/day uncompressed (planning figure, from §5.14 assumptions).
+  - When a generation changes the embedder, the pack switches model on the promotion date. P10 must re-embed stored watch queries with `embed_query` in the tenant boundary before matching. Packs carry the model id, so a stale watch vector is detected, never silently compared.
 - Alternative for very small on-prem (D4/D4h) installs: Postgres with pgvector/pgvectorscale [P2-41] as the TPL engine, behind the same IAL (D1 allows pgvector only for small on-prem tenant planes). It is allowed but not the default, because two engines double the test matrix.
 
 ### 5.14 Capacity and cost at 5M and 20M documents
@@ -942,7 +995,9 @@ Compute costs:
 | `embed_query` (≤ 256 tokens) | p95 ≤ 40 ms |
 | Generation rebuild at 5M (backfill → promote) | ≤ 72 h wall clock |
 | Reconciliation mismatch rate | < 0.01% of expressions; repaired within 24 h |
-| Redaction purge | search ≤ 1 h; all artefacts ≤ 24 h |
+| Redaction purge | search ≤ 1 h; all artefacts ≤ 24 h; `redaction.applied.v1` emitted at each milestone (D19.3) |
+| Binding-scope change → BIND filter effective | ≤ 2 min via query-time expansion; materialised tags ≤ 24 h (§5.11a) |
+| Daily delta-embedding pack (R-25) | published ≤ 1 h after the digest cutoff |
 | Availability of the read path | 99.9% monthly (multi-AZ, 1 replica) |
 
 ### 5.16 Cross-cutting: security, cost at scale, latency, observability, model-agnostic design
@@ -954,7 +1009,7 @@ Compute costs:
   - LLM enrichment is extraction-only: structured outputs, no tools, and outputs checked against source entities. This neutralises prompt injection embedded in documents (§8).
   - The redaction pipeline covers all copies.
 - **Cost:** as in §5.14. The levers are MRL dims, binary-in-RAM plus fp16-on-disk, dropping dense for short orders, selective LLM context, cache reuse across generations, and backfill lanes that yield to the daily lane.
-- **Cost guards (added by independent review):** every `reprocess.requested.v1` gets a cost estimate before any work runs (tokens × Model Gateway price sheet + GPU-hours); anything above `max_cost_usd` or USD 1,000 of LLM spend waits for ops approval. Daily LLM spend has a hard circuit breaker at 3× the trailing 7-day mean (the FULL lane pauses; BASE continues). A prompt or model change for `p2.card.v1` runs on a 1% canary slice and passes the summary gate before a corpus-wide re-card is allowed.
+- **Cost guards (added by independent review):** every `reprocess.requested.v1` gets a cost estimate before any work runs (tokens × Model Gateway price sheet + GPU-hours); anything above `budget.usd_cap` or USD 1,000 of LLM spend waits for ops approval. Daily LLM spend has a hard circuit breaker at 3× the trailing 7-day mean (the FULL lane pauses; BASE continues). A prompt or model change for `p2.card.v1` runs on a 1% canary slice and passes the summary gate before a corpus-wide re-card is allowed.
 - **Latency:** as in §5.15. The IAL is co-located with OpenSearch in the same AZ, and PLC query embedding is pooled on warm GPUs.
 - **Observability:**
   - Every artefact carries `pipeline_version` (D10 form), and every event carries `traceparent` plus the D2 lowercase extensions (`tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass`). IAL telemetry follows the D3 PLC read-path rule (§5.12).
@@ -1108,7 +1163,7 @@ An adversarial review (legal-tech architecture + Indian legal research) re-fetch
 
 **Citation corrections**
 - IL-PCSR [P2-8]: the "dense wins on statutes" claim was framed on SAILER (21.69); the best statute model is actually Para-GNN over *summaries* (32.85). R4, §3.3 and the abstract are corrected, and the summaries-as-retrieval-input finding is now used to justify the card/role-summary views.
-- EBC v Modak [P2-28]: the document treated reporter paragraph numbering as an *unverified* risk. Paras 41–42 of the judgment (verified) hold that the reporter's paragraph segregation, internal numbering and concurring/dissenting labels are protected, and the Court directed that they not be used. This is now a hard requirement, extended to P2's `opinion_type`. SCC citation (2008) 1 SCC 1 confirmed.
+- EBC v Modak [P2-28]: the document treated reporter paragraph numbering as an *unverified* risk. Paras 41–42 of the judgment (verified) hold that the reporter's paragraph segregation, internal numbering and concurring/dissenting labels are protected, and the Court directed that they not be used. This is now a hard requirement, extended to P2's `opinion_role` (formerly `opinion_type`; D21.4). SCC citation (2008) 1 SCC 1 confirmed.
 - AILQA [P2-52]: "still saw ungrounded citations" was not supported by the paper; replaced with what it does show (retrieved context degraded answers; legally distinct passages retrieved). Upgraded to verified.
 - U-CREAT [P2-9]: the "+25.3 F1" figure is not in the abstract; marked *(unverified)*.
 - Gemini [P2-16]: gemini-embedding-2 (8,192 tokens) added, so the rejection rests on API-only deployment, not only on the 2,048-token cap.
@@ -1128,7 +1183,7 @@ An adversarial review (legal-tech architecture + Indian legal research) re-fetch
 2. The P3-extraction window after an overruling judgment lands (hours, plus HITL) cannot be closed by P2; P4/P10 must show "treatment pending".
 3. Vernacular-translation disclaimers and the Official Languages Act route for Hindi HC judgments are *unverified*; doc 21 must confirm per court.
 4. The statutory list of identity-protection duties and the purge SLA need legal sign-off; the identity screen's recall is unknown.
-5. Proposed spine changes 1–10 need the principal architect's decision; until change 9 lands, provisional-ID merges depend on P1 issuing a reprocess.
+5. *Resolved:* proposed spine changes 1–10 were ruled in D4, D8, D9, D16 and D19–D21 (§2.0). Change 9 landed as `identity.merged.v1` / `identity.split.v1`, so provisional-ID merges no longer depend on a P1 reprocess.
 6. The user-facing pinpoint problem: lawyers cite SCC paragraph numbers, which we may not store as an arrangement (§11 Q5).
 
 ---
@@ -1187,7 +1242,8 @@ An adversarial review (legal-tech architecture + Indian legal research) re-fetch
 | Engine | One OpenSearch domain (ap-south-1), aliases and generations **from day 1** | + ap-south-2 DR snapshots, split indexes by doc_type, TPL clusters per tier, D4/D4h on-prem package. MVP runs in one D2 dedicated cell (D17) |
 | Consistency | Outbox, external versioning, nightly digest reconciliation, canaries | + shadow traffic replay, automated promotion gate |
 | Tenant mode | TPL index for the design partner only (SaaS namespace) | Productised per-tenant deployment + small-install Postgres option |
-| Redaction | Manual runbook + `doc.redacted.v1` for search and cache | Automated purge across generations and snapshots with SLO reporting |
+| Redaction | Manual runbook + `doc.redacted.v1` for search and cache; `redaction.applied.v1` acks from day 1 (D19.3) | Automated purge across generations and snapshots with SLO reporting |
+| Binding scope | `binding_scope_tags[]` for SC + the partner's HCs; exact scoring for small tags (§5.11a) | All courts and tribunals; per-tag sub-indexes where the recall probe requires them |
 
 Build generations and aliases in the MVP because they are cheap now. Retrofitting them later means a live migration of a 60M-vector index.
 

@@ -25,7 +25,7 @@
 - **P-3 Public objects only cross.** A signal may leave a tenant only if its target is a PLC object (`wrk_`, anchor, `asr_`, citation mention) and its content can be expressed in a closed vocabulary.
 - **P-4 Legal relevance ≠ lawyer liking.** Lawyers engage less with adverse authority; the loop must never learn to hide it.
 - **P-5 Everything is purgeable.** Every derived artifact records which feedback produced it, so one actor's, one matter's or one tenant's influence can be removed.
-- **P-6 Improvement must be demonstrated**, not assumed: every model or graph change sourced from feedback ships only after P8 regression and a guarded online test.
+- **P-6 Improvement must be demonstrated**, not assumed: every model or graph change sourced from feedback ships only after the P8 offline gate (D11: sentinel suites + non-inferiority) and a guarded online test.
 
 ---
 
@@ -33,28 +33,41 @@
 
 ### 2.0 Spine v1.0 conformance
 
-Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spine v0.1 where they differ. This section records how each of P9's proposed changes (§2.5) was decided. The rest of the document has been edited to follow the decisions.
+Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_decision_record.md) supersedes spine v0.1 where they differ. This section records how each of P9's proposed changes (§2.5) was decided, how the later rulings D19–D21 were applied, and how the 01_master_architecture §14 residuals owned by P9 (R-13, R-23, R-28, R-33) were closed. The rest of the document has been edited to follow the decisions.
 
 | P9 proposal (§2.5) | Disposition | Effect on this document |
 |---|---|---|
-| 1. Extend FeedbackEvent | **ACCEPTED-MODIFIED as D9 (merged P9 + P10 S10-5)** | Accepted: `actor_ref`, closed `reason_code`, `context{query_id, trace_id, impression_id, position, surface, ranker_version, memo_id}`, `consent_snapshot_id` and `recorded_at`. Target kinds + `ANCHOR`, `CITATION_MENTION`, `DRAFT_SPAN`, `MEMORY_ITEM`. Actions + `FLAG_WRONG_TREATMENT`, `FLAG_PARSE_ERROR`, `FLAG_MISSING_AUTHORITY`, `USED_IN_FILING`, `RETRACT`. Four-valued `privilege_class`. `context.surface` **adds P10's `DIGEST`, `WORD_ADDIN`, `SOURCE_VIEWER`, `COMMAND_BAR`, `MOBILE`, `WHATSAPP`**. The ID prefix is `fb_` (D12), not `fbk_`. Targets are anchors, never chunk_ids (D8). `REVIEW_TASK` target / `MICRO_REVIEW_ANSWER` action are kept as a P9 extension that D9 did not rule on (§2.4). |
-| 2. Add `retrieval.served.v1` | **ACCEPTED as D4; schema owned by P5** | P5 → P8, P9 (tenant plane). 07_P5 §2.4 is authoritative and merges this doc's impression fields (`slot`, `propensity`, `randomized`, `features_ref`, `experiment.interleave`). The schema in §2.4 below is kept as P9's field requirements. |
+| 1. Extend FeedbackEvent | **ACCEPTED-MODIFIED as D9 (merged P9 + P10 S10-5)** | Accepted: `actor_ref`, closed `reason_code`, `context{query_id, trace_id, impression_id, position, surface, ranker_version, memo_id}`, `consent_snapshot_id` and `recorded_at`. Target kinds + `ANCHOR`, `CITATION_MENTION`, `DRAFT_SPAN`, `MEMORY_ITEM`. Actions + `FLAG_WRONG_TREATMENT`, `FLAG_PARSE_ERROR`, `FLAG_MISSING_AUTHORITY`, `USED_IN_FILING`, `RETRACT`. Four-valued `privilege_class`. `context.surface` **adds P10's `DIGEST`, `WORD_ADDIN`, `SOURCE_VIEWER`, `COMMAND_BAR`, `MOBILE`, `WHATSAPP`**. The ID prefix is `fb_` (D12), not `fbk_`. Targets are anchors, never chunk_ids (D8). `REVIEW_TASK` target / `MICRO_REVIEW_ANSWER` action were kept as a P9 extension that D9 did not rule on; **now ACCEPTED as D21.10** (§2.4). |
+| 2. Add `retrieval.served.v1` | **ACCEPTED as D4; schema owned by P5; final D21.9** | P5 → P8, P9 (tenant plane). 07_P5 §2.4 is authoritative and merges this doc's impression fields (`slot`, `propensity`, `randomized`, `features_ref`, `experiment.interleave`). **D21.9 (resolves R-23):** the tenant travels only in the `tenantid` envelope attribute, never in the payload; §2.4 below now reproduces the merged schema of 01_master §6.4 with that change. |
 | 3. Add `kg.proposal.v1` (P9 → P3) | **ACCEPTED as D4** | `KgProposal` (`kgp_`) is a new core object (D9). |
 | 4. Add `eval.case.proposed.v1`, `training.dataset.published.v1` | **ACCEPTED as D4** | P8 owns `EvalCase` (`evc_`) and the gold sets (`gld_`). P9 emits candidates only. |
-| 5. Add `erasure.requested.v1` | **ACCEPTED as D4** (P7 → P9, P2, P5, P6) | The **producer of both `erasure.requested.v1` and `erasure.completed.v1` is P7** (D4). P9 reports its component receipt to P7's erasure workflow, and P7 publishes `erasure.completed.v1{component: "P9", …}` (§5.12). Masking of *public* text is not an erasure: it arrives as `doc.redacted.v1` (D16). |
+| 5. Add `erasure.requested.v1` | **ACCEPTED as D4; final D20.15 + D21.3** (P7 → P2, P5, P6, P8, P9) | The **producer of both `erasure.requested.v1` and `erasure.completed.v1` is P7** (D4, D21.3). P9 acknowledges its leg with **`erasure.applied.v1 {erasure_id, consumer: "P9", applied_at, scope}`** (D20.15). P7 aggregates every consumer's ack and emits the single `erasure.completed.v1` (§5.12). Masking of *public* text is not an erasure: it arrives as `doc.redacted.v1` (D16). |
 | 6. Add `feedback.resolved.v1` (P9 → P10), `source.recheck.requested.v1` (P9 → P0) | **ACCEPTED as D4** | P3 may also emit `source.recheck.requested.v1` (D4: P9/P3 → P0). |
 | 7. `Assertion.qualifiers.proposal_ids[]` | **ACCEPTED as D7** | — |
 | 8. `ResearchQuery.experiment{exp_id, arm}` + `personalization_profile_ref` | **ACCEPTED as D9** | — |
-| 9. Envelope rule for gate-crossing events; add `kg.proposal.status.v1` and `erasure.completed.v1` | **ACCEPTED-MODIFIED as D2 + D4** | The rule becomes the spine's **Privacy-Gate envelope rule**. *Any* PLC-side event caused by tenant activity (gate releases, `kg.proposal.v1`, `source.recheck.requested.v1`, `reprocess.requested.v1`, `eval.case.proposed.v1` GLOBAL, `training.dataset.published.v1` GLOBAL) carries `tenantid`=null, a fresh trace root and no tenant causation chain. Attribute names are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`. **`kg.proposal.status.v1` is REJECTED as a P9 event. It is replaced by `kg.proposal.resolved.v1`, produced by P3 (P3 → P9)** with data `{proposal_id, decision ACCEPTED\|REJECTED\|MERGED\|DEFERRED, resulting_assertion_ids[], reviewer_role, decided_at}` (05_P3 §2). The event carries no tenant IDs and is broadcast to every tenant plane, which matches locally. |
+| 9. Envelope rule for gate-crossing events; add `kg.proposal.status.v1` and `erasure.completed.v1` | **ACCEPTED-MODIFIED as D2 + D4 (+ D21.11 schema)** | The rule becomes the spine's **Privacy-Gate envelope rule**. *Any* PLC-side event caused by tenant activity (gate releases, `kg.proposal.v1`, `source.recheck.requested.v1`, `reprocess.requested.v1`, `eval.case.proposed.v1` GLOBAL, `training.dataset.published.v1` GLOBAL) carries `tenantid`=null, a fresh trace root and no tenant causation chain. Attribute names are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`. **`kg.proposal.status.v1` is REJECTED as a P9 event. It is replaced by `kg.proposal.resolved.v1`, produced by P3 (P3 → P9)** with data `{proposal_id, decision ACCEPTED\|REJECTED\|MERGED\|DEFERRED, resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code}` (**final schema D21.11**; 05_P3 §2). The event carries no tenant IDs, is signed (`datasig`, 01_master §6.1 E6) and is broadcast to every tenant plane, which matches locally. |
+| Proposal outcome enum (R-33: P3 `DEFERRED` vs P9 `NEEDS_EVIDENCE`) | **RULED D21.11** | The public `decision` enum is exactly ACCEPTED\|REJECTED\|MERGED\|DEFERRED. "Needs more evidence" travels as `decision=DEFERRED` + `public_note_code=NEEDS_EVIDENCE` (closed vocabulary owned by P3). P9's tenant-facing `feedback.resolved.v1.outcome` may still show NEEDS_EVIDENCE, **derived** from that pair (§2.4). 01_master §6.4's union enum is superseded. |
+| Proposal-priority exposure (R-13) | **RULED D21.19** ([NOVEL — unvalidated]) | Exposure = public citation in-degree/recency (P3 Graph Query API) + distinct `tenant_bucket_key` count among gate releases + optional S2 aggregate. It is sent to P3 only as `KgProposal.exposure_bucket` `0\|1-2\|3-10\|11+` (01_master §7.21). Nothing comes from P4 (D3) (§5.6). |
+| `REVIEW_TASK` target, `MICRO_REVIEW_ANSWER` action | **ACCEPTED D21.10** | Now part of the core `FeedbackEvent` (01_master §7.10). |
+| Reason-code registries | **RULED D21.8** | Verification reason codes (incl. `MT_ANCHOR`, `LOCATOR_ONLY_ANCHOR`, `DERIVED_TEXT_TIER1`, `MASKED_SPAN_QUOTED`, `SUMMARY_AS_SUPPORT`, `UNCONFIRMED_FACT`, `RESIDENCY_NO_QUALIFIED_ENDPOINT`) are owned by P8; authority reason codes (`NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, …) by P3. P9 consumes both read-only. The feedback `ReasonCode` vocabulary (§5.2) stays P9-owned, with a mapping to both registries (§5.2). |
+| `source.recheck.requested.v1` schema ownership | **RULED D20.9** (owner P9) | P9 confirms the 01_master §6.4 field list as canonical; the schema is in §2.4. |
+| `acquire.requested.v1` with reason `MATTER_WATCH` | **RULED D20.2** (producer: the P9 Privacy Gate, unattributed) | P7 hands unresolved court identifiers to the gate; `p9-global` emits the request with `tenantid`=null (§5.5.4). |
+| Redaction acknowledgements | **RULED D19.3 + D21.3** | P9 is a consumer of `doc.redacted.v1`. After re-masking (§5.12), `p9-global` and each tenant cell's `p9-tenant` emit `redaction.applied.v1 {overlay_id, consumer: "P9", applied_at, generations_purged[]}` with `tenantid`=null, for every overlay. |
+| `LLMCallRecord` consumers | **RULED D19.9** | P9 consumes Gateway `LLMCallRecord`s (tenant plane) for lineage and erasure. Every P9 model call (preference extraction, uptake alignment, LLM-judge) is linked to its `LLMCallRecord` in `lineage_edge` (§5.12). |
+| `ConsentRecord` ownership | **RULED D21.16** | `ConsentRecord` (`cns_`) is a **P7-owned** core object (normative schema 09_P7 §2.3.8) consumed by P9 and P8. §2.4 mirrors it. |
+| `training.dataset.published.v1` consumers | **RULED D21.3** | Consumers are P3 and P5. |
+| `reprocess.requested.v1` schema | **RULED D21.15** (owner P4) | P9's `FEEDBACK`-reason requests use P4's schema (01_master §6.3). |
+| Unattributed watch-list for impact prioritisation | **RULED D19.4** | This is a post-GA optimisation, via the Privacy Gate only (k ≥ 5 tenants, decoy-padded); it is not in the P9 MVP. |
+| Kafka topic naming | **RULED D20.16** | Tenant-plane P9 topics are `tpl.<tenant>.feedback.v1`, `tpl.<tenant>.feedback.resolved.v1`, `tpl.<tenant>.eval.case.v1`, etc. Global-plane topics are `plc.kg.proposal.v1`, `plc.source.recheck.v1`, `plc.training.dataset.v1`, etc. |
 
 **Renames and decisions this document now follows.**
-- `kg.proposal.status.v1` → **`kg.proposal.resolved.v1`** (P3-owned). P9's `NEEDS_EVIDENCE` maps to P3's `DEFERRED`.
+- `kg.proposal.status.v1` → **`kg.proposal.resolved.v1`** (P3-owned; schema D21.11). P9's `NEEDS_EVIDENCE` maps to P3's `DEFERRED` + `public_note_code=NEEDS_EVIDENCE`.
 - Envelope attributes `tenant_id`/`causation_id`/`idempotency_key`/`schema_version` → **`tenantid`/`causationid`/`idempotencykey`/`schemaversion`**, plus **`dataclass`** (tenant-plane P9 events: `TENANT_CONFIDENTIAL`, or `PRIVILEGED` for WORK_PRODUCT/PRIVILEGED payloads; global-plane: `PUBLIC`).
 - **Gate policy (D11):** "no regression > 1 point" is replaced everywhere by **zero-tolerance sentinel suites + one-sided 95% paired-bootstrap non-inferiority at δ_s = max(1 pt, 2·SE_diff,s) per slice + rolling 3-release windows** (P8 owns `GateDecision`). This covers §5.7, §5.13 and §9.
 - `feedback_id` prefix `fbk_` → **`fb_`** (D12). `kgp_`, `evc_`, `gld_` and `evr_` follow the registry.
 - **Privacy Gate classes (D9)**: S0 objective defect · S1 legal status · S2 relevance/strategy (aggregates only, k ≥ 5 tenants, DP noise) · S3 private (never crosses). Only closed-vocabulary codes and public IDs cross.
-- **Impact topology (D3).** P4 stores no tenant dependency sets, so the proposal-priority *exposure* signal can no longer come from "P4's impact index". It is recomputed from global-plane data only (§5.6).
-- **Authority display (D6).** Badges are driven only by P3 `AuthorityView`. A tenant's own unreviewed flag is shown as a *separate tenant annotation*, never as a change of badge status (§5.5.3).
+- **Impact topology (D3, D19.4).** P4 stores no tenant dependency sets, so the proposal-priority *exposure* signal can no longer come from "P4's impact index". It is recomputed from global-plane data only (§5.6; D21.19).
+- **Authority display (D6, D20.12).** Badges are driven only by P3 `AuthorityView`. A tenant's own unreviewed flag is shown as a *separate tenant annotation*, never as a change of badge status (§5.5.3). `NEGATIVE_SIGNAL_UNDER_REVIEW` and `COVERAGE_GAP` are P3 reason codes, not statuses; eval cases store `expected_status` only from the 5-valued enum.
 - **MT (D8/D16).** Machine translations are not Expressions. A flag on an MT rendition is a `TRANSLATION_ERROR` for P1/P2, never a treatment proposal.
 - **Masking (D16).** P9 applies `doc.redacted.v1` (RedactionOverlay) to eval cases, dataset examples and memory items that quote public text (§5.8, §5.12).
 
@@ -67,13 +80,17 @@ Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spin
 | `interaction.logged.v1` (D4) | P10 | tenant-scoped topic | implicit signals (open source, dwell, copy, pin, export) joined on `impression_id` (UI impressions `uim_`) |
 | `alert.state.v1` (D4) | P10 | tenant-scoped topic | delivery/ack state for alert-precision labels |
 | `graph.delta.v1` | P3 | global topic | to learn from reviewer decisions (`cause.kind` = HUMAN_REVIEW\|PROPOSAL) and to stale eval cases/memory on `status_changes` |
-| `kg.proposal.resolved.v1` (D4; replaces `kg.proposal.status.v1`) | P3 | global broadcast → every tenant plane | `{proposal_id, decision, resulting_assertion_ids[], reviewer_role, decided_at}`; tenant planes match `proposal_id` locally (§5.6) |
-| `doc.redacted.v1` (D16; RedactionOverlay) | P0/P1/ops/legal | global topic | re-mask eval cases, dataset examples, memory items (§5.8, §5.12) |
+| `kg.proposal.resolved.v1` (D4; replaces `kg.proposal.status.v1`; schema D21.11) | P3 | global broadcast `plc.kg.proposal.resolved.v1` → every tenant plane | `{proposal_id, decision ACCEPTED\|REJECTED\|MERGED\|DEFERRED, resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code}`, signed (`datasig`); tenant planes verify the signature and match `proposal_id` locally (§5.6) |
+| `doc.redacted.v1` (D16; RedactionOverlay, 01_master §7.13) | P0/P1/ops/legal | global topic `plc.doc.redacted.v1` | re-mask eval cases, dataset examples, memory items (§5.8, §5.12); acked with `redaction.applied.v1` (D19.3) |
 | `doc.parsed.v1` for orders/judgments linked to a tenant's `case_id` | P1 | global topic, filtered by P7's case watch list inside tenant plane | used for outcome/argument-uptake labelling |
 | `MatterContext` | P7 (sync API) | tenant plane only | parties, forum, key dates (a derived view of `procedural_events[]`, D9) — used as the *scrub dictionary* for the gate; `privilege_flags.basis` (D16) informs in-house handling (§5.4) |
-| Consent registry (`ConsentRecord`) | P7 admin console | sync API | tenant/practice-group/matter/client level flags (§5.4) |
-| `erasure.requested.v1` (D4) | P7 | tenant topic | matter, client, actor or tenant erasure; drives cascade (§5.12) |
-| `VerificationReport` | P8 | sync/event | P8 verdicts are *machine* labels used to cross-check human feedback |
+| Consent registry (`ConsentRecord`, `cns_`; P7-owned, D21.16) | P7 admin console | sync API `GET /t/{ten}/consent/effective` (09_P7 O11) | tenant/practice-group/matter/client/actor level flags (§5.4); normative schema 09_P7 §2.3.8 |
+| `erasure.requested.v1` (D4) | P7 | tenant topic `tpl.<tenant>.erasure.v1` | matter, client, actor or tenant erasure; drives cascade (§5.12) |
+| `erasure.completed.v1` (D21.3) | P7 | tenant topic | closes the erasure in P9's `erasure_ledger` once P7 has every consumer's ack |
+| `LLMCallRecord` (D19.9) | Model Gateway (13_cross_cutting §4.2; 01_master §7.24) | tenant-plane trace store | links each P9 model call to its lineage for erasure and audit (§5.12) |
+| Court identifiers to watch (`MATTER_WATCH` candidates) | P7 Court Sync (09_P7 §5.11) | tenant-plane gate queue | unresolved CNR / SC diary / case numbers of *public* proceedings; released unattributed (§5.5.4) |
+| `VerificationReport` / `verification.completed.v1` (D4) | P8 | sync / tenant topic `tpl.<tenant>.verification.v1` | P8 verdicts (IDs, statuses, bands, reason codes from the P8 registry, D21.8; never text) are *machine* labels used to cross-check human feedback (§5.2 mapping, §5.3 step 4) |
+| `eval.case.adjudicated.v1` (D4) | P8 | same plane as the candidate | `{candidate_id, decision ACCEPTED\|REJECTED\|MERGED, eval_case_id?}`; closes the pipeline (c) loop and updates `actor_reliability` (§5.8) |
 
 ### 2.2 Outputs
 
@@ -87,7 +104,9 @@ Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spin
 | Personalization API `GET /personalization/profile` | P5, P6 | tenant | `PersonalizationProfile` (memory items + ranking priors) |
 | `feedback.resolved.v1` (**new**) | P10 | tenant | tells the lawyer what happened to their flag ("accepted by editor, graph updated") — trust and engagement |
 | ~~`kg.proposal.status.v1`~~ | — | — | *Superseded (D4):* the public proposal outcome is **`kg.proposal.resolved.v1`, produced by P3** and consumed here (§2.1) |
-| Erasure component receipt | P7 erasure workflow | tenant | P9's receipt `{erasure_id, component: "P9", rows_deleted, artifacts_rebuilt[], completed_at}` goes to P7, which publishes `erasure.completed.v1` (D4: P7 is the producer) for DPDP records (§5.12) |
+| `erasure.applied.v1` (D20.15) | P7 erasure workflow | tenant | `{erasure_id, consumer: "P9", applied_at, scope}` (+ optional `rows_deleted`, `artifacts_rebuilt[]` for the certificate). P7 aggregates all acks and is the **only** producer of `erasure.completed.v1` (D21.3) (§5.12) |
+| `redaction.applied.v1` (D19.3) | P0 redaction ledger | global (`plc.redaction.applied.v1`, `tenantid`=null) | `{overlay_id, consumer: "P9", applied_at, generations_purged[]}`, sent for every overlay by `p9-global` and by each cell's `p9-tenant` (§5.12) |
+| `acquire.requested.v1` reason `MATTER_WATCH` (D16, D20.2) | P0 | global | produced only by `p9-global` from gate releases; `tenantid`=null; `target{scheme CNR\|SC_DIARY_NO\|CASE_NO, value, court_hint}` (§5.5.4) |
 
 ### 2.3 Hand-offs (who does what next)
 - P3 consumes `kg.proposal.v1` into its tiered review queue; accepted proposals become Assertions with `method.kind=HUMAN` (D7 `justification.kind` HUMAN) and **`qualifiers.proposal_ids[]`** (spine change §2.5-7, D7) so they can be traced and purged. P3 then emits `kg.proposal.resolved.v1` and a `graph.delta.v1` with `cause.kind=PROPOSAL`.
@@ -107,9 +126,9 @@ type FeedbackEvent = {
   + actor_ref: string;            // tenant-scoped pseudonym "act_<hash>", never email
   target: { kind: "CLAIM"|"ITEM"|"ASSERTION"|"ANSWER"|"ALERT"
         /*+*/ |"ANCHOR"|"CITATION_MENTION"|"DRAFT_SPAN"|"MEMORY_ITEM"|"REVIEW_TASK", id: string };
-        // ids are anchors / public or private object IDs, never chunk_ids (D8). REVIEW_TASK is a P9 extension not ruled in D9.
+        // ids are anchors / public or private object IDs, never chunk_ids (D8). REVIEW_TASK accepted as D21.10.
   action: "ACCEPT"|"REJECT"|"EDIT"|"FLAG_WRONG_CITATION"|"FLAG_BAD_LAW"|"RELEVANT"|"IRRELEVANT"|"OUTCOME"
-        /*+*/ |"FLAG_WRONG_TREATMENT"|"FLAG_PARSE_ERROR"|"FLAG_MISSING_AUTHORITY"|"USED_IN_FILING"|"MICRO_REVIEW_ANSWER" /* P9 ext., not ruled in D9 */
+        /*+*/ |"FLAG_WRONG_TREATMENT"|"FLAG_PARSE_ERROR"|"FLAG_MISSING_AUTHORITY"|"USED_IN_FILING"|"MICRO_REVIEW_ANSWER" /* accepted as D21.10 */
         /*+*/ |"RETRACT";               // RETRACT = actor withdraws an earlier flag (feeds flip-rate, §5.11)
   + reason_code?: ReasonCode;     // closed vocabulary, see §5.2
   payload: ActionPayload;         // discriminated by action (EditPayload, OutcomePayload, TreatmentCorrection …)
@@ -126,17 +145,21 @@ type FeedbackEvent = {
 };
 ```
 
-**retrieval.served.v1 (D4; schema now owned by P5 — 07_P5 §2.4 is authoritative and is a superset of the fields below)** — one per rendered list; the missing piece for unbiased learning from implicit feedback [P9-1][P9-2]. In P5's version `tenant_id` travels only in the envelope (`tenantid`), and `items[].work_id` is null for TPL items.
+**retrieval.served.v1 (D4; schema owned by P5 — 07_P5 §2.4 is authoritative; D21.9)** — one per rendered list; the missing piece for unbiased learning from implicit feedback [P9-1][P9-2]. Per D21.9 the tenant travels **only** in the envelope attribute `tenantid`, never in the payload (this closes R-23), and `items[].work_id` is null for TPL items. The shape below is the merged schema of 01_master §6.4; the fields P9 depends on are marked `// P9`.
 ```ts
-type RetrievalServed = {
-  impression_id: string; query_id: string; trace_id: string; tenant_id: string; matter_id?: string;
-  surface: string; ranker_version: string; experiment?: { exp_id: string; arm: string; interleave?: { method: "TEAM_DRAFT"; team_of: Record<string,"A"|"B"> } };
-  items: Array<{ item_id: string; anchor_ids: string[]; work_id: string; position: number;
-                 slot: "BINDING_PINNED"|"ADVERSE_PINNED"|"RANKED";   // pinned slots are never learned from as position-biased clicks
-                 propensity: number;        // P(shown at this position | ranking policy); 1.0 if deterministic
-                 randomized: boolean;       // part of RandPair/top-k swap intervention
-                 features_ref: string;      // pointer to feature vector snapshot (P5 writes, tenant-scoped Parquet)
+type RetrievalServed = {            // envelope: tenantid = ten_…, dataclass = TENANT_CONFIDENTIAL; topic tpl.<tenant>.retrieval.served.v1
+  impression_id: string; query_id: string /* qry_ */; trace_id: string; matter_id?: string;
+  surface: string; intent: string; mode: "QUICK"|"STANDARD"|"DEEP"; as_of_legal_date: string; forum?: string;
+  ranker_version: string;                                                   // P9: intervention harvesting
+  experiment?: { exp_id: string; arm: string; interleave?: { method: "TEAM_DRAFT"; team_of: Record<string,"A"|"B"> } };  // P9
+  items: Array<{ item_id: string; anchor_ids: string[]; work_id: string|null; position: number;
+                 slot: "BINDING_PINNED"|"ADVERSE_PINNED"|"RANKED";   // P9: pinned slots are never learned from as position-biased clicks
+                 propensity: number;        // P9: P(shown at this position | ranking policy); 1.0 if deterministic
+                 randomized: boolean;       // P9: part of RandPair/top-k swap intervention
+                 features_ref: string;      // P9: pointer to feature vector snapshot (P5 writes, tenant-scoped Parquet)
                  stance?: "SUPPORTS"|"ADVERSE"|"NEUTRAL"|"MIXED"; binding_on_forum?: string }>;
+  legs_contrib: Record<string, number>; latency_ms_by_stage: Record<string, number>;
+  pipeline_version: string; index_generation: string; graph_watermark: number /* int64 */;
   rendered_at: string;
 };
 ```
@@ -151,6 +174,7 @@ type KgProposal = {
   evidence_public: Array<{ anchor_id: string; span?: [number,number] }>;  // public anchors only
   support: { n_signals: number; n_tenants_bucket: "1"|"2"|"3-5"|"6+"; role_mix: Record<string,number>;
              weighted_score: number; machine_agreement?: number };        // P8/P3-classifier agreement
+  exposure_bucket?: "0"|"1-2"|"3-10"|"11+";   // D21.19 exposure signal, bucketed (§5.6); gate-released sources only (R-13)
   impact_tier: 1|2|3; priority: "URGENT"|"HIGH"|"NORMAL"|"LOW";
   gate_decision_ids: string[];      // audit link; no tenant ids
   created_at: string; pipeline_version: string;
@@ -223,7 +247,7 @@ type ActionPayload =
   | { action: "ACCEPT"|"REJECT"|"USED_IN_FILING"|"RETRACT"; ref_feedback_id?: string; free_text?: string };        // free_text ⇒ WORK_PRODUCT
 ```
 
-**ConsentRecord** (owned by P7 admin console; P9 reads, snapshots are immutable)
+**ConsentRecord** (P7-owned core object, D21.16; normative schema in 09_P7 §2.3.8, mirrored here; P9 and P8 read; snapshots are immutable)
 ```ts
 type ConsentRecord = {
   consent_snapshot_id: string;      // "cns_<ULID>"; a new snapshot on every change
@@ -235,12 +259,32 @@ type ConsentRecord = {
 // effective(candidate) = AND over all levels that apply to (tenant, practice group, matter, client, actor); missing level ⇒ inherit; missing tenant record ⇒ all false.
 ```
 
-**erasure.requested.v1** (D4; producer P7) `data`: `{ erasure_id, scope: "TENANT"|"MATTER"|"CLIENT"|"ACTOR", scope_ref, legal_basis: "DPDP_S12"|"CONTRACT_END"|"CONSENT_WITHDRAWN"|"COURT_ORDER"|"RTBF_MASKING", requested_at, deadline }`. `RTBF_MASKING` covers only P7-initiated erasure of *tenant-plane copies*. Masking of public text is a `doc.redacted.v1` RedactionOverlay (D16), which P9 applies directly (§5.12). Receipt event `erasure.completed.v1` (D4; **producer P7**, one per component) `data`: `{ erasure_id, component, rows_deleted, artifacts_rebuilt[], completed_at }`. P9 sends its component receipt to P7's erasure workflow, and P7 publishes it.
+**erasure.requested.v1** (D4; producer P7) `data`: `{ erasure_id, scope: "TENANT"|"MATTER"|"CLIENT"|"ACTOR", scope_ref, legal_basis: "DPDP_S12"|"CONTRACT_END"|"CONSENT_WITHDRAWN"|"COURT_ORDER"|"RTBF_MASKING", requested_at, deadline }`. `RTBF_MASKING` covers only P7-initiated erasure of *tenant-plane copies*. Masking of public text is a `doc.redacted.v1` RedactionOverlay (D16), which P9 applies directly (§5.12). Per-consumer ack **`erasure.applied.v1`** (D20.15) `data`: `{ erasure_id, consumer: "P9", applied_at, scope }` (P9 adds optional `rows_deleted`, `artifacts_rebuilt[]` for the certificate). Completion event **`erasure.completed.v1`** (D4, D21.3; **producer P7 only**, one per `erasure_id`, emitted after all consumers have acked; schema in 09_P7 §5.10). P9 consumes it to close its `erasure_ledger` entry.
 
-**Proposal resolution broadcast** (spine v1.0 D4: **`kg.proposal.resolved.v1`, produced by P3**, global, public; replaces this doc's earlier `kg.proposal.status.v1`): `{ proposal_id, decision: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED", resulting_assertion_ids[], reviewer_role, decided_at }` (05_P3 §2). The earlier P9 draft's `NEEDS_EVIDENCE` maps to `DEFERRED`. Its `delta_id?` is derivable from `resulting_assertion_ids[]` via the `graph.delta.v1` with `cause.kind=PROPOSAL`, and `public_note_anchor?` is not carried. Every tenant plane subscribes to the whole stream and matches `proposal_id → release_id → feedback_ids` locally, so the global plane never needs to know which tenant to notify.
+**Proposal resolution broadcast** (spine v1.0 D4: **`kg.proposal.resolved.v1`, produced by P3**, global, public; replaces this doc's earlier `kg.proposal.status.v1`): `{ proposal_id, decision: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED", resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code }` (final schema D21.11; 05_P3 §2). `public_note_code` is a closed vocabulary owned by P3 (05_P3 §2.2 O2: `APPLIED`, `DUPLICATE_OF_EXISTING`, `NEEDS_EVIDENCE`, `SOURCE_NOT_OFFICIAL`, `DOCTRINE_CONTESTED`, `OUT_OF_SCOPE`, `AWAITING_JUDGMENT_TEXT`); P10 renders it through `feedback.resolved.v1.note_key`. The earlier P9 draft's `NEEDS_EVIDENCE` maps to `decision=DEFERRED` + `public_note_code=NEEDS_EVIDENCE`. `graph_watermark` lets a tenant plane wait until its badge cache has reached the delta before telling the lawyer "fixed". `delta_id?` is derivable from `resulting_assertion_ids[]` via the `graph.delta.v1` with `cause.kind=PROPOSAL`; the free-form `public_note_anchor?` is not carried. Every tenant plane subscribes to the whole stream and matches `proposal_id → release_id → feedback_ids` locally, so the global plane never needs to know which tenant to notify.
+
+*[Final-pass addition]* Schemas of the remaining P9-produced events (field lists identical to 01_master §6.4; P9 is the schema owner):
+```ts
+// feedback.resolved.v1 — tenant plane (tpl.<tenant>.feedback.resolved.v1) → P10
+type FeedbackResolved = { feedback_ids: string[] /* fb_ */; proposal_id?: string /* kgp_ */;
+  outcome: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED"|"NEEDS_EVIDENCE"|"LOCAL_ONLY";
+  //   ACCEPTED/REJECTED/MERGED/DEFERRED copy kg.proposal.resolved.v1.decision; NEEDS_EVIDENCE is derived from
+  //   decision=DEFERRED ∧ public_note_code=NEEDS_EVIDENCE (D21.11); LOCAL_ONLY = the flag never crossed the gate
+  delta_id?: string; graph_watermark?: number; note_key: string /* P10 i18n key, from public_note_code or a local gate-deny reason */ };
+
+// source.recheck.requested.v1 — global plane (plc.source.recheck.v1) → P0. Schema owner P9 (D20.9); Privacy-Gate envelope.
+type SourceRecheckRequested = { request_id: string; court_ids: string[] /* crt_IN_… */;
+  target: { work_id?: string; citation_text?: string; public_url?: string /* allowlisted domain, query string stripped, untrusted */ };
+  reason: "BAD_LAW_FLAG"|"UNOFFICIAL_ONLY_COPY"|"OPS"; priority: "P1"|"P2"|"P3";
+  dedupe_window_h: 6 /* ≤ 1 request per (court_id, target) per window, deduplicated globally (§5.5.3) */ };
+
+// acquire.requested.v1 with reason MATTER_WATCH — produced only by p9-global (D16, D20.2); schema owner P0 (01_master §6.4)
+//   { request_id, reason: "MATTER_WATCH", target{scheme: "CNR"|"SC_DIARY_NO"|"CASE_NO", value, court_hint, date_hint: null},
+//     priority: "P3", deadline, allowed_access_modes: ["OPEN"] }  — see §5.5.4 for batching and padding
+```
 
 ### 2.5 Proposed spine changes
-*Dispositions under spine v1.0 are in §2.0. In summary: 1 → D9 (merged with P10), 2–6 → D4, 7 → D7, 8 → D9, 9 → D2 (with `kg.proposal.status.v1` replaced by P3's `kg.proposal.resolved.v1`).*
+*Dispositions under spine v1.0 are in §2.0. In summary: 1 → D9 (merged with P10; `REVIEW_TASK`/`MICRO_REVIEW_ANSWER` D21.10), 2–6 → D4 (retrieval.served.v1 final D21.9; erasure acks D20.15/D21.3), 7 → D7, 8 → D9, 9 → D2 (with `kg.proposal.status.v1` replaced by P3's `kg.proposal.resolved.v1`, schema D21.11).*
 
 1. **Extend FeedbackEvent** with `actor_ref`, `reason_code`, `context{query_id, trace_id, impression_id, position, surface, ranker_version, memo_id}`, `consent_snapshot_id`, `recorded_at`, new target kinds (`ANCHOR`, `CITATION_MENTION`, `DRAFT_SPAN`, `MEMORY_ITEM`), new actions (`FLAG_WRONG_TREATMENT`, `FLAG_PARSE_ERROR`, `FLAG_MISSING_AUTHORITY`, `USED_IN_FILING`), and a fourth `privilege_class` enum. *Why:* without the context link, feedback cannot be joined to what was shown, so it is unusable for learning-to-rank [P9-1]; without consent snapshots, the gate cannot prove lawful release.
 2. **Add `retrieval.served.v1`** (P5/P6 → P9, tenant-scoped) carrying positions, slots and propensities. *Why:* counterfactual LTR requires logged propensities [P9-1][P9-2]; clicks without impressions are biased beyond repair.
@@ -364,6 +408,21 @@ Two deployable units: `p9-tenant` (one logical instance per tenant; containerize
 **ReasonCode** (closed vocabulary; P10 renders as chips, no typing required):
 `WRONG_PARA` · `CITATION_NOT_FOUND` · `CITATION_RESOLVES_TO_WRONG_CASE` · `QUOTE_NOT_IN_SOURCE` · `MISSTATES_HOLDING` · `OBITER_NOT_RATIO` · `OVERRULED` · `REVERSED_ON_APPEAL` · `PER_INCURIAM` · `STAYED` · `LEGISLATIVELY_OVERRIDDEN` · `WRONG_TREATMENT_LABEL` · `WRONG_BENCH_OR_DATE` · `OCR_GARBLED` · `WRONG_LANGUAGE_VERSION` · `TRANSLATION_ERROR` *(review addition)* · `NOT_ON_POINT` · `UNFAVOURABLE_BUT_RELEVANT` · `NOT_BINDING_HERE` · `OUTDATED_PROVISION_VERSION` · `WRONG_CRIMINAL_CODE_MAPPING` · `DEADLINE_WRONG` · `STYLE_ONLY` · `OTHER`.
 
+*Registries (D21.8).* This `ReasonCode` list is the P9-owned **feedback** vocabulary. Verification reason codes belong to P8's registry and authority reason codes to P3's; P9 reads both (version-pinned) and never re-defines them. The machine cross-check (§5.3 step 4) and eval-case construction (§5.8) use this mapping (initial; extended with the registries):
+
+| Feedback `ReasonCode` | Corroborating P8 verification code / warrant field | Corroborating P3 authority reason code / status |
+|---|---|---|
+| `QUOTE_NOT_IN_SOURCE` | `warrant.quote_exact=false` | — |
+| `WRONG_PARA` | `warrant.pinpoint_support=false` | — |
+| `MISSTATES_HOLDING`, `OBITER_NOT_RATIO` | `warrant.role_ok=false` | — |
+| `OVERRULED`, `REVERSED_ON_APPEAL`, `STAYED`, `PER_INCURIAM`, `LEGISLATIVELY_OVERRIDDEN` | status `BAD_LAW` / `warrant.status_ok=false` | `AuthorityView.status ∈ {NEGATIVE, PARTIAL_NEGATIVE}`, or CAUTION + `NEGATIVE_SIGNAL_UNDER_REVIEW` |
+| `NOT_BINDING_HERE` | `warrant.binding_ok=false` | `binding_on_forum ∈ {PERSUASIVE, NOT_BINDING}` |
+| `OUTDATED_PROVISION_VERSION` | `warrant.temporal_ok=false`, `DERIVED_TEXT_TIER1` | — |
+| `TRANSLATION_ERROR`, `WRONG_LANGUAGE_VERSION` | `MT_ANCHOR` | — |
+| `OCR_GARBLED` | `LOCATOR_ONLY_ANCHOR` (if the anchor was a `pg{n}` fallback) | — |
+
+A flag whose corroborating code is already present raises `machine_agreement`; a flag on an authority whose `AuthorityView` carries `COVERAGE_GAP` is routed to the urgent recheck path (§5.5.3) rather than treated as disagreement.
+
 | # | Signal | Capture point (owner) | Strength | Primary use | Default `privilege_class` | Sensitivity |
 |---|---|---|---|---|---|---|
 | 1 | `FLAG_WRONG_CITATION` + reason | citation chip in memo/answer; click-to-source viewer (P10) | strong, verifiable | (a) P3/P1 fix; (c) eval | PUBLIC_OBJECT_SIGNAL | S0 |
@@ -479,12 +538,20 @@ A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` 
 
 *[Review addition] Abuse and load limits on the urgent path.* Because it skips the delay and triggers crawling, the urgent path is itself an attack surface (a tenant could mass-flag to exhaust P0's politeness budget on court portals and get our crawler IP-blocked). Controls: (i) at most one `source.recheck.requested.v1` per `(court_id, target work_id)` per 6 h, deduplicated globally; (ii) per-tenant budget of 20 urgent releases/day (excess are demoted to normal S1); (iii) recheck requests are *hints* that P0 schedules inside its existing per-source rate limits, never bypassing them; (iv) `public_url` evidence is fetched by P0 only if its domain is on the allowlist and is treated as untrusted content (it may itself be a prompt-injection vector for any LLM step in P1/P3). If P0 cannot find the negative authority within 48 h, the proposal is routed to an editor for manual source check and the flagging tenant's badge text changes to "flag not yet confirmed".
 
+#### 5.5.4 Court-watch identifiers (`MATTER_WATCH`) [NOVEL — unvalidated]
+D16 and D20.2 make the Privacy Gate the only producer of `acquire.requested.v1` with reason `MATTER_WATCH`. The input is a court identifier that P7's Court Sync Matcher could not resolve to a `cas_` (09_P7 §5.11). A tenant's interest in a specific CNR can reveal a client (for example, an investigation target), so the rules are stricter than for S0/S1:
+1. **Eligibility (p9-tenant).** Only `scheme ∈ {CNR, SC_DIARY_NO, CASE_NO}` values that pass P1's identifier normaliser are eligible. The matter must not be flagged `sensitive_tracking`; those matters register nothing and rely on bulk cause-list/order matching (09_P7 §5.11). The value carries no party name, matter ID, advocate or date.
+2. **Union and batching (p9-global).** Eligible identifiers from all tenants enter one hourly batch. Each is deduplicated against the unattributed watch registry that P0 already holds (D4), so an identifier already watched produces no event. Envelope: `tenantid`=null, a fresh `traceparent`, `causationid` = batch ID, and `time` truncated to the hour (D2).
+3. **Padding.** Each batch is padded with decoy identifiers sampled from identifiers P0 has recently seen in public cause lists, at a ratio of at least 1 decoy per real request. P0 therefore cannot tell a tenant-originated watch from routine coverage expansion. The 1:1 ratio is a starting value to be validated against P0's crawl budget.
+4. **Revocation.** Nothing is sent when a matter closes or tracking stops, because an explicit "unwatch" would itself be a signal. Instead p9-tenant re-asserts live watches every 90 days through the same batching, and P0 is asked to expire registry entries that are not re-asserted within 180 days (a request to P0, not yet reflected in 02_P0).
+This is the court-feed counterpart of the post-GA impact watch-list that D19.4 defers. It is in the MVP because hearing tracking (09_P7 §5.11) needs it.
+
 ### 5.6 Pipeline (a): graph improvement proposals → P3
 
 1. **Group** gate releases by target (`assertion_id` / `anchor_id` / `mention_id` / `work_id`) and signal type, over a rolling 30-day window.
 2. **Score**: `weighted_score = Σ weight_i` with per-tenant contribution capped at 40% of the score and per-actor at 1.0; `machine_agreement` from P8/P3 checks (e.g. quote-hash mismatch confirms `QUOTE_NOT_IN_SOURCE`).
 3. **Map to proposal kind** (deterministic table): `CITATION_RESOLVES_TO_WRONG_CASE` → `FIX_CITATION_RESOLUTION`; `WRONG_PARA` → `FIX_ANCHOR`; `WRONG_TREATMENT_LABEL` with predicate → `CHANGE_PREDICATE`; `OVERRULED` with public negative authority → `ADD_ASSERTION(OVERRULES)` + `POSSIBLE_NEGATIVE_TREATMENT_UNSEEN`; `OCR_GARBLED`/`WRONG_LANGUAGE_VERSION` → `reprocess.requested.v1` to P1 (no proposal).
-4. **Tier and priority**: `impact_tier` copied from the targeted Assertion (spine F) or from the proposal kind (negative treatment, validity, crosswalk = Tier 1). Priority = f(tier, weighted_score, machine_agreement, *exposure*). *Spine v1.0 correction (D3):* P4 never stores tenant dependency sets, so an "active matters citing the target" count from P4 does not exist. `exposure` is instead computed on the global plane only, from public citation in-degree and recency (P3 Graph Query API) plus the number of distinct `tenant_bucket_key`s among gate releases on the target within one `key_epoch`. When S2 aggregates are live, a k ≥ 5-tenant, DP-noised reliance count may be added. *[Review]* Exposure is passed to P3 only as a bucket `0 | 1–2 | 3–10 | 11+`; an exact count of 1 on an obscure authority would tell editors that some firm's live matter turns on it. Suggested priority score: `priority_score = tier_weight[tier] × (1 + log2(1 + exposure_mid)) × weighted_score × (0.5 + machine_agreement)` with `tier_weight = {1: 4, 2: 2, 3: 1}`; URGENT ≥ 12, HIGH ≥ 6, NORMAL ≥ 2, else LOW (starting values, unvalidated).
+4. **Tier and priority**: `impact_tier` copied from the targeted Assertion (spine F) or from the proposal kind (negative treatment, validity, crosswalk = Tier 1). Priority = f(tier, weighted_score, machine_agreement, *exposure*). *Spine v1.0 correction (D3; exposure signal ratified as D21.19, [NOVEL — unvalidated]; closes R-13):* P4 never stores tenant dependency sets, so an "active matters citing the target" count from P4 does not exist. `exposure` is instead computed on the global plane only, from public citation in-degree and recency (P3 Graph Query API) plus the number of distinct `tenant_bucket_key`s among gate releases on the target within one `key_epoch`. When S2 aggregates are live, a k ≥ 5-tenant, DP-noised reliance count may be added. *[Review]* Exposure is passed to P3 only as the bucket `KgProposal.exposure_bucket` `0 | 1-2 | 3-10 | 11+` (01_master §7.21); an exact count of 1 on an obscure authority would tell editors that some firm's live matter turns on it. Suggested priority score: `priority_score = tier_weight[tier] × (1 + log2(1 + exposure_mid)) × weighted_score × (0.5 + machine_agreement)` with `tier_weight = {1: 4, 2: 2, 3: 1}`; URGENT ≥ 12, HIGH ≥ 6, NORMAL ≥ 2, else LOW (starting values, unvalidated).
 5. **P3 decides**. P9 recommends; P3 policy: Tier 1 and 2 always human; Tier 3 (e.g. `CITES` resolution, metadata) may be auto-applied by P3 when `machine_agreement ≥ 0.9` and at least two independent signals (or one editor). Accepted proposals become Assertions with `qualifiers.proposal_ids`.
 6. **Close the loop**: P3 decides → P3 publishes the public **`kg.proposal.resolved.v1`** broadcast (D4; replaces this doc's earlier P9-published `kg.proposal.status.v1`) together with a `graph.delta.v1` (`cause.kind=PROPOSAL`) → `p9-global` marks the proposal resolved → every tenant plane matches `proposal_id` against its own release ledger and emits `feedback.resolved.v1` to its flagging actors (tenant-side mapping from release → feedback_ids is kept only in the tenant plane; the global plane never addresses a tenant).
 7. **Weak supervision for P3 models**: every adjudicated proposal becomes a gold label; unadjudicated gate releases enter P3's label model as one labeling function among others (rule citator, LLM classifier, P8 verifier) [P9-11]. Reviewer decisions update `actor_reliability` in tenant planes via the resolution fan-out (the tenant plane learns whether its actor was right; the global plane never learns who the actor was).
@@ -560,7 +627,7 @@ Anomaly detection runs daily: burst rate per actor, agreement-with-consensus z-s
 
 ### 5.12 Governance: lineage, retention, erasure, unlearning
 
-**Lineage.** `lineage_edge` rows link feedback → label → gate release → proposal → Assertion, and example → dataset → model version → Model Gateway deployment. Every artifact carries `pipeline_version` (spine I).
+**Lineage.** `lineage_edge` rows link feedback → label → gate release → proposal → Assertion, and example → dataset → model version → Model Gateway deployment. Every artifact carries `pipeline_version` (spine I). Every P9 model call (preference extraction, uptake alignment, LLM-judge) also links to its Gateway `LLMCallRecord` (D19.9), so an erasure finds prompts and outputs held in the tenant trace store.
 
 **Retention (defaults; tenant-configurable within limits)**
 
@@ -583,11 +650,13 @@ Anomaly detection runs daily: burst rate per actor, agreement-with-consensus z-s
    erasure or consent revocation, tombstone releases by tenant_bucket_key (if key still exists)
    and add to erasure_ledger → next weekly dataset build excludes them → retrain (exact unlearning
    by retrain; rankers are small enough to retrain weekly).
-5. Send the P9 component receipt {erasure_id, component: "P9", rows_deleted, artifacts_rebuilt[], completed_at} to P7's
-   erasure workflow; P7 publishes erasure.completed.v1 (D4: P7 is the producer) for the tenant's DPDP records;
-   72-hour breach clock is a P7/13 concern.
+5. Emit erasure.applied.v1 {erasure_id, consumer: "P9", applied_at, scope} (+ rows_deleted, artifacts_rebuilt[])
+   to P7's erasure workflow (D20.15) as soon as steps 1–3 are done (tenant plane ≤ 24 h); model rebuilds (step 2)
+   and the global exclusion (step 4) are tracked in erasure_ledger and reported in artifacts_rebuilt[] of a second,
+   idempotent ack when they finish. P7 aggregates every consumer's ack and alone emits erasure.completed.v1 (D21.3),
+   which closes the erasure_ledger entry; 72-hour breach clock is a P7/13 concern.
 ```
-**Public-text masking (spine v1.0 D16).** `doc.redacted.v1` is not an erasure. On each RedactionOverlay both planes re-mask stored quotes of the affected work/spans: dataset examples, eval cases, memory items and gate-release `evidence_public` excerpts (IDs only, so usually nothing). SUPPRESS_ALL works are excluded from the next dataset build and the models are retrained. The same lineage machinery is used, with the overlay's `purge_sla` as the deadline.
+**Public-text masking (spine v1.0 D16).** `doc.redacted.v1` is not an erasure. On each RedactionOverlay both planes re-mask stored quotes of the affected work/spans: dataset examples, eval cases, memory items and gate-release `evidence_public` excerpts (IDs only, so usually nothing). SUPPRESS_ALL works are excluded from the next dataset build and the models are retrained. The same lineage machinery is used, with the overlay's `purge_sla` as the deadline. Overlays are de-duplicated on `overlay_id` (D20.3). When re-masking is done, `p9-global` and each cell's `p9-tenant` emit `redaction.applied.v1 {overlay_id, consumer: "P9", applied_at, generations_purged[]}` (D19.3) with `tenantid`=null. The ack is sent for every overlay, even when no tenant artifact quoted the work, so the ack stream does not reveal which works tenants use.
 Global GOLD eval cases authored from closed matters are covered by the client consent obtained at creation; withdrawal of that consent triggers removal of the case.
 
 ### 5.13 Proving that the loop improves things
@@ -759,7 +828,7 @@ An independent adversarial review (citation audit of ~28 references by fetching 
 | Personalization | Edit distance between generated and final drafts (per user, trend) | −20% after 8 weeks |
 | Personalization | Memory items deleted/disabled by users (proxy for wrong learning) | < 15% |
 | Outcomes | Share of closed matters with outcome captured | ≥ 60% |
-| Governance | Erasure SLA compliance (tenant ≤24 h, models ≤7 d) | 100% |
+| Governance | Erasure SLA compliance (tenant ≤24 h, models ≤7 d); `erasure.applied.v1` ack sent for 100% of `erasure.requested.v1`; `redaction.applied.v1` ack within `purge_sla` for 100% of overlays | 100% |
 | Anti-poisoning | Honeypot accuracy of top-decile contributors; time to detect injected flag campaigns in red-team drills | ≥ 90%; < 48 h |
 
 ---
@@ -770,13 +839,13 @@ An independent adversarial review (citation audit of ~28 references by fetching 
 |---|---|---|
 | Capture | Explicit actions + reason chips; `retrieval.served.v1`; used-in-filing; manual outcome capture | + micro-review tasks, alert feedback, auto outcome tracking via CNR |
 | Tenant plane | Feedback store, reliability weighting with role priors, TENANT_PRIVATE eval | + Dawid–Skene EM, tenant LTR heads |
-| Gate | S0 + S1 only, with written design-partner consent; ledger | + S2 aggregates with k ≥ 5 and DP noise; DP synthetic queries [P9-30] |
+| Gate | S0 + S1 only, with written design-partner consent; ledger; `MATTER_WATCH` identifier path (§5.5.4) | + S2 aggregates with k ≥ 5 and DP noise; DP synthetic queries [P9-30]; post-GA unattributed impact watch-list (D19.4) |
 | (a) KG | Proposals to P3 (`kg.proposal.v1`); urgent bad-law path; resolution fan-out from P3's `kg.proposal.resolved.v1` | + weak supervision into P3 classifiers; CAL-style micro-review |
 | (b) Ranking | Global reranker from gold + LLM-judge labels; logs collected | + IPS LTR, intervention harvesting, constrained interleaving |
 | (c) Eval | Auto TENANT_PRIVATE cases; gold room; lawyer-restated GLOBAL cases | + retrospective consented matters at volume; per-tenant regression dashboards |
 | (d) Personalization | USER + MATTER memory, ranking priors | + PRACTICE_GROUP/FIRM memory with KM approval; opt-in LoRA adapters |
 | Outcomes | Manual capture; tenant eval use | + uptake analyzer; P6 calibration |
-| Governance | Lineage, erasure cascade (receipts to P7's `erasure.completed.v1`), `doc.redacted.v1` re-masking, retention defaults, D2 envelope validator at gate egress | + automated purge-by-actor drills; shard-based adapter unlearning |
+| Governance | Lineage (incl. `LLMCallRecord` links, D19.9), erasure cascade (`erasure.applied.v1` acks to P7, which emits `erasure.completed.v1`; D20.15), `doc.redacted.v1` re-masking with `redaction.applied.v1` acks (D19.3), retention defaults, D2 envelope validator at gate egress | + automated purge-by-actor drills; shard-based adapter unlearning |
 
 MVP build estimate (unvalidated): 2 backend engineers + 1 ML engineer + 0.5 privacy/legal reviewer for ~4 months, assuming P3 review queue and P8 runner exist.
 

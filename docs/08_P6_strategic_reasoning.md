@@ -30,7 +30,7 @@
 
 ### 2.0 Spine v1.0 conformance
 
-This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 text differs, v1.0 wins. §2.6 is kept as the record of what P6 proposed.
+This document follows the spine v1.0 decision record (D1–D21). Where the v0.1 text differs, v1.0 wins. §2.6 is kept as the record of what P6 proposed.
 
 | # (§2.6) | Proposed change | v1.0 disposition |
 |---|---|---|
@@ -39,9 +39,9 @@ This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 
 | C3 | `DraftArtifact` | **ACCEPTED as D9** (P6-owned, prefix `drf_`, D12). |
 | C4 | `strategy.memo.published.v1`, `strategy.memo.stale.v1` | **ACCEPTED as D4** (P6 → P7, P10 for both). The "living memo" path is re-routed by **D3**. `dependency_ids` go into P7's private `matter_dependency` inverted index. The tenant cell's Impact Matcher (the P4-owned `impact-match-core` library, run by P7) matches public `impact.detected.v1` against that index, and P7 then triggers `REVERIFY`. **P4 never receives tenant dependency sets.** |
 | C5 | `ResearchQuery` + `issue_ref{issue_id, elements[]}` and `stance_target` | **ACCEPTED-MODIFIED as D9.** `stance_target SUPPORTING\|ADVERSE\|BOTH` is adopted verbatim. `issue_ref` is folded into `issue_hints[{issue_id, text, elements[], client_position}]`. P6 also passes the optional `temporal_context`, `residency_policy` and the budget caps. |
-| C6 | `MatterContext.procedural_events[]` replacing `key_dates` | **ACCEPTED as D9 (+ D16).** `procedural_events[]{event_type (controlled vocab), date, certainty, alt_dates, anchor, confirmed_by?, source EXTRACTED\|LAWYER}` is the raw record. `key_dates` becomes a derived view (including date_basis-matched keys). A derived **`temporal_context{substantive_event_date?, proceedings[]{stage, initiated_on, initiation_kind, concluded_on?}, filing_date?}`** is exposed on MatterContext. P7 owns MatterContext; P6 proposes the event vocabulary and writes EXTRACTED events. |
-| C7 | Section-level gates on `VerificationReport`; memo `PARTIAL` | **ACCEPTED-MODIFIED as D9.** `VerificationReport.gate ∈ PASS\|PARTIAL\|BLOCK` with `section_gates`, computed by **P8's aggregation rule**; P6 copies it and no longer derives it. A tier-1 section failure (deadline, limitation, maintainability) BLOCKs *that section*, and the memo is then `PARTIAL` with a withheld list. Under v0.1, a failing deadlines section made the whole memo BLOCK (§5.7). |
-| C8 | P6 RuleSpec registry as consumer of `impact.detected.v1` | **ACCEPTED-MODIFIED (D3 topology).** P4 publishes signed `impact.detected.v1` on the public topic `plc.impact.public.v1` (`tenantid` = null). The RuleSpec registry is PLC-side public data, so it subscribes to that topic directly and needs no Impact Matcher. D4 does not list this consumer explicitly (see §11). |
+| C6 | `MatterContext.procedural_events[]` replacing `key_dates` | **ACCEPTED as D9 (+ D16).** `procedural_events[]{event_type (controlled vocab), date, certainty, alt_dates, anchor, confirmed_by?, source EXTRACTED\|LAWYER}` is the raw record. `key_dates` becomes a derived view (including date_basis-matched keys). A derived **`temporal_context{substantive_event_date?, proceedings[]{stage, initiated_on, initiation_kind, concluded_on?}, filing_date?}`** is exposed on MatterContext. P7 owns MatterContext and stores the events; **P6 owns the `event_type` vocabulary, versioned with the RuleSpecs (D21.7)**, and writes EXTRACTED events. |
+| C7 | Section-level gates on `VerificationReport`; memo `PARTIAL` | **ACCEPTED-MODIFIED as D9.** `VerificationReport.gate ∈ PASS\|PARTIAL\|BLOCK` with `section_gates`, computed by **P8's aggregation rule**; P6 copies it and no longer derives it. A tier-1 section failure (deadline, limitation, maintainability) BLOCKs *that section*, and the memo is then `PARTIAL` with a withheld list. **Memo-level BLOCK (ratified, D21.6)** = no displayable section OR a memo-level integrity failure (P8 §5.4). Under v0.1, a failing deadlines section made the whole memo BLOCK (§5.7). |
+| C8 | P6 RuleSpec registry as consumer of `impact.detected.v1` | **ACCEPTED-MODIFIED (D3 topology).** P4 publishes signed `impact.detected.v1` on the public topic `plc.impact.public.v1` (`tenantid` = null). The RuleSpec registry is PLC-side public data, so it subscribes to that topic directly and needs no Impact Matcher. **D21.3 lists the P6 RuleSpec registry as a named consumer of `plc.impact.public.v1`.** |
 
 **Obligations adopted from v1.0 (not in the original proposals):**
 - ID prefixes (D12): `job_` strategy job (was `sjb_`), `prs_` procedural RuleSpec (was a mnemonic id, now kept as `code`), `ddl_`, `drf_`, `mem_`, `clm_`.
@@ -55,8 +55,27 @@ This document follows the spine v1.0 decision record (D1–D18). Where the v0.1 
 - **Residency routing via the Model Gateway** with fail-closed `residency_policy` (D1, D15), and risk-weighted model allocation with two different families for advocate/opponent/bench (D14).
 - `retrieval.served.v1` emitted for memo citations (D4; schema owned by P5).
 - `erasure.requested.v1` consumed (D4).
-- D18 planning cost figure.
+- D19.1 cost figure of record (≈ $2.16 per strategy memo; supersedes D18's $1.66).
 - D11 eval gate for task contracts.
+
+**Rulings D19–D21 applied in this document (final pass):**
+
+| Ruling | Effect on P6 | Where |
+|---|---|---|
+| D19.1 cost of record | ≈ $2.16 per strategy memo (tokenizer-corrected; $1.66 is a list-price lower bound). P6's own ≈ $2.7 token model (placeholder prices, excluding retrieval and verification) is a sensitivity upper bound; 13_cross_cutting is the canonical cost model | §5.12 |
+| D19.2 degradations | P6 copies `VerificationReport.degradations[]` into `StrategyMemo.verification.degradations[]` and adds its own (BUDGET when the job cap forces "withhold" mode; MODEL_FALLBACK / RESIDENCY_FALLBACK from the Gateway); P10 discloses them next to the memo | §2.3, §5.12 |
+| D19.7 D2 cells | D2 cells read the shared PLC via the stateless read path; D3/D4/D4h read a local replica (≤ 24 h lag) | §2.4 |
+| D20.1 court feeds | The Procedural Clock consumes `court.calendar.published.v1` (CourtCalendar), `court.causelist.published.v1` and `case.status.observed.v1` via P7's local match; all are P0-produced and tenant-agnostic | §2.2, §2.5 |
+| D20.15 / D21.3 erasure | P6 consumes `erasure.requested.v1` and acks with `erasure.applied.v1`; only P7 emits `erasure.completed.v1` | §2.5 |
+| D20.16 topic naming | P6 events go to `tpl.<tenant>.strategy.memo.published.v1` / `tpl.<tenant>.strategy.memo.stale.v1`; the registry reads `plc.impact.public.v1` | §2.5 |
+| D21.3 consumer lists | P6 is a named consumer of `matter.document.ingested.v1`, `erasure.requested.v1` and (RuleSpec registry) `plc.impact.public.v1` | §2.5 |
+| D21.5 `mck_` + bundle-local issues | `MaintainabilityCheck` has prefix `mck_`; `Claim.computed_ref` targets `ddl_` or `mck_`. Issues P5 decomposes appear as `qry_…/i{n}` until the lawyer confirms them as P7 `iss_` issues | §2.3, §5.5.3 |
+| D21.6 memo gate | BLOCK only when no section is displayable or on a memo-level integrity failure | §2.0 C7, §5.7 |
+| D21.7 event vocabulary + auto job | P6 owns `procedural_events[].event_type` (versioned with RuleSpecs; P7 stores). An auto `DEADLINES_ONLY` job on `matter.document.ingested.v1` is ACCEPTED: tenant-configurable, default on; trigger dates need lawyer confirmation before a deadline becomes definitive | §2.5, §5.5 |
+| D21.12 `TENANT_COURT_RECORD` | Certified court records held privately are data-only for control flow, but may back RECORD_FACT claims | §5.6, §5.10 |
+| D21.17 certified translations | Private `v1.ht-en` renditions (lawyer-attested) may support RECORD_FACT claims only, never public-law claims; `mt-` never | §5.6 |
+| §14 R-28 / R-35 | Calls use the catalogue paths `POST /p5/v1/retrieve` and `POST /p8/v1/verify`; P6's own job API is `/p6/v1/jobs…` (01_master §9.5) | §2.1, §2.4 |
+| §14 R-30 (open, P1 owns grammar) | RuleSpecs anchored in the CPC First Schedule use the proposed grammar-v1.1 fragment `sch-1.ord-8.rule-1`; until P1 ratifies it, such RuleSpecs cannot reach `review.state = VERIFIED` | §5.5.1 |
 
 **Renames this document now follows:**
 - `sjb_` → `job_`.
@@ -94,18 +113,32 @@ StrategyJobRequest {
 ```
 The request is executed under a **Tenant Execution Context** (TEC, D9) minted by P7 for (tenant, matter, purpose = STRATEGY). Every TPL read by P6 and every call P6 makes to P5, P8 and the Model Gateway carries it. Because a TEC lives at most 5 minutes, the Temporal workflow re-mints it per activity; it is never stored in MatterState.
 
+**Job API (owner P6; paths fixed in 01_master §9.5, closing §14 R-35 for P6).**
+
+| Endpoint | Signature |
+|---|---|
+| `POST /p6/v1/jobs` | `StrategyJobRequest → {job_id, status}`; idempotent on `idempotency_key` (a replay returns the original `job_id`) |
+| `GET /p6/v1/jobs/{job_id}` | `{status RUNNING\|WAITING_HITL\|PUBLISHED\|FAILED\|CANCELLED, budget, spent, memo_id?}` |
+| `POST /p6/v1/jobs/{job_id}/signals/{confirm_dates\|confirm_issues\|approve_draft}` | Temporal signal carrying the lawyer's confirmations (human gates 1–3, §5.4) |
+| `POST /p6/v1/jobs/{job_id}:cancel` | cancels the workflow; partial sections already published stay with status `PARTIAL` |
+| `GET /p6/v1/memos/{memo_id}` · `GET /p6/v1/drafts/{draft_id}` | `StrategyMemo` · `DraftArtifact`, streamed to the UI through the P10 SSE `/v1/stream/memo/{id}` |
+
+Callers are P10 (user-started jobs) and P6's own trigger consumer (auto `DEADLINES_ONLY` jobs on `matter.document.ingested.v1`, D21.7). Every call carries a TEC.
+
 ### 2.2 Inputs P6 consumes
 
 | Input | Producer | How P6 uses it |
 |---|---|---|
-| `MatterContext` (spine H, v1.0) | P7 | parties, client_role, forum, `fact_timeline[]` (private anchors `pdoc_…/v1#pN`, D8; `status PROPOSED\|CONFIRMED\|DISPUTED`), lawyer-confirmed issues (`iss_`), `documents[].trust_label`, privilege flags, `access_policy{authz_token, llm_policy}`, `residency_policy`, `as_of_legal_date_default`, **`procedural_events[]`** and the derived **`temporal_context`** (D9/D16; §2.6-C6), `deadlines[]` |
+| `MatterContext` (spine H, v1.0) | P7 | parties, client_role, forum, `fact_timeline[]` (private anchors `pdoc_…/v1#pN`, D8; `status PROPOSED\|CONFIRMED\|DISPUTED`), lawyer-confirmed issues (`iss_`), `documents[].trust_label` (D9 enum incl. `TENANT_COURT_RECORD`, D21.12), `documents[].privilege_class`/`provenance`, privilege flags, `access_policy{authz_token, llm_policy}`, `residency_policy`, `as_of_legal_date_default`, **`procedural_events[]`** and the derived **`temporal_context`** (D9/D16; §2.6-C6), `deadlines[]` |
 | Trigger `ParsedDocument` (private, `pdoc.parsed.v1` shape) | P1 in tenant mode via P7 (`ParseRequest`); P7 announces it with `matter.document.ingested.v1` (D4, D16) | paragraphs with `pdoc_…/v1#pN` anchors, OCR confidence, language, hidden-text flags. A display MT rendition `v1.mt-en` may be *shown*, but it is never an anchor |
 | `EvidenceBundle` (spine H + D9) | P5, in response to P6's `ResearchQuery` | the only admissible source of public-law claims. `items[].authority` is an `AuthorityView` subset; TPL items have `work_id`/`authority` = null |
 | Graph Query API | P3 | `authority_status(id, as_of)` → **`AuthorityView`** (D6: `status`, `definitive`, `reason_codes[]`, `binding_basis`, `graph_watermark`), `binding_on_forum(work, forum)`, `crosswalk(provision, date)` (D16 `change_type` enum), `provision_text(anchor@date)` (only `authoritative` or `ROUNDTRIP_OK` text backs tier-1 claims), `governing_code()` (D16) |
-| `RuleSpec` registry (`prs_`) + **`CourtCalendar`** | P6-owned rule registry stored in PLC; `CourtCalendar` (holidays, vacations, sitting days) from **P0's tenant-agnostic feed** (D16) | deterministic deadline and maintainability evaluation |
+| `RuleSpec` registry (`prs_`) + **`CourtCalendar`** | P6-owned rule registry stored in PLC; `CourtCalendar` (holidays, vacations, sitting days) from **P0's tenant-agnostic feed**, event `court.calendar.published.v1` (D16, D20.1; P0 prefix `cal_`) | deterministic deadline and maintainability evaluation; `Deadline.calendar_ref.calendar_version` = the `cal_` version used |
+| `case.status.observed.v1`, `court.causelist.published.v1` (D20.1; P0, tenant-agnostic) | P0 → P7 Case Matcher (local match on CNR / case number) → P7 writes `procedural_events[]` with `source = EXTRACTED` | new triggers for the Procedural Clock (e.g. `ORDER_PRONOUNCED`, next hearing date for `HEARING_LISTED`); P6 never subscribes per tenant to the public feed and never tells P0 which cases a tenant tracks (D3) |
 | `VerificationReport` (D9) | P8 | `gate PASS\|PARTIAL\|BLOCK` + `section_gates` + per-claim status (`VERIFIED\|PARTIAL\|UNSUPPORTED\|CONTRADICTED\|BAD_LAW\|UNVERIFIABLE`), `reason_codes`, `narrowed_text`, `suggested_anchor_ids`, `display_band`. These drive the repair loop |
 | `Freshness` (D9) | P4 | "law current to" stamp on the memo (`law_current_to`, `propagation_frontier`, `known_gaps`, `source_health`) |
-| `erasure.requested.v1` (D4) | P7 | purge MatterState jobs, ledgers, artifacts and caches for the erased scope |
+| `erasure.requested.v1` (D4, D21.3) | P7 | purge MatterState jobs, ledgers, artifacts, strategy memory and caches for the erased scope, then ack with `erasure.applied.v1` (D20.15) |
+| `matter.document.ingested.v1` (D4, D21.3) | P7 | trigger for the auto `DEADLINES_ONLY` job (D21.7) and for re-running `REVERIFY` when a new document changes `fact_timeline[]` |
 
 ### 2.3 Outputs
 
@@ -156,7 +189,8 @@ ComputationStep { step: "trigger"|"exclude_first_day"|"period"|"overlay"|"s4_rol
 
 StrategyMemo {                        // spine H, concretised
   memo_id: "mem_<ULID>", tenant_id, matter_id, job_id /* job_ */, trigger_pdoc_id,
-  as_of_legal_date: { default: date, per_issue: {issue_id: date} },
+  context_version: number,            // MatterContext.context_version the memo was built on (01_master §7.17); a newer version ⇒ REVERIFY candidate
+  as_of_legal_date: { default: date, per_issue: {issue_id: date} },   // issue_id = P7 iss_ or bundle-local qry_…/i{n} (D21.5)
   as_known_at, law_current_to /* P4 Freshness.law_current_to (D9) */, graph_watermark, generated_at,
   sections: {
     opponent_claims: Claim[], issues: Claim[], favourable_authorities: Claim[],
@@ -168,7 +202,9 @@ StrategyMemo {                        // spine H, concretised
   deadlines: Deadline[], issue_table: Issue[],
   adverse_accountability: [{ item_id, anchor_id, disposition: "USED_BY_OPPONENT"|"DISTINGUISHED"|"INAPPLICABLE", claim_id }],
   verification: { report_id /* vr_ */, gate: "PASS"|"PARTIAL"|"BLOCK" /* copied from VerificationReport.gate (P8, D9) */,
-                  section_gates: {section: "PASS"|"PARTIAL"|"BLOCK"}, withheld_sections: string[] },
+                  section_gates: {section: "PASS"|"PARTIAL"|"BLOCK"}, withheld_sections: string[],
+                  degradations?: [{ kind: "BUDGET"|"SOURCE_STALE"|"MODEL_FALLBACK"|"RESIDENCY_FALLBACK"|"INDEX_LAG"|"COVERAGE_GAP",
+                                    detail: string, affected_claim_ids: string[] }] },   // D19.2: copied from VerificationReport + P6's own; P10 must disclose
   status: "DRAFT"|"VERIFIED"|"PARTIAL"|"STALE",
   dependency_ids: string[],           // work_ids/anchor_ids/prs_ rule_ids used (anchors, never chunk_ids, D8) → P7 matter_dependency
                                       // inverted index → tenant-cell Impact Matcher (D3); never sent to P4
@@ -182,29 +218,33 @@ DraftArtifact {                       // ext (§2.6-C3; ACCEPTED as D9, P6-owned
   blocks: [{ block_id, text, claim_ids: string[], kind: "GROUNDED"|"BOILERPLATE"|"LAWYER_TODO",
              rendition?: "ORIGINAL"|"MT" /* MT-produced text is flagged; its claim_ids still anchor to original-language text */ }],
   para_grid?: [{ trigger_anchor /* pdoc_…/v1#pN */, stance: "ADMIT"|"DENY"|"NOT_ADMITTED"|"EXPLAIN", basis_claim_ids[] }],
-  verification: { report_id, gate }, lawyer_approval?: { user_id, at },
-  status: "DRAFT"|"VERIFIED"|"APPROVED"|"STALE"
+  verification_report_id?: "vr_…",    // 01_master §7.18 field name
+  verification?: { report_id, gate }, lawyer_approval?: { user_id, at },
+  status: "DRAFT"|"VERIFIED"|"APPROVED_FOR_EXPORT"|"STALE"   // 01_master §7.18 enum (+ STALE when a cited claim is re-verified after an impact);
+                                                            // APPROVED_FOR_EXPORT only after human gate 3 and P7's outbound-leak check
 }
 ```
 
 ### 2.4 Calls P6 makes
 
 - **P5**: `POST /p5/v1/retrieve` with a `ResearchQuery` (spine H + D9) per issue × stance. `perspective` is `CLIENT_SIDE` for advocate queries and `NEUTRAL` for bench queries. `stance_target` and `issue_hints[{issue_id, text, elements[], client_position}]` (C5, merged into D9) let P6 explicitly demand adverse authority. P6 also passes `temporal_context` (derived from `procedural_events[]`, D16), `residency_policy`, `requester{kind: AGENT, agent_role}` and budget caps (`max_llm_calls`, `max_input_tokens`, `max_cost_usd`) drawn from the job budget.
-- **P8**: `POST /verify` with `{memo_id, claims[], ledger_ref, as_of_legal_date, as_known_at, forum}` → `VerificationReport` (D9). Called per section, so verified sections can stream to the user.
-- **P3**: read-only Graph Query API (above), always with `as_of` and `as_known_at`. Calls from the tenant context follow the **PLC read-path rule** (D3): stateless, no tenant-attributable ID logs on the PLC side, and a local PLC replica in D3/D4 deployments.
+- **P8**: `POST /p8/v1/verify` (01_master §9.6; was `/verify`, §14 R-28) with a `VerifyRequest` `{memo_id, section, claims[], ledger_ref, as_of_legal_date, as_known_at, forum}` → `VerificationReport` (D9). Called per section, so verified sections can stream to the user; `POST /p8/v1/reverify` for REVERIFY jobs.
+- **P3**: read-only Graph Query API (above), always with `as_of` and `as_known_at`. Calls from the tenant context follow the **PLC read-path rule** (D3): stateless, no tenant-attributable ID logs on the PLC side, D2 cells use the shared PLC in-region, and D3/D4/D4h deployments a local PLC replica with ≤ 24 h lag (D19.7).
 - **Model Gateway**: every LLM step goes through a `ModelTaskContract` with the job's `residency_policy`, and routing is fail-closed (D1, D15; §5.11).
 
 ### 2.5 Events
 
 | Event | Direction | data (minimum) |
 |---|---|---|
-| `strategy.memo.published.v1` *(ACCEPTED, D4)* | P6 → P7, P10 | tenant_id, matter_id, memo_id, status, gate, dependency_ids[], deadlines[] (id, date, label). Envelope: `tenantid` non-null, `dataclass = PRIVILEGED`, `causationid` = job request, `idempotencykey` = memo_id + version (D2) |
-| `strategy.memo.stale.v1` *(ACCEPTED, D4)* | P6 → P7, P10 | memo_id, cause_impact_id, impact_version, affected_claim_ids[] (emitted after re-verification that P7 triggers when its Impact Matcher matches a public `impact.detected.v1` against the matter's `matter_dependency` index, D3) |
+| `strategy.memo.published.v1` *(ACCEPTED, D4)* | P6 → P7, P10 | tenant_id, matter_id, memo_id, job_id, status, gate, dependency_ids[], deadlines[] (deadline_id, computed_date, label). Topic `tpl.<tenant>.strategy.memo.published.v1` (D20.16). Envelope: `tenantid` non-null, `dataclass = PRIVILEGED`, `causationid` = job request, `idempotencykey` = memo_id + version (D2) |
+| `strategy.memo.stale.v1` *(ACCEPTED, D4)* | P6 → P7, P10 | memo_id, cause_impact_id, impact_version, affected_claim_ids[]; topic `tpl.<tenant>.strategy.memo.stale.v1` (emitted after re-verification that P7 triggers when its Impact Matcher matches a public `impact.detected.v1` against the matter's `matter_dependency` index, D3) |
 | `retrieval.served.v1` (D4; schema owned by P5) | P6 → P8, P9 (tenant plane) | one impression per rendered memo citation list (`surface`, positions, `items[].anchor_ids`); lets P9 learn from citations used in memos |
-| `matter.document.ingested.v1` (D4) | P7 → P6 | consumed: a newly ingested trigger document may auto-start a `DEADLINES_ONLY` job if the matter's policy allows it; otherwise P10 starts jobs |
-| `erasure.requested.v1` (D4) | P7 → P6 | consumed: purge job state for the erased scope and acknowledge |
+| `matter.document.ingested.v1` (D4; P6 named consumer, D21.3) | P7 → P6 | consumed: a newly ingested trigger document (doc type NOTICE / PETITION / ORDER / SUMMONS / SCN) **auto-starts a `DEADLINES_ONLY` job** — ACCEPTED in D21.7, tenant-configurable, **default on**. Its deadlines stay `ASSUMED_INPUTS` (never definitive) until the lawyer confirms the trigger dates through the `confirm_dates` signal. FULL jobs are started by P10 |
+| `court.calendar.published.v1`, `court.causelist.published.v1`, `case.status.observed.v1` (D20.1) | P0 → P6 Procedural Clock (calendar directly; cause-list and case-status via P7's local match) | CourtCalendar versions for s.4 rollover; hearing and order events that become `procedural_events[]` triggers |
+| `erasure.requested.v1` (D4, D21.3) | P7 → P6 | consumed: purge job state, ledgers, drafts and strategy memory for the erased scope |
+| `erasure.applied.v1` (D20.15) | P6 → P7 | `{erasure_id, consumer: "P6", applied_at, scope}`; P7 aggregates acks and alone emits `erasure.completed.v1` |
 | `feedback.recorded.v1` | P10 → P9 | FeedbackEvent whose `target.kind=CLAIM` carries `origin_role` for attribution |
-| `impact.detected.v1` (public topic `plc.impact.public.v1`, `tenantid` = null; D3/D5) | P4 → P6 RuleSpec registry *(PLC-side consumer, §2.6-C8)* | public `affected[]` closure (or `manifest_uri` + sha256) intersected with RuleSpec `anchors[]` → rule set to `SUSPENDED_PENDING_REVIEW` (kill-switch banner, §8). Acts on `lifecycle` PROVISIONAL/CONFIRMED/UPDATED and un-suspends on RETRACTED |
+| `impact.detected.v1` (public topic `plc.impact.public.v1`, `tenantid` = null; D3/D5) | P4 → P6 RuleSpec registry *(PLC-side consumer, §2.6-C8; named in D21.3)* | public `affected[]` closure (or `manifest_uri` + sha256) intersected with RuleSpec `anchors[]` → rule set to `SUSPENDED_PENDING_REVIEW` (kill-switch banner, §8). Acts on `lifecycle` PROVISIONAL/CONFIRMED/UPDATED and un-suspends on RETRACTED |
 | `feedback.recorded.v1` | P6 → P9 | Anticipation-recall outcome (§7.8) as `action=OUTCOME` on the memo; spine already lists P6 as a producer |
 
 *Review note:* an earlier draft listed `reprocess.requested.v1` with P6 as producer. The spine does not list P6 as a producer, and P6 has nothing to reprocess in P1–P3. The RuleSpec dependency now runs through `impact.detected.v1` (C8).
@@ -218,7 +258,7 @@ DraftArtifact {                       // ext (§2.6-C3; ACCEPTED as D9, P6-owned
 | C1 | Spine H | Add a first-class `Deadline` object (above) and have `StrategyMemo.deadlines` hold `Deadline[]` plus PROCEDURAL `Claim`s that reference them | Deadlines are *computed data*, not prose. P7 must push them to the matter calendar and P10 must alert on them. A free-text Claim cannot carry the trace, the sensitivity or the confirmation state. |
 | C2 | Spine H `Claim` | Add `issue_ids[]`, `origin_role`, `revision_of?`, optional `strength`, `assumptions[]`; add `span` and `computed_ref?` to `support[]` | `span` makes quote-by-reference (§5.6) checkable and matches `Assertion.evidence.span`. `computed_ref` lets a PROCEDURAL claim satisfy "≥1 anchor" through the Deadline's anchored trace rather than a bare statute anchor. `revision_of` keeps repair lineage auditable. P8 needs issue context for coverage checks. P9 needs to know *which role* produced a rejected argument, since advocate errors are fixed differently from opponent errors. The UI must show which claims rest on unconfirmed facts. |
 | C3 | Spine H | Add `DraftArtifact {draft_id, memo_id, template_id, lang, blocks[{block_id, text, claim_ids[], kind: GROUNDED\|BOILERPLATE\|LAWYER_TODO}], status}` | Drafting output is not a memo section. Each sentence must stay linked to verified claims so that P8 can re-verify edits. |
-| C4 | Spine G | Add `strategy.memo.published.v1` and `strategy.memo.stale.v1` | Memos must be "living". P7 needs `dependency_ids` for the matter fingerprint so that P4 impacts reach old memos. |
+| C4 | Spine G | Add `strategy.memo.published.v1` and `strategy.memo.stale.v1` | Memos must be "living". P7 needs `dependency_ids` for the matter fingerprint so that P4 impacts reach old memos. *(v1.0: matched inside the tenant cell against P4's public broadcast; never registered with P4 — D3.)* |
 | C5 | Spine H `ResearchQuery` | Add `issue_ref?: {issue_id, elements[]}` and `stance_target: SUPPORTING\|ADVERSE\|BOTH` | Adverse authority must be *requested*, not hoped for. The Stanford study attributes errors partly to naive retrieval and inapplicable authority [P6-1]. |
 | C6 | Spine H `MatterContext.key_dates` | Replace the fixed key_dates with `procedural_events[{event_type (controlled vocabulary), date, anchor, confirmed_by?, source: EXTRACTED\|LAWYER, certainty: EXACT\|DEEMED\|ESTIMATED, alt_dates?: date[]}]` (keep key_dates as a derived view). Seed vocabulary: `CHEQUE_PRESENTED, DISHONOUR_INFO_RECEIVED, NOTICE_DISPATCHED, NOTICE_RECEIVED_BY_DRAWER, NOTICE_DEEMED_SERVED, CAUSE_OF_ACTION_138, SUMMONS_SERVED, COMPLAINT_NOTICE_RECEIVED (consumer), SCN_ISSUED, SCN_PORTAL_UPLOAD, ORDER_PRONOUNCED, CERTIFIED_COPY_APPLIED, CERTIFIED_COPY_READY, AWARD_RECEIVED, S33_REQUEST_DISPOSED, ARREST, FIRST_REMAND, CHARGESHEET_FILED, ANNUAL_RETURN_DUE` | The Procedural Clock needs dozens of trigger types. Four fixed dates cannot express them. `certainty`/`alt_dates` carry deemed-service cases (e.g., notice returned "unclaimed"), where the legal trigger date is itself contested. |
 | C7 | Spine H `VerificationReport` | Spine gate is `PASS\|BLOCK` at memo level. P6 needs **section-level** gates plus a derived memo value `PARTIAL` (non-tier-1 sections withheld). Proposal: add `section_gates{section: PASS\|BLOCK}` to VerificationReport; P6 derives `StrategyMemo.verification.gate ∈ {PASS, PARTIAL, BLOCK}` from them (§5.7) | Progressive delivery (§6.7) needs per-section decisions. Without this, P6's `PARTIAL` would be a silent divergence from the spine. |
@@ -460,6 +500,10 @@ review: { state: VERIFIED, reviewer: "legal_engineer:…", reviewed_at: … }
 tests: [ {trigger: 2026-09-10, expect: 2026-09-25} ]
 ```
 
+**Anchoring rules in the CPC First Schedule (§14 R-30, open; P1 owns the grammar).** Many civil-procedure RuleSpecs (e.g. the written-statement window in Order VIII rule 1) anchor to an Order and Rule inside the CPC's First Schedule, which the v1.0 anchor grammar cannot yet express. P6 uses the **proposed grammar-v1.1 fragment** `wrk_…/en@<version>#sch-1.ord-8.rule-1` (a new `ord-` unit inside a schedule, 01_master §14 R-30). Until P1 ratifies that extension and the Anchor Read API resolves it, any RuleSpec whose `anchors[]` include an `ord-` fragment stays `review.state = DRAFT`: it can be exercised in tests but cannot drive a `Deadline` shown to a user. The fallback is a lawyer-entered deadline (P7 manual `ddl_`), labelled as not computed.
+
+**Event vocabulary ownership (D21.7).** `trigger_event` values come from the `procedural_events[].event_type` controlled vocabulary, which **P6 owns** and versions together with the RuleSpec registry (the seed list is in §2.6-C6); P7 stores the events. Adding a trigger type is a RuleSpec-registry release that passes the D11 gate like any other rule change.
+
 Two further RuleSpec features are required by Indian rules:
 
 ```yaml
@@ -522,7 +566,7 @@ Properties:
 
 #### 5.5.3 Maintainability, forum and jurisdiction checks
 
-`MaintainabilityCheck{check_id, rule_id, question, result: SATISFIED|NOT_SATISFIED|UNKNOWN|NOT_APPLICABLE, facts_used[], anchors[], explanation_claim_id}`.
+`MaintainabilityCheck{check_id /* mck_<ULID>, D21.5 */, rule_id /* prs_ */, rule_version, question, result: SATISFIED|NOT_SATISFIED|UNKNOWN|NOT_APPLICABLE, facts_used[] /* procedural_events[] or fact_timeline[] refs with their confirmation state */, anchors[], explanation_claim_id /* clm_ */}`. A PROCEDURAL claim's `computed_ref` points at a `ddl_` or `mck_` (D21.5). `result = UNKNOWN` whenever a fact it depends on is not CONFIRMED, and the explanation claim then says the precondition is undetermined rather than satisfied.
 - Examples: "was the s.138 notice issued within 30 days of information of dishonour?" (useful to *both* sides; if satisfied, the system says so even though it removes a client defence); "is pre-institution mediation required (s.12A) and was urgent interim relief sought?"; "does this forum have pecuniary/territorial jurisdiction?"; "is the claim prima facie within limitation?".
 - The predicate logic is deterministic. Only fact extraction uses an LLM (S0), and each fact carries an anchor and confirmation state.
 
@@ -540,8 +584,8 @@ Properties:
 
 1. **Ledger build.** After S3, P6 builds a Citation Ledger for the issue:
    - `E<n>`: public EvidenceBundle items. Each holds an anchor_id, the text_hash, the item's `AuthorityView` subset (`status`, `definitive`, `reason_codes`, `binding_on_forum`, `binding_basis`; D6), and stance.
-   - `F<n>`: private MatterContext anchors (facts, documents, trigger paragraphs) in the `pdoc_…/{pver}#frag` form (D8). Each carries the document's `trust_label` (D9) and the fact `status` (PROPOSED/CONFIRMED/DISPUTED). MT renditions (`v1.mt-en`) are never ledger handles.
-   - `R<n>`: RuleSpec/Deadline objects.
+   - `F<n>`: private MatterContext anchors (facts, documents, trigger paragraphs) in the `pdoc_…/{pver}#frag` form (D8). Each carries the document's `trust_label` (D9) and the fact `status` (PROPOSED/CONFIRMED/DISPUTED). MT renditions (`v1.mt-en`) are never ledger handles. `TENANT_COURT_RECORD` documents (privately held certified copies, D21.12) and lawyer-attested certified translations (`v1.ht-en`, `authoritative = true`, D21.17; §14 R-10) are ledger handles that may back **RECORD_FACT claims only**, never LEGAL_PROPOSITION support.
+   - `R<n>`: RuleSpec/Deadline/MaintainabilityCheck objects (`prs_`, `ddl_`, `mck_`).
    Handles are short, opaque and local to the job, so they are cheap to constrain and impossible to "remember" from pre-training.
 2. **Constrained output.** Each LLM step's output schema types `support[].handle` as an `enum` of the ledger's handles. `span` is `{handle, start_char, end_char}` bounded by the anchor text length. Constrained decoding is used where the serving stack supports it (XGrammar-class engines on self-hosted models [P6-20]; provider structured outputs elsewhere). Otherwise strict post-validation rejects and re-asks once.
 3. **Quote-by-reference.** The model never types the quote. P6 fills `quote` from the anchor store using the span, so fabricated or "improved" quotations cannot occur. If the model's paraphrase needs a quote the span does not contain, P8 entailment fails and the claim is repaired.
@@ -554,7 +598,7 @@ Properties:
    - STRATEGIC_OPINION needs `depends_on_claim_ids` pointing only to grounded claims. **The Composer can't introduce a new legal proposition.** If it tries, the schema forbids it.
 5. **Deterministic pre-check** before P8:
    - handle exists; span within bounds; quote hash matches;
-   - `AuthorityView.status` as-of ∈ {GOOD, CAUTION, PARTIAL_NEGATIVE-with-note} for claims in `favourable_authorities` (else move to `adverse_authorities` or drop). `UNKNOWN` (common for recent, regional-language or unreported judgments; `reason_codes ∋ COVERAGE_GAP` when feeds are stale) is allowed only with a rendered "treatment not yet established" note, and it cannot be the *sole* support of a tier-1 claim. `CAUTION` with `definitive = false` (`NEGATIVE_SIGNAL_UNDER_REVIEW`) is shown as CAUTION with its reason, never hidden and never upgraded (D6);
+   - `AuthorityView.status` as-of ∈ {GOOD, CAUTION, PARTIAL_NEGATIVE-with-note} for claims in `favourable_authorities` (else move to `adverse_authorities` or drop). `UNKNOWN` (common for recent, regional-language or unreported judgments) is allowed only with a rendered "treatment not yet established" note, and it cannot be the *sole* support of a tier-1 claim. A `COVERAGE_GAP` reason code (D20.12) sets `definitive = false` without changing the status unless the gap exceeds P3's per-source threshold (72 h HOT, 7 days WARM/COOL binding sources), when GOOD becomes UNKNOWN; P6 renders "status current to <law_current_to>" either way. A P5 `TREATMENT_PENDING` warning (D21.1) is treated like `definitive = false`. `CAUTION` with `definitive = false` (reason code `NEGATIVE_SIGNAL_UNDER_REVIEW`) is shown as CAUTION with its reason, never hidden and never upgraded (D6);
    - **direct-history check** on every cited HC/tribunal decision (P3 case lineage): a `STAYS` assertion, or an `APPEAL_OF` edge with no disposition (e.g., an SLP pending with interim orders), forces CAUTION with the lineage shown. A pending `REFERS_TO_LARGER_BENCH` on the same proposition forces CAUTION. Both are frequent in Indian practice and invisible to a citator that only tracks citing treatment;
    - **visibility check**: a support span that overlaps any `visibility=HIDDEN` region of a private document is rejected (§5.10, control 6);
    - `binding_on_forum` stated correctly in the claim text (template check);
@@ -591,7 +635,7 @@ sequenceDiagram
 
 **Gate policy.**
 - A section is displayed if every displayed claim is VERIFIED, or PARTIAL with the narrowed text.
-- **The memo gate is P8's, not P6's (D9, resolving C7).** `VerificationReport.gate ∈ {PASS, PARTIAL, BLOCK}` with `section_gates` is computed by P8's aggregation rule, and P6 copies it into `StrategyMemo.verification`. A tier-1 section failure (deadlines, limitation, maintainability) BLOCKs *that section*. The memo is then `PARTIAL` with a withheld list that names the blocked sections and their reasons. (v0.1 had P6 BLOCK the whole memo when the deadlines or opponent_claims sections failed; the v1.0 rule keeps the verified remainder usable while the blocked section shows "needs lawyer review".) A BLOCKed section, or a memo P8 marks BLOCK, is still shown to the requesting lawyer as a *diagnostic view* with the reasons. It cannot be exported. Exports of a PARTIAL memo carry the withheld list and a banner on every withheld section. A memo whose `deadlines` section is BLOCK is not exportable at all (P8 export rule, `10_P8` §5.4).
+- **The memo gate is P8's, not P6's (D9, resolving C7).** `VerificationReport.gate ∈ {PASS, PARTIAL, BLOCK}` with `section_gates` is computed by P8's aggregation rule, and P6 copies it into `StrategyMemo.verification`. A tier-1 section failure (deadlines, limitation, maintainability) BLOCKs *that section*. The memo is then `PARTIAL` with a withheld list that names the blocked sections and their reasons. (v0.1 had P6 BLOCK the whole memo when the deadlines or opponent_claims sections failed; the v1.0 rule keeps the verified remainder usable while the blocked section shows "needs lawyer review".) The **memo** is BLOCK only when no section is displayable or P8 finds a memo-level integrity failure (ratified in D21.6; P8 §5.4). A BLOCKed section, or a memo P8 marks BLOCK, is still shown to the requesting lawyer as a *diagnostic view* with the reasons. It cannot be exported. Exports of a PARTIAL memo carry the withheld list and a banner on every withheld section. A memo whose `deadlines` section is BLOCK is not exportable at all (P8 export rule, `10_P8` §5.4).
 - P6 never displays P8's calibrated confidence as a percentage for STRATEGIC_OPINION. It shows the ordinal strength with reasons (§7.3). P8 owns the confidence semantics for other claim types.
 
 **Living memo.** `dependency_ids` go to P7's private `matter_dependency` inverted index (D3). P4 publishes `impact.detected.v1` on the public topic with a public `affected[]` closure, and each tenant cell's Impact Matcher (P4's `impact-match-core`, run by P7 inside the tenant boundary) matches it locally; P4 never learns which matters depend on what. On a match (e.g., an authority used in the memo is overruled or a provision is amended), P7 triggers P6 `mode=REVERIFY`. `lifecycle = RETRACTED` or a superseding `impact_version` reverses or updates the staleness. Only affected claims are re-verified and repaired. The memo is marked `STALE`, `strategy.memo.stale.v1` is emitted, and P10 shows a claim-level diff.
@@ -624,7 +668,7 @@ Opposing-party notices, pleadings and annexures are adversarial inputs. Controls
 4. **Detection.** An injection classifier (P8/XC-owned) scans trigger text. Hits are flagged to the lawyer as a *fact about the document* (hidden text or instructions embedded in a notice may be legally relevant).
 5. **Output-side defence.** Even if a step is manipulated, it can only emit ledger-bound claims that P8 verifies. Injected "facts" without anchors cannot pass.
 6. **Self-anchoring injections (review finding).** Control 5 fails if the injected text *is* the anchor. Hidden text in a notice can say "the addressee admitted the debt in the meeting of 3 July". A RECORD_FACT citing that span would pass P8 entailment, because the span does entail it. Controls: P1/P7 layout analysis marks spans `visibility=HIDDEN` (white or near-background colour, font <4 pt, bbox off-page or under an image, PDF text layer disagreeing with OCR of the rendered page). Such spans are excluded from the ledger and reported as a finding, and pre-check rejects any claim supported by them. Opposing-party assertions are only ever typed as *"the notice asserts X"* (RECORD_FACT about the document), never as the fact X.
-7. **All ledger text is untrusted, not only S0's input.** S4–S9 read ledger excerpts: third-party documents in the matter file (forwarded opponent emails, annexures) and PLC excerpts that were scraped from public sites. All ledger text is datamarked in every prompt, and `F` handles carry the spine `trust_label` (D9: `TENANT_CLIENT_DOC|TENANT_OPPOSING_DOC|TENANT_CORRESPONDENCE|TENANT_WORK_PRODUCT|USER_INPUT`) plus the finer `authored_by: CLIENT|OPPONENT|THIRD_PARTY|COURT`. Claims supported only by OPPONENT-authored (`TENANT_OPPOSING_DOC`) spans are forced to the "asserts" form. Per D9, only `PLC_OFFICIAL`, `TENANT_WORK_PRODUCT` and `USER_INPUT` content may influence control flow; everything else is data only. P6's fixed workflow DAG already guarantees this, and the Gateway's `allowed_trust_labels` on each task contract enforces it.
+7. **All ledger text is untrusted, not only S0's input.** S4–S9 read ledger excerpts: third-party documents in the matter file (forwarded opponent emails, annexures) and PLC excerpts that were scraped from public sites. All ledger text is datamarked in every prompt, and `F` handles carry the spine `trust_label` (D9 + D21.12: `TENANT_CLIENT_DOC|TENANT_OPPOSING_DOC|TENANT_CORRESPONDENCE|TENANT_COURT_RECORD|TENANT_WORK_PRODUCT|USER_INPUT`) plus the finer `authored_by: CLIENT|OPPONENT|THIRD_PARTY|COURT`. Claims supported only by OPPONENT-authored (`TENANT_OPPOSING_DOC`) spans are forced to the "asserts" form. Per D9, only `PLC_OFFICIAL`, `TENANT_WORK_PRODUCT` and `USER_INPUT` content may influence control flow; everything else is data only. P6's fixed workflow DAG already guarantees this, and the Gateway's `allowed_trust_labels` on each task contract enforces it.
 
 ### 5.11 Model selection per agent (model-agnostic via the Gateway)
 
@@ -663,13 +707,13 @@ Every step pins `(model_id, model_snapshot, endpoint_region, prompt_hash, schema
 | **Total** | **≈490 / 70** | **≈130 / 26** |
 
 - At placeholder prices of T1 = $3/$15 and T2 = $0.8/$4 per M tokens: ≈ **$2.7 per memo**. At T1 = $15/$75 (premium tier): ≈ **$13**.
-- **Spine v1.0 planning figure (D18, from `13_cross_cutting`, corrected):** ≈ **$1.66 per strategy memo**. Use that figure for downstream planning. The token model above is P6's own illustrative bound, and all figures remain estimates pending the P1 measurement sample.
+- **Figure of record (D19.1, from `13_cross_cutting`, tokenizer-corrected):** ≈ **$2.16 per strategy memo** end-to-end (≈ $0.105 per verified Q&A). Use that figure for downstream planning; the earlier D18 figure of $1.66 is a list-price lower bound only. The ≈ $2.7 token model above (placeholder prices, excluding P5 retrieval and P8 verification) is P6's **sensitivity upper bound**, and 13_cross_cutting is the canonical cost model. All figures remain estimates pending the P1 10K-document measurement sample (D19.8).
 - Ledger-prefix caching across S4–S7 should cut T1 input by roughly 30–50% *(estimate, unvalidated)*.
 - Excluded: P5 retrieval and P8 verification (≈100 claims; mostly NLI-class models); see those docs.
 - Corpus size (5M → 10M docs) does not change per-memo cost. It scales with issues and bundle size, which are capped.
-- At 50 firms × 200 memos/month = 10k memos/month, LLM spend ≈ $27k–130k/month *(illustrative)*.
+- At 50 firms × 200 memos/month = 10k memos/month, LLM spend ≈ $27k–130k/month on the placeholder token model *(illustrative)*, versus ≈ $21.6k/month at the D19.1 figure of record ($2.16 × 10k).
 - **REVERIFY storms (review finding).** When a heavily cited SC judgment is overruled or a common provision is amended, `impact.detected.v1` can fan out to thousands of memos across tenants in one hour. REVERIFY cost is ≈10–20% of a full memo (only affected claims and dependants), but an uncontrolled fan-out still spikes spend and provider rate limits. Under D3, the fan-out happens per tenant cell: each cell's Impact Matcher matches the public `impact.detected.v1`, and a `storm` flag and `coalesce_key` (D5) mark mass events. Controls: (1) a per-cell REVERIFY queue ordered by `min(next deadline, next_hearing)` then impact `significance` (in the D1 pooled cell it spans that cell's tenants, with per-tenant fairness); (2) per-tenant concurrency cap (default 5) and a platform token-rate cap; (3) memos with no deadline or hearing in the next 30 days are marked `STALE` immediately (cheap) and re-verified lazily when next opened; (4) identical (claim text hash, changed anchor) pairs within a tenant share one P8 call.
-- **Per-job cost guard.** The token budget (§5.4) is enforced in the Gateway as a hard cap per `job_id`. A job reaching 80% emits a metric; at 100% remaining steps run in "withhold" mode (sections become `uncertainties`) instead of calling models.
+- **Per-job cost guard.** The token budget (§5.4) is enforced in the Gateway as a hard cap per `job_id`. A job reaching 80% emits a metric; at 100% remaining steps run in "withhold" mode (sections become `uncertainties`) instead of calling models, and the memo records a `BUDGET` entry in `verification.degradations[]` (D19.2) listing the affected claims, which P10 discloses next to the memo.
 
 **Latency targets (SLOs).**
 
@@ -861,7 +905,7 @@ Per-task routing mirrors what Lexis reports doing [P6-24].
 3. **[NOVEL — unvalidated] Argument Strength Ledger.** The bench's ordinal strength is cross-checked against deterministic features, and a mismatch forces a visible "assessment disputed" note. Features: count of BINDING supporting vs adverse items; `AuthorityView` status of key authorities; whether each element has ≥1 `F` (record) handle; open procedural bars; unconfirmed assumptions. This constrains sycophancy [P6-19] without pretending to give probabilities.
 4. **[NOVEL — unvalidated] Counterfactual fact-sensitivity pass.** Toggle each DISPUTED fact and re-run the bench to find outcome-determinative facts. This ranks the evidence checklist by decision impact.
 5. **[NOVEL — unvalidated] Per-issue temporal selection.** Substantive vs procedural `as_of_legal_date`, with savings-clause routing through P3 crosswalks (BNS/BNSS/BSA; Income-tax Act 2025 s.536 [P6-38]; CGST s.74A [P6-39]). A straddling case produces an explicit fork, not a silent choice.
-6. **[NOVEL — unvalidated] Living memo.** Dependency fingerprints trigger partial re-verification and claim-level diffs when the law changes (with P4/P7).
+6. **[NOVEL — unvalidated] Living memo.** Dependency fingerprints trigger partial re-verification and claim-level diffs when the law changes. The fingerprints live only in P7's private `matter_dependency` index; the tenant cell's Impact Matcher matches P4's public broadcast against them (broadcast-and-match, D3/D19.4), so P4 and every PLC-side component stay unaware of which works a tenant relies on.
 7. **[NOVEL — unvalidated] Deadline sensitivity bands.** Deadlines built on unconfirmed trigger dates show ±1/±3-day consequences, and the UI demands confirmation for the one date that matters most.
 8. **[NOVEL — unvalidated] Anticipation Recall metric.** When the opponent's actual reply or pleading later arrives, measure how many of its arguments the memo anticipated (§9). This is an outcome-linked evaluation that competitors without matter-level integration cannot compute.
 
@@ -962,12 +1006,13 @@ An adversarial review (legal-tech architecture + Indian legal research) was run 
 8. **Rule authoring cost and ownership.** Legal-engineering headcount for 300+ rules and their maintenance on amendments. Liability for a wrong rule.
 9. **Heterogeneous-family benefit** for Advocate vs Opponent is supported by general MAD findings [P6-13], not by legal-strategy evidence. A/B test it.
 10. **Competitor convergence.** TR, Lexis and Harvey already ship plan-review agents with citator flags [P6-22][P6-23][P6-26]. Our moat rests on Indian procedural data, proposition-level treatment, adverse accountability and matter-integrated outcome loops, not on the agent pattern itself.
-11. **Spine v1.0 follow-ups (open).**
-    - (a) `MaintainabilityCheck` (`mck_`) is referenced by `computed_ref` but has no prefix in the D12 registry, and D9 names only a Deadline computation as a `computed_ref` target. P6 proposes registering `mck_`.
-    - (b) D4 does not list the P6 RuleSpec registry as a consumer of `impact.detected.v1` / `plc.impact.public.v1` (C8), although the D3 public-topic topology permits it.
-    - (c) The `procedural_events[].event_type` controlled vocabulary needs an owner. P7 owns MatterContext and P6 proposes the seed list.
-    - (d) D9 does not define when P8 marks a whole memo BLOCK, as opposed to PARTIAL with withheld sections. P8 §5.4 now uses "no displayable section, or a memo-level integrity failure", and P6 follows it pending ratification.
-    - (e) Auto-starting a `DEADLINES_ONLY` job on `matter.document.ingested.v1` is a P6 policy choice, and P7/P10 must agree on who triggers it.
+11. **Spine v1.0 follow-ups — ruled (D21), one residual open.**
+    - (a) `MaintainabilityCheck` prefix: **ACCEPTED as `mck_` (D21.5)**; `Claim.computed_ref` targets `ddl_` or `mck_` (§5.5.3).
+    - (b) RuleSpec registry as a consumer of `plc.impact.public.v1`: **listed in D21.3** (§2.5).
+    - (c) `procedural_events[].event_type` vocabulary: **owned by P6, versioned with RuleSpecs, stored by P7 (D21.7)** (§5.5.1).
+    - (d) Memo-level BLOCK: **ratified (D21.6)** — no displayable section, or a memo-level integrity failure; a tier-1 section BLOCK makes the memo PARTIAL.
+    - (e) Auto `DEADLINES_ONLY` on `matter.document.ingested.v1`: **ACCEPTED (D21.7)**, tenant-configurable, default on; trigger dates need lawyer confirmation before a deadline becomes definitive (§2.5).
+    - (f) **Still open (§14 R-30):** CPC First-Schedule anchors (`sch-1.ord-8.rule-1`) await P1's grammar v1.1; affected RuleSpecs stay DRAFT (§5.5.1).
 
 ---
 

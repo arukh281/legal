@@ -47,20 +47,20 @@
 
 ### 2.0 Spine v1.0 conformance
 
-This doc follows the spine v1.0 decision record (D1–D18). Where the rest of this doc says "proposed", read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` in §2.0 and in v1.0 annotations means a spine v1.0 decision. The doctrine checks labelled D1–D3 in §5.9 are this doc's own local labels.
+This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 dispositions are in the second table below, and the open points they closed are marked *ruled*). Where the rest of this doc says "proposed", read the disposition below. The v1.0 name wins wherever the two differ. *Notation:* `D#` in §2.0 and in v1.0 annotations means a spine v1.0 decision. The doctrine checks labelled D1–D3 in §5.9 are this doc's own local labels.
 
 | # | P3 proposal (§2.4) | Disposition |
 |---|---|---|
 | S3-1 | Assertion additions (`logical_key`, `version`, `justification`, `extraction_run_id`, qualifiers `speaker`, `opinion_role`, `effect`, `effective_from`, `change_type`, `territory`, `proposal_ids[]`) | **ACCEPTED as D7.** D16 adds `effect = MOULDED` with `conditions[]{text, anchor_id}` (21_india `rul_IN_PREC_19`) and the canonical crosswalk qualifiers (§5.7). |
-| S3-2 | `AuthorityStatus` → `AuthorityView` | **ACCEPTED as D6** (new §H object, P3-owned). It is the **only** input for badges, P5 ranking features and P8 status checks. Modifications: <br/>• the key field is **`subject_id`** (was `target_id`); <br/>• it adds a `valid_from`/`valid_to` segment; <br/>• `binding_basis` gains `conflict: LARGER_BENCH\|EARLIER_COEQUAL\|UNRESOLVED` (D16); <br/>• status **stays 5-valued**. "Under review" = `CAUTION` + `definitive=false` + reason code `NEGATIVE_SIGNAL_UNDER_REVIEW`. A coverage gap = `UNKNOWN` + reason code `COVERAGE_GAP` (§5.5.2). Neither is a status value; <br/>• P4's "no change" equivalence (D6) compares `(status, definitive, reason_codes, binding rule_ids, confidence bucket 0.1)`. |
-| S3-3 | `kg.proposal.resolved.v1`; `graph.delta.v1` gains `graph_watermark`, `cause`, `status_changes[].{definitive, reason_codes, valid_from}`, `manifest_uri` | **ACCEPTED-MODIFIED as D4.** <br/>• `cause.kind` is fixed to **`EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL`**; the mapping from this doc's earlier enum is below. <br/>• P3 emits a `graph.delta.v1`, **possibly empty**, for **every** `doc.parsed.v1`. This is the propagation frontier P4 needs. <br/>• P3 exposes **`commit_status_batch`**, so that P3 stays the single writer of status when P4 recomputes (§2.2 O5). <br/>• `kg.proposal.resolved.v1` replaces any "kg.proposal.status.v1". |
+| S3-2 | `AuthorityStatus` → `AuthorityView` | **ACCEPTED as D6** (new §H object, P3-owned). It is the **only** input for badges, P5 ranking features and P8 status checks. Modifications: <br/>• the key field is **`subject_id`** (was `target_id`); <br/>• it adds a `valid_from`/`valid_to` segment; <br/>• `binding_basis` gains `conflict: LARGER_BENCH\|EARLIER_COEQUAL\|UNRESOLVED` (D16); <br/>• status **stays 5-valued**. "Under review" = `CAUTION` + `definitive=false` + reason code `NEGATIVE_SIGNAL_UNDER_REVIEW`. A coverage gap adds reason code `COVERAGE_GAP` and sets `definitive=false` without changing the status, unless the gap exceeds the per-source threshold (72 h HOT; 7 days WARM/COOL sources that can bind the forum), in which case a GOOD status degrades to `UNKNOWN`; negatives never lose their status (**D20.12**, refining D6; §5.5.2). Neither code is a status value; <br/>• P4's "no change" equivalence (D6) compares `(status, definitive, reason_codes, binding rule_ids, confidence bucket 0.1)`. |
+| S3-3 | `kg.proposal.resolved.v1`; `graph.delta.v1` gains `graph_watermark`, `cause`, `status_changes[].{definitive, reason_codes, valid_from}`, `manifest_uri` | **ACCEPTED-MODIFIED as D4.** <br/>• `cause.kind` is fixed to **`EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL\|IDENTITY`** (D4 set + `IDENTITY`, 01_master §6.3 and §14 R-17); the mapping from this doc's earlier enum is below. <br/>• P3 emits a `graph.delta.v1`, **possibly empty**, for **every** `doc.parsed.v1`. This is the propagation frontier P4 needs. <br/>• P3 exposes **`commit_status_batch`**, so that P3 stays the single writer of status when P4 recomputes (§2.2 O5). <br/>• `kg.proposal.resolved.v1` replaces any "kg.proposal.status.v1". |
 | S3-4 | New predicates | **ACCEPTED as D7** (all listed). |
-| S3-5 | ID prefixes | **ACCEPTED-MODIFIED as D12.** <br/>• Public IssueTopic **`iss_` → `itp_`**. `iss_` now means P7's *private* matter issue and must never appear in the PLC. <br/>• D12 assigns `xrn_` to the **crosswalk row**, so P3 uses `xrn_` as the stable public ID of a `CORRESPONDS_TO` logical row (one per `logical_key`; each version is an `asr_`). Extraction runs move to **`xtr_`** (not yet in the D12 registry; see open points). <br/>• D16 adds `ent_` for recurring institutional parties. |
+| S3-5 | ID prefixes | **ACCEPTED-MODIFIED as D12.** <br/>• Public IssueTopic **`iss_` → `itp_`**. `iss_` now means P7's *private* matter issue and must never appear in the PLC. <br/>• D12 assigns `xrn_` to the **crosswalk row**, so P3 uses `xrn_` as the stable public ID of a `CORRESPONDS_TO` logical row (one per `logical_key`; each version is an `asr_`). Extraction runs move to **`xtr_`** (registered by **D20.5**, which confirms `xrn_` = crosswalk row and `xtr_` = extraction run; this supersedes 01_master §14 R-02's reading). <br/>• D16 adds `ent_` for recurring institutional parties. |
 | S3-6 | Dependencies on sibling proposals | **ACCEPTED (D4, D16):** `identity.merged.v1`/`identity.split.v1` `{kind WORK\|CASE\|ALIAS, from_id, to_id, reason, confidence}`; `doc.parsed.v1` `quality.gate`, `work_id_status`, `supersedes_parse_id`, `anchor_changes`, `case_ids[]`; `ParsedDocument.amendment_instructions[]`; `CitationMention.context{rhetorical_role, speaker, cue_spans}`, `temporal_check`; `kg.proposal.v1`, `training.dataset.published.v1`, `source.recheck.requested.v1`. **Modified:** `metadata.authoritative_expression_key` is replaced by the Expression authority attributes (`authoritative`, `derived`, `verification`) and the anchor API's `is_authoritative_expression` (D8/D16). The fallbacks listed in S3-6 are no longer needed. |
 | S3-7 | Expression-independent provision ID `{work_id}#{fragment}` | **ACCEPTED as D7.** Resolution to a concrete anchor takes *(date, territory)* (D16 territorial versions). |
 | — | Crosswalk enum (21_india C5) | **ACCEPTED as D16:** P3 adopts the **canonical 21_india `change_type` enum** and `source_kind`. The mapping table from P3's earlier enum is in §5.7. |
 
-**`graph.delta.v1` `cause.kind` mapping** (earlier P3 enum → D4 enum): `DOC` → `EXTRACTION` (ref = `parse_id`) · `REPROCESS` → `EXTRACTION` (ref = `camp_…` or the reprocess event id) · `REVIEW` → `HUMAN_REVIEW` (ref = `rvw_…`) · `PROPOSAL` → `PROPOSAL` (ref = `kgp_…`) · `RULE_CHANGE` → `RECOMPUTE` (ref = `rul_…@version`) · `IDENTITY` → `RECOMPUTE` (ref = identity event id; the retractions it forces carry `retracted[].reason = IDENTITY_SPLIT`). The new kinds are: `SCHEDULED` (a future-dated legal event falls due: commencement, ordinance lapse, stay expiry; triggered by P4 through `commit_status_batch`) and `RETRACTION` (truth-maintenance cascades and source withdrawals, §5.9).
+**`graph.delta.v1` `cause.kind` mapping** (earlier P3 enum → D4 enum): `DOC` → `EXTRACTION` (ref = `parse_id`) · `REPROCESS` → `RECOMPUTE` (ref = `camp_…` or the reprocess event id) when P3 re-derives from an existing parse; a re-parse that arrives as a new `doc.parsed.v1` is still `EXTRACTION` (ref = `par_…`) · `REVIEW` → `HUMAN_REVIEW` (ref = `rvw_…`) · `PROPOSAL` → `PROPOSAL` (ref = `kgp_…`) · `RULE_CHANGE` → `RECOMPUTE` (ref = `rul_…@version`) · `IDENTITY` → `IDENTITY` (ref = identity event id; kept as its own kind per R-17; the retractions it forces carry `retracted[].reason = IDENTITY_SPLIT`). The new kinds are: `SCHEDULED` (a future-dated legal event falls due: commencement, ordinance lapse, stay expiry; triggered by P4 through `commit_status_batch`) and `RETRACTION` (truth-maintenance cascades and source withdrawals, §5.9).
 
 **Renames this doc now follows:**
 - Envelope extension attributes (D2) are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (`PUBLIC`).
@@ -72,7 +72,9 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 - `pipeline_version` in D10 form.
 - Deployments D1–D4/D4h (D17).
 - P5/P8 status checks read `AuthorityView` only (D6).
-- `source.recheck.requested.v1` is kept for re-fetching a known source. A missing work is requested with `acquire.requested.v1` (reason `UNRESOLVED_CITATION`, D16).
+- `source.recheck.requested.v1` is kept for re-fetching a known source. A missing work is requested with `acquire.requested.v1`. Under **D20.2** P3 may use only `COVERAGE_GAP` (with an internal `sub_reason`) and `LINEAGE_WATCH`. `UNRESOLVED_CITATION`, `CORRIGENDUM_SUSPECTED` and `LOW_QUALITY_COPY` are P1's reasons.
+- `parse_id` prefix `prs_` → **`par_`** (D20.5). Judgment-expected records are `jex_` (D20.5).
+- Kafka topics are `{plane}.{domain}.{event}.v{n}` (D20.16), e.g. `plc.graph.delta.v1` (with `.rt`/`.bulk` lanes) and `plc.kg.proposal.resolved.v1`.
 
 **Obligations added by v1.0:**
 - `commit_status_batch` (§2.2 O5).
@@ -85,14 +87,35 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 - `binding_basis.conflict`.
 - Territorial expression keys `lang@YYYY-MM-DD[~TERR]` (§5.6).
 - `governing_code()` from 21_india, implemented by `/v1/applicable-provisions` (§5.7, D16).
-- Consume `doc.redacted.v1` (masking overlay).
+- Consume `doc.redacted.v1` (masking overlay) and acknowledge each overlay with `redaction.applied.v1` (D19.3).
+- Own and maintain `Work.integrity_flags[]` (D19.5, §5.2.1a).
+- Supply the values of `Chunk.binding_scope_tags[]` to P2 (D21.2, §5.12 `/v1/binding-scopes`).
+- Own the authority reason-code registry (D21.8, §5.5.3).
+- Keep optional `Proposition.law_declared` (D20.7).
 - The D3 PLC read-path rule on the Graph Query API (§5.12).
 
-**Open cross-phase points** (flagged, not resolved here):
-- D12 has no prefix for extraction runs. `xtr_` needs registering.
-- D16 says `rul_IN_PREC_01..22`, but 21_india currently publishes `_01.._24`. P3 loads the registry as published.
-- 21_india's `source_kind` enum (`GAZETTE_TEXT_DIFF|OFFICIAL_TABLE|JUDICIAL_STATEMENT|THIRD_PARTY|EDITORIAL`) differs from D16's `OFFICIAL_TABLE|JUDICIAL|EDITORIAL|MODEL`. P3 stores D16's enum (§5.7).
-- P1 issues `parse_id` as `prs_…`, which collides with D12 `prs_` (P6 RuleSpec). P3 treats `parse_id` as opaque.
+**Cross-phase points raised by earlier drafts (all now ruled):**
+- *Ruled D20.5:* the extraction-run prefix `xtr_` is registered.
+- *Ruled D20.8:* the registry is `rul_IN_PREC_01..24` (21_india §4.1), all canonical. P3 loads all 24.
+- *Ruled D20.11:* crosswalk `source_kind` = `OFFICIAL_TABLE|GAZETTE_TEXT_DIFF|JUDICIAL|EDITORIAL|THIRD_PARTY|MODEL`. P3 stores this enum (§5.7) and maps 21_india's earlier `JUDICIAL_STATEMENT` → `JUDICIAL`.
+- *Ruled D20.5:* `parse_id` = `par_…` (`prs_` stays P6's RuleSpec). P3 treats `parse_id` as opaque.
+
+**D19–D21 dispositions affecting P3**
+
+| Ruling | What P3 does |
+|---|---|
+| D19.3 `redaction.applied.v1` | P3 acks every `doc.redacted.v1` overlay `{overlay_id, consumer: "P3", applied_at, generations_purged: []}` once evidence quotes, citator excerpts and name lookups serve the masked rendition (≤ 1 h). |
+| D19.4 real-time lane | P3 publishes every delta that carries an impact_tier-1 assertion or a status change on `plc.graph.delta.v1.rt` (O1). It does the same for EXPECTED stubs of larger or constitution benches. All other deltas go to `.bulk`. P3 never uses tenant interest to choose a lane. |
+| D19.5 `Work.integrity_flags[]` | **Owner P3** (§5.2.1a). Flags are `RECALLED`, `AI_GENERATION_ALLEGED`, `CORRIGENDUM_PENDING`, `WITHDRAWN_FROM_SOURCE` and `SUPPRESSED`. They surface as `AuthorityView.reason_codes` and through the PLC Access API. |
+| D20.2 `acquire.requested.v1` | P3 emits only `COVERAGE_GAP` (with `sub_reason` ∈ {`EXPECTED_OVERDUE`, `ATTESTED_WORK_MISSING`, `FEED_GAP`}) and `LINEAGE_WATCH` (§2.2 O3a). There is no `PRONOUNCEMENT_EXPECTED` reason. |
+| D20.4 EXPECTED stubs | P1 is the sole writer of Work and Case identity. On `judgment.expected.v1`, P3 asks P1's identity service to mint `work.status = EXPECTED` and then annotates the stub (§5.8 item 10). |
+| D20.7 `Proposition.law_declared` | Optional field `ART142_DIRECTION\|EXPRESSLY_NOT_PRECEDENT\|CONCESSION_BASED\|PER_INCURIAM_DECLARED\|NORMAL`. `authority-core` treats `ART142_DIRECTION` and `EXPRESSLY_NOT_PRECEDENT` as non-binding precedent (§5.5). `binding_basis.weight` is not adopted. |
+| D20.12 COVERAGE_GAP | Applied in §5.5.2. |
+| D20.17 `commit_status_batch` | Signature ratified as in §2.2 O5. |
+| D21.2 `binding_scope_tags` | P3 supplies the values through `GET /v1/binding-scopes` (§5.12), derived from the court registry and rules B1–B7. |
+| D21.8 reason-code registries | P3 owns the authority reason codes (§5.5.3). P8 owns the verification codes. |
+| D21.11 `kg.proposal.resolved.v1` | The schema is as in §2.2 O2. `NEEDS_EVIDENCE` is expressed as `DEFERRED` + `public_note_code = NEEDS_EVIDENCE` (resolves R-33). |
+| D21.18 `judgment.expected.v1.referenced_authorities[]` | P3 adds `PENDING_REFERENCE` + `TEXT_AWAITED` (`definitive=false`) to each named authority's `AuthorityView` until the text arrives (§5.8 item 10; R-29). |
 
 ### 2.1 Inputs
 
@@ -106,8 +129,9 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 | I6 | `training.dataset.published.v1` | P9 | manifests for re-training the treatment / proposition classifiers |
 | I7 | Official correspondence tables (IPC→BNS, CrPC→BNSS, IEA→BSA) | P0/P1 as parsed documents | `IMPORT` assertions for `CORRESPONDS_TO` (source documents to be catalogued in 21_india) |
 | I8 | Court registry (courts, benches, territorial jurisdiction, hierarchy) | P3-owned reference data, editor-maintained | doctrine engine |
-| I9 | `judgment.expected.v1` `{expected_id, court_id, expected_on, case_ref, bench{bench_strength}, evidence, state PENDING\|MATCHED\|OVERDUE\|CANCELLED}` | P0 (D16) | record an **EXPECTED stub Work** (§5.8 item 10) |
-| I10 | `doc.redacted.v1` (`data` = `RedactionOverlay`) | P0/P1/ops/legal (D4/D16) | masking overlay: masked spans are never returned in evidence quotes or snippets; `name_search_suppressed[]` names are excluded from name lookups (§5.12) |
+| I9 | `judgment.expected.v1` `{expected_id (jex_), court_id, case_ref{scheme, value, parties?}, bench{strength, judge_ids[]}, pronounced_on, evidence_raw_id, source_kind CAUSE_LIST\|DAILY_ORDER\|OFFICIAL_NOTICE, expected_by?, state PENDING\|MATCHED\|OVERDUE\|CANCELLED, matched_work_id?, referenced_authorities[]?}` (01_master §6.4; D21.18) | P0 (D16) | have P1 mint an **EXPECTED stub Work** (D20.4) and annotate it; mark `referenced_authorities[]` (§5.8 item 10) |
+| I10 | `doc.redacted.v1` (`data` = `RedactionOverlay`, 01_master §7.13; `ovl_` ids) | P0/P1/ops/legal (D4/D16/D20.3) | masking overlay: masked spans are never returned in evidence quotes or snippets; `name_search_suppressed[]` names are excluded from name lookups (§5.12). `kind = SUPPRESS_ALL` also sets `Work.integrity_flags += SUPPRESSED`. P3 de-duplicates on `overlay_id` and acks with `redaction.applied.v1` (D19.3) |
+| I14 | `raw.captured.v1`, **metadata-only filtered subscription**: `change_kind ∈ {DELETED, REAPPEARED, SUPPRESSED}` or `flags.suspected_replacement = true`. The event is joined to the Work through P1's manifestation lookup (`prior_raw_id` → `manifestation_id` → `work_id`) | P0 | `Work.integrity_flags[]` (D19.5 "derived from P0 signals"; §5.2.1a). P3 adds itself as a filtered consumer of this event; 01_master §6.2 lists only P1 and P4 |
 | I11 | `commit_status_batch` (sync, internal) | P4 | status rows P4 computed with `authority-core` on recompute or a scheduled event. P3 validates and writes them as the single status writer (§2.2 O5) |
 | I12 | Freshness API (`known_gaps`, `source_health`, `capture_frontier`) | P4 (D9) | the `COVERAGE_GAP` reason code (§5.5.2) |
 | I13 | DoctrineRule registry `rul_IN_PREC_*` | 21_india (D16) | canonical doctrine source for `authority-core` (§5.5) |
@@ -117,7 +141,7 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
 2. If `work_id_status = PROVISIONAL`, assertions are written against the provisional ID and re-pointed on `identity.merged.v1`.
 3. If `speaker ∈ {COUNSEL_*, LOWER_COURT}`, the mention yields `CITES` with `qualifiers.speaker` only. It is **never** a court treatment. Magesh et al. document that tools conflate litigants' arguments with court holdings [P3-1].
 4. A mention in a dissenting opinion never creates a treatment by the court. It yields `CITES` with `qualifiers.opinion_role=DISSENT`.
-5. **One authoritative expression per Work** *(added in independent review)*. Assertions are extracted only from the expression P1 marks as the language of the pronounced judgment. Under v1.0 this is the Expression's `authoritative` flag, exposed by the anchor API as `is_authoritative_expression` (D8/D16); it replaces `metadata.authoritative_expression_key`. Machine-translation renditions (`aux_text['{lang}-x-mt']`) are never Expressions and never evidence (D16). A translated expression (e.g. `hi` of an English SC judgment, or `en` of a Hindi HC judgment) never creates new assertions. Its mentions are matched to the authoritative expression's mentions by anchor alignment and may only add `role=CONTEXT` evidence. Without this rule, every translation would double-count treatments and inflate `depth`.
+5. **One authoritative expression per Work** *(added in independent review)*. Assertions are extracted only from the expression P1 marks as the language of the pronounced judgment. Under v1.0 this is the Expression's `authoritative` flag, exposed by the anchor API as `is_authoritative_expression` (D8/D16). P1 also derives `metadata.authoritative_expression_key` from it on `doc.parsed.v1` (01_master §14 R-15). P3 reads that key when present, and otherwise falls back to the anchor API. Machine-translation renditions (`aux_text['{lang}-x-mt']`) are never Expressions and never evidence (D16). A translated expression (e.g. `hi` of an English SC judgment, or `en` of a Hindi HC judgment) never creates new assertions. Its mentions are matched to the authoritative expression's mentions by anchor alignment and may only add `role=CONTEXT` evidence. Without this rule, every translation would double-count treatments and inflate `depth`.
 6. **Source trust** *(added in independent review)*. Tier-1 assertions are derived only from manifestations whose `provenance_tier ∈ {OFFICIAL_PRIMARY, OFFICIAL_AGGREGATOR}` (D16; court portals, India Code, Gazette). A document seen only on an unofficial mirror yields tier-2/3 assertions plus a `source.recheck.requested.v1` for the official copy. This blunts forged or doctored "judgments".
 7. **Low-confidence resolution with a hard-negative cue** *(added in independent review)*. A mention with `resolution_confidence < τ_res` is not dropped when its context contains a hard-negative or attestation cue (§5.4). It opens a `TIER1_TREATMENT` review task that carries `candidates[]`. If the top candidate's probability is ≥ 0.8, it also emits `NEGATIVE_SIGNAL_UNDER_REVIEW` on that candidate. Dropping such a mention would violate P-3 (bad OCR of a party name is exactly when this happens).
 
@@ -129,18 +153,19 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
   "id": "01J…(ULID)", "specversion": "1.0", "time": "2026-09-30T10:15:02Z", "schemaversion": "1.1.0",
   "type": "graph.delta.v1", "source": "p3/kg-writer@1.4.0", "subject": "wrk_01J…",
   "traceparent": "00-…", "causationid": "<id of the doc.parsed.v1 / review / proposal event>",
-  "idempotencykey": "p3|<cause_ref>|<graph_watermark>", "tenantid": null, "dataclass": "PUBLIC",   // D2 names
+  "idempotencykey": "p3|delta|<cause_ref>|<sha256(payload)>|w<graph_watermark>",   // 01_master §6.1 E3 grammar
+  "tenantid": null, "dataclass": "PUBLIC",   // D2 names
   "data": {
     "delta_id": "gdl_01J…",
     "+graph_watermark": 918273645,               // monotonic int64; every read returns the watermark it saw
-    "+cause": { "kind": "EXTRACTION|HUMAN_REVIEW|RECOMPUTE|SCHEDULED|RETRACTION|PROPOSAL",   // D4 enum (mapping in §2.0)
-                "ref": "<parse_id>|camp_…|rvw_…|kgp_…|rul_…@ver|<event id>" },
+    "+cause": { "kind": "EXTRACTION|HUMAN_REVIEW|RECOMPUTE|SCHEDULED|RETRACTION|PROPOSAL|IDENTITY",   // D4 + IDENTITY (R-17; mapping in §2.0)
+                "ref": "par_…|jex_…|camp_…|rvw_…|kgp_…|rul_…@ver|court_registry@ver|<event id>" },
     "assertions_added": [ { "assertion_id": "asr_…", "subject": "wrk_B", "predicate": "OVERRULES",
         "object": "wrk_A", "qualifiers": { "proposition_id": "prp_…" }, "impact_tier": 1,
         "review_state": "PENDING_REVIEW", "confidence": 0.93, "valid_from": "2023-12-13" } ],
     "retracted":  [ { "assertion_id": "asr_…", "reason": "REVIEW_REJECTED|SOURCE_RETRACTED|IDENTITY_SPLIT|CONSTRAINT" } ],
     "superseded": [ { "old": "asr_…", "new": "asr_…", "change": "CONFIDENCE|REVIEW_STATE|VALID_TIME|OBJECT" } ],
-    "status_changes": [ { "target_id": "wrk_A|prp_…|wrk_ITACT2000#sec-66A",   // = AuthorityView.subject_id
+    "status_changes": [ { "subject_id": "wrk_A|prp_…|wrk_ITACT2000#sec-66A",   // = AuthorityView.subject_id (D6; R-05)
         "old": "GOOD", "new": "CAUTION",
         "+definitive": false, "+reason_codes": ["NEGATIVE_SIGNAL_UNDER_REVIEW"],
         "reason_assertion_ids": ["asr_…"], "+valid_from": "2023-12-13" } ],
@@ -148,19 +173,28 @@ This doc follows the spine v1.0 decision record (D1–D18). Where the rest of th
   }
 }
 ```
-Consumers: P4 (impact detection, propagation frontier), P2 (`plc-status` mirror of `AuthorityView` and proposition units), P5 caches (authority features), P8 (BAD_LAW checks), and P7 (badge refresh only). Ordering: per-subject ordering by `graph_watermark`. Consumers must be idempotent (spine §G).
+Consumers (01_master §6.2): P4 (impact detection, propagation frontier), P2 (`plc-status` mirror of `AuthorityView`, proposition units, `binding_scope_tags` refresh), P5 caches (authority features), P8 (BAD_LAW checks), P9-global, P10, and P7 (badge refresh only). Topic `plc.graph.delta.v1.{rt,bulk}`, partition key `subject` (D20.16). A delta goes to `.rt` if it carries any impact_tier-1 assertion, any `status_changes[]`, or an EXPECTED stub for a bench of ≥ 5 judges; everything else goes to `.bulk` (D19.4). Campaign-caused deltas follow the same rule. Their RT volume is bounded by the campaign's `impact_policy` and by P4's storm control (06_P4 §5.7.3), never by tenant interest. Ordering: per-subject ordering by `graph_watermark`. Consumers must be idempotent (spine §G).
 
 **One delta per `doc.parsed.v1`, even if empty (D4).** Every accepted `doc.parsed.v1` produces exactly one `graph.delta.v1` with `cause = {kind: EXTRACTION, ref: parse_id}`. This holds even when it yields no assertions, for example a QUARANTINED document, a translation expression, or a parse whose re-derivation changed nothing. The delta's `graph_watermark` is P4's **propagation frontier** for that document. Work that completes later (L3 adjudication, propositions, review) emits further deltas with their own `cause`.
 
-**O2 — `kg.proposal.resolved.v1`** (new; P3 → P9): `{proposal_id, decision: ACCEPTED|REJECTED|MERGED|DEFERRED, resulting_assertion_ids[], reviewer_role, decided_at}`. P9 needs it to emit `feedback.resolved.v1` to the lawyer (P9 doc §2.2). It carries no tenant IDs.
+**O2 — `kg.proposal.resolved.v1`** (P3 → P9-global **and every tenant plane**, broadcast on `plc.kg.proposal.resolved.v1`; schema per **D21.11**): `{proposal_id, decision: ACCEPTED|REJECTED|MERGED|DEFERRED, resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code}`.
+- `public_note_code` is a closed vocabulary owned by P3: `APPLIED`, `DUPLICATE_OF_EXISTING`, `NEEDS_EVIDENCE`, `SOURCE_NOT_OFFICIAL`, `DOCTRINE_CONTESTED`, `OUT_OF_SCOPE`, `AWAITING_JUDGMENT_TEXT`. P9's earlier `NEEDS_EVIDENCE` outcome is `decision = DEFERRED` + `public_note_code = NEEDS_EVIDENCE` (01_master §14 R-33).
+- The envelope carries `datasig` (Ed25519 JWS over `data`, 01_master §6.1 E6), which tenant planes verify before matching against their local release ledger.
+- P9 needs it to emit `feedback.resolved.v1` to the lawyer (P9 doc §2.2). It carries no tenant IDs and no free text.
 
-**O3 — `reprocess.requested.v1`** (P3 → P1): when P3 detects a probable parse or resolution error. Examples: `temporal_check=CITED_AFTER_CITING`; a treatment whose evidence quote no longer matches.
+**O3 — `reprocess.requested.v1`** (P3 → P1; schema owner P4, D21.15; 01_master §6.3): when P3 detects a probable parse or resolution error. Examples: `temporal_check=CITED_AFTER_CITING`; a treatment whose evidence quote no longer matches. Constraints (01_master §14 R-27):
+- `scope.selector.work_ids` has exactly one `work_id`; `lane = RT`; `mode = APPLY`; `reason = QUALITY_ALERT`; `stages` ⊆ {`P1.segment`, `P1.citations`}.
+- At most one request per work per hour, de-duplicated by `idempotencykey = p3|reprocess|<work_id>|<sha256(stages)>|<hour>` (E3 grammar).
+- P4's campaign ledger observes these requests. More than 50 requests per court per day trips a breaker that converts them into a single P4 campaign proposal.
 
-**O3a — `acquire.requested.v1`** (P3 → P0; D4/D16, `tenantid` always null). The reasons are:
-- `UNRESOLVED_CITATION`: clusters of unresolved mentions pointing to the same missing work, or an attested overruling judgment that is not in the corpus (§5.8, A8).
+**O3a — `acquire.requested.v1`** (P3 → P0; D4/D16, `tenantid` always null). Under **D20.2** P3 may emit only two reasons:
 - `LINEAGE_WATCH`: pending appeals, SLPs or references whose outcome P3 needs.
-- `COVERAGE_GAP`: a court feed gap that affects statuses.
-- `LOW_QUALITY_COPY`: a mis-OCR'd copy.
+- `COVERAGE_GAP`, with internal `sub_reason`:
+  - `FEED_GAP`: a court feed gap that affects statuses.
+  - `EXPECTED_OVERDUE`: a `judgment.expected.v1` stub past `expected_by`. This replaces the rejected `PRONOUNCEMENT_EXPECTED`.
+  - `ATTESTED_WORK_MISSING`: an attested overruling judgment, or an A8 dangling-negative cluster, whose target is not in the corpus (§5.8, A8).
+
+Clusters of ordinary unresolved mentions and mis-OCR'd copies are **P1's** to request (`UNRESOLVED_CITATION`, `LOW_QUALITY_COPY`, D20.2). P3 raises them to P1 through O3 (`reason = QUALITY_ALERT`), not to P0.
 
 `source.recheck.requested.v1` (P3 → P0, D4) is kept for re-fetching the official copy of a known document (§2.1 rule 6).
 
@@ -185,12 +219,16 @@ type AuthorityView = {
   subject_id: string;                // D6 name (was target_id): wrk_… | prp_… | provision ref (wrk_…#sec-…)
   status: "GOOD"|"CAUTION"|"NEGATIVE"|"PARTIAL_NEGATIVE"|"UNKNOWN";   // D6: stays 5-valued.
                                      // "Under review" = CAUTION + definitive=false + NEGATIVE_SIGNAL_UNDER_REVIEW;
-                                     // coverage gap = UNKNOWN + COVERAGE_GAP (§5.5.2). Neither is a status value.
+                                     // coverage gap = + COVERAGE_GAP, definitive=false, status unchanged unless the gap
+                                     // exceeds the per-source threshold (then GOOD → UNKNOWN) (D20.12; §5.5.2).
+                                     // Neither code is a status value.
   definitive: boolean;               // true only if every reason assertion is VERIFIED (or tier ≥2 MACHINE above threshold)
   reason_codes: ReasonCode[];        // e.g. OVERRULED, OVERRULED_IN_PART, PER_INCURIAM, REVERSED, STAYED, PENDING_REFERENCE,
                                      // DOUBTED_BY_EQUAL_OR_LARGER_BENCH, RELIES_ON_OVERRULED, LEGISLATIVELY_OVERRIDDEN,
                                      // STRUCK_DOWN, READ_DOWN, NOT_IN_FORCE_ON_DATE, NEGATIVE_SIGNAL_UNDER_REVIEW,
-                                     // PROSPECTIVE_OVERRULING_SAVES, COVERAGE_GAP
+                                     // PROSPECTIVE_OVERRULING_SAVES, COVERAGE_GAP, TEXT_AWAITED, NOT_BINDING_PRECEDENT,
+                                     // integrity: RECALLED, AI_GENERATION_ALLEGED, CORRIGENDUM_PENDING,
+                                     // WITHDRAWN_FROM_SOURCE, SUPPRESSED (D19.5). Registry owned by P3 (D21.8; §5.5.3)
   reason_assertion_ids: string[];
   status_confidence: number;         // calibrated P(status is not worse than shown)
   status_mode: "CURRENT"|"HISTORICAL";
@@ -245,7 +283,7 @@ The spine gives every query `as_of_legal_date` and `as_known_at` (§E), and P5 a
 | S3-4 | §F predicates (P3-owned ontology; listed because P5/P6/P8 consume them) | Add `HOLDS`, `OBSERVES`, `RELIES_ON`, `RESTATES`, `ANSWERS_REFERENCE`, `DISMISSES_IN_LIMINE`, `RECALLS`, `DECLARES_SUB_SILENTIO`, `ATTESTS_TREATMENT` (evidence-only), `NO_COUNTERPART_IN`, `PRECEDENT_CARRIES_TO` (derived), `IN_FORCE_IN` (territorial extent); rename nothing | See §5.2. `DISMISSES_IN_LIMINE` records that a non-speaking SLP dismissal is *not* an affirmance (no merger) [P3-52]. Without it, the history is ambiguous. |
 | S3-5 | §B IDs | Add prefixes `prp_` (Proposition, already in §F), `lga_` (LegislativeAction), `crt_` (Court), `bnc_` (Bench), `jdg_` (Judge), `iss_` (public IssueTopic; **v1.0: `itp_`**), `rvw_` (ReviewTask), `rul_` (DoctrineRule), `ter_` (Territory), `xrn_` (extraction run; **v1.0: `xtr_`, since D12 gives `xrn_` to crosswalk rows**) | Stable IDs for nodes the spine references but does not name. |
 | S3-6 | §G/§H (dependencies, not P3-owned) *(added in independent review)* | P3 consumes events and fields that are **proposed by sibling docs, not yet in the spine**: `identity.merged.v1`/`identity.split.v1` (P1 S4); `doc.parsed.v1` fields `work_id_status`, `quality.gate`, `supersedes_parse_id`, `anchor_changes`, `AmendmentInstruction[]`, `metadata.authoritative_expression_key`, `CitationMention.context{speaker, rhetorical_role, cue_spans}` and `temporal_check` (P1); `kg.proposal.v1`, `training.dataset.published.v1` and `source.recheck.requested.v1` (P9) | Before this review these fields were used silently. If the spine owner rejects any of them, the fallback is as follows. Without `speaker`, every treatment goes to L3 with a "who is speaking" field. Without `quality.gate`, P3 derives it from `quality.needs_review` and `ocr_conf < 0.8`. Without the identity events, P3 polls P1's alias table. |
-| S3-7 | §C anchors *(added in independent review)* | Formalise the **expression-independent provision reference** `{work_id}#{fragment}` (e.g. `wrk_…#sec-302`) as a legal ID for Provision nodes, crosswalk rows and `status_changes.target_id`. It resolves to a concrete `anchor_id` via `@date` and territory. | Spine §C shows only the `@date` resolution form. Treatment of a provision (struck down, corresponds to) is about the provision across versions, not one expression. Using a versioned `anchor_id` would force N copies of every crosswalk row. |
+| S3-7 | §C anchors *(added in independent review)* | Formalise the **expression-independent provision reference** `{work_id}#{fragment}` (e.g. `wrk_…#sec-302`) as a legal ID for Provision nodes, crosswalk rows and `status_changes.target_id` (v1.0: `status_changes[].subject_id`). It resolves to a concrete `anchor_id` via `@date` and territory. | Spine §C shows only the `@date` resolution form. Treatment of a provision (struck down, corresponds to) is about the provision across versions, not one expression. Using a versioned `anchor_id` would force N copies of every crosswalk row. |
 
 ---
 
@@ -407,13 +445,13 @@ Everything that writes goes through **one KG Writer**. It is the only holder of 
 
 | Node | ID | Owner | Key properties | Alignment |
 |---|---|---|---|---|
-| Work | `wrk_` | P1 creates, P3 annotates (P3 creates EXPECTED stubs, §5.8 item 10) | `work_type` ∈ {JUDGMENT, ORDER, ACT, AMENDING_ACT, RULE, REGULATION, NOTIFICATION, ORDINANCE, CONSTITUTION, CONSTITUTIONAL_AMENDMENT}, court_id, bench_id, decision/enactment date, reportable flag, `work_status` ∈ {EXPECTED, ACTIVE} *(v1.0)*, `access_restriction{}` (D16) | LRMoo F1 Work; AKN `FRBRWork` [P3-32][P3-31] |
+| Work | `wrk_` | P1 creates (sole identity writer, incl. EXPECTED stubs that P3 requests, D20.4); P3 annotates | `work_type` ∈ {JUDGMENT, ORDER, ACT, AMENDING_ACT, RULE, REGULATION, NOTIFICATION, ORDINANCE, CONSTITUTION, CONSTITUTIONAL_AMENDMENT}, court_id, bench_id, decision/enactment date, reportable flag, `work_status` ∈ {EXPECTED, ACTIVE} *(v1.0)*, `access_restriction{}` (D16), `integrity_flags[]` (D19.5, P3-owned, §5.2.1a) | LRMoo F1 Work; AKN `FRBRWork` [P3-32][P3-31] |
 | Case | `cas_` | P1 | forum court_id, case_type/no/year, CNR, diary no, parties | — (proceeding, not a document) |
 | Expression / Manifestation / Anchor | per spine | P1 | language, temporal version, text, `text_hash`, bbox | LRMoo F2/F3; AKN eId |
 | Provision (= statute anchor) | `wrk_…#sec-…` | P1 anchors; P3 versions | structural path, heading | ELI "subdivision" [P3-33] |
 | ProvisionVersion | `(anchor, territory, valid_period)` | P3 | `expression_key` (`lang@YYYY-MM-DD[~TERR]`, TERR = ISO 3166-2:IN, D16), `text_hash`, validity status, `authoritative`/`derived` (D16) | SAT-Graph component temporal version [P3-4] |
 | LegislativeAction | `lga_` | P3 | op ∈ {SUBSTITUTE, INSERT, OMIT, RENUMBER, REPEAL, SAVE, COMMENCE, STRIKE_DOWN, READ_DOWN}, source anchor, target anchor, enacted_on, effective_from, territory, old/new text hashes | SAT-Graph Action node [P3-4]; LKIF modification [P3-35] |
-| Proposition | `prp_` | P3 | normalised text (≤ 50 words), source work, `opinion_role` (MAJORITY/CONCURRING), `kind` (RATIO/OBITER), anchors[], provisions[], issue_ids[], conditions, `canonical_group` | — (our core addition) |
+| Proposition | `prp_` | P3 | normalised text (≤ 50 words), source work, `opinion_role` (MAJORITY/CONCURRING), `kind` (RATIO/OBITER), anchors[], provisions[], issue_ids[], conditions, `canonical_group`, optional `law_declared` ∈ {ART142_DIRECTION, EXPRESSLY_NOT_PRECEDENT, CONCESSION_BASED, PER_INCURIAM_DECLARED, NORMAL} (D20.7) | — (our core addition) |
 | Court | `crt_` | P3 (editor-maintained) | level, parent courts, territorial jurisdiction (versioned; e.g. state reorganisations), seat benches | ECLI court code [P3-34] |
 | Bench | `bnc_` | P3 | court_id, strength, judge_ids, `is_constitution_bench`, date | — `is_constitution_bench` = SC and strength ≥ 5 and (the order records a substantial question of constitutional interpretation or an Art. 143 reference). Art. 145(3) sets five judges as the minimum for those matters [P3-63]. Strength alone is not a proxy. |
 | Judge | `jdg_` | P1 entity → P3 | name variants, courts served (dated) | — |
@@ -421,6 +459,16 @@ Everything that writes goes through **one KG Writer**. It is the only holder of 
 | IssueTopic | `itp_` (D12; was `iss_`, which is now P7's private matter issue) | P3 (public taxonomy) | label, parent, synonyms | — |
 | DoctrineRule | `rul_` | P3 (content: 21_india registry `rul_IN_PREC_*`, D16) | rule logic ref, version, `authority_anchor_ids[]`, `contested` | LegalRuleML-inspired [P3-36] |
 | Assertion | `asr_` | P3 | spine §F + S3-1 | PROV-O Entity with `wasGeneratedBy` method activity [P3-37] |
+
+**5.2.1a `Work.integrity_flags[]` (D19.5; owner P3).** The flags are stored as a bitemporal table `work_integrity(work_id, flag, set_by_assertion_id?, source_ref, valid_period, tx_period)`. They surface as `AuthorityView.reason_codes` and on the PLC Access API (D13).
+
+| Flag | Set when | Cleared when | Effect on `AuthorityView` |
+|---|---|---|---|
+| `RECALLED` | A `RECALLS` assertion targets the Work (a VERIFIED assertion makes it definitive) | The recall itself is recalled or set aside | `NEGATIVE` + `RECALLED` (§5.5.2 `RECALLS` branch) |
+| `AI_GENERATION_ALLEGED` | Set by an editor only, from a `kg.proposal.v1` (P9 S0 objective defect), a court observation extracted as `OBSERVES`, or ops. Never set by a machine alone | An editor records that the text was verified against the official source | `CAUTION` + reason code, `definitive=false` |
+| `CORRIGENDUM_PENDING` | `raw.captured.v1` `flags.suspected_replacement` on the Work's official manifestation, or a parsed corrigendum document | The revised expression (`lang.rN`) is parsed (`supersedes_parse_id`) | Reason code only; status unchanged; `definitive=false` |
+| `WITHDRAWN_FROM_SOURCE` | `raw.captured.v1 change_kind = DELETED` for the Work's only `OFFICIAL_PRIMARY` manifestation (P0 issues DELETED only after 3 absent sweeps plus a 404) | `REAPPEARED` | Reason code only. Tier-1 assertions derived from the Work keep their review state, but P3 opens a `source.recheck.requested.v1` |
+| `SUPPRESSED` | `doc.redacted.v1 kind = SUPPRESS_ALL`, or `raw.captured.v1 change_kind = SUPPRESSED` | The overlay is withdrawn | Reason code; the PLC Access API withholds text and returns metadata only |
 
 Anchors, expressions and chunks are **referenced by ID, never copied** into the graph. The hot graph holds Works, Propositions, Provisions and Cases (§5.13). Paragraph anchors appear only as qualifiers and evidence.
 
@@ -543,6 +591,7 @@ CREATE TABLE proposition (
   kind text NOT NULL, opinion_role text NOT NULL,
   text_norm text NOT NULL, anchor_ids text[] NOT NULL, provision_anchor_ids text[],
   issue_ids text[], canonical_group text, confidence real NOT NULL,
+  law_declared text DEFAULT 'NORMAL',   -- D20.7: ART142_DIRECTION|EXPRESSLY_NOT_PRECEDENT|CONCESSION_BASED|PER_INCURIAM_DECLARED|NORMAL
   review_state review_state NOT NULL, method_id int REFERENCES method_version,
   tx_period tstzrange NOT NULL
 );
@@ -555,13 +604,13 @@ CREATE TABLE provision_version (
 );
 
 CREATE TABLE authority_status (
-  target_id text NOT NULL, status_mode text NOT NULL,          -- target_id = AuthorityView.subject_id (D6); CURRENT|HISTORICAL
+  subject_id text NOT NULL, status_mode text NOT NULL,         -- = AuthorityView.subject_id (D6; R-05); CURRENT|HISTORICAL
                                                                -- written ONLY by the KG Writer (incl. P4's commit_status_batch, D4)
   valid_period daterange NOT NULL, tx_period tstzrange NOT NULL,
   status text NOT NULL, definitive boolean NOT NULL,
   reason_codes text[] NOT NULL, reason_assertion_ids text[] NOT NULL,
   status_confidence real NOT NULL, doctrine_version text NOT NULL, graph_watermark bigint NOT NULL,
-  EXCLUDE USING gist (target_id WITH =, status_mode WITH =, valid_period WITH &&, tx_period WITH &&)
+  EXCLUDE USING gist (subject_id WITH =, status_mode WITH =, valid_period WITH &&, tx_period WITH &&)
 );
 
 CREATE TABLE court (court_id text PRIMARY KEY, level text NOT NULL, parent_ids text[],
@@ -726,7 +775,7 @@ The doctrine engine is a pure, deterministic library, `authority-core@semver`. I
 
 The registry also adds rules the B-table lacked. `authority-core` must implement all of them:
 - `rul_IN_PREC_18` / `_19`: prospective overruling (SC only) and moulded retroactivity (`effect=MOULDED`, §2.3).
-- `rul_IN_PREC_23`: Art. 142 directions are NOT_BINDING as precedent.
+- `rul_IN_PREC_23`: Art. 142 directions are NOT_BINDING as precedent. Under D20.7 this is keyed on `Proposition.law_declared`: `ART142_DIRECTION` and `EXPRESSLY_NOT_PRECEDENT` make `binding_on_forum = NOT_BINDING` for that proposition, with reason code `NOT_BINDING_PRECEDENT` and `binding_basis.rule_ids` naming the rule. `CONCESSION_BASED` and `PER_INCURIAM_DECLARED` add a CAUTION note without changing binding. Any weighting is expressed through `rule_ids`; there is no `binding_basis.weight` (D20.7).
 - `rul_IN_PREC_22`: the tax canon, `contested` as a precedent-selection rule.
 - `rul_IN_PREC_11`: curative petitions (history only).
 
@@ -771,12 +820,21 @@ authority_status(T, mode, as_of_legal_date D, as_known_at K = now):
   if T unprocessed / provisional and reasons == []: status = UNKNOWN
   definitive  = all(r.assertion.review_state == VERIFIED or r.tier ≥ 2 for r in reasons(status))
   confidence  = calibrated(status, reasons)             # §5.11
+  reasons    += integrity_flags(T) as reason codes      # D19.5, §5.2.1a
   coverage    = feed freshness of courts able to treat T (P4 Freshness API: known_gaps, source_health; D9)
-  if material coverage gap:                             # a court that could bind or negatively treat T lags beyond its SLO
-      if status == GOOD: status = UNKNOWN               # D6: coverage gap = UNKNOWN + COVERAGE_GAP
-      reasons += COVERAGE_GAP                           # a known CAUTION/NEGATIVE/PARTIAL_NEGATIVE is never masked (P-3)
-  return AuthorityView(...)
+  gap_h       = max lag (hours) over sources whose court could bind or negatively treat T
+  if gap_h > source SLO:                                # D20.12 (refines D6)
+      reasons += COVERAGE_GAP; definitive = false       # status itself is unchanged …
+      if status == GOOD and gap_h > threshold(source):  # … unless the gap exceeds the per-source threshold:
+          status = UNKNOWN                              #    72 h for HOT sources; 7 days for WARM/COOL sources that can bind the forum
+      # a known CAUTION/NEGATIVE/PARTIAL_NEGATIVE never loses its status on a gap (P-3; D20.12)
+  return AuthorityView(...)                             # P10 shows "status current to <law_current_to>" (Freshness)
 ```
+**5.5.3 Authority reason-code registry (D21.8; owner P3).** The registry is versioned with `authority-core` (`doctrine_version`) and published as a machine-readable table `{code, severity_floor, may_be_definitive, display_key, since_version}`. P5, P8, P9 and P10 consume it. Unknown codes must render as a generic CAUTION, never be dropped.
+- Status-bearing codes: `OVERRULED`, `OVERRULED_IN_PART`, `PER_INCURIAM`, `SUB_SILENTIO`, `REVERSED`, `MODIFIED`, `STAYED`, `LEGISLATIVELY_OVERRIDDEN`, `STRUCK_DOWN`, `READ_DOWN`, `NOT_IN_FORCE_ON_DATE`, `RELIES_ON_OVERRULED`, `PROVISION_MODIFIED`, `DOUBTED_BY_EQUAL_OR_LARGER_BENCH`, `CONFLICTS_WITH`, `POSSIBLE_PER_INCURIAM`, `PER_INCURIAM_BY_COEQUAL`, `PENDING_REFERENCE`, `PROSPECTIVE_OVERRULING_SAVES`, `NEGATIVE_SIGNAL_UNDER_REVIEW`.
+- Qualifying codes (never a status on their own): `COVERAGE_GAP` (D20.12), `TEXT_AWAITED` (R-29; an authority named in a pending reference, or an operative order whose reasons are awaited), `NOT_BINDING_PRECEDENT` (D20.7), and the five integrity flags (D19.5).
+- `NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP` and `TEXT_AWAITED` always force `definitive=false`.
+
 `doctrine_valid` enforces two rules. An `OVERRULES` must come from a superior court, or from the same court with *larger* bench strength [P3-51]. A same-strength "overruling" is kept as `CONFLICTS_WITH` and sent to review [P3-57]. *(Added in independent review.)* A `DECLARES_PER_INCURIAM` or `DECLARES_SUB_SILENTIO` from an equal or smaller bench of the same court is *not* discarded. It contributes only `CAUTION(PER_INCURIAM_BY_COEQUAL)` with `contested=true` (B16), and it downgrades to NEGATIVE only when it comes from a larger bench or a superior court.
 
 **Worked test vectors (a CI fixture for `authority-core`; added in independent review).**
@@ -808,13 +866,13 @@ Statuses are materialised as **valid-time segments**. For example, *N.N. Global*
 **Model.** `CORRESPONDS_TO` links an old-code provision anchor to a new-code provision anchor at the **finest matching granularity** (sub-section or clause). It is many-to-many.
 - Qualifiers (v1.0 canonical enum = 21_india §6.4, adopted by D16):
   - `change_type` ∈ {SAME_RENUMBERED, SAME_TEXT_SPLIT, MERGED, SPLIT, MODIFIED_SCOPE, MODIFIED_PENALTY, REPLACED_BY_DIFFERENT_OFFENCE, FUNCTIONAL_ANALOGUE, NEW_NO_PREDECESSOR, OMITTED}
-  - `group_id` (binds the members of one 1→n or n→1 mapping), `granularity` ∈ {SECTION, SUBSECTION, CLAUSE}, `text_similarity`, `penalty_delta` ∈ {SAME, HIGHER, LOWER, DIFFERENT_KIND} (drives Art. 20(1) warnings), `chain_prev` (e.g. CrPC 1898 s.561A → CrPC s.482 → BNSS s.528)
+  - `group_id` (`xwg_…`, 01_master §7.5; binds the members of one 1→n or n→1 mapping), `granularity` ∈ {SECTION, SUBSECTION, CLAUSE}, `text_similarity`, `penalty_delta` ∈ {SAME, HIGHER, LOWER, DIFFERENT_KIND} (drives Art. 20(1) warnings), `chain_prev` (e.g. CrPC 1898 s.561A → CrPC s.482 → BNSS s.528)
   - `scope_delta` ∈ {NARROWED, WIDENED, BOTH} *(P3 extension, optional; preserves the finer distinction of the old enum for MODIFIED_SCOPE)*
   - `diff_ref` (clause-level token diff of the two texts)
-  - `source_kind` ∈ {OFFICIAL_TABLE (IMPORT), JUDICIAL (P1 `correspondence_hint`, e.g. "now Section 103 BNS"), EDITORIAL, MODEL} (D16; was `source`)
+  - `source_kind` ∈ {OFFICIAL_TABLE (IMPORT), GAZETTE_TEXT_DIFF (token diff of the two Gazette texts), JUDICIAL (P1 `correspondence_hint`, e.g. "now Section 103 BNS"), EDITORIAL, THIRD_PARTY (a licensed or published concordance, never tier-1 definitive on its own), MODEL} (**D20.11** final enum; was `source`; 21_india's `JUDICIAL_STATEMENT` → `JUDICIAL`)
   - `valid_from = 2024-07-01`
 - Each logical crosswalk row has a stable public ID `xrn_…` (D12), one per `logical_key`. Each version is an `asr_…`.
-- **Mapping from P3's earlier `change_type` enum** (for migration and for P5's `via_crosswalk` penalty, which must switch to the canonical values; inverse of 21_india §6.4):
+- **Mapping from P3's earlier `change_type` enum** (for migration and for P5's `via_crosswalk` penalty, which must key on the canonical D16 `change_type` per D20.11; inverse of 21_india §6.4):
 
   | Earlier P3 value | Canonical `change_type` (D16) |
   |---|---|
@@ -846,19 +904,20 @@ Whether BNS s.103(2) adds new content, making `change_type` SPLIT or WIDENED (ca
 ### 5.8 Self-enrichment loops
 1. **Forward.** Each new judgment's own citations add its treatments of older works.
 2. **Backward.** Later documents treat or decide on it: citing treatments, appellate outcomes (`APPEAL_OF` + outcome), references answered. For pending appeals, SLPs and references, P3 emits `acquire.requested.v1` with `reason=LINEAGE_WATCH` (D16) so that P0's tenant-agnostic case-status feeds watch the outcome.
-3. **Attestation mining.** A judgment's narrative ("*X*, since overruled in *Y*") becomes ATTESTATION evidence on `Y OVERRULES X`. If no such assertion exists, the sentence creates a candidate (tier 1, review). If *Y* is missing from the corpus, P3 emits `acquire.requested.v1` (`reason=UNRESOLVED_CITATION`, D16) to P0. *(Originally `source.recheck.requested.v1`, which v1.0 keeps for re-fetching a known source.)* Several independent attestations raise confidence, which is how we find overrulings our own pipeline missed. **[NOVEL — unvalidated]** as a systematic citator signal.
+3. **Attestation mining.** A judgment's narrative ("*X*, since overruled in *Y*") becomes ATTESTATION evidence on `Y OVERRULES X`. If no such assertion exists, the sentence creates a candidate (tier 1, review). If *Y* is missing from the corpus, P3 emits `acquire.requested.v1` (`reason=COVERAGE_GAP`, `sub_reason=ATTESTED_WORK_MISSING`; D20.2 reserves `UNRESOLVED_CITATION` for P1) to P0. *(Originally `source.recheck.requested.v1`, which v1.0 keeps for re-fetching a known source.)* Several independent attestations raise confidence, which is how we find overrulings our own pipeline missed. **[NOVEL — unvalidated]** as a systematic citator signal.
 4. **Consensus maps.** When treatments of the same proposition by different High Courts diverge (FOLLOWS vs NOT_FOLLOWED), the result is materialised as an "HCs divided" view for P5 and P10. There is no status downgrade outside the state.
 5. **Implied-conflict miner [NOVEL — unvalidated].** A later larger-bench proposition on the same provision and issue that contradicts an earlier smaller-bench proposition *without citing it* becomes a `CONFLICTS_WITH` candidate. It is always sent for review and never auto-asserted. Detection uses provision/issue blocking, then an NLI contradiction model, then L3.
 6. **Upgrades.** New parser, model or prompt versions run in SHADOW over a stratified sample plus sentinels. A diff report goes to P8. Promotion writes new assertion *versions*. Nothing is deleted.
 7. **Lawyer feedback.** Only `kg.proposal.v1` enters, and it becomes review tasks, never direct writes. Accepted proposals produce `method.kind=HUMAN` assertions with `proposal_ids[]` and emit `kg.proposal.resolved.v1`.
 8. **Parser feedback.** Anomalies (dangling pin cites, `CITED_AFTER_CITING`, quote-hash drift) emit `reprocess.requested.v1` to P1.
 9. **Active learning.** Review decisions on public objects become gold and silver data for L2 (via P9 manifests), sampled toward high-entropy regions.
-10. **Expected judgments (v1.0 D16).** On `judgment.expected.v1` from P0 with `state=PENDING`:
-    - P3 records an **EXPECTED stub Work**: a `wrk_` with `work_status=EXPECTED`, `court_id`, the listed bench strength, `expected_on`, the `case_ref`/`case_id` link, and the official evidence reference. It has no expressions, no anchors and no treatment assertions.
-    - It emits a `graph.delta.v1` (`cause.kind=EXTRACTION`, ref = `expected_id`) so that P4 can decide on a PROVISIONAL "text awaited" impact for constitution-bench or larger-bench pronouncements.
+10. **Expected judgments (v1.0 D16, D20.4, D21.18).** On `judgment.expected.v1` from P0 with `state=PENDING`:
+    - P3 asks P1's identity service (the sole writer of Work and Case identity, D20.4) to mint an **EXPECTED stub Work**: a `wrk_` with `work_status=EXPECTED`, `court_id`, the listed bench strength, `pronounced_on`, the `case_ref`/`case_id` link, and `evidence_raw_id`. The call is idempotent on `expected_id` (`jex_`). P3 then annotates the stub. It has no expressions, no anchors and no treatment assertions.
+    - It emits a `graph.delta.v1` (`cause.kind=EXTRACTION`, ref = `expected_id`), on the `.rt` lane for benches of ≥ 5 judges (D19.4), so that P4 can decide on a PROVISIONAL "text awaited" impact for constitution-bench or larger-bench pronouncements.
+    - For each authority in `referenced_authorities[]` (D21.18), for example precedents named in a reference order, P3 adds `PENDING_REFERENCE` and `TEXT_AWAITED` to that authority's `AuthorityView` (status at least CAUTION, `definitive=false`), whatever the bench size. It commits this through a `RECOMPUTE` delta (ref = `jex_…`), so P4 may raise its PROVISIONAL impact. Both codes are removed when the judgment text is parsed and L3 has run, or on `CANCELLED` (01_master §14 R-29).
     - Stubs are never `status` subjects and never evidence.
     - On `state=MATCHED`, the matching `doc.parsed.v1` (joined by `case_id`/CNR/`expected_id`) promotes the stub to `ACTIVE`. P1's `identity.merged.v1` handles the case where P1 minted a different `work_id`. Normal extraction then runs.
-    - On `OVERDUE`, P3 emits `acquire.requested.v1` (`reason=COVERAGE_GAP`).
+    - On `OVERDUE`, P3 emits `acquire.requested.v1` (`reason=COVERAGE_GAP`, `sub_reason=EXPECTED_OVERDUE`; there is no `PRONOUNCEMENT_EXPECTED` reason, D20.2).
     - On `CANCELLED`, the stub is closed (`tx_period` ended), and a delta lets P4 retract any PROVISIONAL impact.
 
 ### 5.9 Error detection, quarantine and truth maintenance
@@ -886,7 +945,7 @@ Whether BNS s.103(2) adds new content, making `change_type` SPLIT or WIDENED (ca
 - A5: citing-consensus disagreement (we say GOOD; ≥ 2 later courts attest "overruled").
 - A6: evidence orphaned by a re-parse. Re-anchor via `anchor_alias`, otherwise QUARANTINE.
 - A7 *(added in independent review)*: **mass-orphan breaker**. If more than 1% of a source's evidence rows, or more than 500 rows, orphan within 24 h, the likely cause is a parser regression or a source format change (e.g. paragraph renumbering), not new law. P3 therefore stops applying A6 quarantines for that `source_id × pipeline_version`, keeps the prior assertion versions in force, and emits `reprocess.requested.v1` to P1 with `reason=MASS_ORPHAN`. Re-anchoring resumes only after P1 publishes a corrected `anchor_changes` set.
-- A8 *(added in independent review)*: **dangling-negative counter**. Hard-negative or attestation cues on mentions below `tau_res_hardneg_task` are aggregated by normalised citation string. At 3 or more independent citing works, an `acquire.requested.v1` (`reason=UNRESOLVED_CITATION`, or `LOW_QUALITY_COPY` when a mis-OCR'd copy exists; D16) and a P1 resolution review are raised. `source.recheck.requested.v1` is used only when the official copy of a known document must be re-fetched. This is how a missing or mis-OCR'd overruled judgment is found.
+- A8 *(added in independent review)*: **dangling-negative counter**. Hard-negative or attestation cues on mentions below `tau_res_hardneg_task` are aggregated by normalised citation string. At 3 or more independent citing works, P3 raises an `acquire.requested.v1` (`reason=COVERAGE_GAP`, `sub_reason=ATTESTED_WORK_MISSING`; D20.2) and a P1 resolution review. When a mis-OCR'd copy exists, it raises an O3 `reprocess.requested.v1` to P1 (`reason=QUALITY_ALERT`), and P1 itself requests `LOW_QUALITY_COPY` if a better copy is needed (D20.2). `source.recheck.requested.v1` is used only when the official copy of a known document must be re-fetched. This is how a missing or mis-OCR'd overruled judgment is found.
 
 ```mermaid
 stateDiagram-v2
@@ -929,7 +988,7 @@ Cascades touching more than 10k targets move to the P4 batch lane with a single 
 
 **Priority.** `priority = severity(label) × exposure × urgency × uncertainty`, where:
 - severity comes from the predicate's `negative_severity`, following the Average Severity Error idea [P3-13];
-- exposure = log(1 + citing count) + privacy-gated matter-usage bucket from P9/P4 (bucketed counts only, no tenant IDs);
+- exposure = log(1 + citing count) + the P9 exposure signal (D21.19 [NOVEL — unvalidated]: public citation in-degree/recency, the Privacy-Gate `n_tenants_bucket` carried on `kg.proposal.v1`, and optional S2 aggregates at k ≥ 5 tenants). These are bucketed counts only, with no tenant IDs. P4 holds no tenant data (D3, D19.4), so no exposure term ever comes from P4 (01_master §14 R-13);
 - urgency = court level × recency;
 - uncertainty = 1 − |2·conf − 1|.
 
@@ -972,7 +1031,7 @@ Every call accepts `as_of_legal_date`, `as_known_at?`, `status_mode?` and an opt
 
 | Endpoint | Signature | Consumers | p95 SLO |
 |---|---|---|---|
-| `POST /v1/authority:batch` | `{ids[≤500], forum{court_id, bench_strength?, state?}, as_of_legal_date, as_known_at?, status_mode?} → AuthorityView[]` | P5 (`authority_batch`), P6, P8 (`revalidate`), P10 | 60 ms for 200 ids |
+| `POST /v1/authority:batch` | `{ids[≤500], forum{court_id, bench_strength?, state?}, as_of_legal_date, as_known_at?, status_mode?} → AuthorityView[]` | P5 (`authority_batch`), P6, P8 (`revalidate`), P10 | 60 ms for 200 ids; target ≤ 120 ms for 500 ids (R-18, see note) |
 | `GET /v1/authority/{id}` | same as above for one id, plus the full reason chain with evidence | P6, P8, P10 | 30 ms |
 | `POST /v1/binding` | `{subject_id, forum, as_of_legal_date} → {binding_on_forum, basis{rule_ids (rul_IN_PREC_*), authority_anchor_ids, contested, conflict?}}` | P5, P6 | 10 ms |
 | `GET /v1/works/{id}/citing` | `?predicates=&court_level=&min_conf=&proposition_id=&cursor=` → treatments with evidence anchors (the citator) | P5, P10 | 150 ms |
@@ -987,7 +1046,14 @@ Every call accepts `as_of_legal_date`, `as_known_at?`, `status_mode?` and an opt
 | `POST /v1/ppr` | `{seeds[{id, weight}], predicates[], restart = 0.15, max_nodes}` → ranked nodes (HippoRAG-style [P3-9]) | P5 | 150 ms |
 | `GET /v1/assertions/{id}` (+ `/justifications`, `?as_known_at=`) | audit replay | P8, P10, support | 50 ms |
 | `GET /v1/deltas?after_watermark=` | pull fallback for `graph.delta.v1` | P4, P2, caches | 200 ms |
+| `GET /v1/binding-scopes?after_watermark=` | → `{rows[{court_id, bench_id?, decided_from?, decided_to?, min_bench_strength?, tags[], rule_ids[]}], graph_watermark}`. The tags are the materialised binding universes derived from the court registry (`court`, `bench`) and rules B1–B7, e.g. `ALL_INDIA` (SC), `STATE:IN-MH`, `HC:crt_IN_HC_BOM`, `TRIBUNAL:NCLT-ALL`, and bench-qualified `…:bench>=N`. Every court-registry or B-rule edit commits a `graph.delta.v1` with `cause = {kind: RECOMPUTE, ref: court_registry@ver \| rul_…@ver}` so that consumers re-pull | P2 (materialises `Chunk.binding_scope_tags[]`, D21.2), P5 (forum → tag set) | 100 ms |
+| `GET /v1/reason-codes?version=` | authority reason-code registry (§5.5.3; D21.8) | P5, P8, P9, P10 | 20 ms |
 | `POST /v1/status:commit_batch` *(internal, P4 service identity only)* | `commit_status_batch` (§2.2 O5) → `{graph_watermark, committed, unchanged, rejected[]}` | P4 | 500 ms per 1,000 rows |
+
+**`authority:batch` sizing (01_master §14 R-18, open).** P5 needs about 600 ids at p95 ≤ 120 ms. The endpoint caps a call at 500 ids and commits to 60 ms for 200 ids.
+- The MVP load test runs 200, 300, 500 and 600 ids at 50 QPS against the in-memory projection. The status read is one hash lookup per id, and `binding_on_forum` is memoised per (forum, `doctrine_version`).
+- If 500 ids exceed 120 ms at p95, P5 issues two parallel 300-id calls pinned to the same `min_watermark`.
+- P3 adds a projection-side `AuthorityView` cache keyed by (id, forum, `as_of_legal_date` bucket, `graph_watermark`). It is invalidated by `status_changes[]`.
 
 Write paths are internal only: the extractor → KG Writer, the review console → KG Writer, and P4's `commit_status_batch` → KG Writer (D4). There is no external write API.
 
@@ -1142,7 +1208,7 @@ All items below are **[NOVEL — unvalidated]**. Each needs an offline evaluatio
 3. **Attestation-based discovery of missed treatments** (§5.8-3). Later courts' narrative statements ("since overruled in …") are used as independent evidence and as a detector for gaps in our own corpus.
 4. **Crosswalk-aware precedent carry-over** (§5.7). IPC-era holdings are transferred to BNS/BNSS/BSA provisions only when a clause-level diff shows the interpreted text unchanged. Transfers are confirmed by post-2024 judicial usage.
 5. **Citation-pinned ratio detection** (§5.4). Later courts' pin cites locate the operative ratio paragraphs of a judgment. This complements rhetorical-role classifiers.
-6. **Coverage-aware status** (`COVERAGE_GAP`, §5.5.2). A status is annotated when the feeds of courts that could have treated the authority are stale. It is an honest "we might not know yet". *(v1.0 D6: `COVERAGE_GAP` is a reason code. A material gap turns an otherwise GOOD status into `UNKNOWN` + `COVERAGE_GAP`; negative statuses keep their value and gain the reason code.)*
+6. **Coverage-aware status** (`COVERAGE_GAP`, §5.5.2). A status is annotated when the feeds of courts that could have treated the authority are stale. It is an honest "we might not know yet". *(v1.0 D6 as refined by D20.12: `COVERAGE_GAP` is a reason code. Any gap adds it and sets `definitive=false` without changing status. Only a gap beyond the per-source threshold (72 h HOT; 7 days WARM/COOL binding sources) turns an otherwise GOOD status into `UNKNOWN`. Negative statuses keep their value and gain the reason code.)*
 7. **Doctrine-as-cited-code** (`DoctrineRule` with authority anchors and a `contested` flag). Changes in doctrine propagate like changes in law and are themselves reviewable.
 8. **Status confidence as P(no undetected negative)** (§5.11), rather than a bare flag.
 9. **Method-version circuit breakers and sentinel canaries** (§5.9 A3–A4). Drift in a model or prompt quarantines its outputs automatically.
@@ -1160,7 +1226,7 @@ All items below are **[NOVEL — unvalidated]**. Each needs an offline evaluatio
 | **Malicious or prompt-injected document** (e.g., a judgment quoting a party's injected text) | LLM adjudicator follows embedded instructions or fabricates spans | Tool-less, schema-constrained calls. Outputs are limited to label, character offsets into supplied text, and candidate IDs. Spans are hash-verified (P-1). Doctrine checks cannot be overridden by model output. Circuit breakers catch bulk anomalies. |
 | **Feedback poisoning** (a firm floods `FLAG_BAD_LAW` to hurt a precedent the other side relies on) | Status manipulated | Proposals never write. They create review tasks with P9's `n_tenants_bucket` and role mix. Rate limits per source bucket. An R2 editor decides from public evidence only. |
 | **Confused user** (flags the wrong case; misreads CAUTION as bad law) | Wrong proposals; mistrust | Proposals are reviewed. `AuthorityView` returns reason codes plus evidence anchors, so P10 can say *why* ("pending reference; law remains binding" [P3-53]). `kg.proposal.resolved.v1` closes the loop politely. |
-| **Source site outage or format change** | A court's judgments stop arriving; statuses silently go stale | P0/P1 own detection. P3 annotates affected statuses with `COVERAGE_GAP` (per court, from P4's Freshness API and P0 `source.health.v1` via P4). Under D6, otherwise-GOOD statuses show `UNKNOWN` + `COVERAGE_GAP`. Deltas resume idempotently when backfill arrives, and backfilled treatments carry correct `valid_from` (bitemporal). |
+| **Source site outage or format change** | A court's judgments stop arriving; statuses silently go stale | P0/P1 own detection. P3 annotates affected statuses with `COVERAGE_GAP` (per court, from P4's Freshness API and P0 `source.health.v1` via P4). Under D20.12, affected statuses gain `COVERAGE_GAP` with `definitive=false`. Only past the per-source threshold (72 h HOT; 7 days WARM/COOL) does an otherwise-GOOD status show `UNKNOWN`. Deltas resume idempotently when backfill arrives, and backfilled treatments carry correct `valid_from` (bitemporal). |
 | **Wrong tier-1 edge verified by a reviewer** | False "overruled" alerts across many matters | Two-person rule for SC. Gold-audited reviewers. Retraction cascade (§5.9) with alert *corrections* via P4. Every alert carries `assertion_id` for replay. |
 | **Doctrine genuinely unsettled** (stayed HC judgments' precedent value; all-India tribunals; SC obiter) | A single deterministic answer would be wrong | `contested=true` rules return the answer plus the contrary view and the authorities, and P6 must present both. |
 | **Identity merge error** (two different cases merged by P1) | Treatments attach to the wrong work | `identity.split.v1` re-points assertions (new versions). Statuses recompute. Merges are reversible within P1's window. |
@@ -1261,6 +1327,7 @@ The PUCL post-2015 s.66A orders still could not be located, and the claim remain
 | Cascade | L1 + L3 + HITL (L2 trained once gold ≥ 3k) | full L0–L3 with active learning and circuit breakers |
 | Storage | Postgres only; projection only for `ppr`/`traverse` (MVP = one D2 dedicated cell, D17) | projection replicas; signed snapshots for D3/D4/D4h |
 | HITL | partner-firm editors; SC SLA only | full role ladder and SLAs |
+| Registries (D19.5, D21.2, D21.8) | `binding-scopes` for SC + the partner's HCs; integrity flags `RECALLED`, `SUPPRESSED`, `WITHDRAWN_FROM_SOURCE`; reason-code registry v1 | all courts and tribunals; editor workflow for `AI_GENERATION_ALLEGED` and `CORRIGENDUM_PENDING` |
 
 ---
 
@@ -1275,6 +1342,9 @@ The PUCL post-2015 s.66A orders still could not be located, and the claim remain
 7. **LLM accuracy may improve fast.** Thresholds (the L3 share, auto-accept precision) are configuration, and re-evaluation after each model generation may shift the cascade toward fewer human reviews for tier 2.
 8. **Graph-engine revisit.** Monitor PostgreSQL SQL/PGQ [P3-41] and P5's traversal needs (§5.13 revisit triggers).
 9. **Public perception of "CAUTION".** Too many cautions cause alert fatigue, and too few create false comfort. The reason-code thresholds (e.g., NOT_FOLLOWED count) need A/B tests with P10 and P9.
+10. **Prospective and conditional effects (01_master §14.2 Q1).** It is unmeasured whether L3 can extract `effect`/`effective_from`, `date_basis` and scope predicates (CORE and MADA-type rulings) reliably enough for P4's `temporal_scope`. Until the partner gold set shows ≥ 0.9 precision on these qualifiers, P3 writes them only as `review_state=PENDING_REVIEW`, and `impact-match-core` returns `UNCERTAIN` and asks the lawyer for the governing date.
+11. **`authority:batch` at P5's size (R-18).** This is open until the MVP load test (§5.12 note). The fallback is two parallel 300-id calls.
+12. **Integrity-flag inputs.** `AI_GENERATION_ALLEGED` depends on editor capacity, and `WITHDRAWN_FROM_SOURCE` depends on P0's DELETED discipline (3 absent sweeps). P3's filtered `raw.captured.v1` subscription (I14) must be added to the 01_master §6.2 consumer list.
 
 ---
 

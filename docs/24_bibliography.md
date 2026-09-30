@@ -1,6 +1,11 @@
 # Bibliography
 
-This is the consolidated, deduplicated bibliography for the architecture blueprint. It was built mechanically from the reference fragments of the 14 research documents: the eleven phase documents (P0–P10), the cross-cutting document (XC), the competitive teardown (CT) and the India-specific legal data document (IN). Those fragments hold **721 reference entries**, which collapse to **584 unique sources**. 102 of these sources are cited by two or more documents. No source was added, removed, re-fetched or re-verified in this pass. Every verification tag was recorded by the document that cites the source. Where documents disagree, the strongest tag wins, and the weaker per-document tags are listed in Appendix B so their owners can update them. Section 9 lists every source still tagged `snippet` or `unverified`, as a follow-up verification queue. A consistency check found that all 721 fragment entries match their documents' reference lists in tag and primary URL, and that no inline reference tag in any document is missing from its fragment.
+This is the consolidated, deduplicated bibliography for the architecture blueprint. It was built mechanically from the reference fragments of the 14 research documents: the eleven phase documents (P0–P10), the cross-cutting document (XC), the competitive teardown (CT) and the India-specific legal data document (IN). Two further fragments were merged after the first build: the master architecture (MA, `01_master_architecture.md`) and the build roadmap (RM, `22_build_roadmap.md`). The 16 fragments hold **755 reference entries**, which collapse to **586 unique sources**. 123 of these sources are cited by two or more documents. The MA/RM merge (Appendix A.4) added two new sources, both from RM, and attached all 32 MA tags to sources already listed. No source was removed, re-fetched or re-verified in either pass. Every verification tag was recorded by the document that cites the source. Where documents disagree, the strongest tag wins, and the weaker per-document tags are listed in Appendix B so their owners can update them. Section 9 lists every source still tagged `snippet` or `unverified`, as a follow-up verification queue. A consistency check found that all 721 fragment entries of the first build match their documents' reference lists in tag and primary URL, and that no inline reference tag in any document is missing from its fragment. The same check passes for the 34 MA and RM entries against `01_master_architecture.md` and `22_build_roadmap.md`.
+
+**Documents with no reference list of their own.**
+- `01a_spine_decision_record.md` (decisions D1–D21) has **no external references**. It records the principal architect's rulings and cites only the other blueprint documents.
+- `23_risk_register.md` introduces no new external sources. It re-cites phase-document tags, which resolve here.
+- `00_executive_summary.md` has no reference list. Its three inline links point to sources already listed here: Magesh et al. (§1), the vanga HC dataset `STATS.md` (§2) and VLAIR Legal Research (§7).
 
 ## How to read this bibliography
 
@@ -16,7 +21,7 @@ This is the consolidated, deduplicated bibliography for the architecture bluepri
 
 **Strongest-tag rule.** When a source is cited by several documents, it carries the strongest tag any of them recorded (verified > snippet > unverified). The short qualifier in parentheses, such as "(abstract)" or "(secondary)", comes from the entry that supplied that tag. Longer author notes are omitted here, except in §9.
 
-**Doc refs.** These are the reference tags, across all documents, that point to the source, sorted in the order P0…P10, XC, CT, IN. The prefixes map to files as follows:
+**Doc refs.** These are the reference tags, across all documents, that point to the source, sorted in the order P0…P10, XC, CT, IN, MA, RM. The prefixes map to files as follows:
 
 | Prefix | Document | Fragment entries |
 |---|---|---:|
@@ -34,7 +39,9 @@ This is the consolidated, deduplicated bibliography for the architecture bluepri
 | XC | `13_cross_cutting.md` | 44 |
 | CT | `20_competitive_teardown.md` | 56 |
 | IN | `21_india_specific_legal_data.md` | 79 |
-| **Total** | | **721** |
+| MA | `01_master_architecture.md` (merged after the first build) | 32 |
+| RM | `22_build_roadmap.md` (merged after the first build) | 2 |
+| **Total** | | **755** |
 
 **Deduplication.** Sources were merged when any of the following held:
 
@@ -58,16 +65,16 @@ Secondary URLs inside an entry do **not** cause merges. When one reference line 
 | 4 | [Government, regulatory & compliance](#4-government-regulatory--compliance) | 17 | 6 | 9 | 2 |
 | 5 | [Products, vendors & pricing](#5-products-vendors--pricing) | 86 | 70 | 15 | 1 |
 | 6 | [Engineering (databases, infrastructure, standards/RFCs, OSS)](#6-engineering-databases-infrastructure-standardsrfcs-oss) | 107 | 96 | 7 | 4 |
-| 7 | [News, commentary & surveys](#7-news-commentary--surveys) | 53 | 37 | 16 | 0 |
+| 7 | [News, commentary & surveys](#7-news-commentary--surveys) | 55 | 39 | 16 | 0 |
 | 8 | [Other](#8-other) | 25 | 20 | 5 | 0 |
-| | **Total** | **584** | **489** | **83** | **12** |
+| | **Total** | **586** | **491** | **83** | **12** |
 
 | Tag | Unique sources (strongest tag) | Share | Raw fragment entries |
 |---|---:|---:|---:|
-| `verified` | 489 | 83.7% | 605 |
+| `verified` | 491 | 83.8% | 639 |
 | `snippet` | 83 | 14.2% | 103 |
-| `unverified` | 12 | 2.1% | 13 |
-| **Total** | **584** | 100% | **721** |
+| `unverified` | 12 | 2.0% | 13 |
+| **Total** | **586** | 100% | **755** |
 
 The tag counts differ between raw entries and unique sources for two reasons. Duplicates collapse into one source, and 16 sources were upgraded because another document verified them (Appendix B).
 
@@ -75,13 +82,14 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 
 | Documents | Source | Doc refs |
 |---:|---|---|
-| 12 | Magesh, V., Surani, F., Dahl, M., Suzgun… "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools" | P1-38, P2-50, P3-1, P4-1, P5-6, P6-1, P8-1, P9-21, P10-20, XC-35, CT-38, IN-70 |
-| 6 | Joshi, A., Paul, S., Sharma, A., Goyal, … "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning" | P1-22, P2-7, P3-30, P5-10, P8-46, XC-18 |
+| 13 | Magesh, V., Surani, F., Dahl, M., Suzgun… "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools" | P1-38, P2-50, P3-1, P4-1, P5-6, P6-1, P8-1, P9-21, P10-20, XC-35, CT-38, IN-70, MA-29 |
+| 7 | Joshi, A., Paul, S., Sharma, A., Goyal, … "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning" | P1-22, P2-7, P3-30, P5-10, P8-46, XC-18, MA-19 |
+| 5 | Supreme Court of India. Eastern Book Company & Ors v. D.B. Modak & Anr, (2008) 1 SCC 1;… | P0-18, P2-28, CT-49, IN-3, MA-20 |
+| 4 | Debenedetti, E. et al. "Defeating Prompt Injections by Design" (CaMeL) | P6-17, P7-21, XC-34, MA-24 |
 | 4 | Government of India. Bharatiya Sakshya A… "Professional communications" | P7-8, P8-69, XC-43, IN-61 |
 | 4 | Central Board of Dawoodi Bohra Community v. State of Maharashtra, (2005) 2 SCC 673 (SC, 5… | P3-51, P4-45, P5-36, IN-12 |
 | 4 | Digital Personal Data Protection Act 2023, s.3(c)(ii) (mirror text; PRS copy of Act). | P0-23, P8-67, XC-42, IN-58 |
 | 4 | Digital Personal Data Protection Act, 2023, s.17 (s.17(1)(a) legal-claims exemption;… | P7-3, P8-68, P9-22, IN-57 |
-| 4 | Supreme Court of India. Eastern Book Company & Ors v. D.B. Modak & Anr, (2008) 1 SCC 1;… | P0-18, P2-28, CT-49, IN-3 |
 | 4 | Supreme Court Observer "In re: Summoning Advocates who give Legal Opinion or Represent Parties during Investigation of Cases and Related Issues" | P7-9, P8-70, P9-25, IN-62 |
 | 4 | Department of Official Language, GoI "The Official Languages Act, 1963" | P1-46, P5-41, P10-36, IN-11 |
 | 4 | Vals AI "Vals Legal AI Report (VLAIR): Legal Research" | P6-3, P8-10, P10-21, CT-39 |
@@ -104,7 +112,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 12. Bruch, S., Gai, S., Ingber, A. "An Analysis of Fusion Functions for Hybrid Retrieval." ACM TOIS 42(1), 2023. https://arxiv.org/abs/2210.11934 (DOI 10.1145/3596512) — `verified` (abstract) · Doc refs: P5-2
 13. Budiu, M., McSherry, F., Ryzhyk, L., Tannen, V. "DBSP: Automatic Incremental View Maintenance for Rich Query Languages." arXiv 2203.16684, 2022 (VLDB 2023 publication unverified). https://arxiv.org/abs/2203.16684 — `verified` (abstract) · Doc refs: P4-22
 14. Burges, C.J.C. "From RankNet to LambdaRank to LambdaMART: An Overview." Microsoft Research Technical Report MSR-TR-2010-82, 2010. — `unverified` (foundational; not fetched) · Doc refs: P5-38
-15. Butler, A.-R., Butler, U. "Legal RAG Bench: an end-to-end benchmark for legal RAG." arXiv:2603.01710, 2026. https://arxiv.org/abs/2603.01710 — `verified` · Doc refs: P2-4, P8-7
+15. Butler, A.-R., Butler, U. "Legal RAG Bench: an end-to-end benchmark for legal RAG." arXiv:2603.01710, 2026. https://arxiv.org/abs/2603.01710 — `verified` · Doc refs: P2-4, P8-7, MA-26
 16. Butler, U., Butler, A.-R., Malec, A.L. "The Massive Legal Embedding Benchmark (MLEB)." arXiv:2510.19365, 2025. https://arxiv.org/html/2510.19365v1 — `verified` · Doc refs: P2-3
 17. Cedar team, Amazon Web Services. "How We Built Cedar: A Verification-Guided Approach." FSE 2024 (Industry) / arXiv:2407.01688. https://arxiv.org/abs/2407.01688 — `verified` · Doc refs: P7-31
 18. Cemri, M. et al. "Why Do Multi-Agent LLM Systems Fail?" arXiv 2503.13657 (v3, 26 Oct 2025). https://arxiv.org/abs/2503.13657 — `verified` · Doc refs: P6-5
@@ -129,8 +137,8 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 37. Dawid, A.P., Skene, A.M. "Maximum Likelihood Estimation of Observer Error-Rates Using the EM Algorithm." Applied Statistics, 1979. — `unverified` · Doc refs: P9-40
 38. de Martim, H. "An Ontology-Driven Graph RAG for Legal Norms: A Structural, Temporal, and Deterministic Approach" (orig. "Graph RAG for Legal Norms: A Hierarchical, Temporal and Deterministic Approach"). arXiv 2505.00039, 2025. https://arxiv.org/abs/2505.00039 — `verified` (abstract) · Doc refs: P3-4, P4-5, P5-20
 39. de Martim, H. "Beyond Probabilistic Similarity: Structural, Temporal, and Causal Limitations of Retrieval-Augmented Generation in the Legal Domain." arXiv 2606.09724, 2026. https://arxiv.org/abs/2606.09724 — `verified` (abstract) · Doc refs: P4-4
-40. Debenedetti, E. et al. "Defeating Prompt Injections by Design" (CaMeL). 2025. https://arxiv.org/abs/2503.18813 — `verified` · Doc refs: P6-17, P7-21, XC-34
-41. Demir, M.M., Canbaz, M.A. "Validate Your Authority: Benchmarking LLMs on Multi-Label Precedent Treatment Classification." NLLP 2025; arXiv:2605.17691. https://arxiv.org/abs/2605.17691 — `verified` (abstract) · Doc refs: P3-13, P8-63
+40. Debenedetti, E. et al. "Defeating Prompt Injections by Design" (CaMeL). 2025. https://arxiv.org/abs/2503.18813 — `verified` · Doc refs: P6-17, P7-21, XC-34, MA-24
+41. Demir, M.M., Canbaz, M.A. "Validate Your Authority: Benchmarking LLMs on Multi-Label Precedent Treatment Classification." NLLP 2025; arXiv:2605.17691. https://arxiv.org/abs/2605.17691 — `verified` (abstract) · Doc refs: P3-13, P8-63, MA-18
 42. Deode, S., Gadre, J., Kajale, A., Joshi, A., Joshi, R. "L3Cube-IndicSBERT." arXiv:2304.11434, 2023. https://arxiv.org/abs/2304.11434 — `verified` · Doc refs: P2-49
 43. Dong, Y. et al. "XGrammar: Flexible and Efficient Structured Generation Engine for Large Language Models." 2024. https://arxiv.org/abs/2411.15100 — `verified` · Doc refs: P6-20
 44. "dots.ocr: Multilingual Document Layout Parsing in a Single Vision-Language Model." arXiv:2512.02498, 2025. https://arxiv.org/abs/2512.02498 — `snippet` · Doc refs: P1-6
@@ -151,7 +159,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 59. Gardella, M., Mariño, C., Belzarena, D., Ramírez, I., Randall, G., Morel, J.-M. "When Low CER is Not Enough: An Analysis of Hallucinations in Vision-Language OCR Systems on Historical Uruguayan Documents." arXiv:2607.24077, 2026. https://arxiv.org/abs/2607.24077 — `verified` · Doc refs: P1-14
 60. Ghanem, H., Cruz, C. "Enhancing Knowledge Graph Construction: Evaluating with Emphasis on Hallucination, Omission, and Graph Similarity Metrics." arXiv 2502.05239, 2025. https://arxiv.org/abs/2502.05239 — `verified` (abstract) · Doc refs: P3-11
 61. Greshake, K. et al. "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection." arXiv:2302.12173, 2023. https://arxiv.org/abs/2302.12173 — `verified` · Doc refs: XC-32
-62. Gu, C., Li, X.L., Kuditipudi, R., Liang, P., Hashimoto, T. "Auditing Prompt Caching in Language Model APIs." arXiv:2502.07776, 2025. https://arxiv.org/abs/2502.07776 — `verified` · Doc refs: P7-23
+62. Gu, C., Li, X.L., Kuditipudi, R., Liang, P., Hashimoto, T. "Auditing Prompt Caching in Language Model APIs." arXiv:2502.07776, 2025. https://arxiv.org/abs/2502.07776 — `verified` · Doc refs: P7-23, MA-22
 63. Guha, N. et al. "LegalBench: A Collaboratively Built Benchmark for Measuring Legal Reasoning in Large Language Models." arXiv 2308.11462, 2023. https://arxiv.org/abs/2308.11462 — `verified` · Doc refs: P3-16, P8-47
 64. Guo, C., Pleiss, G., Sun, Y., Weinberger, K.Q. "On Calibration of Modern Neural Networks." ICML 2017; arXiv:1706.04599. https://arxiv.org/abs/1706.04599 — `verified` · Doc refs: P8-34
 65. Guo, Z., Xia, L., Yu, Y., Ao, T., Huang, C. "LightRAG: Simple and Fast Retrieval-Augmented Generation." arXiv 2410.05779, 2024/2025. https://arxiv.org/abs/2410.05779 — `verified` · Doc refs: P3-8
@@ -159,7 +167,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 67. Günther, M., Mohr, I., Williams, D.J., Wang, B., Xiao, H. "Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models." arXiv:2409.04701, 2024. https://arxiv.org/abs/2409.04701 — `verified` · Doc refs: P2-2
 68. Han, J. et al. "RAG Meets Temporal Graphs: Time-Sensitive Modeling and Retrieval for Evolving Knowledge." arXiv 2510.13590, 2025. https://arxiv.org/abs/2510.13590 — `snippet` · Doc refs: P4-46
 69. Hellyer, P. "Evaluating Shepard's, KeyCite, and BCite for Case Validation Accuracy." Law Library Journal 110(4), 2018. https://scholarship.law.wm.edu/libpubs/131/ — `verified` · Doc refs: P3-14, P4-9
-70. Hines, K. et al. "Defending Against Indirect Prompt Injection Attacks With Spotlighting." 2024. https://arxiv.org/abs/2403.14720 — `verified` · Doc refs: P6-18, P7-20
+70. Hines, K. et al. "Defending Against Indirect Prompt Injection Attacks With Spotlighting." 2024. https://arxiv.org/abs/2403.14720 — `verified` · Doc refs: P6-18, P7-20, MA-23
 71. Hou, A.B., et al. "CLERC: A Dataset for Legal Case Retrieval and Retrieval-Augmented Analysis Generation." Findings of NAACL 2025. https://arxiv.org/abs/2406.17186 — `verified` · Doc refs: P5-16, P8-58
 72. Jayatilleke, N., de Silva, N. "Zero-shot OCR Accuracy of Low-Resourced Languages: A Comparative Analysis on Sinhala and Tamil." RANLP 2025 (Document AI best on Tamil, CER 0.78%; Surya best on Sinhala). https://aclanthology.org/2025.ranlp-1.56 — `verified` · Doc refs: P1-16
 73. Jiang, R., Chiappa, S., Lattimore, T., György, A., Kohli, P. "Degenerate Feedback Loops in Recommender Systems." AIES, 2019. https://arxiv.org/abs/1902.10730 — `verified` (abstract); specific remedies snippet · Doc refs: P9-4
@@ -186,7 +194,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 94. Liu, Y., Zhang, M.J.Q., Choi, E. "User Feedback in Human-LLM Dialogues: A Lens to Understand Users But Noisy as a Learning Signal." EMNLP, 2025. https://arxiv.org/abs/2507.23158 — `verified` · Doc refs: P9-8
 95. LLM-AggreFact Leaderboard (11 grounded-factuality datasets; balanced accuracy). Accessed 30 Sep 2026. https://llm-aggrefact.github.io/ — `verified` · Doc refs: P8-14
 96. Louis, A., van Dijck, G., Spanakis, G. "Know When to Fuse: Investigating Non-English Hybrid Retrieval in the Legal Domain." arXiv 2409.01357, 2024. https://arxiv.org/abs/2409.01357 — `verified` · Doc refs: P5-4
-97. Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." Journal of Empirical Legal Studies, 2025 (arXiv 2405.20362). https://arxiv.org/abs/2405.20362 — `verified` (P3 session [P3-1]) · Doc refs: P1-38, P2-50, P3-1, P4-1, P5-6, P6-1, P8-1, P9-21, P10-20, XC-35, CT-38, IN-70 · Also at: https://law.stanford.edu/publications/hallucination-free-assessing-the-reliability-of-leading-ai-legal-research-tools
+97. Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." Journal of Empirical Legal Studies, 2025 (arXiv 2405.20362). https://arxiv.org/abs/2405.20362 — `verified` (P3 session [P3-1]) · Doc refs: P1-38, P2-50, P3-1, P4-1, P5-6, P6-1, P8-1, P9-21, P10-20, XC-35, CT-38, IN-70, MA-29 · Also at: https://law.stanford.edu/publications/hallucination-free-assessing-the-reliability-of-leading-ai-legal-research-tools
 98. Mahari, R., et al. "LePaRD: A Large-Scale Dataset of Judicial Citations to Precedent." ACL 2024. https://aclanthology.org/2024.acl-long.532/ — `verified` (abstract) · Doc refs: P5-17
 99. Manku, G.S., Jain, A., Das Sarma, A. "Detecting Near-Duplicates for Web Crawling." WWW 2007, pp. 141–150. https://research.google/pubs/detecting-near-duplicates-for-web-crawling/ — `verified` · Doc refs: P0-30
 100. Medvedeva, M., McBride, P. "Legal Judgment Prediction: If You Are Going to Do It, Do It Right." NLLP Workshop, 2023. https://aclanthology.org/2023.nllp-1.9 — `verified` · Doc refs: P9-36
@@ -195,13 +203,13 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 103. Min, S. et al. "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation." EMNLP 2023; arXiv:2305.14251. https://arxiv.org/abs/2305.14251 — `verified` · Doc refs: P8-15
 104. Mohri, C., Hashimoto, T. "Language Models with Conformal Factuality Guarantees." ICML 2024; arXiv:2402.10978. https://arxiv.org/abs/2402.10978 — `verified` · Doc refs: P8-26
 105. Mokhov, A., Mitchell, N., Peyton Jones, S. "Build Systems à la Carte." Proc. ACM Program. Lang. (ICFP), 2018. https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf — `snippet` · Doc refs: P4-25
-106. Morris, J.X., Kuleshov, V., Shmatikov, V., Rush, A.M. "Text Embeddings Reveal (Almost) As Much As Text." EMNLP 2023. https://arxiv.org/abs/2310.06816 — `verified` · Doc refs: P2-54, P7-24
+106. Morris, J.X., Kuleshov, V., Shmatikov, V., Rush, A.M. "Text Embeddings Reveal (Almost) As Much As Text." EMNLP 2023. https://arxiv.org/abs/2310.06816 — `verified` · Doc refs: P2-54, P7-24, MA-25
 107. Ngo, T.-H. et al. "NOWJ@COLIEE 2026: Adaptive Pipelines for Legal Retrieval and Reasoning" (all five COLIEE 2026 tasks). arXiv:2607.16603, 2026; Nguyen, H.-T. et al. "NOWJ@COLIEE 2025…Legal Retrieval and Entailment." arXiv:2509.08025. https://arxiv.org/abs/2607.16603 — `verified` (abstract) · Doc refs: P5-15, P8-57 · Also at: https://www.catalyzex.com/paper/nowj-coliee-2025-a-multi-stage-framework
 108. Nguyen, T.-M. et al. "L-MAD: A Systematic Evaluation of Multi-Agent Debate Structures in Legal Reasoning." AI4Law@ICML 2026. https://arxiv.org/abs/2607.09099 — `verified` (abstract) · Doc refs: P6-12
 109. Niu, C. et al. "RAGTruth: A Hallucination Corpus for Developing Trustworthy Retrieval-Augmented Language Models." ACL 2024; arXiv:2401.00396. https://arxiv.org/abs/2401.00396 — `verified` · Doc refs: P8-22
 110. Nyffenegger, A., Stürmer, M., Niklaus, J. "Anonymity at Risk? Assessing Re-Identification Capabilities of Large Language Models in Court Decisions." Findings of NAACL, 2024. https://arxiv.org/abs/2308.11103 — `verified` · Doc refs: P9-29
 111. Ong, I. et al. "RouteLLM: Learning to Route LLMs with Preference Data." arXiv:2406.18665, 2024. https://arxiv.org/abs/2406.18665 — `verified` · Doc refs: XC-29
-112. Ongris, J.G., Darari, F., Tobing, B.C.L., Faisal, D.R., Lee, O. "Benchmarking KG-based RAG Systems: A Case Study of Legal Documents." CEUR-WS Vol-4079, 2025 (HippoRAG 2, Nano GraphRAG, LightRAG, LlamaIndex; EU Directives + Indonesian Government Regulations). https://ceur-ws.org/Vol-4079/paper6.pdf (abstract: https://dara.ui.ac.id/research-output/7409d879-ce06-4519-a24b-8da1fdd90d42) — `verified` · Doc refs: P3-5
+112. Ongris, J.G., Darari, F., Tobing, B.C.L., Faisal, D.R., Lee, O. "Benchmarking KG-based RAG Systems: A Case Study of Legal Documents." CEUR-WS Vol-4079, 2025 (HippoRAG 2, Nano GraphRAG, LightRAG, LlamaIndex; EU Directives + Indonesian Government Regulations). https://ceur-ws.org/Vol-4079/paper6.pdf (abstract: https://dara.ui.ac.id/research-output/7409d879-ce06-4519-a24b-8da1fdd90d42) — `verified` · Doc refs: P3-5, MA-27
 113. OpenDataLab. "MinerU2.5: A Decoupled Vision-Language Model for Efficient High-Resolution Document Parsing." arXiv:2509.22186, 2025. https://arxiv.org/abs/2509.22186 — `snippet` · Doc refs: P1-5
 114. Ouyang, L. et al. "OmniDocBench: Benchmarking Diverse PDF Document Parsing with Comprehensive Annotations." CVPR 2025. https://arxiv.org/abs/2412.07626 — `snippet` · Doc refs: P1-3
 115. Ovcharov, V. "Citation Grounding Measures the Oracle: Graph Coverage Determines Reported LLM Hallucination Rates in Law." arXiv:2606.00898, 2026. https://arxiv.org/abs/2606.00898 — `verified` (abstract; Ukrainian legal queries) · Doc refs: P8-6
@@ -212,7 +220,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 120. Pipitone, N., Houir Alami, G. "LegalBench-RAG: A Benchmark for Retrieval-Augmented Generation in the Legal Domain." arXiv:2408.10343, 2024. https://arxiv.org/abs/2408.10343 — `verified` · Doc refs: P2-20, P5-8, P8-48
 121. Poznanski, J. et al. "olmOCR: Unlocking Trillions of Tokens in PDFs with Vision Language Models." arXiv:2502.18443, 2025. https://arxiv.org/abs/2502.18443 — `verified` · Doc refs: P1-2, XC-25
 122. Pradeep, R., Sharifymoghaddam, S., Lin, J. "RankZephyr: Effective and Robust Zero-Shot Listwise Reranking is a Breeze!" arXiv 2312.02724, 2023. https://arxiv.org/abs/2312.02724 — `snippet` · Doc refs: P5-32
-123. Prior, M., Hof, A., Wais, N., Grabmair, M. "Risks and Limits of Automatic Consolidation of Statutes." NLLP 2025 (German federal law; 908 amendment-law pairs; 93–99% similarity; 50.3% / 20.51% exact match). https://aclanthology.org/2025.nllp-1.29 — `verified` · Doc refs: P1-33, IN-74
+123. Prior, M., Hof, A., Wais, N., Grabmair, M. "Risks and Limits of Automatic Consolidation of Statutes." NLLP 2025 (German federal law; 908 amendment-law pairs; 93–99% similarity; 50.3% / 20.51% exact match). https://aclanthology.org/2025.nllp-1.29 — `verified` · Doc refs: P1-33, IN-74, MA-10
 124. Prior, M., Schultz, A., Grabmair, M. "Asking For An Old Friend: Diagnosing and Mitigating Temporal Failure Modes in LLM-based Statutory Question Answering." ICAIL 2026; arXiv 2605.23497. https://arxiv.org/abs/2605.23497 — `verified` (abstract) · Doc refs: P4-3
 125. Qu, R., Tu, R., Bao, F. "Is Semantic Chunking Worth the Computational Cost?" arXiv:2410.13070, 2024. https://arxiv.org/abs/2410.13070 — `verified` · Doc refs: P2-19
 126. Qwen Team. "Qwen3 Embedding: Advancing Text Embedding and Reranking Through Foundation Models." arXiv 2506.05176, 2025; model cards. https://arxiv.org/abs/2506.05176 ; https://huggingface.co/Qwen/Qwen3-Reranker-4B — `verified` · Doc refs: P2-11, P5-27
@@ -233,7 +241,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 141. Singh, D., Narayanan, S. "Unmasking the Reality of PII Masking Models: Performance Gaps and the Call for Accountability." arXiv, 2025. https://arxiv.org/abs/2504.12308 — `verified` · Doc refs: P9-28
 142. Smit, A.P., Grinsztajn, N., Duckworth, P., Barrett, T.D., Pretorius, A. "Should we be going MAD? A Look at Multi-Agent Debate Strategies for LLMs." ICML 2024 (PMLR 235). https://proceedings.mlr.press/v235/smit24a.html — `verified` · Doc refs: P6-10
 143. Song, Y., Kim, Y., Iyyer, M. "VeriScore: Evaluating the factuality of verifiable claims in long-form text generation." arXiv:2406.19276, 2024. https://arxiv.org/abs/2406.19276 — `verified` · Doc refs: P8-18
-144. Souly, A., Rando, J., Chapman, E. et al. "Poisoning Attacks on LLMs Require a Near-constant Number of Poison Samples." arXiv, 2025 (with Anthropic, UK AISI, Alan Turing Institute). https://arxiv.org/abs/2510.07192 ; https://www.anthropic.com/research/small-samples-poison — `verified` · Doc refs: P9-14
+144. Souly, A., Rando, J., Chapman, E. et al. "Poisoning Attacks on LLMs Require a Near-constant Number of Poison Samples." arXiv, 2025 (with Anthropic, UK AISI, Alan Turing Institute). https://arxiv.org/abs/2510.07192 ; https://www.anthropic.com/research/small-samples-poison — `verified` · Doc refs: P9-14, MA-32
 145. "δ-Stance: A Large-Scale Real World Dataset of Stances in Legal Argumentation." ACL 2025. https://aclanthology.org/2025.acl-long.1517 — `verified` (abstract) · Doc refs: P5-18
 146. Stanford RegLab & Casetext. "The Overruling Dataset: A Benchmark for Detecting Legal Decisions that Have Been Overruled." https://reglab.stanford.edu/data/the-overruling-dataset-a-benchmark-for-detecting-legal-decisions-that-have-been-overruled/ — `verified` · Doc refs: P3-15
 147. Sun, W. et al. "Is ChatGPT Good at Search? Investigating Large Language Models as Re-Ranking Agents." EMNLP, 2023. https://arxiv.org/abs/2304.09542 — `verified` · Doc refs: P9-10
@@ -243,7 +251,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 151. Taranukhin, M., Shwartz, V. "Legal LLM Hallucination Should Be Evaluated as Failure of Legal Warrant." arXiv:2609.17546, 2026. https://arxiv.org/abs/2609.17546 — `verified` (abstract) · Doc refs: P8-5
 152. Terdalkar, H., Bhojani, K., Dongare, A., Behera, O.A. "BHRAM-IL: A Benchmark for Hallucination Recognition and Assessment in Multiple Indian Languages." arXiv:2512.01852, 2025. https://arxiv.org/abs/2512.01852 — `verified` · Doc refs: P8-59
 153. UQLegalAI. "UQLegalAI@COLIEE2025: Advancing Legal Case Retrieval with Large Language Models and Graph Neural Networks." arXiv 2505.20743, 2025. https://arxiv.org/abs/2505.20743 — `snippet` · Doc refs: P5-14
-154. Verma, A. "Is this Citation on Point?" arXiv:2608.12571, 2026. https://arxiv.org/abs/2608.12571 — `verified` (abstract) · Doc refs: P8-4
+154. Verma, A. "Is this Citation on Point?" arXiv:2608.12571, 2026. https://arxiv.org/abs/2608.12571 — `verified` (abstract) · Doc refs: P8-4, MA-30
 155. Villavicencio, M., Pan, S., Wang, Q. "Not All Uncertainty Is Equal: How Uncertainty Granularity Shapes Human Verification in LLM-Assisted Decision Making." arXiv:2605.28571, 2026. https://arxiv.org/abs/2605.28571 — `verified` (abstract) · Doc refs: P8-45
 156. Wang, C. et al. "LeKUBE: A Legal Knowledge Update BEnchmark." arXiv:2407.14192, 2024; Li, C. et al. "LexKairos: Benchmarking Legal Temporal Capabilities in LLMs." arXiv:2608.09106, 2026. https://arxiv.org/abs/2407.14192 ; https://arxiv.org/abs/2608.09106 — `verified` (abstracts) · Doc refs: P8-64
 157. Wang, F., Li, B. "Leaner Training, Lower Leakage: Revisiting Memorization in LLM Fine-Tuning with LoRA." arXiv, 2025. https://arxiv.org/abs/2506.20856 — `verified` · Doc refs: P9-34
@@ -277,7 +285,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 11. Deroy, A., Ghosh, K., Ghosh, S. "How Ready are Pre-trained Abstractive Models and LLMs for Legal Case Judgement Summarization?" arXiv:2306.01248, 2023. https://arxiv.org/abs/2306.01248 — `verified` · Doc refs: P2-25
 12. Harde, P., Jain, B., Jain, S. "LeCNet: A Legal Citation Network Benchmark Dataset." Proc. 1st Workshop on NLP for Empowering Justice (JUST-NLP 2025). https://aclanthology.org/2025.justnlp-main.4/ — `verified` · Doc refs: P3-29
 13. India Science & Technology portal. "Predictive Coding for Identification of Ratio Decidendi in Indian Judicial Decisions" (NIT Tiruchirappalli, 2024–2027). https://indiascienceandtechnology.gov.in/research/predictive-coding-identification-ratio-decidendi-indian-judicial-decisions — `snippet` · Doc refs: P1-44
-14. Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024. https://arxiv.org/abs/2407.05399 — `verified` · Doc refs: P1-22, P2-7, P3-30, P5-10, P8-46, XC-18 · Also at: https://exploration-lab.github.io/IL-TUR/
+14. Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024. https://arxiv.org/abs/2407.05399 — `verified` · Doc refs: P1-22, P2-7, P3-30, P5-10, P8-46, XC-18, MA-19 · Also at: https://exploration-lab.github.io/IL-TUR/
 15. Joshi, A., Sharma, A., Tanikella, S.K., Modi, A. "U-CREAT: Unsupervised Case Retrieval using Events extrAcTion." ACL 2023. https://arxiv.org/html/2307.05260v1 — `verified` · Doc refs: P2-9, P5-9 · Also at: https://aclanthology.org/2023.acl-long.777
 16. Kalamkar, P., Agarwal, A., Tiwari, A., Gupta, S., Karn, S., Raghavan, V. "Named Entity Recognition in Indian court judgments." NLLP Workshop, 2022. https://aclanthology.org/2022.nllp-1.15 — `verified` (46,545 entities, 14 types; type list unverified) · Doc refs: P1-23, P9-26 · Also at: https://arxiv.org/abs/2211.03442
 17. Kalamkar, P., Tiwari, A., Agarwal, A., Karn, S., Gupta, S., Raghavan, V., Modi, A. "Corpus for Automatic Structuring of Legal Documents." LREC 2022. https://arxiv.org/abs/2201.13125 — `verified` · Doc refs: P1-17
@@ -292,7 +300,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 26. Nigam, S.K., Dubey, T., Sharma, G., Shallum, N., Ghosh, K., Bhattacharya, A. "LegalSeg: Unlocking the Structure of Indian Legal Judgments Through Rhetorical Role Classification." Findings of NAACL 2025. https://arxiv.org/abs/2502.05836 — `verified` · Doc refs: P1-19
 27. Nigam, S.K., Mishra, S.K., Shallum, N., Ghosh, K., Bhattacharya, A. "AILQA: Evaluating AI-Driven Legal Question Answering Systems for the Indian Legal System." arXiv:2607.18825, 2026. https://arxiv.org/abs/2607.18825 — `verified` (abstract + HTML body: ~7,221 docs, ChromaDB, Ada/Instructor-XL/mxbai) · Doc refs: P2-52, P8-55
 28. OpenNyAI. "Opennyai" library (NER, rhetorical roles, extractive summariser; MIT). https://github.com/OpenNyAI/Opennyai — `verified` · Doc refs: P1-25
-29. Paul, S., Ghumare, D., Goyal, P., Ghosh, S., Modi, A. "IL-PCSR: Legal Corpus for Prior Case and Statute Retrieval." EMNLP 2025. https://arxiv.org/html/2511.00268v1 — `verified` · Doc refs: P2-8
+29. Paul, S., Ghumare, D., Goyal, P., Ghosh, S., Modi, A. "IL-PCSR: Legal Corpus for Prior Case and Statute Retrieval." EMNLP 2025. https://arxiv.org/html/2511.00268v1 — `verified` · Doc refs: P2-8, MA-28
 30. Paul, S., Mandal, A., Goyal, P., Ghosh, S. "Pre-trained Language Models for the Legal Domain: A Case Study on Indian Law." ICAIL 2023. https://arxiv.org/abs/2209.06049 — `verified` · Doc refs: P1-24, P2-5
 31. Shukla, A., Bhattacharya, P., Poddar, S., Mukherjee, R., Ghosh, K., Goyal, P., Ghosh, S. "Legal Case Document Summarization: Extractive and Abstractive Methods and their Evaluation." AACL-IJCNLP 2022. https://arxiv.org/abs/2210.07544 — `verified` · Doc refs: P2-24
 32. vanga (Dattam Labs). "indian-high-court-judgments" GitHub repo and STATS.md (17,771,420 PDFs; 1,276.94 GiB; per-year counts). https://github.com/vanga/indian-high-court-judgments/blob/main/STATS.md — `verified` · Doc refs: XC-16
@@ -346,7 +354,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 43. Digital Personal Data Protection Rules, 2025, G.S.R. 843(E), 14 Nov 2025; enforcement timeline (immediate / +12 months / +18 months for ss.3–5, 7–17 of the Act). https://dpdpa.com/dpdpa_enforcement_timeline.html ; rules PDF https://dpdpa.com/DPDP_Rules_2025_English_only.pdf — `verified` (timeline page; secondary host, gazette PDF not read) · Doc refs: P8-74
 44. e-Gazette of India PDF paths (e.g. https://egazette.gov.in/WriteReadData/1969/O-1469-1969-0001-66051.pdf) and Internet Archive mirror (https://archive.org/download/in.gazette.1972.112/) — `snippet` · Doc refs: P0-35
 45. *East India Commercial Co. Ltd. v. Collector of Customs, Calcutta*, AIR 1962 SC 1893; 1963 (3) SCR 338 (decided 4 May 1962; Sarkar, Subba Rao, Mudholkar JJ.). https://indiankanoon.org/doc/1839963/ — `verified` · Doc refs: P5-35, IN-21
-46. Supreme Court of India. Eastern Book Company & Ors v. D.B. Modak & Anr, (2008) 1 SCC 1; AIR 2008 SC 809 (12 Dec 2007), paras 40–42. https://indiankanoon.org/doc/1062099/ — `verified` (re-checked in review) · Doc refs: P0-18, P2-28, CT-49, IN-3
+46. Supreme Court of India. Eastern Book Company & Ors v. D.B. Modak & Anr, (2008) 1 SCC 1; AIR 2008 SC 809 (12 Dec 2007), paras 40–42. https://indiankanoon.org/doc/1062099/ — `verified` (re-checked in review) · Doc refs: P0-18, P2-28, CT-49, IN-3, MA-20
 47. eCommittee SC / NIC. "Judgment Search Portal." https://judgments.ecourts.gov.in/pdfsearch/ — `verified` (probe 2026-09-30: Securimage CAPTCHA) · Doc refs: P0-5
 48. eCourts Services portal (CNR search, case status, orders, cause list; CAPTCHA). https://services.ecourts.gov.in/ecourtindia_v6/ — `verified` · Doc refs: P7-15, P10-30
 49. Supreme Court of India. "Equivalent Citation Table — how to find" (SCR ↔ SCC, AIR(SC), JT, SCALE). https://main.sci.gov.in/pdf/ECT/how2find.pdf — `snippet` (fetch failed: DNS) · Doc refs: P1-31
@@ -379,7 +387,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 76. Supreme Court of India. *Nipun Saxena v. Union of India*, decided 11 Dec 2018 (directions against publishing the name or identifying facts of rape victims in print, electronic or social media). https://indiankanoon.org/doc/53672964/ — `verified` · Doc refs: P2-56
 77. High Court of Manipur. "Notice: eSCR and DigiSCR merged into SCR portal." https://hcmimphal.nic.in/Documents/eSCR%20and%20DigiSCR_0001.pdf — `snippet` · Doc refs: P0-7
 78. Jharkhand High Court. Order of 19 Feb 2025 discussing IPC s.420 and BNS s.318(4). https://indiankanoon.org/doc/105667861/ — `snippet` · Doc refs: IN-40
-79. Supreme Court of India. Parvinder Singh v. Directorate of Enforcement, 2026 INSC 519 (19 May 2026), paras 26–34. https://indiankanoon.org/doc/46844204/ — `verified` · Doc refs: IN-34
+79. Supreme Court of India. Parvinder Singh v. Directorate of Enforcement, 2026 INSC 519 (19 May 2026), paras 26–34. https://indiankanoon.org/doc/46844204/ — `verified` · Doc refs: IN-34, MA-21
 80. Patil Automation Pvt Ltd v Rakheja Engineers Pvt Ltd (SC, 17 Aug 2022). https://indiacorplaw.in/2022/09/05/supreme-court-on-mandatory-pre-litigation-mediation-in-commercial-court-cases/ — `verified` · Doc refs: P6-33
 81. Supreme Court of India. Rajendra Bihari Lal v. State of U.P., 2025 INSC 1249 (17 Oct 2025). https://indiankanoon.org/doc/12774401/ — `verified` · Doc refs: IN-36
 82. Supreme Court of India. Rupa Ashok Hurra v. Ashok Hurra, (2002) 4 SCC 388 (10 Apr 2002). https://indiankanoon.org/doc/854624/ — `verified` · Doc refs: IN-18
@@ -425,11 +433,11 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 
 1. Adalat AI. Homepage. https://adalat.ai — `verified` · Doc refs: CT-24
 2. Amazon Web Services. "Amazon Textract: Best Practices" (supported languages). https://docs.aws.amazon.com/textract/latest/dg/textract-best-practices.html — `verified` · Doc refs: P1-12
-3. Anthropic. "Data residency." Claude Platform Docs, retrieved 2026-09-30. https://platform.claude.com/docs/en/manage-claude/data-residency — `verified` · Doc refs: XC-2
+3. Anthropic. "Data residency." Claude Platform Docs, retrieved 2026-09-30. https://platform.claude.com/docs/en/manage-claude/data-residency — `verified` · Doc refs: XC-2, MA-13
 4. Anthropic. "Pricing." Claude Platform Docs, retrieved 2026-09-30. https://platform.claude.com/docs/en/about-claude/pricing — `verified` · Doc refs: XC-1
-5. AWS. "Access Anthropic Claude models in India on Amazon Bedrock with Global cross-Region inference." AWS ML Blog, 2026-03-09. https://aws.amazon.com/blogs/machine-learning/access-anthropic-claude-models-in-india-on-amazon-bedrock-with-global-cross-region-inference — `verified` · Doc refs: XC-6
+5. AWS. "Access Anthropic Claude models in India on Amazon Bedrock with Global cross-Region inference." AWS ML Blog, 2026-03-09. https://aws.amazon.com/blogs/machine-learning/access-anthropic-claude-models-in-india-on-amazon-bedrock-with-global-cross-region-inference — `verified` · Doc refs: XC-6, MA-14
 6. AWS. "Amazon Textract FAQs" (languages: English, German, French, Spanish, Italian, Portuguese). https://aws.amazon.com/textract/faqs/ — `verified` · Doc refs: XC-24
-7. AWS. "Introducing OpenAI models on Amazon Bedrock for in-country inferencing in India." AWS ML Blog, 2026-08-27. https://aws.amazon.com/blogs/machine-learning/introducing-openai-models-on-amazon-bedrock-for-in-country-inferencing-in-india/ — `verified` · Doc refs: XC-7
+7. AWS. "Introducing OpenAI models on Amazon Bedrock for in-country inferencing in India." AWS ML Blog, 2026-08-27. https://aws.amazon.com/blogs/machine-learning/introducing-openai-models-on-amazon-bedrock-for-in-country-inferencing-in-india/ — `verified` · Doc refs: XC-7, MA-15
 8. AWS. Price List API, Amazon OpenSearch Service, ap-south-1 (r7g.2xlarge.search $0.498/h; or2.2xlarge.search $0.562/h). retrieved 2026-09-30. https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonES/current/ap-south-1/index.csv — `verified` · Doc refs: XC-21
 9. AWS. Price List API, Amazon RDS PostgreSQL, ap-south-1 (db.r7g.2xlarge Multi-AZ $2.176/h; db.r7g.4xlarge Multi-AZ $4.352/h). retrieved 2026-09-30. https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/ap-south-1/index.csv — `verified` · Doc refs: XC-23
 10. AWS. Price List API, Amazon Textract, ap-south-1 (DetectDocumentText $1.50/1K pages ≤1M, $0.60 beyond; Layout $4→$3/1K). retrieved 2026-09-30. https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonTextract/current/ap-south-1/index.csv — `verified` · Doc refs: XC-22
@@ -477,7 +485,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 52. Manupatra training manual (Kerala Law Academy library mirror): Manu Cite shows citation counts and "the treatment of the subject case in other cases"; Authority Check / Case Map pages not opened. https://manupatrafast.library.keralalawacademy.in/Defaults/training-manual-manu-cite-feature.aspx — `verified` · Doc refs: P3-25
 53. Meta for Developers. "Pricing on the WhatsApp Business Platform" (per-message pricing from 1 Jul 2025; free utility templates in open service window; India INR billing from 1 Jan 2026 and higher India marketing rate). https://developers.facebook.com/docs/whatsapp/pricing/ — `verified` · Doc refs: P10-13
 54. Microsoft India. "AI First Movers: SCC Online." Microsoft, FY26. https://www.microsoft.com/en-in/aifirstmovers/fy26scconline — `verified` · Doc refs: CT-3
-55. Microsoft. "Region availability for Foundry Models sold by Azure." Microsoft Learn, updated 2026-09-04. https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability — `verified` · Doc refs: XC-8
+55. Microsoft. "Region availability for Foundry Models sold by Azure." Microsoft Learn, updated 2026-09-04. https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability — `verified` · Doc refs: XC-8, MA-16
 56. Midpage. Homepage. https://midpage.ai — `verified` · Doc refs: CT-46
 57. Mistral AI. "Mistral OCR" (2025; ~1,000 pages/US$, ~2× with batch; selective self-hosting; Hindi in vendor benchmark), https://mistral.ai/news/mistral-ocr — `verified` · Doc refs: P1-13
 58. NyaySaathi. Homepage. https://www.nyaysaathi.com — `verified` · Doc refs: CT-21
@@ -519,7 +527,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 3. Anthropic. "How we built our multi-agent research system." 2025. https://www.anthropic.com/engineering/multi-agent-research-system — `verified` · Doc refs: P6-6
 4. Anthropic. "Introducing Contextual Retrieval." 2024. https://www.anthropic.com/news/contextual-retrieval — `verified` · Doc refs: P2-1, P5-25
 5. Apache Flink. "Timely Stream Processing" (watermarks). https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/ — `verified` · Doc refs: P4-32
-6. Apache Kafka. "Apache Kafka 4.0.0 Release Announcement." 18 Mar 2025. https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/ — `verified` · Doc refs: P4-13
+6. Apache Kafka. "Apache Kafka 4.0.0 Release Announcement." 18 Mar 2025. https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/ — `verified` · Doc refs: P4-13, MA-3
 7. Apache Kafka. "Apache Kafka 4.1.0 Release Announcement." 4 Sep 2025 (KIP-932 "now in preview … still not ready for production"). https://kafka.apache.org/blog/2025/09/04/apache-kafka-4.1.0-release-announcement/ — `verified` · Doc refs: P4-48
 8. Apache Kafka. "Apache Kafka 4.2.0 Release Announcement." 17 Feb 2026 ("Kafka Queues (Share Groups) is now production-ready"). https://kafka.apache.org/blog/2026/02/17/apache-kafka-4.2.0-release-announcement/ — `verified` · Doc refs: P4-47
 9. Apache Kafka. Blog index (4.1.0, 4 Sep 2025; 4.2.0, 17 Feb 2026; 4.3.0, 22 May 2026). https://kafka.apache.org/blog — `verified` · Doc refs: P4-14
@@ -527,19 +535,19 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 11. ArangoDB. "Update: Evolving ArangoDB's Licensing Model for a Sustainable Future." 2024. https://arango.ai/blog/update-evolving-arangodbs-licensing-model-for-a-sustainable-future — `verified` · Doc refs: P3-47
 12. AutomationAtlas. "Temporal vs Apache Airflow 2026: Durable Workflows vs DAG Orchestration." 2026. https://automationatlas.io/guides/temporal-vs-apache-airflow-2026-comparison/ — `snippet` · Doc refs: P0-32
 13. AWS Prescriptive Guidance. "Row-level security recommendations" (multi-tenant PostgreSQL). https://docs.aws.amazon.com/prescriptive-guidance/latest/saas-multitenant-managed-postgresql/rls.html — `verified` · Doc refs: P7-26
-14. AWS. "Amazon OpenSearch Service endpoints and quotas" (ap-south-1, ap-south-2). https://docs.aws.amazon.com/general/latest/gr/opensearch-service.html — `verified` · Doc refs: P2-35
+14. AWS. "Amazon OpenSearch Service endpoints and quotas" (ap-south-1, ap-south-2). https://docs.aws.amazon.com/general/latest/gr/opensearch-service.html — `verified` · Doc refs: P2-35, MA-31
 15. AWS. "External key stores" (HYOK, XKS proxy, double encryption, availability caveats). AWS KMS Developer Guide. https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html — `verified` · Doc refs: P7-34
 16. AWS. "Locking objects with Object Lock" (WORM, governance vs compliance mode, legal hold, Cohasset assessment). Amazon S3 User Guide. https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html — `verified` · Doc refs: P7-33
 17. AWS. "Silo, Pool, and Bridge Models." AWS Well-Architected SaaS Lens. https://docs.aws.amazon.com/wellarchitected/latest/saas-lens/silo-pool-and-bridge-models.html — `snippet` · Doc refs: P7-25
 18. BAAI. "bge-reranker-v2-m3" model documentation. https://bge-model.com/_sources/bge/bge_reranker_v2.rst.txt — `snippet` · Doc refs: P5-30
 19. Beyer, B. et al. (eds). "Monitoring Distributed Systems." Site Reliability Engineering, Google/O'Reilly, 2016. https://sre.google/sre-book/monitoring-distributed-systems/ — `verified` · Doc refs: P4-31
 20. Brandur. "Implementing Stripe-like Idempotency Keys in Postgres." 2017. https://brandur.org/idempotency-keys — `verified` · Doc refs: P4-29
-21. CNCF CloudEvents. "CloudEvents — Version 1.0 specification", Attribute Naming Convention. https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md — `verified` · Doc refs: P4-10, XC-44 · Also at: https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md
+21. CNCF CloudEvents. "CloudEvents — Version 1.0 specification", Attribute Naming Convention. https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md — `verified` · Doc refs: P4-10, XC-44, MA-1, MA-2 · Also at: https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md
 22. CNCF. "OpenFGA becomes a CNCF incubating project." 11 Nov 2025. https://www.cncf.io/blog/2025/11/11/openfga-becomes-a-cncf-incubating-project/ — `verified` · Doc refs: P7-30
 23. Cognition. "Don't Build Multi-Agents." 2025. https://cognition.com/blog/dont-build-multi-agents — `verified` · Doc refs: P6-8
 24. Datalab. "Surya" GitHub repository (650M; 91 languages, 87.2% internal multilingual benchmark; olmOCR-Bench 83.3; ~5 pages/s RTX 5090; code Apache-2.0, weights modified AI Pubs OpenRAIL-M — free for research/personal/startups < US$5M funding or revenue). https://github.com/datalab-to/surya — `verified` · Doc refs: P1-7
 25. DBOS, Inc. "DBOS Transact (Python)." GitHub, MIT. https://github.com/dbos-inc/dbos-transact-py — `verified` · Doc refs: P4-17
-26. Debezium. "Outbox Event Router." Documentation. https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html — `verified` · Doc refs: P4-11
+26. Debezium. "Outbox Event Router." Documentation. https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html — `verified` · Doc refs: P4-11, MA-4
 27. Elastic. "Elasticsearch is Open Source. Again!" Blog, 29 Aug 2024. https://www.elastic.co/blog/elasticsearch-is-open-source-again — `verified` · Doc refs: P2-36
 28. Elastic. "Update a document" API reference. https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html — `verified` · Doc refs: P2-37
 29. FalkorDB. GitHub repository (SSPLv1; GraphBLAS). https://github.com/FalkorDB/FalkorDB — `verified` · Doc refs: P3-48
@@ -562,7 +570,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 46. Jina AI. "jina-reranker-v3: 0.6B Listwise Reranker for SOTA Multilingual Retrieval." 2025. https://jina.ai/news/jina-reranker-v3-0-6b-listwise-reranker-for-sota-multilingual-retrieval/ ; licence: https://huggingface.co/jinaai/jina-reranker-v3 — `verified` (BEIR 61.94, MIRACL 66.83, 131k context; CC BY-NC 4.0) · Doc refs: P5-31
 47. Kreps, J. "Questioning the Lambda Architecture." O'Reilly Radar, 2 Jul 2014. https://www.oreilly.com/radar/questioning-the-lambda-architecture/ — `verified` · Doc refs: P4-27
 48. Kùzu. GitHub repository (archived 10 Oct 2025). https://github.com/kuzudb/kuzu — `verified` · Doc refs: P3-44
-49. Langfuse. "Self-hosting" (OSS; PostgreSQL, ClickHouse, Redis/Valkey, S3; EE features). https://langfuse.com/self-hosting — `verified` · Doc refs: XC-40
+49. Langfuse. "Self-hosting" (OSS; PostgreSQL, ClickHouse, Redis/Valkey, S3; EE features). https://langfuse.com/self-hosting — `verified` · Doc refs: XC-40, MA-12
 50. Library of Congress. "Sustainability of Digital Formats: WACZ." https://loc.gov/preservation/digital/formats/fdd/fdd000586.shtml — `snippet` · Doc refs: P0-29
 51. libyal. "libpff" (PST/OST/PAB; LGPL-3.0; pypff; alpha). GitHub. https://github.com/libyal/libpff — `verified` · Doc refs: P7-35
 52. LightGBM. "Parameters: objective=lambdarank; monotone_constraints; monotone_constraints_method." https://lightgbm.readthedocs.io/en/latest/Parameters.html — `verified` · Doc refs: P5-37
@@ -575,9 +583,9 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 59. Neo4j. "Operations Manual — Introduction (edition feature comparison; online backup, clustering, RBAC, property/sub-graph access control EE-only; multiple databases in all editions)." https://neo4j.com/docs/operations-manual/current/introduction/ — `verified` · Doc refs: P3-43
 60. OASIS LegalDocML TC. "Akoma Ntoso Version 1.0" OASIS Standard, 29 Aug 2018. https://www.oasis-open.org/standard/akn-v1-0/ — `verified` · Doc refs: P1-36, P3-31 · Also at: https://docs.oasis-open.org/legaldocml/akn-core/v1.0/
 61. OASIS LegalRuleML TC. "LegalRuleML Core Specification Version 1.0" OASIS Standard, 30 Aug 2021. https://www.oasis-open.org/standard/legalruleml-core-specification-version-1-0/ — `verified` · Doc refs: P3-36
-62. OpenFGA. "Configuring OpenFGA" (listObjectsMaxResults default 1000; listObjectsDeadline default 3s). openfga.dev. https://openfga.dev/docs/getting-started/setup-openfga/configuration — `verified` · Doc refs: P7-37
+62. OpenFGA. "Configuring OpenFGA" (listObjectsMaxResults default 1000; listObjectsDeadline default 3s). openfga.dev. https://openfga.dev/docs/getting-started/setup-openfga/configuration — `verified` · Doc refs: P7-37, MA-8
 63. OpenLineage. "Object Model." https://openlineage.io/docs/spec/object-model — `verified` · Doc refs: P4-33
-64. OpenSearch Project. "Disk-based vector search" (on_disk mode). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_vector-search/optimizing-storage/disk-based-vector-search.md — `verified` · Doc refs: P2-29
+64. OpenSearch Project. "Disk-based vector search" (on_disk mode). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_vector-search/optimizing-storage/disk-based-vector-search.md — `verified` · Doc refs: P2-29, MA-6
 65. OpenSearch Project. "Index document API" (version_type external). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_api-reference/document-apis/index-document.md — `verified` · Doc refs: P2-33
 66. OpenSearch Project. "Introducing reciprocal rank fusion for hybrid search." OpenSearch blog, 2025 (OpenSearch 2.19). https://opensearch.org/blog/introducing-reciprocal-rank-fusion-hybrid-search/ — `verified` · Doc refs: P5-3
 67. OpenSearch Project. "Language analyzers." Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_analyzers/language-analyzers/index.md — `verified` · Doc refs: P2-34
@@ -585,28 +593,28 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 69. OpenSearch Project. "Pretrained models" (neural sparse, incl. multilingual-v1). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_ml-commons-plugin/pretrained-models.md — `verified` · Doc refs: P2-31
 70. OpenSearch Project. "Score ranker processor" (RRF, 2.19). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_search-plugins/search-pipelines/score-ranker-processor.md — `verified` · Doc refs: P2-30
 71. OpenSearch Software Foundation (a Linux Foundation project). https://opensearch.org/foundation/ — `verified` · Doc refs: P2-53
-72. OpenTelemetry. "GenAI semantic conventions" (moved to open-telemetry/semantic-conventions-genai). https://opentelemetry.io/docs/specs/semconv/gen-ai/ ; https://github.com/open-telemetry/semantic-conventions-genai — `verified` · Doc refs: XC-39
+72. OpenTelemetry. "GenAI semantic conventions" (moved to open-telemetry/semantic-conventions-genai). https://opentelemetry.io/docs/specs/semconv/gen-ai/ ; https://github.com/open-telemetry/semantic-conventions-genai — `verified` · Doc refs: XC-39, MA-11
 73. OWASP Gen AI Security Project. "LLM01:2025 Prompt Injection" (and 2025 list incl. LLM02, LLM08). https://genai.owasp.org/llmrisk/llm01-prompt-injection/ — `verified` · Doc refs: P7-19
 74. OWASP GenAI Security Project. "OWASP Top 10 for Agentic Applications 2026" (9 Dec 2025; ASI01–ASI10). https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/ — `verified` (release date); snippet (ASI item names) · Doc refs: XC-31
 75. OWASP GenAI Security Project. "OWASP Top 10 for LLM Applications 2025" (v2.0, 18 Nov 2024). https://genai.owasp.org/llm-top-10/ — `verified` · Doc refs: XC-30
 76. pg_trickle project blog. "Multi-tenant vector search with RLS" (filtered HNSW pitfalls; ~10× wasted work for small tenants). PGXN. https://pgxn.org/dist/pg_trickle/0.36.0/blog/multi-tenant-vector-search-rls.html — `verified` · Doc refs: P7-27
-77. PostgreSQL Global Development Group. "PostgreSQL 18 Release Notes" (25 Sep 2025). https://www.postgresql.org/docs/18/release-18.html — `verified` · Doc refs: P3-40
+77. PostgreSQL Global Development Group. "PostgreSQL 18 Release Notes" (25 Sep 2025). https://www.postgresql.org/docs/18/release-18.html — `verified` · Doc refs: P3-40, MA-5
 78. PostgreSQL Global Development Group. "PostgreSQL 19 Release Notes (devel, beta 4)." accessed 2026-09-30. https://www.postgresql.org/docs/devel/release-19.html — `verified` · Doc refs: P3-41
 79. Presidio. "Supported entities." https://presidio.dataprivacystack.org/supported_entities/ — `verified` · Doc refs: P9-27
 80. Qdrant. "BM42: New Baseline for Hybrid Search" (with post-publication correction). 2024. https://qdrant.tech/articles/bm42/ — `verified` · Doc refs: P2-40
 81. Qdrant. "Multitenancy" guide (is_tenant, m=0/payload_m=16, tiered multitenancy, ~20,000-point promotion threshold). https://qdrant.tech/documentation/guides/multiple-partitions/ — `verified` · Doc refs: P7-28
 82. Qwen Team. "Qwen3-235B-A22B" model card, Hugging Face. https://huggingface.co/Qwen/Qwen3-235B-A22B — `verified` · Doc refs: XC-13
 83. Qwen Team. "Qwen3-Embedding-4B" model card. Hugging Face, 2025. https://huggingface.co/Qwen/Qwen3-Embedding-4B — `verified` · Doc refs: P2-10
-84. Redpanda Data. "Business Source License 1.1" (Redpanda). https://github.com/redpanda-data/redpanda/blob/dev/licenses/bsl.md — `verified` · Doc refs: P4-15
+84. Redpanda Data. "Business Source License 1.1" (Redpanda). https://github.com/redpanda-data/redpanda/blob/dev/licenses/bsl.md — `verified` · Doc refs: P4-15, MA-7
 85. Restate. LICENSE (Business Source License 1.1; converts to Apache 2.0 four years after release). https://github.com/restatedev/restate — `verified` · Doc refs: P4-16
 86. Richardson, C. "Pattern: Transactional outbox." microservices.io. https://microservices.io/patterns/data/transactional-outbox.html — `verified` · Doc refs: P2-42, P4-12
 87. Salsa project. "The red-green algorithm" (backdating). https://salsa-rs.github.io/salsa/reference/algorithm.html — `verified` · Doc refs: P4-24
-88. Sarvam AI. "sarvam-105b" model card, Hugging Face, 2026. https://huggingface.co/sarvamai/sarvam-105b — `verified` · Doc refs: XC-12
+88. Sarvam AI. "sarvam-105b" model card, Hugging Face, 2026. https://huggingface.co/sarvamai/sarvam-105b — `verified` · Doc refs: XC-12, MA-17
 89. Sarvam AI. "sarvam-m" model card (24B, Mistral-Small-3.1 base, Apache-2.0, Indic languages). Hugging Face, 2025. https://huggingface.co/sarvamai/sarvam-m — `verified` · Doc refs: P7-36
 90. Shakir, A., Aarsen, T., Lee, S. "Binary and Scalar Embedding Quantization for Significantly Faster & Cheaper Retrieval." Hugging Face Blog, 2024. https://huggingface.co/blog/embedding-quantization — `verified` · Doc refs: P2-43
 91. Temporal Technologies. "Events and Event History" (limits: warn at 10,240 events; terminate above 51,200 events, 10,000 signals or 2,000 updates) and "Continue-As-New." https://docs.temporal.io/workflow-execution/event ; https://docs.temporal.io/workflow-execution/continue-as-new — `verified` · Doc refs: P0-41
 92. Temporal Technologies. "Task Queue Priority and Fairness." https://docs.temporal.io/develop/task-queue-priority-fairness — `verified` · Doc refs: P4-19
-93. Temporal Technologies. "Temporal Cloud regions." https://docs.temporal.io/cloud/regions — `verified` · Doc refs: P4-18
+93. Temporal Technologies. "Temporal Cloud regions." https://docs.temporal.io/cloud/regions — `verified` · Doc refs: P4-18, MA-9
 94. Temporal Technologies. "Workflow Execution limits." https://docs.temporal.io/workflow-execution/limits — `verified` · Doc refs: P4-20
 95. Temporal Technologies. "Workflows" (durable execution, replay). https://docs.temporal.io/workflows — `verified` · Doc refs: P0-31, P4-21
 96. Timescale. "pgvectorscale" README. GitHub. https://github.com/timescale/pgvectorscale — `verified` (vendor benchmark) · Doc refs: P2-41
@@ -624,7 +632,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 
 ## 7. News, commentary & surveys
 
-*Scope:* Independent news, legal-industry journalism, commentary, industry reports and surveys, and trackers. (53 sources.)
+*Scope:* Independent news, legal-industry journalism, commentary, industry reports and surveys, and trackers. (55 sources.)
 
 1. ABA Journal. "France bans and creates criminal penalty for judicial analytics" (Art. 33, Law no. 2019-222 of 23 Mar 2019). Jun 2019. https://www.abajournal.com/news/article/france-bans-and-creates-criminal-penalty-for-judicial-analytics — `verified` · Doc refs: P6-30, P10-29
 2. Ambrogi, R. (LawSites). "LexisNexis launches Lexis+ with Protégé, replacing Lexis+ AI with an end-to-end workflow platform." Feb 2026. https://www.lawnext.com/2026/02/lexisnexis-launches-lexis-with-protege-replacing-lexis-ai-with-an-end-to-end-workflow-platform.html — `verified` · Doc refs: P6-23
@@ -632,53 +640,55 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 4. Bar & Bench. "AZB & Partners announces adoption of Harvey AI." 10 Sep 2025. https://www.barandbench.com/news/corporate/azb-partners-announces-adoption-of-harvey-ai — `verified` · Doc refs: CT-27, IN-67
 5. Bar & Bench. "CaseMine launches 'AMICUS AI – Advanced', its most powerful AI model for legal work." 10 Mar 2026. https://www.barandbench.com/news/casemine-launches-amicus-ai-advanced-its-most-powerful-ai-model-for-legal-work — `verified` · Doc refs: P10-33, CT-10
 6. Bar & Bench. "Shardul Amarchand Mangaldas announces partnership with Harvey AI." 4 Jun 2025. https://www.barandbench.com/news/corporate/shardul-amarchand-mangaldas-announces-partnership-with-harvey-ai — `verified` · Doc refs: CT-26, IN-67
-7. Bar & Bench. "Supreme Court e-Committee makes audio captchas available on all High Court websites…" https://barandbench.com/amp/story/news/litigation/supreme-court-e-committee-makes-audio-captchas-available-on-all-high-court-websites-to-facilitate-access-for-visually-impaired — `snippet` · Doc refs: P0-6
-8. Bar & Bench. "Supreme Court launches neutral citation for judgments." 2023. https://www.barandbench.com/news/supreme-court-launches-neutral-citation-judgments — `verified` · Doc refs: P0-10, P1-28
-9. Bar & Bench. "Three Harvard graduates are leveraging AI to enhance productivity for lawyers in India" (jhana). https://www.barandbench.com/news/three-harvard-graduates-jhana-ai-lawyers-in-india — `snippet` · Doc refs: CT-50
-10. Bloomberg Law. "Harvey's $8 Billion Question: Can AI Startup Match Its Hype." 2025. https://news.bloomberglaw.com/esg/harveys-8-billion-question-can-ai-startup-match-its-hype — `verified` (via CT-32) · Doc refs: P10-22, CT-32
-11. Business Wire / Entrackr. "Lucio Raises $5M to Build AI Native Workspace for Lawyers." Oct 2025. https://www.businesswire.com/news/home/20251006027921/en/ — `snippet` · Doc refs: CT-19
-12. Charlotin, D. "AI Hallucination Cases" database (2,097 decisions; 16 India; accessed 30 Sep 2026). https://www.damiencharlotin.com/hallucinations/ — `verified` · Doc refs: P6-29, P8-8 · Also at: https://www.damiencharlotin.com/hallucinations/?q=&sort_by=-date&states=India
-13. Codesota. "OmniDocBench leaderboard" (v1.5; GLM-OCR 94.62, PaddleOCR-VL-1.5 94.50; updated 2026-05-21). https://www.codesota.com/ocr/benchmark/omnidocbench — `verified` · Doc refs: P1-42
-14. Conventus Law. "India: Cyril Amarchand Mangaldas takes a bold leap towards an AI-first future with strategic AI adoption" (Harvey pilot, Lucio, Copilot, ChatGPT Plus). 11 Mar 2025. https://conventuslaw.com/press-releases/india-cyril-amarchand-mangaldas-takes-a-bold-leaptowards-an-ai-first-future-with-strategic-ai-adoption/ — `verified` · Doc refs: P7-12
-15. DEV Community. "olmOCR review: AllenAI's VLM beats Mistral, Marker on PDFs" (secondary report of olmOCR-Bench numbers). https://dev.to/andrew-ooo/olmocr-review-allenais-vlm-beats-mistral-marker-on-pdfs-4cci — `snippet` · Doc refs: P1-40
-16. Drishti IAS. "National Judicial Data Grid" (NJDG Open API via departmental IDs and access keys for institutional litigants; extension planned). 26 Aug 2023. https://www.drishtiias.com/daily-updates/daily-news-analysis/national-judicial-data-grid/print_manually — `verified` (secondary source) · Doc refs: P0-12
-17. Drishti IAS. "National Judicial Data Grid" (Open API for Central/State governments and institutional litigants). Sep 2023. https://www.drishtiias.com/daily-updates/daily-news-analysis/national-judicial-data-grid-1/print_manually — `snippet` · Doc refs: P7-16
-18. DSCI. "Acquittal, anonymity: Delhi High Court's ruling on right to be forgotten and what comes next" (*Laksh Vir Singh Yadav v. Union of India*, W.P.(C) 1021/2016, Delhi HC, 2026). https://www.dsci.in/article/content/acquittal-anonymity-delhi-high-courts-ruling-right-be-forgotten-and-what-comes-next — `verified` (secondary; judgment text not read) · Doc refs: P9-38
-19. Entrackr. "AI paralegal startup Jhana raises $1.6 Mn in seed round." Sep 2024. https://entrackr.com/2024/09/ai-paralegal-startup-jhana-raises-1-6-mn-in-seed-round — `snippet` · Doc refs: CT-14
-20. GKToday. "Indian Courts Achieve Milestone in Case Disposals" (NJDG 2024: HCs "more than 1.2 million" cases cleared; SC "addressed 36,969 cases"). 2025. https://www.gktoday.in/indian-courts-achieve-milestone-in-case-disposals/ — `verified` (secondary; wording does not define "disposal") · Doc refs: P0-14
-21. The Hacker News. "Zero-Click AI Vulnerability Exposes Microsoft 365 Copilot Data Without User Interaction" (EchoLeak, CVE-2025-32711, CVSS 9.3; Aim Security; patched June 2025). Jun 2025. https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html — `verified` · Doc refs: P7-18
-22. Implicator.ai. "Legora and the 260x question." 2026. https://www.implicator.ai/legora-and-the-260x-question/ — `verified` (secondary; ARR conflicts with CT-43) · Doc refs: P10-23, CT-44
-23. InfoQ. "AWS to discontinue Amazon QLDB" (end of support 31 Jul 2025; migrate to Aurora PostgreSQL). Jul 2024. https://www.infoq.com/news/2024/07/aws-kill-qldb — `verified` · Doc refs: P7-32
-24. Internet Freedom Foundation. "Zombie Tracker" (Section 66A cases after 2015; timeline incl. SC directions of 15 Feb 2019). https://zombietracker.in/ — `verified` (CivicDataLab co-authorship not confirmed on the page) · Doc refs: P4-41
-25. IT Brief. "Harvey launches 500 legal AI agents, Agent Builder tool." 5 May 2026. https://itbrief.news/story/harvey-launches-500-legal-ai-agents-builder-tool — `verified` · Doc refs: P6-27
-26. law.asia. "Cyril Amarchand Mangaldas embarks on an AI-first future." https://law.asia/?p=560564 — `snippet` · Doc refs: CT-20
-27. Law.asia. "Legality of data scraping under Indian law." https://law.asia/india-data-scraping-regulation/ — `snippet` · Doc refs: P0-22
-28. LawFoyer. "Eastern Book Company v. D.B. Modak — case summary." https://lawfoyer.in/eastern-book-company-ors-v-d-b-modak-anr-air-2008-sc-809-2008-1-scc-1-2008-air-scw-49/ — `snippet` · Doc refs: P0-19
-29. LawNext (Ambrogi, B.). "LexisNexis unveils the next generation of its Protégé General AI." 10 Dec 2025. https://www.lawnext.com/2025/12/lexisnexis-unveils-the-next-generation-of-its-protege-general-ai — `verified` · Doc refs: P10-28, CT-35
-30. LawNext. "Harvey announces plan to develop Memory…" 8 Jan 2026. https://www.lawnext.com/2026/01/harvey-announces-plan-to-develop-memory-enabling-users-to-retain-context-for-more-consistent-work.html — `verified` · Doc refs: P9-39
-31. LawSites. "LexisNexis introduces Protégé General AI…" Aug 2025. https://www.lawnext.com/2025/08/lexisnexis-introduces-protege-general-ai-and-expands-agentic-ai-leadership-bringing-secure-integrated-access-to-general-purpose-ai-for-legal-professionals.html — `snippet` · Doc refs: P6-24
-32. Legal IT Insider. "Harvey partners with Intapp for ethical walls enforcement." 23 Feb 2026 (partnership announcement; CEO quote on standards following users "into every tool"). https://legaltechnology.com/2026/02/23/harvey-partners-with-intapp-for-ethical-walls-enforcement/ — `verified` · Doc refs: P7-14
-33. LiveLaw. "CJI DY Chandrachud Urges Lawyers To Use SCR." 19 Sep 2024. https://www.livelaw.in/top-stories/cji-dy-chandrachud-urges-lawyers-to-use-scr-270054 — `verified` · Doc refs: P0-9
-34. LiveLaw. "Madras High Court To Have Neutral Citation System From Jan 1" ("Year/MHC/auto generated number", w.e.f. 1 Jan 2023). https://livelaw.in/news-updates/madras-high-court-citation-system-from-1st-january-217771 — `verified` · Doc refs: P1-30
-35. MediaNama. "223 experts concerned about MeitY's stance on web scraping to train AI models." Feb 2025. https://www.medianama.com/2025/02/223-experts-concerned-about-meitys-stance-on-web-scraping-to-train-ai-models/ — `verified` · Doc refs: P0-21, IN-63
-36. Mondaq. "Delhi High Court First To Introduce Neutral Citation System For Its Judgements." 2022. https://www.mondaq.com/india/performance/1241608/delhi-high-court-first-to-introduce-neutral-citation-system-for-its-judgements — `verified` · Doc refs: P0-11, P1-29
-37. Moneylife. "Kerala Becomes 1st State To Make AI-based Witness Recording Mandatory in All Courts." 7 Oct 2025. https://www.moneylife.in/article/kerala-becomes-1st-state-to-make-aibased-witness-recording-mandatory-in-all-courts/78510.html — `verified` · Doc refs: CT-25
-38. Open Knowledge Foundation blog. "Opening up India's laws – the journey of Nyaaya.in" (Akoma Ntoso via Indigo). https://blogarchive.okfn.org/?p=23075 — `snippet` · Doc refs: P1-35
-39. PRS Legislative Research. "The Bharatiya Nyaya (Second) Sanhita, 2023" bill track. https://prsindia.org/billtrack/the-bharatiya-nyaya-second-sanhita-2023 — `verified` · Doc refs: IN-42
-40. PRS Legislative Research. "The Negotiable Instruments (Amendment) Bill, 2015" (territorial jurisdiction for cheque-bouncing cases; definition of electronic cheque). https://prsindia.org/billtrack/the-negotiable-instruments-amendment-bill-2015 — `verified` · Doc refs: P10-37
-41. Pulse 2.0 / Sacra. "Legora: $550 Million Series D At $5.55 Billion Valuation…" Mar 2026. https://pulse2.com/legora-550-million-series-d-at-5-55-billion-valuation-raised-for-collaborative-ai-legal-platform — `snippet` · Doc refs: CT-43
-42. SabrangIndia (citing Ministry of Law & Justice / NJDG). "26 thousand cases disposed of by the SC, 5.23 lakh by the HC in this year" (HC disposals 2020–2022). https://sabrangindia.in/26-thousand-cases-disposed-of-by-the-sc-5-23-lakh-by-the-hc-in-this-year-ministry-of-law-and-justice — `verified` (Lok Sabha reply, 22 Jul 2023) · Doc refs: XC-41
-43. Sacra. "Harvey" company profile (ARR estimates). https://sacra.com/c/harvey/ — `snippet` · Doc refs: CT-31
-44. Shardul Amarchand Mangaldas. "SAM leads Indian legal market with rollout of Harvey AI." 3 Jun 2025. https://www.amsshardul.com/sam-leads-indian-legal-market-with-rollout-of-harvey-ai/ — `verified` · Doc refs: P7-11
-45. SpicyIP. "EBC granted injunction against Lexis Nexis and Thomson Reuters…" Feb 2014 (interim injunctions, District Judge, Lucknow; Mar 2013 and Jan 2014). https://spicyip.com/2014/02/ebc-granted-injunction-against-lexis-nexis-and-thomson-reuters-for-infringement-of-their-copyright.html — `verified` · Doc refs: P0-20
-46. Stanford HAI. "AI on Trial: Legal Models Hallucinate in 1 out of 6 (or More) Benchmarking Queries." 2024. https://hai.stanford.edu/news/ai-trial-legal-models-hallucinate-1-out-6-or-more-benchmarking-queries — `verified` · Doc refs: P5-7
-47. Thomson Reuters. "Future of Professionals" report (2026 edition findings). https://www.thomsonreuters.com/en/c/future-of-professionals — `verified` · Doc refs: P10-11
-48. Unite.ai. "Harvey secures $550M in fresh funding; valuation climbs to $15.5B." 9 Sep 2026. https://www.unite.ai/harvey-secures-550m-in-fresh-funding-valuation-climbs-to-15-5b/ — `verified` (secondary; Tenet and LAB details) · Doc refs: CT-30
-49. Vals AI. "Vals Legal AI Report (VLAIR)." Feb 2025. https://www.vals.ai/industry-reports/vlair-2-27-25 — `snippet` · Doc refs: P6-4, CT-40 · Also at: https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/VALs-AI-Legal-AI-report-February-2025-.pdf
-50. Vals AI. "Vals Legal AI Report (VLAIR): Legal Research." 14 Oct 2025. https://vals.ai/industry-reports/vlair-10-14-25 — `verified` · Doc refs: P6-3, P8-10, P10-21, CT-39
-51. Verdictum. "All Supreme Court Judgments to Have Neutral Citations" (Feb 2023; from 1 Jan 2023, then back "till 2014 and then from 1950 to 2014"; AI-assisted vernacular translation vetted by retired District Judges), https://www.verdictum.in/court-updates/supreme-court/neutral-citations-judgments-chief-justice-dy-chandrachud-1463966 — `verified` · Doc refs: P1-28, IN-48
-52. Verdictum. "CJI Announces Launch Of e-SCR Project To Provide Free Access To 34,000 Judgments." 3 Jan 2023. https://www.verdictum.in/court-updates/supreme-court/e-scr-free-access-to-34000-judgments-1455548 — `verified` (incl. "all judgements will be placed online within 24 hours") · Doc refs: P0-8
-53. YourStory. "How Adalat AI is bringing ease to India's overburdened justice system." Jan 2026. https://yourstory.com/socialstory/2026/01/adalat-ai-india-overburdened-justice-system-technology — `snippet` · Doc refs: CT-51
+7. Bar & Bench. "Spice Route Legal announces associate salary scales for 2024." 10 Oct 2023. https://www.barandbench.com/news/spice-route-legal-announces-associate-salary-scales-2024 — `verified` · Doc refs: RM-2
+8. Bar & Bench. "Supreme Court e-Committee makes audio captchas available on all High Court websites…" https://barandbench.com/amp/story/news/litigation/supreme-court-e-committee-makes-audio-captchas-available-on-all-high-court-websites-to-facilitate-access-for-visually-impaired — `snippet` · Doc refs: P0-6
+9. Bar & Bench. "Supreme Court launches neutral citation for judgments." 2023. https://www.barandbench.com/news/supreme-court-launches-neutral-citation-judgments — `verified` · Doc refs: P0-10, P1-28
+10. Bar & Bench. "Three Harvard graduates are leveraging AI to enhance productivity for lawyers in India" (jhana). https://www.barandbench.com/news/three-harvard-graduates-jhana-ai-lawyers-in-india — `snippet` · Doc refs: CT-50
+11. Bloomberg Law. "Harvey's $8 Billion Question: Can AI Startup Match Its Hype." 2025. https://news.bloomberglaw.com/esg/harveys-8-billion-question-can-ai-startup-match-its-hype — `verified` (via CT-32) · Doc refs: P10-22, CT-32
+12. Business Wire / Entrackr. "Lucio Raises $5M to Build AI Native Workspace for Lawyers." Oct 2025. https://www.businesswire.com/news/home/20251006027921/en/ — `snippet` · Doc refs: CT-19
+13. Charlotin, D. "AI Hallucination Cases" database (2,097 decisions; 16 India; accessed 30 Sep 2026). https://www.damiencharlotin.com/hallucinations/ — `verified` · Doc refs: P6-29, P8-8 · Also at: https://www.damiencharlotin.com/hallucinations/?q=&sort_by=-date&states=India
+14. Codesota. "OmniDocBench leaderboard" (v1.5; GLM-OCR 94.62, PaddleOCR-VL-1.5 94.50; updated 2026-05-21). https://www.codesota.com/ocr/benchmark/omnidocbench — `verified` · Doc refs: P1-42
+15. Conventus Law. "India: Cyril Amarchand Mangaldas takes a bold leap towards an AI-first future with strategic AI adoption" (Harvey pilot, Lucio, Copilot, ChatGPT Plus). 11 Mar 2025. https://conventuslaw.com/press-releases/india-cyril-amarchand-mangaldas-takes-a-bold-leaptowards-an-ai-first-future-with-strategic-ai-adoption/ — `verified` · Doc refs: P7-12
+16. DEV Community. "olmOCR review: AllenAI's VLM beats Mistral, Marker on PDFs" (secondary report of olmOCR-Bench numbers). https://dev.to/andrew-ooo/olmocr-review-allenais-vlm-beats-mistral-marker-on-pdfs-4cci — `snippet` · Doc refs: P1-40
+17. Drishti IAS. "National Judicial Data Grid" (NJDG Open API via departmental IDs and access keys for institutional litigants; extension planned). 26 Aug 2023. https://www.drishtiias.com/daily-updates/daily-news-analysis/national-judicial-data-grid/print_manually — `verified` (secondary source) · Doc refs: P0-12
+18. Drishti IAS. "National Judicial Data Grid" (Open API for Central/State governments and institutional litigants). Sep 2023. https://www.drishtiias.com/daily-updates/daily-news-analysis/national-judicial-data-grid-1/print_manually — `snippet` · Doc refs: P7-16
+19. DSCI. "Acquittal, anonymity: Delhi High Court's ruling on right to be forgotten and what comes next" (*Laksh Vir Singh Yadav v. Union of India*, W.P.(C) 1021/2016, Delhi HC, 2026). https://www.dsci.in/article/content/acquittal-anonymity-delhi-high-courts-ruling-right-be-forgotten-and-what-comes-next — `verified` (secondary; judgment text not read) · Doc refs: P9-38
+20. Entrackr. "AI paralegal startup Jhana raises $1.6 Mn in seed round." Sep 2024. https://entrackr.com/2024/09/ai-paralegal-startup-jhana-raises-1-6-mn-in-seed-round — `snippet` · Doc refs: CT-14
+21. GKToday. "Indian Courts Achieve Milestone in Case Disposals" (NJDG 2024: HCs "more than 1.2 million" cases cleared; SC "addressed 36,969 cases"). 2025. https://www.gktoday.in/indian-courts-achieve-milestone-in-case-disposals/ — `verified` (secondary; wording does not define "disposal") · Doc refs: P0-14
+22. The Hacker News. "Zero-Click AI Vulnerability Exposes Microsoft 365 Copilot Data Without User Interaction" (EchoLeak, CVE-2025-32711, CVSS 9.3; Aim Security; patched June 2025). Jun 2025. https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html — `verified` · Doc refs: P7-18
+23. Hyring. "Machine Learning Engineer Salary in Bengaluru" (Hyring India Salary Model 2026; updated 20 Jun 2026). https://hyring.com/jobseeker-toolkit/salary/machine-learning-engineer-salary-in-bengaluru — `verified` · Doc refs: RM-1
+24. Implicator.ai. "Legora and the 260x question." 2026. https://www.implicator.ai/legora-and-the-260x-question/ — `verified` (secondary; ARR conflicts with CT-43) · Doc refs: P10-23, CT-44
+25. InfoQ. "AWS to discontinue Amazon QLDB" (end of support 31 Jul 2025; migrate to Aurora PostgreSQL). Jul 2024. https://www.infoq.com/news/2024/07/aws-kill-qldb — `verified` · Doc refs: P7-32
+26. Internet Freedom Foundation. "Zombie Tracker" (Section 66A cases after 2015; timeline incl. SC directions of 15 Feb 2019). https://zombietracker.in/ — `verified` (CivicDataLab co-authorship not confirmed on the page) · Doc refs: P4-41
+27. IT Brief. "Harvey launches 500 legal AI agents, Agent Builder tool." 5 May 2026. https://itbrief.news/story/harvey-launches-500-legal-ai-agents-builder-tool — `verified` · Doc refs: P6-27
+28. law.asia. "Cyril Amarchand Mangaldas embarks on an AI-first future." https://law.asia/?p=560564 — `snippet` · Doc refs: CT-20
+29. Law.asia. "Legality of data scraping under Indian law." https://law.asia/india-data-scraping-regulation/ — `snippet` · Doc refs: P0-22
+30. LawFoyer. "Eastern Book Company v. D.B. Modak — case summary." https://lawfoyer.in/eastern-book-company-ors-v-d-b-modak-anr-air-2008-sc-809-2008-1-scc-1-2008-air-scw-49/ — `snippet` · Doc refs: P0-19
+31. LawNext (Ambrogi, B.). "LexisNexis unveils the next generation of its Protégé General AI." 10 Dec 2025. https://www.lawnext.com/2025/12/lexisnexis-unveils-the-next-generation-of-its-protege-general-ai — `verified` · Doc refs: P10-28, CT-35
+32. LawNext. "Harvey announces plan to develop Memory…" 8 Jan 2026. https://www.lawnext.com/2026/01/harvey-announces-plan-to-develop-memory-enabling-users-to-retain-context-for-more-consistent-work.html — `verified` · Doc refs: P9-39
+33. LawSites. "LexisNexis introduces Protégé General AI…" Aug 2025. https://www.lawnext.com/2025/08/lexisnexis-introduces-protege-general-ai-and-expands-agentic-ai-leadership-bringing-secure-integrated-access-to-general-purpose-ai-for-legal-professionals.html — `snippet` · Doc refs: P6-24
+34. Legal IT Insider. "Harvey partners with Intapp for ethical walls enforcement." 23 Feb 2026 (partnership announcement; CEO quote on standards following users "into every tool"). https://legaltechnology.com/2026/02/23/harvey-partners-with-intapp-for-ethical-walls-enforcement/ — `verified` · Doc refs: P7-14
+35. LiveLaw. "CJI DY Chandrachud Urges Lawyers To Use SCR." 19 Sep 2024. https://www.livelaw.in/top-stories/cji-dy-chandrachud-urges-lawyers-to-use-scr-270054 — `verified` · Doc refs: P0-9
+36. LiveLaw. "Madras High Court To Have Neutral Citation System From Jan 1" ("Year/MHC/auto generated number", w.e.f. 1 Jan 2023). https://livelaw.in/news-updates/madras-high-court-citation-system-from-1st-january-217771 — `verified` · Doc refs: P1-30
+37. MediaNama. "223 experts concerned about MeitY's stance on web scraping to train AI models." Feb 2025. https://www.medianama.com/2025/02/223-experts-concerned-about-meitys-stance-on-web-scraping-to-train-ai-models/ — `verified` · Doc refs: P0-21, IN-63
+38. Mondaq. "Delhi High Court First To Introduce Neutral Citation System For Its Judgements." 2022. https://www.mondaq.com/india/performance/1241608/delhi-high-court-first-to-introduce-neutral-citation-system-for-its-judgements — `verified` · Doc refs: P0-11, P1-29
+39. Moneylife. "Kerala Becomes 1st State To Make AI-based Witness Recording Mandatory in All Courts." 7 Oct 2025. https://www.moneylife.in/article/kerala-becomes-1st-state-to-make-aibased-witness-recording-mandatory-in-all-courts/78510.html — `verified` · Doc refs: CT-25
+40. Open Knowledge Foundation blog. "Opening up India's laws – the journey of Nyaaya.in" (Akoma Ntoso via Indigo). https://blogarchive.okfn.org/?p=23075 — `snippet` · Doc refs: P1-35
+41. PRS Legislative Research. "The Bharatiya Nyaya (Second) Sanhita, 2023" bill track. https://prsindia.org/billtrack/the-bharatiya-nyaya-second-sanhita-2023 — `verified` · Doc refs: IN-42
+42. PRS Legislative Research. "The Negotiable Instruments (Amendment) Bill, 2015" (territorial jurisdiction for cheque-bouncing cases; definition of electronic cheque). https://prsindia.org/billtrack/the-negotiable-instruments-amendment-bill-2015 — `verified` · Doc refs: P10-37
+43. Pulse 2.0 / Sacra. "Legora: $550 Million Series D At $5.55 Billion Valuation…" Mar 2026. https://pulse2.com/legora-550-million-series-d-at-5-55-billion-valuation-raised-for-collaborative-ai-legal-platform — `snippet` · Doc refs: CT-43
+44. SabrangIndia (citing Ministry of Law & Justice / NJDG). "26 thousand cases disposed of by the SC, 5.23 lakh by the HC in this year" (HC disposals 2020–2022). https://sabrangindia.in/26-thousand-cases-disposed-of-by-the-sc-5-23-lakh-by-the-hc-in-this-year-ministry-of-law-and-justice — `verified` (Lok Sabha reply, 22 Jul 2023) · Doc refs: XC-41
+45. Sacra. "Harvey" company profile (ARR estimates). https://sacra.com/c/harvey/ — `snippet` · Doc refs: CT-31
+46. Shardul Amarchand Mangaldas. "SAM leads Indian legal market with rollout of Harvey AI." 3 Jun 2025. https://www.amsshardul.com/sam-leads-indian-legal-market-with-rollout-of-harvey-ai/ — `verified` · Doc refs: P7-11
+47. SpicyIP. "EBC granted injunction against Lexis Nexis and Thomson Reuters…" Feb 2014 (interim injunctions, District Judge, Lucknow; Mar 2013 and Jan 2014). https://spicyip.com/2014/02/ebc-granted-injunction-against-lexis-nexis-and-thomson-reuters-for-infringement-of-their-copyright.html — `verified` · Doc refs: P0-20
+48. Stanford HAI. "AI on Trial: Legal Models Hallucinate in 1 out of 6 (or More) Benchmarking Queries." 2024. https://hai.stanford.edu/news/ai-trial-legal-models-hallucinate-1-out-6-or-more-benchmarking-queries — `verified` · Doc refs: P5-7
+49. Thomson Reuters. "Future of Professionals" report (2026 edition findings). https://www.thomsonreuters.com/en/c/future-of-professionals — `verified` · Doc refs: P10-11
+50. Unite.ai. "Harvey secures $550M in fresh funding; valuation climbs to $15.5B." 9 Sep 2026. https://www.unite.ai/harvey-secures-550m-in-fresh-funding-valuation-climbs-to-15-5b/ — `verified` (secondary; Tenet and LAB details) · Doc refs: CT-30
+51. Vals AI. "Vals Legal AI Report (VLAIR)." Feb 2025. https://www.vals.ai/industry-reports/vlair-2-27-25 — `snippet` · Doc refs: P6-4, CT-40 · Also at: https://www.law.berkeley.edu/wp-content/uploads/archive/2025/12/VALs-AI-Legal-AI-report-February-2025-.pdf
+52. Vals AI. "Vals Legal AI Report (VLAIR): Legal Research." 14 Oct 2025. https://vals.ai/industry-reports/vlair-10-14-25 — `verified` · Doc refs: P6-3, P8-10, P10-21, CT-39
+53. Verdictum. "All Supreme Court Judgments to Have Neutral Citations" (Feb 2023; from 1 Jan 2023, then back "till 2014 and then from 1950 to 2014"; AI-assisted vernacular translation vetted by retired District Judges), https://www.verdictum.in/court-updates/supreme-court/neutral-citations-judgments-chief-justice-dy-chandrachud-1463966 — `verified` · Doc refs: P1-28, IN-48
+54. Verdictum. "CJI Announces Launch Of e-SCR Project To Provide Free Access To 34,000 Judgments." 3 Jan 2023. https://www.verdictum.in/court-updates/supreme-court/e-scr-free-access-to-34000-judgments-1455548 — `verified` (incl. "all judgements will be placed online within 24 hours") · Doc refs: P0-8
+55. YourStory. "How Adalat AI is bringing ease to India's overburdened justice system." Jan 2026. https://yourstory.com/socialstory/2026/01/adalat-ai-india-overburdened-justice-system-technology — `snippet` · Doc refs: CT-51
 
 ## 8. Other
 
@@ -858,6 +868,16 @@ Every source whose strongest tag is `unverified` (12) or `snippet` (83) is liste
 - P4-26 (Doyle 1979 and de Kleer 1986, the truth-maintenance papers) was seen via the Wikipedia article "Reason maintenance" (P3-39). The papers are listed in §1 and the Wikipedia article in §8.
 - P3-27 (Indian Kanoon "Cites / Cited by" feature) uses the *Shreya Singhal* judgment page only as an example. The feature is listed in §5 and the judgment in §3.
 - The dataset pages of one project on different hosts stay separate: the AWS Open Data registry pages, the GitHub `vanga/indian-*-court-judgments` repositories, `dataset.md` and `STATS.md`. The same holds for different judgments in the same matter, such as *Mineral Area Development Authority*, 25 Jul 2024 (P4-38) vs 14 Aug 2024 (IN-26).
+
+**A.4 Fragments merged after the first build (MA, RM).** `01_master_architecture.md` (MA, 32 entries) and `22_build_roadmap.md` (RM, 2 entries) did not exist when this bibliography was first built. Their fragments were merged by the same rules: each MA entry names the phase tag it was verified through ("via [XX-n]"), and that tag or the normalised primary URL located the existing source. MA-30 shares its URL with *Mata v. Avianca* (see A.3) and is attached only to Verma 2026. No MA entry created a new source, and no strongest tag changed.
+
+- MA-1 + MA-2 → CNCF CloudEvents "CloudEvents — Version 1.0 specification" (with P4-10, XC-44)
+- MA-3 → Apache Kafka 4.0.0 release (P4-13) · MA-4 → Debezium Outbox Event Router (P4-11) · MA-5 → PostgreSQL 18 release notes (P3-40) · MA-6 → OpenSearch disk-based vector search (P2-29) · MA-7 → Redpanda BSL 1.1 (P4-15) · MA-8 → Configuring OpenFGA (P7-37) · MA-9 → Temporal Cloud regions (P4-18)
+- MA-10 → Prior et al., NLLP 2025 (P1-33) · MA-11 → OpenTelemetry GenAI conventions (XC-39) · MA-12 → Langfuse self-hosting (XC-40) · MA-13 → Anthropic data residency (XC-2) · MA-14 → AWS Claude in India via Global CRIS (XC-6) · MA-15 → AWS OpenAI in-country India (XC-7) · MA-16 → Azure Foundry region availability (XC-8) · MA-17 → Sarvam-105B model card (XC-12)
+- MA-18 → Demir & Canbaz 2025 (P3-13) · MA-19 → IL-TUR (P1-22) · MA-20 → *EBC v. D.B. Modak* (IN-3, CT-49) · MA-21 → *Parvinder Singh v. ED* (IN-34) · MA-22 → Gu et al., prompt-caching audit (P7-23) · MA-23 → Hines et al., Spotlighting (P7-20) · MA-24 → CaMeL (P7-21) · MA-25 → Morris et al., embedding inversion (P2-54)
+- MA-26 → Legal RAG Bench (P2-4) · MA-27 → Ongris et al., CEUR-WS Vol-4079 (P3-5) · MA-28 → IL-PCSR (P2-8) · MA-29 → Magesh et al. (P5-6) · MA-30 → Verma 2026 (P8-4) · MA-31 → Amazon OpenSearch Service endpoints and quotas (P2-35) · MA-32 → Souly et al., poisoning (P9-14)
+- RM-1 → **new source** in §7: Hyring, "Machine Learning Engineer Salary in Bengaluru" (industry salary survey)
+- RM-2 → **new source** in §7: Bar & Bench, "Spice Route Legal announces associate salary scales for 2024"
 
 ## Appendix B. Per-document tags upgraded by merge
 

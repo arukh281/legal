@@ -37,25 +37,50 @@
 
 ### 2.0 Spine v1.0 conformance
 
-The principal architect's spine v1.0 decision record (D1–D18) disposed of this doc's §2.5 proposals as follows. Where the body of this doc and v1.0 differ, v1.0 wins.
+The principal architect's spine v1.0 decision record (D1–D21, [01a_spine_decision_record.md](01a_spine_decision_record.md)) disposed of this doc's §2.5 proposals as follows. Where the body of this doc and v1.0 differ, v1.0 wins. Residual mismatches that 01_master_architecture §14 assigns to P1 are closed in the second table.
 
 | §2.5 # | Proposal | Disposition |
 |---|---|---|
 | S1 | Opinion prefix `o{n}.` | **ACCEPTED as D16** (anchor grammar). Unprefixed means `o1`, e.g. `#o2.p14`. 01_master_architecture publishes the full EBNF. |
 | S2 | `pg{n}` / `pg{n}.l{m}` fallbacks | **ACCEPTED-MODIFIED as D16.** Allowed only for QUARANTINED documents. They are **locators only and never sufficient support for impact_tier-1 claims**; P8 fails a tier-1 claim whose only support is a `pg` anchor. |
 | S3 | MT is not an Expression | **ACCEPTED as D8/D16 (final).** Public side: `nodes[].aux_text['{lang}-x-mt']` / `Chunk.mt`, `authoritative=false`. Private side: display rendition `{pdoc_id}/v1.mt-en`. MT renditions may be displayed and aligned but are **never** support anchors, and a claim anchored to MT fails P8. |
-| S4 | `identity.merged.v1` / `identity.split.v1` | **ACCEPTED-MODIFIED as D4/D16.** The normative v1.0 payload is `{kind WORK\|CASE\|ALIAS, from_id, to_id, reason, confidence}` (P1 → P2, P3, P4, P7). `reversible_until` is kept only as an **optional, non-normative** field: consumers must not depend on it, and the authoritative value lives in P1's merge ledger (§2.4). 01_master_architecture §6.4 lists it too. |
+| S4 | `identity.merged.v1` / `identity.split.v1` | **ACCEPTED-MODIFIED as D4/D16.** The normative v1.0 payload is `{kind WORK\|CASE\|ALIAS, from_id, to_id, reason, confidence}`; consumers are P2, P3, P4, P5, P7, P8, P10 (D21.3). `reversible_until` is kept only as an **optional, non-normative** field (confirmed by D20.6): consumers must not depend on it, and the authoritative value lives in P1's merge ledger (§2.4). 01_master_architecture §6.4 lists it too. |
 | S5 | `doc.parsed.v1` additions | **ACCEPTED as D16** (`quality.gate`, `work_id_status`, `case_ids[]`, `supersedes_parse_id`, `anchor_changes{}`). |
 | S6 | CitationMention additions | **ACCEPTED as D16.** |
 | S7 | ParsedDocument additions | **ACCEPTED as D16.** D9 also adds **`quality.hidden_text_flags[]`** (§2.3, §5.2). |
 | S8 | `crt_`, `jdg_`, `ent_` registries | **ACCEPTED as D12/D16.** `ent_` is for recurring institutional parties only, with no global IDs for individuals. `crt_` covers courts and bench *seats* (e.g. `crt_IN_HC_ALL_LKO`). Bench *compositions* use P3's `bnc_`. |
 | S9 | Reconstructed statute text is `derived=true` | **ACCEPTED as D16.** Only official or ROUNDTRIP_OK text may back tier-1 claims. |
-| S10 | `pdoc.parsed.v1` + `ParseRequest` | **ACCEPTED as D16.** P1 in tenant mode serves P7 only. P7 then emits `matter.document.ingested.v1`. Private anchors take the D8 form `{pdoc_id}/{pver}#{fragment}` (e.g. `pdoc_…/v1#p12`). |
+| S10 | `pdoc.parsed.v1` + `ParseRequest` | **ACCEPTED as D16.** P1 in tenant mode is invoked only by P7; `pdoc.parsed.v1` is consumed by P7 and tenant-mode P2 (D20.13). P7 then emits `matter.document.ingested.v1`. Private anchors take the D8 form `{pdoc_id}/{pver}#{fragment}` (e.g. `pdoc_…/v1#p12`). |
 | S11 | Node shape (`spans[]`, RR object, `quality.lang[]`) | **ACCEPTED as D16.** v1.0 names the RR object's fields `{label, confidence, source}`, so P1's `conf`/`method` are renamed; `fine` and `dist` are kept as additive fields. Nodes also carry `speaker` and an opinion reference (`opinion_id`). |
 | S12 | Extra fragments (`ill-x`, `p12.a`, `p12.u1`, `p45.x1`, `pg…`, `att{n}/`) | **ACCEPTED as D16.** D8 also registers the private fragments `m12`, `m12.att2`, `hdr.from\|to\|date\|subject`, `sheet2.r15.c4`, `pg3.rg2`, `t00:03:15-00:03:40`, and clause-within-proviso `sec-138.p1.c`. |
-| S13 | `identifier_alias.status` PENDING + `evidence` | **ACCEPTED-MODIFIED as D16.** Status is `ACTIVE\|PENDING\|REJECTED\|SUPERSEDED`, plus **`trust_tier` T0** court-issued \| **T1** harvested parallel clusters \| **T2** official tables \| **T3** contracted third party \| **T4** model-inferred. Third-party (T3) never overrides T0. P1's former `CONFLICT` becomes `PENDING` with `evidence.conflict=true`, which still freezes auto-merge. `RETIRED` becomes `SUPERSEDED`. D16 also adds the schemes `SCC_SUPP`, `SCC_SERIES`, `AIR_SCW`, `AIRONLINE` and `NJRS`, `NEUTRAL_HC` normalised as `court_code\|bench_code\|year\|n\|bench_type`, and `SC_DIARY_NO` as `n/yyyy`. |
+| S13 | `identifier_alias.status` PENDING + `evidence` | **ACCEPTED-MODIFIED as D16, completed by 01_master §5.4 (R-04).** Status is the union `PENDING\|ACTIVE\|CONFLICT\|REJECTED\|SUPERSEDED`, plus **`trust_tier` T0** court-issued \| **T1** harvested parallel clusters \| **T2** official tables \| **T3** contracted third party \| **T4** model-inferred. Third-party (T3) never overrides T0. `CONFLICT` is kept as its own value (it freezes auto-merge for the whole union-find component, and `evidence.conflict` carries the competing targets). `RETIRED` becomes `SUPERSEDED`. D16 also adds the schemes `SCC_SUPP`, `SCC_SERIES`, `AIR_SCW`, `AIRONLINE` and `NJRS`, `NEUTRAL_HC` normalised as `court_code\|bench_code\|year\|n\|bench_type`, and `SC_DIARY_NO` as `n/yyyy`. |
 | S14 | Expression authority attributes | **ACCEPTED as D16** (`authoritative`, `derived`, `verification ROUNDTRIP_OK\|UNVERIFIED`, `translation_of`, `authority_basis`). OLA s.7 Hindi originals and HC-issued English translations are both Expressions with `authoritative=true`. |
 | S15 | `security{signature, unicode_anomalies, active_content_stripped}` | **ACCEPTED as D16** (ParsedDocument `security{}`). |
+| — | `hidden_text_flags[]` format | **ACCEPTED (D20.10):** string codes in `quality.hidden_text_flags[]`; per-region detail in `security.hidden_text_regions[]` (§2.3). |
+| — | `doc.parsed.v1` provenance fields | **ACCEPTED (D20.14):** `rights_class` and `provenance_tier` are copied from the canonical Manifestation onto every `doc.parsed.v1` (§2.2). |
+| — | `pdoc.parsed.v1` consumers | **Ruled (D20.13):** P7 and P2 (tenant mode), on the tenant-scoped topic `tpl.<tenant>.pdoc.parsed.v1` (D20.16). |
+| — | `CitationMention.pin` | **ACCEPTED extension (D19.6):** `pin{kind, value, cited_anchor, method SAME_NUMBERING\|QUOTE_ALIGN\|PAGE_SPAN_ALIGN\|UNRESOLVED, confidence}` (§2.3, §5.8). P8 never treats `PAGE_SPAN_ALIGN` alone as sufficient for VERIFIED. |
+| — | `opinion_role` vocabulary | **Final (D21.4):** `MAJORITY\|CONCURRING\|DISSENT\|REFERENCE_ORDER\|UNKNOWN`; per curiam → MAJORITY (§2.4A). |
+| — | EXPECTED stub works | **Ruled (D20.4):** P1 is the sole writer of Work/Case identity. P3, on `judgment.expected.v1`, calls P1's identity service to mint `work.status=EXPECTED` (§2.4B). |
+| — | `doc.redacted.v1` producer and consumer roles | **Ruled (D20.3, D21.3, D19.3).** P1 produces overlays for statutory identity masking found in parsing, and consumes every overlay for its anchor read API and ParsedDocument serving. Consumers de-duplicate on `overlay_id`; P1 acks each applied overlay with `redaction.applied.v1` (consumer `P1`) to P0's redaction ledger. Canonical overlay fields = 01_master §7.13. |
+| — | `acquire.requested.v1` producer set | **Ruled (D20.2):** P1 may send only `UNRESOLVED_CITATION`, `CORRIGENDUM_SUSPECTED`, `LOW_QUALITY_COPY`. |
+| — | `Work.integrity_flags[]` | **D19.5 (owner P3).** P1 supplies inputs only: `CORRIGENDUM_SUSPECTED` findings (→ `CORRIGENDUM_PENDING`), `manifestation.withdrawn_at` (→ `WITHDRAWN_FROM_SOURCE`) and `suppressed_at` (→ `SUPPRESSED`), exposed on the Work registry read path; P3 derives the flags. |
+| — | Measurement sample | **Assigned (D19.8):** P1 owns the 10K-document stratified measurement sample in M0 (tokens/doc, pages/doc, OCR share, citations/doc, Indic share). XC's cost model and the roadmap rebase on it (§5.15, §10). |
+| — | Private certified translations | **D21.17:** private `v1.ht-en` renditions (authoritative=true, lawyer-attested, recorded by P7) may support RECORD_FACT claims only. P1-tenant never produces an `ht-` rendition; it parses the uploaded certified translation as its own `pver` and P7 records the certification. |
+
+**01_master §14 residuals owned by P1 (closed in this revision)**
+
+| R-id | Residual | Fix in this doc |
+|---|---|---|
+| R-01 | `parse_id` prefix `prs_` collides with P6 RuleSpec | `par_` everywhere (§2.2, §2.3, §2.4); D20.5 |
+| R-04 | alias status enums differ | union `PENDING\|ACTIVE\|CONFLICT\|REJECTED\|SUPERSEDED`; `RETIRED` → `SUPERSEDED` (§2.4, §5.9) |
+| R-09 | court ID forms differ | canonical `crt_IN_…` (P3 registry, seeded by P1 S8); all examples use it |
+| R-13 | review priority used "presence in tenant watchlists" | replaced by membership (boolean) in P0's unattributed `watch_identifier` union, the only court-watch signal the PLC holds; no tenant counts (D3) (§5.11) |
+| R-14 | P1 consumer table lacked `SUPPRESSED` | `SUPPRESSED` row in §2.1(a): tombstone, apply the P0 overlay, purge derived text, ack `redaction.applied.v1` |
+| R-15 | `metadata.authoritative_expression_key` missing | added to ParsedDocument.metadata, derived from `expression.authoritative` (§2.3) |
+| R-16 | rhetorical-role vocabularies differ | §5.6 table is the canonical `rr-labels@1.0` set; P2 and P5 map to it (§5.6) |
+| R-30 | CPC First-Schedule Order/Rule not expressible | P1 proposes grammar v1.1 unit `ord-` inside a schedule (`sch-1.ord-8.rule-1`), §2.5 S16 and §5.7; stays open until 01_master publishes grammar v1.1 |
+| R-35 | Anchor Read API owner and paths | owner P1; paths per 01_master §9.2 (`/plc/v1/anchors/…`, `:batch`, `citations:resolve`) (§2.4A) |
 
 **Obligations assigned to P1 by v1.0 and added in this revision**
 - **Masking is a RedactionOverlay (D16).** When the `needs_masking` / `sensitive_identity_flags` gate fires, or legal review confirms a statutory bar, P1 emits **`doc.redacted.v1`**. Its `data` is a RedactionOverlay `{overlay_id, scope, kind MASK_SPANS…, spans[], legal_basis, ordered_by?, effective_at, purge_sla}` (§2.2B). P1 **never mints a masked `expression_key`**; 21_india's `en.m1` proposal was rejected. Anchors are unchanged. The anchor read API, snippets, exports and quote checks serve the masked rendition.
@@ -68,9 +93,11 @@ The principal architect's spine v1.0 decision record (D1–D18) disposed of this
 - Envelope attributes: `tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass` (D2). The value is PUBLIC for PLC events and TENANT_CONFIDENTIAL or PRIVILEGED for `pdoc.parsed.v1`. Payload fields keep snake_case.
 - **`parse_id` prefix `prs_` → `par_`.** D12 assigns `prs_` to P6's procedural RuleSpec; `par_` is the prefix registered in 01_master_architecture's ID registry.
 - `change_kind` input values add `METADATA_CHANGED` and `SUPPRESSED` (D16).
-- Alias status values: `CONFLICT`/`RETIRED` → `PENDING`(+conflict evidence) / `SUPERSEDED`.
+- Alias status values: `RETIRED` → `SUPERSEDED`; `CONFLICT` is kept (union enum, 01_master §5.4, R-04).
 - Private anchors: `pdoc_…#p12` → `pdoc_…/v1#p12` (D8).
-- The takedown event is `doc.redacted.v1`. No `plc.redaction.v1` or `work.access_restricted.v1` event exists.
+- The takedown event is `doc.redacted.v1`. No `plc.redaction.v1` or `work.access_restricted.v1` event exists; court-ordered access restrictions become `Work.access_restriction{name_search_suppressed[], masked_expression_required, court_prohibition}` plus an overlay (D16).
+- Topics follow D20.16 (`{plane}.{domain}.{event}.v{n}`): P1 publishes `plc.doc.parsed.v1.{rt,bulk}`, `plc.identity.v1`, `plc.doc.redacted.v1`, `plc.acquire.requested.v1`, `plc.redaction.applied.v1` (acks) and, in tenant mode only, `tpl.<tenant>.pdoc.parsed.v1`.
+- Court IDs use the canonical `crt_IN_…` form (01_master §5.2).
 - Deployment names: tenant-mode P1 runs in D1/D2 cells (per-tenant namespace), D3 customer VPC, and D4/D4h on-prem (D17).
 
 ### 2.1 Inputs
@@ -86,7 +113,7 @@ Consumer behaviour:
 | DELETED | no parse; emit nothing; record `manifestation.withdrawn_at` (removal from source does not delete law; P4 decides) |
 | REAPPEARED | re-link manifestation; parse only if `raw_id` not already parsed at current pipeline_version |
 | METADATA_CHANGED *(v1.0 D16)* | no OCR/parse; re-run metadata reconciliation (S5J field agreement, identity S9) on the new `source_metadata`; emit `doc.parsed.v1` only if identity or metadata fields change (new `parse_id`, `supersedes_parse_id` set) |
-| SUPPRESSED *(v1.0 D16)* | no parse; mark the manifestation suppressed (`manifestation.suppressed_at`) and apply the accompanying P0-emitted `doc.redacted.v1` RedactionOverlay to anchor reads and ParsedDocument serving (§2.4A); never re-emit text for it. P1 does **not** emit a second overlay for a P0-originated suppression (dedupe on `overlay_id`); it answers P0's manifestation → `work_id` lookup so the overlay can be keyed by `work_id` |
+| SUPPRESSED *(v1.0 D16)* | no parse; mark the manifestation suppressed (`manifestation.suppressed_at`) and apply the accompanying P0-emitted `doc.redacted.v1` RedactionOverlay to anchor reads and ParsedDocument serving (§2.4A); never re-emit text for it. P1 does **not** emit a second overlay for a P0-originated suppression (dedupe on `overlay_id`); it answers P0's manifestation → `work_id` lookup so the overlay can be keyed by `work_id`. Tombstone the manifestation's anchors for serving, purge P1-derived text (page images, OCR JSON, cached ParsedDocument renditions) within `purge_sla.derived_h`, and ack with `redaction.applied.v1`. Fail-closed fallback: if the overlay named by `redaction_overlay_id` has not arrived 15 min after the capture event, P1 emits its own `SUPPRESS_ALL` overlay (legal_basis `SOURCE_TAKEDOWN`, `review_state=PENDING_REVIEW`), which P0's ledger later merges by `work_id` (R-14) |
 
 **(b) `reprocess.requested.v1` (P4/P9/ops → P1)** — scope selector (e.g. `{source_id: "sci", decided_between: [...], pipeline_component: "rr-labeller<3.0"}`), reason, target `pipeline_version`. P1 re-parses from raw bytes and runs the anchor-stability protocol (§5.10) against the previous parse.
 
@@ -94,6 +121,7 @@ Consumer behaviour:
 ```ts
 ParseRequest {
   request_id: string; tenant_id: string; matter_id: string;
+  tec: string;                  // signed Tenant Execution Context (≤ 5 min, D9); P1-tenant passes it to the Model Gateway and tenant stores
   pdoc_id: "pdoc_…";            // minted by P7
   pver: "v1";                   // D8 private-document version (v1..vn); anchors are {pdoc_id}/{pver}#{fragment}
   storage_uri: string;          // tenant-bucket URI, never PLC
@@ -103,11 +131,15 @@ ParseRequest {
   priority: "INTERACTIVE"|"BATCH";
 }
 ```
-Output: the same `ParsedDocument` schema with `pdoc_` IDs; private anchors `pdoc_…/v1#p12` (D8 form `{pdoc_id}/{pver}#{fragment}`). No event goes to the PLC bus; P7 receives a tenant-scoped `pdoc.parsed.v1` (same payload shape as `doc.parsed.v1`; envelope `tenantid` set, `dataclass` TENANT_CONFIDENTIAL or PRIVILEGED). P7 then emits `matter.document.ingested.v1` (D4). Machine translations of private documents are display renditions `{pdoc_id}/v1.mt-en`, never anchors (D8/D16).
+Output: the same `ParsedDocument` schema with `pdoc_` IDs; private anchors `pdoc_…/v1#p12` (D8 form `{pdoc_id}/{pver}#{fragment}`). No event goes to the PLC bus; P7 and tenant-mode P2 receive a tenant-scoped `pdoc.parsed.v1` on `tpl.<tenant>.pdoc.parsed.v1` (D20.13, D20.16; same payload shape as `doc.parsed.v1`; envelope `tenantid` set, `dataclass` TENANT_CONFIDENTIAL or PRIVILEGED). P7 then emits `matter.document.ingested.v1` (D4). Machine translations of private documents are display renditions `{pdoc_id}/v1.mt-en`, never anchors (D8/D16).
 
 **(d) Reference data (read-only)**: `identifier_alias`, Work registry, Court registry, Judge registry, Statute registry (act IDs + provision anchor sets per expression), reporter grammar DB (`reporters_in.yaml`), abbreviation gazetteer. In tenant mode these are a read-only **snapshot replica** inside the tenant boundary (§5.12).
 
-### 2.2 Output: `doc.parsed.v1` (P1 → P2, P3, P4)
+**(e) `doc.redacted.v1` (P0, P1 itself, ops/legal → P1; D20.3)**: P1 stores every overlay in `redaction_overlay_applied` (§2.4), applies it in the anchor read API and ParsedDocument serving within `purge_sla.serving_h` (≤ 1 h), purges derived text within `purge_sla.derived_h` (≤ 24 h), then emits `redaction.applied.v1 {overlay_id, consumer: "P1", applied_at, generations_purged: [parse_ids]}` (D19.3). Duplicates are dropped on `overlay_id` (latest `recorded_at` wins).
+
+**(f) EXPECTED-work request (P3 → P1 identity service, synchronous; D20.4)**: `POST /plc/v1/identity/expected-works` (§2.4B), made by P3 when it consumes `judgment.expected.v1`.
+
+### 2.2 Output: `doc.parsed.v1` (P1 → P2, P3, P4, P7 tracked-case orders, P9-tenant filtered, P10; topic `plc.doc.parsed.v1.{rt,bulk}`, key `work_id`)
 
 Spine fields plus proposed additive fields (marked `+`):
 ```jsonc
@@ -125,7 +157,9 @@ Spine fields plus proposed additive fields (marked `+`):
     "case_id": "cas_01J…", "case_ids": ["cas_…","cas_…"],               // + batch/connected matters
     "expression_key": "en", "manifestation_id": "man_01J…",
     "doc_type": "JUDGMENT",
-    "metadata": { /* ParsedDocument.metadata, abridged */ },
+    "rights_class": "OFFICIAL",                                        // + D20.14, copied from the canonical Manifestation (raw.captured.v1, D9)
+    "provenance_tier": "OFFICIAL_PRIMARY",                             // + D20.14, same source
+    "metadata": { /* ParsedDocument.metadata, abridged: court_id, coram, bench_strength, decision_date, opinions[], authoritative_expression_key … */ },
     "parsed_doc_uri": "s3://plc-parsed/wrk_…/en/par_….json.zst",
     "citations": [ /* CitationMention[] (full objects, §2.3) */ ],
     "statute_mentions_count": 41,                                       // + full list in ParsedDocument
@@ -149,7 +183,7 @@ Semantics: `QUARANTINED` documents are still emitted (so P4 knows they exist and
 
 All PLC-mode events carry `tenantid=null` and `dataclass=PUBLIC` (D2). They go out through the P1 Postgres outbox with Debezium onto Kafka (D1).
 
-**`identity.merged.v1` / `identity.split.v1` (P1 → P2, P3, P4, P7; D4/D16)**
+**`identity.merged.v1` / `identity.split.v1` (P1 → P2, P3, P4, P5, P7, P8, P10; D4/D16/D21.3; topic `plc.identity.v1`, key `from_id`)**
 ```jsonc
 { "type": "identity.merged.v1", "tenantid": null, "dataclass": "PUBLIC",
   "data": { "kind": "WORK|CASE|ALIAS", "from_id": "wrk_STUB…", "to_id": "wrk_01J…",
@@ -160,7 +194,7 @@ All PLC-mode events carry `tenantid=null` and `dataclass=PUBLIC` (D2). They go o
 - `reversible_until` is optional on the event. The authoritative value is in P1's internal `identity_merge_ledger` (§2.4).
 - Merged IDs remain resolvable forever through `identifier_alias` rows with `status=SUPERSEDED`.
 
-**`doc.redacted.v1` (P1 producer; also P0, ops and legal → P2, P3, P4, P5 caches, P7; D4/D16)**
+**`doc.redacted.v1` (P1 producer for statutory identity masking found in parsing; also P0 and ops/legal → P1, P2, P3, P4, P5 caches, P7, P8, P9, P10, replicas; D4/D16/D20.3/D21.3; topic `plc.doc.redacted.v1`, key `work_id`)**
 ```jsonc
 { "type": "doc.redacted.v1", "tenantid": null, "dataclass": "PUBLIC",
   "data": { "overlay_id": "ovl_…", "work_id": "wrk_…", "expression_key": "en",
@@ -170,11 +204,15 @@ All PLC-mode events carry `tenantid=null` and `dataclass=PUBLIC` (D2). They go o
             "legal_basis": { "type": "STATUTE|COURT_ORDER|SOURCE_TAKEDOWN|DPDP_REQUEST", "ref": "BNS s.72", "anchor_id": null },
             "ordered_by": "crt_…|null", "effective_at": "…",
             "purge_sla": { "serving_h": 1, "derived_h": 24, "replica": "NEXT_BUNDLE" },
-            "review_state": "PENDING_REVIEW|VERIFIED" } }   // field names per 01_master_architecture §7.13
+            "review_state": "PENDING_REVIEW|VERIFIED", "valid_from": "…", "recorded_at": "…" } }   // field names per 01_master_architecture §7.13
+                                                                                              // overlay_id is minted as ovl_ + ULID (D19.3)
 ```
 - P1 emits it from the sensitive-identity / `needs_masking` gate (§5.9). Masking is an **overlay**: no masked `expression_key` exists (21_india's `en.m1` was rejected), and anchors and fragment IDs are unchanged.
 - An unreviewed candidate is emitted with `kind=MASK_SPANS` and `review_state=PENDING_REVIEW`, so display fails closed. Derived-text purge follows once review sets `VERIFIED` (P0 §5.10).
-- P1 also *consumes* `doc.redacted.v1` from P0, ops and legal so that its anchor read API and ParsedDocument serving return the masked rendition (§2.4A).
+- P1 also *consumes* `doc.redacted.v1` from P0, ops and legal so that its anchor read API and ParsedDocument serving return the masked rendition (§2.4A), and acks each one (below).
+- When the overlay's `kind` is `NAME_SEARCH_SUPPRESSED` or `COURT_PROHIBITION`, P1 also updates `Work.access_restriction{name_search_suppressed[], masked_expression_required, court_prohibition}` in the Work registry (D16), which P2 and P10 read for search and display filtering.
+
+**`redaction.applied.v1` (P1 as a consumer of `doc.redacted.v1` → P0 ledger; D19.3)**: `{overlay_id, consumer: "P1", applied_at, generations_purged[]}`, where `generations_purged[]` lists the `parse_id`s whose derived renditions were purged. Emitted after serving is masked and derived text is purged; topic `plc.redaction.applied.v1`, key `overlay_id`.
 
 **`acquire.requested.v1` (P1 → P0; D16 enum)**
 - P1 emits it in PLC mode only, with `tenantid=null`.
@@ -185,8 +223,8 @@ All PLC-mode events carry `tenantid=null` and `dataclass=PUBLIC` (D2). They go o
 - The request-only schemes `URL`/`CITATION_STRING` are never written to `identifier_alias`.
 - Tenant-mode P1 never emits it.
 
-**`pdoc.parsed.v1` (P1-tenant → P7 only; D16)**
-- Same `data` shape as `doc.parsed.v1`, with `pdoc_id` + `pver` in place of `work_id`.
+**`pdoc.parsed.v1` (P1-tenant → P7 and P2-tenant; D16/D20.13; topic `tpl.<tenant>.pdoc.parsed.v1`, key `pdoc_id`)**
+- Same `data` shape as `doc.parsed.v1`, with `pdoc_id` + `pver` (and `tenant_id`, `matter_id` in the payload, 01_master §6.4) in place of `work_id`; `rights_class=USER_UPLOADED`, `provenance_tier` null.
 - Envelope `tenantid` is set, and `dataclass` is TENANT_CONFIDENTIAL or PRIVILEGED.
 - Never published on the PLC bus.
 
@@ -222,6 +260,9 @@ Stored as zstd-compressed JSON at `parsed_doc_uri`; immutable per `parse_id`. Re
                  "respondents": [ … ] },
     "advocates": [ { "name_as_printed": "…", "for_side": "PETITIONER|RESPONDENT|INTERVENOR|AMICUS", "designation": "Sr. Adv.|AOR|ASG|…" } ],
     "reportable": true,
+    "authoritative_expression_key": "en",           // R-15 / 05_P3 input rule 5: the expression_key whose Expression has authoritative=true
+                                                    // (e.g. "hi" for a Hindi original with an HC-issued English translation, both authoritative → the original);
+                                                    // derived from expression.authoritative, re-emitted when a new Expression changes it
     "impugned": [ { "court_id": "crt_IN_HC_ALL", "case_number_raw": "…", "decision_date": "2018-05-02", "resolved_case_id": "cas_…", "conf": 0.8 } ],
     "disposition": { "label": "ALLOWED|DISMISSED|PARTLY_ALLOWED|REMANDED|DISPOSED|WITHDRAWN|REFERRED_TO_LARGER_BENCH|OTHER", "anchor_id": "wrk_…/en#ord", "conf": 0.9 },
     "statute_areas": ["IPC","CrPC"],
@@ -254,6 +295,7 @@ Stored as zstd-compressed JSON at `parsed_doc_uri`; immutable per `parse_id`. Re
                "hidden_text_flags": [] },   // D9 (string codes, per 13_XC S6 / 01_master): WHITE_TEXT|OFF_PAGE|TINY_FONT|TEXT_LAYER_OCR_MISMATCH|EMBEDDED_ACTIVE_CONTENT;
                                             // per-region detail {page, bbox, anchor_id?, char_count, in_critical_node} stays in security.hidden_text_regions[] (§5.2)
   "security": { "injection_signals": [], "hidden_text_detected": false, "sensitive_identity_flags": [],
+                "hidden_text_regions": [ { "page": 3, "bbox": [0,0,10,10], "anchor_id": null, "char_count": 212, "in_critical_node": false, "code": "WHITE_TEXT" } ],   // D20.10
                 "signature": { "present": true, "valid": true, "signer_cn": "…", "signed_at": "…", "covers_whole_doc": true },   // PDF digital signature (§5.2)
                 "unicode_anomalies": { "bidi_controls": 0, "zero_width": 0, "mixed_script_confusables": 0 },                   // §5.2
                 "active_content_stripped": ["JavaScript","EmbeddedFile"] }
@@ -269,7 +311,8 @@ Stored as zstd-compressed JSON at `parsed_doc_uri`; immutable per `parse_id`. Re
   "char_range": [1203, 1219],                  // + within anchor text
   "mention_kind": "FULL|SHORT|SUPRA|IBID|NAME_ONLY|NEUTRAL|CASE_NUMBER",   // +
   "parsed": { "scheme": "SCC", "year": 1978, "vol": 1, "page": 248, "court": null, "reporter_series": null },
-  "pin": { "kind": "PARA|PAGE|NONE", "value": "para 56", "cited_anchor": "wrk_B/en#p56" },   // +
+  "pin": { "kind": "PARA|PAGE|NONE", "value": "para 56", "cited_anchor": "wrk_B/en#p56",
+           "method": "SAME_NUMBERING|QUOTE_ALIGN|PAGE_SPAN_ALIGN|UNRESOLVED", "confidence": 0.97 },   // + D19.6 (§5.8); PAGE_SPAN_ALIGN alone never suffices for P8 VERIFIED
   "cluster_id": "cc_…",                         // + parallel citations of the same case in one string
   "antecedent_mention_id": null,                // + for SUPRA/IBID/SHORT
   "case_name_as_printed": "Maneka Gandhi v. Union of India",   // +
@@ -317,8 +360,10 @@ Stored as zstd-compressed JSON at `parsed_doc_uri`; immutable per `parse_id`. Re
 
 ```sql
 -- Identity (P1 is sole writer; P3/P9 may *propose* via review tasks)
-CREATE TABLE work        (work_id text PRIMARY KEY, work_type text, status text /*ACTIVE|PROVISIONAL|STUB|EXPECTED|MERGED*/,  -- EXPECTED: stub for judgment.expected.v1 (D16), minted via P1 identity on P3's request
-                          merged_into text, court_id text, decision_date date, title text, created_at timestamptz);
+CREATE TABLE work        (work_id text PRIMARY KEY, work_type text, status text /*ACTIVE|PROVISIONAL|STUB|EXPECTED|MERGED*/,  -- EXPECTED: stub for judgment.expected.v1, minted by P1 on P3's request (D20.4, §2.4B)
+                          merged_into text, court_id text, decision_date date, title text, created_at timestamptz,
+                          expected_ref text /* jex_ id when status was EXPECTED */,
+                          access_restriction jsonb /* D16: {name_search_suppressed[], masked_expression_required, court_prohibition} */);
 CREATE TABLE legal_case  (case_id text PRIMARY KEY, court_id text, case_type text, number text, year int,
                           cnr text UNIQUE, diary_no text, status text, merged_into text);
 CREATE TABLE work_case   (work_id text, case_id text, role text /*LEAD|CONNECTED|TAGGED*/, PRIMARY KEY(work_id, case_id));
@@ -332,7 +377,7 @@ CREATE TABLE manifestation (manifestation_id text PRIMARY KEY, work_id text, exp
                           rights_class text /* D9: OFFICIAL|OPEN_LICENSED|THIRD_PARTY_LINK_ONLY|LICENSED_RESTRICTED|USER_UPLOADED, from raw.captured.v1 */,
                           provenance_tier text, suppressed_at timestamptz /* change_kind=SUPPRESSED */);
 CREATE TABLE identifier_alias (scheme text, value_normalized text, target_id text, confidence real, source text,
-                          first_seen timestamptz, status text /*ACTIVE|PENDING|REJECTED|SUPERSEDED (D16); former CONFLICT → PENDING + evidence.conflict, RETIRED → SUPERSEDED*/,
+                          first_seen timestamptz, status text /*PENDING|ACTIVE|CONFLICT|REJECTED|SUPERSEDED (D16 + 01_master §5.4, R-04); former RETIRED → SUPERSEDED*/,
                           trust_tier text /*T0 court-issued|T1 harvested parallel clusters|T2 official tables|T3 contracted third party|T4 model-inferred (D16)*/,
                           evidence jsonb /* citing doc ids, courts, counts, conflict */,
                           PRIMARY KEY (scheme, value_normalized, target_id));
@@ -350,7 +395,9 @@ CREATE TABLE identity_merge_ledger (event_id text PRIMARY KEY, kind text /*WORK|
                            from_id text, to_id text, reason text, confidence real, reversible_until timestamptz,  -- authoritative; mirrored as an optional field on the event
                            recorded_at timestamptz);
 CREATE TABLE redaction_overlay_applied (overlay_id text PRIMARY KEY, scope text, kind text, target_ids text[], spans jsonb,
-                           legal_basis text, effective_at timestamptz, received_at timestamptz);  -- applied by the anchor read API (§2.4A)
+                           legal_basis jsonb, effective_at timestamptz, received_at timestamptz, recorded_at timestamptz,
+                           review_state text, serving_applied_at timestamptz, derived_purged_at timestamptz,
+                           ack_event_id text);  -- applied by the anchor read API (§2.4A); ack = redaction.applied.v1 (D19.3)
 
 CREATE TABLE parse_run (parse_id text PRIMARY KEY, raw_ids text[], work_id text, expression_key text,
                         pipeline_version text, gate text, started_at timestamptz, finished_at timestamptz,
@@ -361,23 +408,44 @@ CREATE TABLE review_task (task_id text PRIMARY KEY, kind text, subject_id text, 
                           state text, assigned_to text, resolution jsonb, created_at timestamptz);
 ```
 
-### 2.4A Anchor read API (spine v1.0 D8; consumed by P5, P8, P10, P7)
+### 2.4A Anchor read API (spine v1.0 D8; owner P1 per 01_master §9.2 / R-35; consumed by P5, P6, P7, P8, P10 and the PLC Access API)
 
 ```
-GET /v1/anchors/{anchor_id}?as_of_legal_date=&as_known_at=    (point-in-time form wrk_…#sec-302@2023-12-31 accepted)
--> { anchor_id, text, text_hash, lang, page, bbox[] (all spans), node_type,
+GET  /plc/v1/anchors/{anchor_ref}?date=&territory=&as_known_at=
+     anchor_ref = public_anchor | provision_ref (+ date, territory) | pit_ref (e.g. wrk_…/en#sec-302@2023-12-31)
+-> { anchor_id (resolved), text, text_hash, quote_selector {prefix, suffix}, lang, node_type,
+     spans: [{page, bbox}],                                          // all spans; page/bbox of the first span = legacy form
      rhetorical_role {label, confidence, source}, speaker,
-     opinion_role: MAJORITY|CONCURRING|DISSENT|REFERENCE_ORDER,
-     ocr_conf, quality_gate, state LIVE|TOMBSTONED, forward_to?,
+     opinion_role: MAJORITY|CONCURRING|DISSENT|REFERENCE_ORDER|UNKNOWN,   // D21.4
+     ocr_conf, quality_gate, state LIVE|TOMBSTONED, forward_to?, aliases[],
      is_authoritative_expression, expression {authoritative, derived, verification, translation_of, authority_basis},
-     siblings: [{anchor_id, expression_key, alignment_conf}],        // cross-expression alignment (§5.10)
+     sibling_expressions: [{anchor_id, expression_key, alignment_conf}],  // cross-expression alignment (§5.10)
+     manifestation {source_url, fetched_at, rights_class},           // D9 rights filter for external output
      aux_text?: {"en-x-mt": "…"},                                    // MT rendition: display only, never support (D16)
      redaction: {overlay_ids[], masked: bool} }                      // text is the masked rendition when an overlay applies
+POST /plc/v1/anchors:batch            {anchor_refs[≤ 500]} -> [same shape | {anchor_ref, error NOT_FOUND|SUPPRESSED}]   (P6 ledger build, P8 checks)
+POST /plc/v1/citations:resolve        {raw_text | parsed} -> {candidates[{target_id, score, method}], cluster?}
+                                      (tenant callers send normalised keys only, §5.12; nothing tenant-attributable is logged)
 ```
-- **`opinion_role` mapping.** It comes from `metadata.opinions[].kind`: MAJORITY, PLURALITY and PER_CURIAM → `MAJORITY`; CONCURRING → `CONCURRING`; DISSENTING and PARTLY_DISSENTING → `DISSENT` (the partly-dissenting opinion's agreeing paragraphs are flagged for review); an order of reference → `REFERENCE_ORDER`.
+- **SLOs.** Single read p95 ≤ 40 ms, batch of 500 p95 ≤ 250 ms, availability 99.9% *(targets; to be load-tested in the MVP)*. A `SUPPRESS_ALL` overlay returns `410 SUPPRESSED` with the overlay's `legal_basis.type`, never the text.
+- **`opinion_role` mapping.** It comes from `metadata.opinions[].kind`: MAJORITY, PLURALITY and PER_CURIAM → `MAJORITY`; CONCURRING → `CONCURRING`; DISSENTING and PARTLY_DISSENTING → `DISSENT` (the partly-dissenting opinion's agreeing paragraphs are flagged for review); an order of reference → `REFERENCE_ORDER`; an opinion whose kind could not be determined (`p1.opinion_split.v1` confidence < 0.7, or no opinion structure recovered) → `UNKNOWN` (D21.4). P5/P8 treat `UNKNOWN` as not ratio-bearing until reviewed.
 - **`is_authoritative_expression`** equals `expression.authoritative`. Quotes checked against an MT rendition always fail (P8).
-- **Stateless read path (D3).** When the API is called from a tenant context, it logs no tenant-attributable anchor IDs outside the tenant-scoped audit store. D3 and D4 deployments read from a local PLC replica.
+- **Stateless read path (D3).** When the API is called from a tenant context, it logs no tenant-attributable anchor IDs outside the tenant-scoped audit store. D3, D4 and D4h deployments read from a local PLC replica (D19.7).
 - **Durable references.** Cross-phase durable records must persist anchors, never `chunk_id`s (D8).
+- **Deployment (D19.7).** D2 cells call this API through the stateless same-region PLC read path; D3/D4/D4h call a local replica of it (≤ 24 h lag).
+
+### 2.4B Identity service: EXPECTED works (spine v1.0 D20.4)
+
+P1 is the sole writer of Work and Case identity. P3 calls this when it consumes `judgment.expected.v1`:
+```
+POST /plc/v1/identity/expected-works
+  { expected_id: "jex_…", court_id: "crt_IN_SC", case_ref: {scheme, value, parties?}, pronounced_on: "2026-10-01",
+    bench: {strength, judge_ids[]} }
+-> { work_id: "wrk_…", status: "EXPECTED", case_ids: ["cas_…"], created: true|false }
+```
+- Idempotent on `expected_id`, and on the strong keys: if `case_ref` already resolves to a Case with a Work decided on `pronounced_on`, that Work is returned (`created=false`).
+- When the judgment text arrives, S9 (§5.9) matches it by case number and date to the EXPECTED Work and flips it to `ACTIVE` in place (same `work_id`, no merge event). If identity resolution instead picks a different Work, the EXPECTED Work is merged into it with `identity.merged.v1{kind: WORK, reason: STUB_RESOLVED}`.
+- `state=CANCELLED` on `judgment.expected.v1` (the matter was adjourned) leaves the EXPECTED Work in place, because the same case will usually be listed for pronouncement again. If no text arrives within 180 days, P1 downgrades it to `STUB` (edges that P3 hung on it stay valid) and opens a low-priority review task.
 
 ### 2.5 Proposed spine changes
 
@@ -400,6 +468,7 @@ GET /v1/anchors/{anchor_id}?as_of_legal_date=&as_known_at=    (point-in-time for
 | S13 | §D `identifier_alias.status` | Add `PENDING` (harvested, below activation threshold) to `status`, and an `evidence jsonb` column. | *Added in independent review:* §5.9 alias learning needs a non-resolvable holding state; spine lists no status values. |
 | S14 | §B Expression attributes | Add `authoritative`, `translation_of`, `authority_basis`, `derived`, `verification` to Expression. | *Added in independent review:* under s. 7 Official Languages Act 1963 a HC's Hindi/regional judgment and its HC-issued English translation are both official [P1-46], whereas SC vernacular translations are not the judgment of record [P1-28]; P5/P8 must know which text may be quoted as "the court said". |
 | S15 | §H ParsedDocument `security{}` | Add `signature{present, valid, signer_cn, signed_at, covers_whole_doc}`, `unicode_anomalies{}`, `active_content_stripped[]`. | *Added in independent review:* provenance of court-issued PDFs (digitally signed) is the cheapest defence against forged or altered "judgments" entering via mirrors or tenant uploads (§8.13). |
+| S16 | §C anchor grammar v1.1 (01_master §14 R-30; with P6) | New unit `ord-` inside a schedule, followed by `rule-`: `sch-1.ord-8.rule-1`. EBNF delta: `unit = … \| "sch-", unit_no, [ ".item-", unit_no \| ".ord-", unit_no, [ ".rule-", unit_no ] ]`. | *Added in the final conformance pass:* the CPC First Schedule (Orders and Rules), which P6's RuleSpecs cite constantly (e.g. O.VIII r.1 on the written statement *(unverified)*), is not expressible in grammar v1.0; `sch-1.item-n` loses the Order/Rule structure that lawyers cite. Additive; old anchors are aliased. |
 
 ---
 
@@ -630,7 +699,7 @@ Separate extractors for: author line ("J U D G M E N T / … , J."), reserved/pr
 
 ### 5.6 S6: rhetorical-role labeller
 
-**Label set (two levels, mapped to spine needs).**
+**Label set (two levels, mapped to spine needs).** This table is the **canonical rhetorical-role vocabulary `rr-labels@1.0`** (01_master §14 R-16). `ParsedNode.rhetorical_role.label` takes a coarse value and `.fine` a fine value. P2 maps its 13-label list 1:1 onto the fine column (LegalEval-13) and uses labels only for chunk boundaries; P5 and P3 consume the coarse labels. A label change is a new `rr-labels` version shipped with a P4 reprocess campaign.
 | Coarse (spine / P3) | Fine (LegalEval-13 compatible [P1-18]) |
 |---|---|
 | PREAMBLE | Preamble |
@@ -651,7 +720,7 @@ Separate extractors for: author line ("J U D G M E N T / … , J."), reserved/pr
 
 **Output granularity.** Sentence-level labels (→ `p45.s3` anchors) plus paragraph-level distribution (`rhetorical_role.dist`). Paragraph label = argmax of length-weighted sentence labels, except RATIO_CANDIDATE wins if ≥ 1 sentence has P(RATIO) ≥ 0.6.
 
-**Speaker attribution.** Separate head predicts `speaker ∈ {COURT, COUNSEL_PETITIONER, COUNSEL_RESPONDENT, LOWER_COURT, QUOTED_AUTHORITY}` per sentence; this is what prevents "counsel relied on X" from being counted as the court following X.
+**Speaker attribution.** Separate head predicts `speaker ∈ {COURT, COUNSEL_PETITIONER, COUNSEL_RESPONDENT, LOWER_COURT, QUOTED_AUTHORITY}` per sentence; this is what prevents "counsel relied on X" from being counted as the court following X. *Wire vocabulary (01_master §7.1):* `COURT|COUNSEL_PETITIONER|COUNSEL_RESPONDENT|LOWER_COURT|UNKNOWN`. The internal `QUOTED_AUTHORITY` class is not emitted as a speaker: such sentences carry the quoting voice's speaker and are covered by `quotes[]` (with `quoted_source_mention_id`), which P3 uses to exclude quoted language from treatment cues. Sentences with head confidence < 0.6 are emitted as `UNKNOWN`.
 
 ### 5.7 S5S: statute parser, amendment instructions and point-in-time expressions
 
@@ -674,7 +743,7 @@ illustration := "Illustration" "s"? (item)+
 schedule     := ("THE" ORDINAL? "SCHEDULE" | "SCHEDULE" ROMAN|DIGITS) items
 footnote_ref := SUPERSCRIPT_DIGITS | "[" … "]"                            # amendment markers in consolidated text
 ```
-Anchor mapping (spine §C): `sec-302`, `sec-302.1`, `sec-302.1.a`, `sec-302.1.a.i`, `sec-302.p1` (provisos numbered in order within their parent; a proviso to sub-section (1) is `sec-302.1.p1`), `sec-302.e1`, `sec-302.ill-a`, `sch-1.item-5`, `art-21A`, `rule-4.2`. Omitted provisions keep a tombstoned anchor with text "[Omitted]" and `valid_to`. A secondary AKN serialisation (eId e.g. `sec_302__subsec_1__para_a`) is emitted for interoperability.
+Anchor mapping (spine §C): `sec-302`, `sec-302.1`, `sec-302.1.a`, `sec-302.1.a.i`, `sec-302.p1` (provisos numbered in order within their parent; a proviso to sub-section (1) is `sec-302.1.p1`), `sec-302.e1`, `sec-302.ill-a`, `sch-1.item-5`, `art-21A`, `rule-4.2`. *Proposed grammar v1.1 (§2.5 S16, 01_master §14 R-30):* Orders and Rules inside a schedule, as in the CPC First Schedule, map to `sch-1.ord-8.rule-1` (Order VIII rule 1; Roman order numbers are converted to Arabic, and lettered rule numbers keep their suffix, e.g. `ord-39.rule-2A`). Until 01_master publishes grammar v1.1, P1 emits these anchors only behind the feature flag `anchor_grammar_v11` and serialises them to v1.0 consumers as `sch-1.item-…` with an `anchor_alias` to the `ord-` form. Statute expression keys take the D16 form `lang@YYYY-MM-DD[~TERR]`, where `~TERR` is an ISO 3166-2:IN code for a state amendment (e.g. `en@2019-08-01~IN-MH`). Omitted provisions keep a tombstoned anchor with text "[Omitted]" and `valid_to`. A secondary AKN serialisation (eId e.g. `sec_302__subsec_1__para_a`) is emitted for interoperability.
 
 **Footnote parsing** (consolidated texts): footnotes of the form "Subs. by Act 22 of 2018, s. 3, for 'X' (w.e.f. 1-8-2018)" / "Ins. by …" / "Omitted by …" *(pattern family observed in India Code; exact variants to be catalogued)* are parsed by a grammar into `AmendmentInstruction` *hints* attached to the provision anchor.
 
@@ -701,7 +770,7 @@ if normalize(E_n) == normalize(C) at every provision:   mark all E_k verificatio
 else: for each provision p with mismatch:
         mark E_k[p] (all k after the first instruction touching p) verification=UNVERIFIED
         open review task (tier-1 Acts: IPC/BNS/CrPC/BNSS/Evidence/BSA/CPC/Constitution/Companies/IBC/GST/Income-tax/Arbitration… first)
-emit one doc.parsed.v1 per expression: expression_key = "en@<valid_from>", derived=true
+emit one doc.parsed.v1 per expression: expression_key = "en@<valid_from>[~<ISO 3166-2:IN>]", derived=true
 ```
 The official consolidated text is always emitted as the current expression (`derived=false`). Historic expressions are only exposed to P5 for as-of queries with their `verification` flag, and P8 treats UNVERIFIED as insufficient for tier-1 claims (spine change S9). This is the direct answer to the 50.3% / 20.5% exact-match finding for LLM consolidation [P1-33].
 
@@ -760,9 +829,20 @@ resolve_pit(act, provision, as_cited_date, doc):
       return (anchor@(act.repealed_on - 1 day), pit_rule="LAST_IN_FORCE_BEFORE_REPEAL", conf *= 0.8)
   return (unresolved, pit_rule="NO_EXPRESSION")      # review task if the act is tier-1
 ```
-`pit_rule` is stored on the StatuteMention; P3/P5 may override using matter facts (`MatterContext.key_dates.cause_of_action`). The same logic covers CrPC→BNSS and Evidence Act→BSA and any repealed state Act.
+`pit_rule` is stored on the StatuteMention; P3/P5 may override using matter facts (`MatterContext.temporal_context.substantive_event_date` and the proceeding stage, D16; `key_dates` is only a derived view). The same logic covers CrPC→BNSS and Evidence Act→BSA and any repealed state Act.
 
 **Quote anchoring [NOVEL — unvalidated].** When a paragraph quotes > 25 words from a cited (resolved) Work, locate the quote in the cited Work's parsed text with fuzzy matching (normalised n-gram seed + Smith-Waterman local alignment, score ≥ 0.9); on success set `pin.cited_anchor` to the matched anchor(s). This yields paragraph-level cited anchors even when the pin was a reporter page, and gives P3/P8 an independently verifiable link ("the citing court quoted para 56 of X").
+
+**`pin.method` and `pin.confidence` (v1.0 D19.6).** Each pin records how `cited_anchor` was obtained, tried in this order:
+
+| `method` | When | `confidence` |
+|---|---|---|
+| `SAME_NUMBERING` | the pin is a paragraph number and the cited citation is a neutral citation or the court's own copy (court-issued numbering on both sides, D16) | 0.99 if the paragraph exists and the opinion prefix is unambiguous; else 0.8 |
+| `QUOTE_ALIGN` | quote anchoring above succeeded (alignment score ≥ 0.9) | the alignment score |
+| `PAGE_SPAN_ALIGN` | a reporter page pin was mapped to court paragraphs by aligning the reporter's page span to our text *without* a quote; used only where page-boundary data is lawfully held (whether it may be stored at all is open, 01_master §14.2 Q3) | ≤ 0.7 (capped); P8 never accepts it alone as VERIFIED |
+| `UNRESOLVED` | none of the above; `cited_anchor` = null | 0 |
+
+A reporter *paragraph* number (e.g. "SCC para 56") is never treated as `SAME_NUMBERING`, because reporter paragraphing differs from the court copy (EBC v. D.B. Modak, 21_india §2.2); it resolves only through `QUOTE_ALIGN` or `PAGE_SPAN_ALIGN`.
 
 ### 5.9 S8–S9: resolution and identity
 
@@ -786,7 +866,7 @@ resolve(mention):
   elif top.score >= 0.80: RESOLVED_PROVISIONAL (FLAGGED, review if citing court is SC/HC-larger-bench)
   else: UNRESOLVED -> link to STUB work (see below); candidates[] kept
 ```
-**STUB works.** An unresolved citation that is well-formed (e.g. "(1965) 2 SCR 123" not yet in our corpus) creates/matches a `work` row with `status=STUB` keyed by its alias, so P3 can already hold edges to it; when the actual judgment is ingested and its aliases match, the STUB is merged into the real Work (`identity.merged.v1`). This is what makes citation counts correct *before* the full corpus is backfilled. In PLC mode, minting a STUB also emits `acquire.requested.v1{reason: UNRESOLVED_CITATION, target: {scheme, value}}` to P0, rate-limited per alias key (§2.2B). A STUB's EXPECTED variant is minted on P3's request when P0 publishes `judgment.expected.v1` (D16).
+**STUB works.** An unresolved citation that is well-formed (e.g. "(1965) 2 SCR 123" not yet in our corpus) creates/matches a `work` row with `status=STUB` keyed by its alias, so P3 can already hold edges to it; when the actual judgment is ingested and its aliases match, the STUB is merged into the real Work (`identity.merged.v1`). This is what makes citation counts correct *before* the full corpus is backfilled. In PLC mode, minting a STUB also emits `acquire.requested.v1{reason: UNRESOLVED_CITATION, target: {scheme, value}}` to P0, rate-limited per alias key (§2.2B). A STUB's EXPECTED variant is minted on P3's request when P0 publishes `judgment.expected.v1` (D20.4, §2.4B); P1 remains the only identity writer.
 
 **Alias sources & learning.**
 1. Authoritative: SC neutral citations and case numbers from sci.gov.in metadata [P1-28]; HC neutral citations [P1-29][P1-30]; SC Equivalent Citation Table (SCR↔SCC/AIR/JT/SCALE) [P1-31].
@@ -798,7 +878,7 @@ resolve(mention):
      - **T3**: contracted third party (item 4);
      - **T4**: model-inferred.
    - A lower tier never overrides T0. A T3 or T4 proposal that contradicts a T0 alias is stored as `REJECTED`, not `CONFLICT`.
-3. Conflicts (same alias → two Works): union-find with conflict edges; any component containing a conflict freezes auto-merging for its members and opens a review task (v1.0: rows stay `PENDING` with `evidence.conflict=true`). **False merges are treated as the worst error class** (they silently corrupt treatment history), so thresholds favour STUBs over merges.
+3. Conflicts (same alias → two Works): union-find with conflict edges; any component containing a conflict freezes auto-merging for its members and opens a review task (v1.0: rows take `status=CONFLICT`, with `evidence.conflict` listing the competing targets; R-04). **False merges are treated as the worst error class** (they silently corrupt treatment history), so thresholds favour STUBs over merges.
 4. Third-party datasets (e.g. commercial reporter tables) only after IN/legal clearance of licence terms.
 
 **Entity resolution.**
@@ -868,7 +948,7 @@ Statute anchors are derived from official numbering and are therefore stable by 
 
 Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so that FLAGGED ≤ 5% and QUARANTINED ≤ 1% of documents while false-PASS on critical fields stays < 0.5%.
 
-**Review queue.** `review_task.priority = impact × uncertainty`, where impact = f(court level, bench strength, citation in-degree so far, presence in any tenant matter watchlist (count only, no tenant data), recency) and uncertainty = 1 − conf. Tasks are typed (OCR_LINE, METADATA_FIELD, OPINION_SPLIT, CITATION_RESOLUTION, ALIAS_CONFLICT, WORK_CONFLICT, AMENDMENT_ROUNDTRIP, RR_RATIO) with purpose-built UIs showing the page image + bbox. Every resolution is stored as a HUMAN-method label, triggers a scoped `reprocess.requested.v1`, and flows into training data (P9) — review effort therefore compounds.
+**Review queue.** `review_task.priority = impact × uncertainty`, where impact = f(court level, bench strength, citation in-degree so far, whether the case's identifiers are in P0's unattributed `watch_identifier` union (a boolean from the public union; P1 never sees tenant counts or tenant watchlists, D3/R-13), recency) and uncertainty = 1 − conf. Tasks are typed (OCR_LINE, METADATA_FIELD, OPINION_SPLIT, CITATION_RESOLUTION, ALIAS_CONFLICT, WORK_CONFLICT, AMENDMENT_ROUNDTRIP, RR_RATIO) with purpose-built UIs showing the page image + bbox. Every resolution is stored as a HUMAN-method label, triggers a scoped `reprocess.requested.v1`, and flows into training data (P9) — review effort therefore compounds.
 
 ### 5.12 Tenant-isolated mode (for P7)
 
@@ -877,7 +957,7 @@ Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so t
 - **Reference data**: a read-only, signed snapshot of PLC reference tables (aliases, work registry keys, court/judge registries, statute provision sets; tens of GB) is replicated into the tenant zone daily; citation resolution never sends private text to PLC. In SaaS tenants a PLC resolution API may be used with **only normalised citation keys** and no tenant identifier logged — opt-in, because even a lookup pattern can reveal strategy.
 - **Private document profiles**: PLEADING (numbered averments, grounds, prayer clause, annexure references, verification), NOTICE (sender/recipient, statutory basis, demands, deadlines — e.g. "within 15 days of receipt"), ORDER copies (reuse judgment parser; if the order exists in PLC, link `pdoc` to `wrk_` by identity keys), EMAIL (.eml/.msg: headers, thread reconstruction, attachments recursively parsed), EVIDENCE (images, scanned documents, spreadsheets). Anchors: `pdoc_…/v1#p12`, `pdoc_…/v1#pg3.l14`, `pdoc_…/v1#att2/p4` for attachments (D8 form `{pdoc_id}/{pver}#{fragment}`; `att{n}/` accepted in D16). D8 also adds `m12`, `m12.att2`, `hdr.from|to|date|subject`, `sheet2.r15.c4`, `pg3.rg2` and `t00:03:15-00:03:40` for email, spreadsheet, image-region and media evidence. Private MT is a display rendition `pdoc_…/v1.mt-en`, never an anchor.
 - **Nothing to PLC**: tenant parses never write `identifier_alias`, never mint `wrk_`, never emit to the PLC bus; alias *proposals* learned from private docs are dropped (they could leak which cases a firm relies on) unless P9's Privacy Gate explicitly allows de-identified public-object signals.
-- **Private copy vs. public record check** *(added in independent review)*: when a tenant uploads an ORDER/JUDGMENT_COPY that identity keys match to a PLC Work, P1-tenant diffs it (paragraph-aligned via §5.10, against the snapshot's `text_hash` values) with the PLC expression. Outcomes: `IDENTICAL`; `OLDER_REV` (matches a superseded `rev`); `CERTIFIED_COPY_VARIANT` (only furniture/stamps differ); `TEXT_DIVERGES` (substantive paragraphs differ → shown to the lawyer as "your copy differs from the court's published text at ¶¶…", and P6/P8 must quote the PLC anchor, never the private text, for legal propositions). This catches stale, tampered or mis-OCR'd copies circulating in case files — a common reality with photocopied certified copies. Only `text_hash` values of PLC anchors are needed inside the tenant zone, so nothing flows TPL → PLC.
+- **Private copy vs. public record check** *(added in independent review)*: when a tenant uploads an ORDER/JUDGMENT_COPY that identity keys match to a PLC Work, P1-tenant diffs it (paragraph-aligned via §5.10, against the snapshot's `text_hash` values) with the PLC expression. Outcomes: `IDENTICAL`; `OLDER_REV` (matches a superseded `rev`); `CERTIFIED_COPY_VARIANT` (only furniture/stamps differ); `TEXT_DIVERGES` (substantive paragraphs differ → shown to the lawyer as "your copy differs from the court's published text at ¶¶…", and P6/P8 must quote the PLC anchor, never the private text, for legal propositions). A privately held certified copy is labelled `trust_label=TENANT_COURT_RECORD` by P7 (D21.12): data-only for control flow, and usable as support only for RECORD_FACT claims. This catches stale, tampered or mis-OCR'd copies circulating in case files — a common reality with photocopied certified copies. Only `text_hash` values of PLC anchors are needed inside the tenant zone, so nothing flows TPL → PLC.
 
 ### 5.13 Multilingual handling
 
@@ -901,7 +981,7 @@ Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so t
 | `p1-mentions` | Rust/Hyperscan citation tokenizer + NER model | CPU + small GPU |
 | `p1-resolver`, `p1-identity` | Python service over PostgreSQL + in-memory alias cache (Redis/embedded) | CPU; single-writer per work key via advisory locks |
 | `p1-anchors` | alignment library (Rust) | CPU |
-| `p1-anchor-api` *(v1.0 D8)* | stateless read service over `anchor` + ParsedDocument + applied RedactionOverlays (§2.4A); local replica in D3/D4 | horizontal, read replicas |
+| `p1-anchor-api` *(v1.0 D8)* | stateless read service over `anchor` + ParsedDocument + applied RedactionOverlays (§2.4A); local replica in D3/D4/D4h (D19.7) | horizontal, read replicas |
 | `p1-review` | web app over `review_task` | — |
 
 **Model Gateway task contracts owned by P1** (each with JSON schema, closed label sets, "document text is data, not instructions" system policy, eval gate on the P1 gold set before any provider/model swap, and per-task budget caps). Each contract is a v1.0 `ModelTaskContract` (D1): task_id, I/O schemas, eval gate, `data_class_max`, `allowed_trust_labels`, `tools_allowed` (none), `batch_ok`, and ≥ 2 qualified endpoints with a fail-closed `residency_policy`. The eval gate follows the D11 policy: zero-tolerance sentinel suites (critical tokens, neutral citations, false merges) plus one-sided 95% paired-bootstrap non-inferiority at δ_s = max(1 pt, 2·SE_diff,s) per slice (court × script × era), over rolling 3-release windows:
@@ -936,6 +1016,13 @@ Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so t
 | Human review | 2% of docs × ~3 min + all tier-1 statute round-trip failures | ≈ 5,000+ reviewer-hours (dominant cost) |
 
 Daily run-rate: at an assumed 20k–100k new documents/day (dominated by orders; P0 to confirm), P1 compute is ≈ US$20–150/day. The expensive, moat-building spend is human review, which is why it is prioritised by impact (§5.11).
+
+**Relation to the cost of record.** These P1 figures are inputs to the canonical platform cost model in 13_cross_cutting (D18/D19.1: build ≈$90K at 5M docs with the cascade; run ≈$77K/month at 5M and ≈$89K/month at 20M for 2,000 seats; ≈$0.105 per verified Q&A and ≈$2.16 per strategy memo). All of them are planning estimates until the measurement sample below replaces the assumptions.
+
+**M0 measurement sample (v1.0 D19.8; P1-owned).** Before the backfill is sized, P1 parses a **10,000-document stratified sample** and publishes a signed `corpus_profile@1` report that XC's cost model and the 22_roadmap rebase on.
+- *Strata* (proportional allocation with a floor of 150 docs per non-empty cell): source family (SC, each Tier-A HC, NCLT/NCLAT/ITAT, India Code, e-Gazette, district orders from the AWS dataset) × era (pre-2000, 2000–2015, 2016–2022, 2023+) × text layer (born-digital, scanned, legacy-font suspect from P0's probe) × language (`lang_hint`).
+- *Measured per document:* pages; tokens under the tokenizers of the two primary LLM families and the embedder (this is the tokenizer correction behind D19.1); OCR share (pages without a usable text layer); citations and statute mentions per doc; paragraphs per doc (the §5.14 anchor-row assumption); Indic share by script; `quality.gate` rates; parse-depth profile mix (§5.15); LLM residual calls and tokens per stage; wall-clock per lane.
+- *Output:* per-stratum means with 95% bootstrap intervals, weighted to corpus totals by P0's source counts. The run takes ≈ 1 week on the MVP pipeline. A re-run is triggered when any stratum weight changes by more than 20%.
 
 **Parse-depth profiles and cost circuit breakers (added in independent review).** The 5M-document model above understates the long tail: district-court daily/interim orders from eCourts are far more numerous than judgments and mostly one-page procedural entries ("adjourned to…"). Running the full pipeline (RR, quote anchoring, LLM residuals) on them would dominate cost while adding little legal value. Three profiles, selected after S4 by `doc_type`, court level and length:
 
@@ -1087,6 +1174,9 @@ An independent adversarial review (legal-tech architecture + Indian legal resear
 | Ops | S0.5 header-peek recall for L0-worthy docs (≥ 3-judge bench or negative-treatment cue) | ≥ 0.98 | full-parse labels of all SC/HC docs |
 | Statutes | PIT resolution accuracy for mentions of repealed codes (`pit_rule` correct) | ≥ 0.95 | 500 post-July-2024 judgments citing IPC/CrPC/Evidence Act |
 | Security | Signature verification coverage; forged-doc detection on red-team set | 100% of signed PDFs checked; ≥ 0.95 | synthetic tampered-PDF set |
+| Citations | Pin `cited_anchor` accuracy by `pin.method` (D19.6); calibration of `pin.confidence` | `SAME_NUMBERING` ≥ 0.99, `QUOTE_ALIGN` ≥ 0.97; ECE ≤ 0.05 | 1,000 pinned mentions, gold-aligned |
+| Redaction | Overlays applied in the anchor API within `purge_sla.serving_h`; `redaction.applied.v1` sent within `derived_h` | 100% / 100% (zero-tolerance sentinel, D11) | production ledger (P0) |
+| Identity | EXPECTED-work match rate: EXPECTED Works flipped to ACTIVE in place (no merge) when text arrives | ≥ 0.95 | all `judgment.expected.v1` rows, monthly |
 
 All metrics are reported per court, per script and per era (pre-2000 scans behave differently), because averages hide exactly the strata where errors concentrate. P8 owns the global regression harness; P1 contributes these suites.
 
@@ -1102,7 +1192,8 @@ All metrics are reported per court, per script and per era (pre-2000 scans behav
 - Statute hierarchy parser; no historic reconstruction except for the five criminal codes (manual verification).
 - Anchor protocol v1 (numbers + hash + sequence alignment); quality gates; review UI for metadata/citation conflicts.
 - English + Hindi.
-- Spine v1.0 obligations, all cheap (the MVP is one D2 dedicated cell, D17): v1.0 envelope names; `par_` parse IDs; `hidden_text_flags[]`; the D16 anchor grammar (`o{n}.`, `pg` locators); alias `status` + `trust_tier`; `identity.merged.v1`/`split.v1`; `doc.redacted.v1` from the sensitive-identity gate; the anchor read API (§2.4A); `pdoc.parsed.v1` + `ParseRequest` for the design partner's matters.
+- Spine v1.0 obligations, all cheap (the MVP is one D2 dedicated cell, D17): v1.0 envelope names and D20.16 topics; `par_` parse IDs; `hidden_text_flags[]`; `rights_class` + `provenance_tier` on `doc.parsed.v1`; the D16 anchor grammar (`o{n}.`, `pg` locators); alias `status` (union enum) + `trust_tier`; `identity.merged.v1`/`split.v1`; `doc.redacted.v1` from the sensitive-identity gate plus `redaction.applied.v1` acks; `pin.method`/`confidence`; the anchor read API at the 01_master §9.2 paths (§2.4A); the EXPECTED-work identity endpoint (§2.4B); `pdoc.parsed.v1` + `ParseRequest` for the design partner's matters.
+- **M0, before any backfill:** the 10K-document stratified measurement sample and `corpus_profile@1` report (D19.8, §5.15).
 
 **Full version:**
 - All HCs, tribunals (NCLT, NCLAT, ITAT, NGT, CAT, consumer commissions), district orders; all 22 scheduled languages (progressively).
@@ -1114,7 +1205,7 @@ All metrics are reported per court, per script and per era (pre-2000 scans behav
 
 ## 11. Open questions and risks
 
-1. **Corpus profile unknown**: born-digital vs scanned share, pages/doc, language mix, per source — P0 must measure; all cost/latency numbers depend on it.
+1. **Corpus profile unknown**: born-digital vs scanned share, pages/doc, language mix, per source. *(v1.0 D19.8: P1 owns the measurement through the M0 10K-document stratified sample, §5.15; P0 supplies source counts for weighting.)* All cost/latency numbers depend on it.
 2. **Indic OCR engine choice**: vendor benchmarks (Sarvam) are strong but self-reported [P1-9]; Chitrapathak availability/licence unclear [P1-8]; PaddleOCR-VL per-script Indic accuracy unreported [P1-4]. Decide only after IC-OCR-Bench.
 3. **Data residency of fallback APIs**: whether Google Document AI / Sarvam can process in India regions with zero retention — to verify with vendors (13_cross_cutting).
 4. **HC neutral citation codes**: only Delhi and Madras formats verified [P1-29][P1-30], and they already differ in separator (Delhi announced `/`, printed practice `:`; Madras `/`); need each HC's notification.

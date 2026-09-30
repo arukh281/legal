@@ -3,12 +3,12 @@
 **Abstract.** This document sets the platform-wide rules that every phase (P0–P10) must follow. It covers corpus sizing, a cost model with formulas, the Model Gateway, the security threat model, latency budgets, observability, disaster recovery inside India, deployment topologies, and a catalogue of failure modes. Five findings change decisions elsewhere.
 
 1. **The corpus is about 4× bigger than the brief assumed.** The open eCourts-derived High Court dump alone holds 17.77M PDFs (1,276.94 GiB) from 25 High Courts, and about 1.4M new PDFs arrive each year [XC-16]. The "5M docs" scale is really a *curated core*. The full public corpus is about 20M documents even with district courts left out.
-2. **"Premium models to build the knowledge graph, cheap models to serve" is refuted as a phase-based rule.** A one-time LLM enrichment of 5M documents costs about $41K on a cheap batch model and about $285K on the premium batch model once tokenizer inflation is counted. But the corpus will be *re-processed* several times a year (P4 backfills), and a 2,000-seat serving load costs about $60K every month once the Claude 4.7+ tokenizer factor is applied to serving (the uncorrected list-price figure of ≈$47K is superseded). Total monthly run cost at 2,000 seats is **≈$77K at a 5M-doc corpus and ≈$89K at 20M** (§3.4; spine v1.0 D18). Model tier should follow **error cost × uncertainty**, not pipeline phase.
+2. **"Premium models to build the knowledge graph, cheap models to serve" is refuted as a phase-based rule.** A one-time LLM enrichment of 5M documents costs about $41K on a cheap batch model and about $285K on the premium batch model once tokenizer inflation is counted. But the corpus will be *re-processed* several times a year (P4 backfills), and a 2,000-seat serving load costs about $60K every month once the Claude 4.7+ tokenizer factor is applied to serving (the uncorrected list-price figure of ≈$47K is superseded). Total monthly run cost at 2,000 seats is **≈$77K at a 5M-doc corpus and ≈$89K at 20M**, with per-unit serving of **≈$0.105 per verified Q&A and ≈$2.16 per strategy memo** (§3.4; the cost figures of record, spine v1.0 D19.1, which supersedes D18's per-unit numbers). Model tier should follow **error cost × uncertainty**, not pipeline phase.
 3. **No Claude model is documented as running inference inside India.** The first-party API offers only `global` and `us` inference geos (verified Sep 2026 [XC-2]). The Bedrock India launch covers Global cross-Region inference only, for 4.5/4.6-generation models (Mar 2026 [XC-6]); the Bedrock position for Claude 5.x must be re-checked at each tenant onboarding. In-India processing does exist for OpenAI GPT-5.6 Terra/Luna on Bedrock `in.` profiles [XC-7], for older-generation Azure OpenAI deployments in South India (newest regional full-size model: gpt-5.1) [XC-8], and, on snippet-level evidence only, for Gemini 2.5 on Vertex asia-south1 [XC-10]. The Gateway therefore routes by *data class × residency policy*, not by quality alone.
 4. **Prompt injection through uploaded opposing-party documents is the top security risk.** It is handled architecturally with trust labels, a dual-LLM/plan-then-execute design, and no exfiltration-capable tools in untrusted contexts [XC-33][XC-34]. Model hardening is not relied on.
 5. **The whole stack can run within India with a Mumbai primary and a Hyderabad DR site.** On-prem tenants (deployment D4; D4h when they allow in-India cloud LLM endpoints) get a signed PLC replica plus open-weight Indic-capable models (Sarvam-105B, Qwen3) [XC-12][XC-13]. Any quality gap is measured and disclosed.
 
-**Spine v1.0 note.** This document conforms to the spine v1.0 decision record (cited here as "v1.0 D1–D18"; not to be confused with the deployment names D1–D4h of §9). The disposition of each change it proposed, and the renames it now follows, are in §1.3.0.
+**Spine v1.0 note.** This document conforms to the spine v1.0 decision record (cited here as "v1.0 D1–D21", including the synthesis-pass rulings D19–D21; not to be confused with the deployment names D1–D4h of §9). The disposition of each change it proposed, and the renames it now follows, are in §1.3.0.
 
 ---
 
@@ -42,15 +42,17 @@ The principal architect's spine v1.0 decision record ruled on every proposal in 
 | S2 | `pipeline_version` = component@semver + model_id + model_snapshot + endpoint_region + prompt_hash | **ACCEPTED as v1.0 D10** | Verbatim. |
 | S3 | CloudEvents extension `dataclass` | **ACCEPTED as v1.0 D2** | `dataclass` ∈ PUBLIC \| TENANT_CONFIDENTIAL \| PRIVILEGED. |
 | S4 | `residency_policy` on ResearchQuery / MatterContext | **ACCEPTED as v1.0 D9** | Also carried in P7's signed Tenant Execution Context (TEC). v1.0 D15 fixes the qualifying IN_ONLY endpoints (§4.4). |
-| S5 | `trust_label` on MatterContext.documents[] and EvidenceBundle.items[] | **ACCEPTED-MODIFIED as v1.0 D9** | Enum gains `TENANT_WORK_PRODUCT`; labels also go on chunks. Only PLC_OFFICIAL, TENANT_WORK_PRODUCT and USER_INPUT may influence control flow; every other label is data-only (§4.2, §5.4 updated). |
+| S5 | `trust_label` on MatterContext.documents[] and EvidenceBundle.items[] | **ACCEPTED-MODIFIED as v1.0 D9; extended by D21.12** | Enum gains `TENANT_WORK_PRODUCT`; labels also go on chunks. Only PLC_OFFICIAL, TENANT_WORK_PRODUCT and USER_INPUT may influence control flow; every other label is data-only (§4.2, §5.4 updated). v1.0 D21.12 adds `TENANT_COURT_RECORD` (privately held certified copies of court records): data-only for control flow, may support RECORD_FACT claims. |
 | S6 | `ParsedDocument.quality.hidden_text_flags[]` | **ACCEPTED as v1.0 D9** | Verbatim. |
 | S7 | `budget.max_cost_usd`, `budget.max_llm_calls` | **ACCEPTED-MODIFIED as v1.0 D9** | `budget` = {latency_ms, max_items, max_cost_usd, max_llm_calls, max_input_tokens}; `max_input_tokens` came from 20_competitive_teardown. |
-| S8 | `VerificationReport.degradations[]` | **NOT RULED in v1.0** (absent from D9's VerificationReport; neither accepted nor rejected) | This doc keeps the requirement that a memo reader must see degradation (§3.6, §4.7), but P6/P8/P10 are not bound to the field. Open item Q14. |
-| S9 | `RedactionOverlay` + `plc.redaction.v1` | **ACCEPTED-MODIFIED as v1.0 D16 (+ D4 catalogue)** | Single event name **`doc.redacted.v1`** (P0/P1/ops/legal → P2, P3, P4, P5 caches, P7). Overlay reshaped to {overlay_id, scope WORK\|EXPRESSION\|ANCHOR_SPANS, kind SUPPRESS_ALL\|MASK_SPANS\|NAME_SEARCH_SUPPRESSED\|COURT_PROHIBITION, spans[], legal_basis, ordered_by?, effective_at, purge_sla}. Masking is an overlay with no masked `expression_key`. Work gains `access_restriction{…}`. 21_india's `work.access_restricted.v1` is folded in, and source takedowns arrive as `raw.captured.v1` `change_kind=SUPPRESSED`. Schema in §1.3.1 remapped; the consumer-ack ledger stays an XC operational extension (Q16). |
+| S8 | `VerificationReport.degradations[]` | **ACCEPTED-MODIFIED as v1.0 D19.2** (was not ruled in D9; 01_master §14 R-08) | `degradations[]{kind BUDGET \| SOURCE_STALE \| MODEL_FALLBACK \| RESIDENCY_FALLBACK \| INDEX_LAG \| COVERAGE_GAP, detail, affected_claim_ids[]}` on VerificationReport, mirrored in `EvidenceBundle.warnings[]`. P10 must disclose any degradation next to the answer. This doc's enum maps onto it (§1.3.1). Q14 closed. |
+| S9 | `RedactionOverlay` + `plc.redaction.v1` | **ACCEPTED-MODIFIED as v1.0 D16 (+ D4 catalogue); ack ledger ACCEPTED as D19.3; producers, consumers and field list fixed by D20.3/D21.3** | Single event name **`doc.redacted.v1`** (producers P0, P1, ops/legal → consumers P1 anchor API, P2, P3, P4, P5 caches, P7, P8, P9, P10 and replicas; v1.0 D20.3/D21.3). Consumers de-duplicate on `overlay_id` (`ovl_`, D19.3/D20.5) and each acknowledges with **`redaction.applied.v1`** {overlay_id, consumer, applied_at, generations_purged[]}; P0 keeps the redaction ledger and alerts on `purge_sla` breach (D19.3). The canonical overlay field list is 01_master §7.13 (D20.3). Q16 closed. Overlay reshaped to {overlay_id, scope WORK\|EXPRESSION\|ANCHOR_SPANS, kind SUPPRESS_ALL\|MASK_SPANS\|NAME_SEARCH_SUPPRESSED\|COURT_PROHIBITION, spans[], legal_basis, ordered_by?, effective_at, purge_sla}. Masking is an overlay with no masked `expression_key`. Work gains `access_restriction{…}`. 21_india's `work.access_restricted.v1` is folded in, and source takedowns arrive as `raw.captured.v1` `change_kind=SUPPRESSED`. Schema in §1.3.1 remapped to 01_master §7.13. Purge SLO reconciled with P2 (01_master §14 R-24): serving ≤1 h, derived ≤24 h, replicas with the next bundle (§5.9). |
 | S10 | `EvidenceBundle.items[].quality{ocr_conf, lang, is_authoritative_expression}` | **ACCEPTED-MODIFIED as v1.0 D9** | `quality{ocr_conf, is_authoritative_expression}`; `lang` moves to `items[].lang`. |
 | S11 | Lowercase envelope attribute names | **ACCEPTED as v1.0 D2** | `tenantid`, `causationid`, `idempotencykey`, `schemaversion` (+ `dataclass`, `traceparent`). Payload fields may keep snake_case. D2 adds the Privacy-Gate envelope rule (§5.2, §7.1). |
 
 **Other v1.0 decisions this document now applies** (not proposals of its own): v1.0 D1 technology posture (§3.4 cost lines); D3 impact-broadcast topology and PLC read-path rule (§6.2, §7.4, §8.2, §9); D6 `AuthorityView` semantics (§3.6, §5.3, §5.5, §6.1, §10); D9 Privacy Gate classes and TEC (§5.2, §5.5); D11 gate policy (§4.2, §4.6); D14 risk-weighted model allocation, i.e. this doc's §3.5 verdict; D15 residency (§4.4); D16 MT, masking, crosswalk and `judgment.expected.v1` (§5.9, §10); D17 deployment names (§9); D18 cost figures of record (abstract, §3.4, §3.5).
+
+**Synthesis-pass rulings D19–D21 applied in this revision:** D19.1 cost figures of record ≈$0.105/Q&A, ≈$2.16/memo, ≈$77K/≈$89K per month at 2,000 seats; $0.086/$1.66 are list-price lower bounds only; 08_P6's ≈$2.7/memo is a sensitivity upper bound; this document is the canonical cost model (abstract, §3.4); D19.2 `degradations[]` (§1.3.1, §3.6, §4.3, §4.7); D19.3 `redaction.applied.v1` acks and `ovl_` (§1.3.1, §5.9, F21); D19.4 real-time lane without tenant knowledge (§6.2; closes Q15 and 01_master §14 R-36); D19.7 replica rule for D2 vs D3/D4/D4h (§7.4, §9); D19.8 P1 owns the 10K-document measurement sample in M0 (§2.2, Q1); D19.9 `LLMCallRecord` consumers P8, P9 and FinOps (§4.2); D19.10 sequencing: MVP/M1 = one D2 cell, deployment menu D1–D4h published at GA (M3), PLC Access API/MCP after M2 coverage (§9); D20.3 redaction producers/consumers and canonical overlay (§5.9); D20.5 prefixes `ovl_` (§1.3.1), `par_` for parse IDs (§1.3.1 envelope example) and `jex_` (§6.2); D20.12 COVERAGE_GAP semantics (§6.2, F1); D20.16 topic naming `{plane}.{domain}.{event}.v{n}` (§6.2); D21.3 consumer lists and the control-plane event `model.endpoint.candidate.v1` (Model Gateway → P8 offline gate; §4.6; closes 01_master §14 R-31 for this doc); D21.8 reason-code registries: P8 owns verification codes incl. `RESIDENCY_NO_QUALIFIED_ENDPOINT`, P3 owns authority codes (§4.3); D21.12 `TENANT_COURT_RECORD` (§4.2, §5.4); D21.18 `judgment.expected.v1.referenced_authorities[]` (§6.2, F19).
 
 **Renames this document now follows**
 
@@ -69,7 +71,13 @@ The principal architect's spine v1.0 decision record ruled on every proposal in 
 | `memo_gate` PASS/BLOCK | `VerificationReport.gate` PASS \| PARTIAL \| BLOCK | D9 |
 | `MatterContext.key_dates.cause_of_action` as the date default | `as_of_legal_date_default` / `temporal_context`, derived from `procedural_events[]` (`key_dates` is a derived view) | D9, D16 |
 | Privacy Gate "k-anonymity across ≥3 tenants" | Privacy Gate classes S0–S3; S2 aggregates only, k≥5 tenants + DP noise; S3 never crosses | D9 |
-| Monthly totals ≈$64K (S-5M) / ≈$77K (S-20M) in the §3.4 table | **≈$77K (S-5M) / ≈$89K (S-20M) at 2,000 seats**; old table totals struck through as superseded | D18 |
+| Monthly totals ≈$64K (S-5M) / ≈$77K (S-20M) in the §3.4 table | **≈$77K (S-5M) / ≈$89K (S-20M) at 2,000 seats**; old table totals struck through as superseded | D18, D19.1 |
+| Per-unit serving Q&A ≈$0.086 / memo ≈$1.66 quoted as the D18 figures | **≈$0.105 per verified Q&A / ≈$2.16 per memo** (tokenizer-corrected, figures of record); $0.086/$1.66 are list-price lower bounds only | D19.1 |
+| `degradations[].kind` RESIDENCY_QUEUED \| QUALIFIED_FALLBACK (+ BUDGET, SOURCE_STALE) | BUDGET \| SOURCE_STALE \| MODEL_FALLBACK \| RESIDENCY_FALLBACK \| INDEX_LAG \| COVERAGE_GAP, plus `affected_claim_ids[]` | D19.2 |
+| Overlay `acks{}` written by consumers into an XC-only ledger | `redaction.applied.v1` event from every consumer; P0 keeps the ledger (the `acks` map is a ledger view) | D19.3 |
+| Redaction SLO "SaaS ≤4 h" | serving ≤1 h, derived stores ≤24 h, replicas with the next bundle (`purge_sla{serving_h, derived_h, replica}`) | D20.3; 01_master §14 R-24 |
+| Real-time trigger "cites a Work referenced in an active matter" | every impact_tier-1 impact and every larger/constitution-bench `judgment.expected.v1` take the real-time lane; other impacts by public citation footprint | D19.4; 01_master §14 R-36 |
+| Replica lag ≤24 h for D2/D3 and ≤48 h for D4/D4h; D2 holds a local replica | D2 reads the shared PLC through the stateless read path (replica optional); D3/D4/D4h MUST use a local replica with a ≤24 h lag SLO | D19.7 |
 
 **Proposals as submitted (S1–S11; dispositions above):**
 
@@ -93,7 +101,7 @@ The principal architect's spine v1.0 decision record ruled on every proposal in 
 { "specversion": "1.0", "id": "01J9Z…", "type": "doc.parsed.v1", "source": "p1.parser@2.3.0",
   "time": "2026-09-30T10:12:00Z", "subject": "wrk_01H…", "tenantid": null, "dataclass": "PUBLIC",
   "traceparent": "00-4bf9…-00f0…-01", "causationid": "01J9Y…", "idempotencykey": "sha256:…",
-  "schemaversion": "1", "data": { "parse_id": "…" } }
+  "schemaversion": "1", "data": { "parse_id": "par_…" } }   // topic plc.doc.parsed.v1 (v1.0 D20.16); par_ per D20.5
 
 // S4: ResearchQuery / MatterContext addition
 { "residency_policy": "IN_ONLY" }          // IN_ONLY | IN_PREFERRED | ANY; matter value overrides tenant default
@@ -102,30 +110,47 @@ The principal architect's spine v1.0 decision record ruled on every proposal in 
 { "item_id": "itm_…", "anchor_ids": ["wrk_…/en#p45"], "trust_label": "PLC_OFFICIAL", "lang": "en",
   "quality": { "ocr_conf": 0.97, "is_authoritative_expression": true } }
 
-// S8: VerificationReport (memo level). v1.0 D9: gate ∈ PASS | PARTIAL | BLOCK (was memo_gate PASS/BLOCK);
-//     degradations[] is NOT in the v1.0 contract (not ruled; §1.3.0, Q14)
-{ "gate": "PASS", "degradations": [ { "kind": "BUDGET", "detail": "bench-agent role skipped: max_cost_usd reached" } ] }
+// S8 → v1.0 D19.2 (ACCEPTED): VerificationReport (memo level). v1.0 D9: gate ∈ PASS | PARTIAL | BLOCK (was memo_gate PASS/BLOCK).
+//     degradations[] kind ∈ BUDGET | SOURCE_STALE | MODEL_FALLBACK | RESIDENCY_FALLBACK | INDEX_LAG | COVERAGE_GAP;
+//     mirrored in EvidenceBundle.warnings[]; P10 discloses every entry next to the answer (D19.2).
+//     Mapping from this doc's earlier enum: QUALIFIED_FALLBACK → MODEL_FALLBACK; RESIDENCY_QUEUED → RESIDENCY_FALLBACK
+//     (detail "queued"). Residency never falls back abroad (§4.3): RESIDENCY_FALLBACK records an IN_PREFERRED request served
+//     outside India or an IN_ONLY request served by the degraded self-hosted pool (§8.3). A sync IN_ONLY request with no
+//     qualified endpoint is refused with P8 verification reason code RESIDENCY_NO_QUALIFIED_ENDPOINT (v1.0 D21.8).
+{ "gate": "PASS", "degradations": [ { "kind": "BUDGET", "detail": "bench-agent role skipped: max_cost_usd reached",
+                                        "affected_claim_ids": ["clm_…"] } ] }
 ```
 ```ts
-// S9 → v1.0 D16: RedactionOverlay, carried as the data of doc.redacted.v1 (bitemporal, spine §E);
-// raw blobs and anchors are never edited or deleted. Pre-v1.0 field names are kept in comments for traceability.
+// S9 → v1.0 D16 + D19.3 + D20.3: RedactionOverlay, carried as the data of doc.redacted.v1 (bitemporal, spine §E).
+// The canonical field list is 01_master §7.13 (v1.0 D20.3); it is reproduced here for the XC controls in §5.9.
+// Raw blobs and anchors are never edited or deleted. Pre-v1.0 field names are kept in comments for traceability.
 interface RedactionOverlay {
-  // --- v1.0 D16 core (normative) ---
-  overlay_id: string;                                     // was redaction_id "red_…"; prefix not yet in the D12 registry (Q16)
+  // --- v1.0 D16/D20.3 fields (normative; 01_master §7.13) ---
+  overlay_id: string;                                     // "ovl_…" (v1.0 D19.3, D20.5); was redaction_id "red_…"
+  work_id: string; expression_key?: string;               // D20.3 superset of D16
   scope: "WORK" | "EXPRESSION" | "ANCHOR_SPANS";          // was target: { anchor_id, span? } | { work_id }
   kind: "SUPPRESS_ALL" | "MASK_SPANS" | "NAME_SEARCH_SUPPRESSED" | "COURT_PROHIBITION";
         // mapping from this doc's earlier enum: MASK_NAME, MASK_SPAN → MASK_SPANS;
         // DEINDEX_WORK → NAME_SEARCH_SUPPRESSED (name-search de-indexing orders) or SUPPRESS_ALL (whole-Work de-indexing);
         // WITHHOLD_WORK → SUPPRESS_ALL; COURT_PROHIBITION is new in v1.0
-  spans: { anchor_id: string; span?: [number, number]; replacement?: string }[];   // replacement e.g. "[victim]"
+  spans: { anchor_id: string; span: [number, number]; replacement?: string }[];    // replacement e.g. "[victim]"
   legal_basis: { type: "COURT_ORDER" | "STATUTE" | "SOURCE_TAKEDOWN" | "DPDP_REQUEST"; ref: string; anchor_id?: string };
   ordered_by?: string;                                    // court or authority that ordered it
-  effective_at: string;                                   // was valid_from
-  purge_sla: string;                                      // e.g. SaaS PT4H; replicas with next bundle (§5.9 item 5)
-  // --- XC operational extensions (proposed; not part of the D16 core) ---
-  valid_to?: string; recorded_at: string; superseded_at?: string;
+  effective_at: string;                                   // legal effective date
+  purge_sla: { serving_h: 1; derived_h: 24; replica: "NEXT_BUNDLE" }; // D20.3 / 01_master §14 R-24; was a single
+                                                          // duration string with an XC SaaS target of PT4H (superseded)
+  valid_from: string; valid_to?: string; recorded_at: string; superseded_at?: string;   // bitemporal (spine §E)
   review_state: "PENDING_REVIEW" | "VERIFIED";            // SUPPRESS_ALL (was WITHHOLD_WORK) needs legal sign-off
-  acks: Record<"INDEX" | "EMBEDDINGS" | "CACHE" | "TRACE_STORE" | "REPLICA", string | null>; // ack time per consumer
+  acks: Record<"INDEX" | "EMBEDDINGS" | "CACHE" | "TRACE_STORE" | "REPLICA" | "GRAPH", string | null>;
+                                                          // ledger view, filled from redaction.applied.v1 (below)
+}
+// v1.0 D19.3: every consumer of doc.redacted.v1 acknowledges with event redaction.applied.v1.
+// P0 keeps the redaction ledger, joins acks to overlays on overlay_id, and alerts on purge_sla breach.
+interface RedactionApplied {
+  overlay_id: string;                                     // "ovl_…"
+  consumer: "P1" | "P2" | "P3" | "P4" | "P5" | "P7" | "P8" | "P9" | "P10" | `REPLICA:${string}`;
+                                                          // D19.3 enum, extended to the D21.3 consumer list (P1, P8, P9)
+  applied_at: string; generations_purged: string[];       // e.g. index_generation / cache generations purged
 }
 ```
 
@@ -157,7 +182,7 @@ interface RedactionOverlay {
 
 Cross-check: in 2022 there were 1.72M PDFs against 1.36M disposals. The dump therefore contains more than final judgments (interim orders, several orders per case). For P0/P1 this means **"document" ≠ "judgment"**. About a quarter to a third of HC PDFs may be short procedural orders with little precedential value. This is an estimate, to be measured.
 
-### 2.2 Estimates (flagged; to be measured in P1 week 1)
+### 2.2 Estimates (flagged; to be measured by P1's 10K-document stratified sample in M0, v1.0 D19.8)
 | Quantity | Working value | Status | How we will measure |
 |---|---|---|---|
 | Tribunal decisions (NCLT, NCLAT, ITAT, NGT, CAT, consumer commissions, SAT, APTEL …) | 1–3M historical; 1–2K/day | **unverified estimate** | P0 source census (doc 21) |
@@ -261,7 +286,7 @@ QA_cost   = synth(Sonnet 5.5: 25K in, 1.5K out)          = $0.065
 MEMO_cost = agents(Opus 5.5: 100K uncached in + 300K cache-hit in @0.05× + 40K out) = $1.26
           + verify(Sonnet 5.5: 150K in, 10K out)                                  = $0.40  ⇒ ≈ $1.66
 ```
-**Per-unit figures, stated unambiguously.** At list-price token counts (no tokenizer factor): Q&A ≈ $0.086, memo ≈ $1.66 (the per-unit figures quoted in spine v1.0 D18). With the ×1.3 Claude 4.7+ tokenizer factor applied to Sonnet/Opus 5.5 (review correction below): Q&A ≈ $0.105, memo ≈ $2.16. **The monthly figures of record (≈$77K / ≈$89K) use the tokenizer-corrected per-unit costs.**
+**Per-unit figures, stated unambiguously.** At list-price token counts (no tokenizer factor): Q&A ≈ $0.086, memo ≈ $1.66. These were the per-unit figures quoted in spine v1.0 D18; v1.0 D19.1 demotes them to **list-price lower bounds only**. With the ×1.3 Claude 4.7+ tokenizer factor applied to Sonnet/Opus 5.5 (review correction below): **Q&A ≈ $0.105 per verified answer, memo ≈ $2.16. These are the per-unit cost figures of record (v1.0 D19.1)**, and the monthly figures of record (≈$77K / ≈$89K) use them. 08_P6's ≈$2.7/memo (placeholder prices, excluding retrieval and verification) is a sensitivity upper bound, not a figure of record; this document is the canonical cost model (D19.1). All remain planning estimates until the P1 10K-document sample (D19.8) re-bases them.
 
 | Line item | S-5M | S-20M | Basis |
 |---|---|---|---|
@@ -278,10 +303,10 @@ MEMO_cost = agents(Opus 5.5: 100K uncached in + 300K cache-hit in @0.05× + 40K 
 | LLM serving: Q&A (400K/mo) | ~~$34K~~ superseded → **≈$42K** | ~~$34K~~ superseded → **≈$42K** | independent of corpus size; corrected at $0.105/Q&A |
 | LLM serving: memos (8K/mo) | ~~$13K~~ superseded → **≈$17K** | ~~$13K~~ superseded → **≈$17K** | corrected at $2.16/memo |
 | ~~Total monthly (list-price serving, no tokenizer factor)~~ — **SUPERSEDED, do not use** | ~~≈$64K (≈$32/seat)~~ | ~~≈$77K (≈$39/seat)~~ | kept only for traceability; note that the old S-20M total equals the corrected S-5M total |
-| **Total monthly — FIGURES OF RECORD (v1.0 D18), 2,000 seats** | **≈$77K (≈$38/seat)** | **≈$89K (≈$44/seat)** | infra + delta + tokenizer-corrected serving: ≈$17.3K + ≈$59.3K ≈ $76.6K (S-5M); ≈$29.2K + ≈$59.3K ≈ $88.5K (S-20M); rounded |
+| **Total monthly — FIGURES OF RECORD (v1.0 D18, confirmed by D19.1), 2,000 seats** | **≈$77K (≈$38/seat)** | **≈$89K (≈$44/seat)** | infra + delta + tokenizer-corrected serving: ≈$17.3K + ≈$59.3K ≈ $76.6K (S-5M); ≈$29.2K + ≈$59.3K ≈ $88.5K (S-20M); rounded |
 
 **Review corrections to §3.4.**
-- *Tokenizer consistency.* §3.3 applies the ×1.3 Claude 4.7+ factor, but the serving formulas above do not. Sonnet 5.5 and Opus 5.5 use the new tokenizer; Haiku 4.5 does not [XC-1]. Applied consistently, Q&A ≈ $0.105 and memo ≈ $2.16, so serving ≈ $60K/month. **Total ≈ $77K (S-5M, ≈$38/seat) and ≈ $89K (S-20M, ≈$44/seat).** These are the planning figures of record (spine v1.0 D18). The table above now shows them, with the superseded uncorrected values struck through for traceability. They remain estimates pending the P1 10K-doc measurement sample (Q1).
+- *Tokenizer consistency.* §3.3 applies the ×1.3 Claude 4.7+ factor, but the serving formulas above do not. Sonnet 5.5 and Opus 5.5 use the new tokenizer; Haiku 4.5 does not [XC-1]. Applied consistently, Q&A ≈ $0.105 and memo ≈ $2.16, so serving ≈ $60K/month. **Total ≈ $77K (S-5M, ≈$38/seat) and ≈ $89K (S-20M, ≈$44/seat).** These are the planning figures of record (spine v1.0 D18 monthly totals; D19.1 per-unit figures). The table above now shows them, with the superseded uncorrected values struck through for traceability. They remain estimates pending the P1 10K-doc measurement sample (Q1; v1.0 D19.8).
 - *Retry, repair and escalation overhead* (§4.3: up to 3 attempts, one repair call, one escalation hop) is missing from the per-request formulas. Budget a planning multiplier of 1.1–1.2× on LLM serving until Gateway telemetry measures it (estimate).
 - *Vector memory.* The search-cluster line counts int8 vectors once. With one replica and HNSW graph overhead (≈10–15%, estimate), resident vector memory is ≈2.3× the figure shown: ≈94 GB at S-5M and ≈377 GB at S-20M. The node counts hold only if P2's load test confirms headroom. A blue/green `index_generation` cut-over (e.g. re-embedding with a new model) needs ≈2× capacity while it runs.
 
@@ -299,7 +324,7 @@ MEMO_cost = agents(Opus 5.5: 100K uncached in + 300K cache-hit in @0.05× + 40K 
 
 ### 3.6 Cost controls built into the platform
 - Every Gateway call records `input_chars`, `output_chars`, provider tokens and USD. Dashboards compare **$/1K source chars per task** across providers, which removes the tokenizer bias [XC-1].
-- Budgets are enforced per tenant, per matter, per request (`max_cost_usd`, S7) and per pipeline run. Overruns degrade gracefully (cheaper qualified model or fewer agents) and record a `BUDGET` degradation for the memo (S8 `degradations[]`; not yet part of the v1.0 VerificationReport contract, see §1.3.0 and Q14).
+- Budgets are enforced per tenant, per matter, per request (`max_cost_usd`, S7) and per pipeline run. Overruns degrade gracefully (cheaper qualified model or fewer agents) and record a `BUDGET` entry in `VerificationReport.degradations[]` with the `affected_claim_ids[]` (S8, accepted as v1.0 D19.2), mirrored in `EvidenceBundle.warnings[]` and disclosed by P10 next to the answer.
 - Caching:
   - Prompt caching for shared system prompts and EvidenceBundles reused across P6 agents (cache hit 0.05–0.1× [XC-1]).
   - An exact-match result cache is used for PLC-only computations such as `AuthorityView` (v1.0 D6; formerly AuthorityStatus) and treatment summaries. Cache keys include `as_of_legal_date`, `as_known_at`, `status_mode` and the graph generation, i.e. `graph_watermark` (v1.0 D4; formerly the last applied `graph.delta.v1` `delta_id`). Any `status_changes[]` entry for a Work evicts every cached entry that mentions that Work, so a stale GOOD cannot outlive an overruling (review addition). A `doc.redacted.v1` overlay also evicts by `work_id` (§5.9).
@@ -325,6 +350,8 @@ interface ModelTaskContract {
   data_class_max: DataClass;       // highest class this task may receive
   allowed_trust_labels: TrustLabel[]; // e.g. P6 planner: [USER_INPUT, TENANT_WORK_PRODUCT, PLC_OFFICIAL] (the v1.0 D9
                                       // control-flow set); quarantined reader: all
+                                      // TrustLabel = PLC_OFFICIAL | PLC_THIRD_PARTY | TENANT_CLIENT_DOC | TENANT_OPPOSING_DOC |
+                                      //   TENANT_CORRESPONDENCE | TENANT_WORK_PRODUCT | TENANT_COURT_RECORD (v1.0 D21.12) | USER_INPUT
   tools_allowed: ToolId[];         // empty for extraction tasks; never "egress" tools with untrusted inputs
   eval: { gold_set_id: string; metric: "macro_f1"|"exact"|"faithfulness"|"judge_pairwise";
           promote_threshold: number; slices: string[];
@@ -352,10 +379,14 @@ interface ModelEndpoint {
   qualified_tasks: Record<string /*task_id*/, { score: number; slices: Record<string, number>; qualified_at: string; eval_run_id: string }>;
 }
 
-interface LLMCallRecord {           // written for every call; audit + lineage + cost
+interface LLMCallRecord {           // written for every call; audit + lineage + cost (01_master §7.24)
+                                   // consumers (v1.0 D19.9): P8 (audit replay, per-residency quality), P9 (lineage,
+                                   // erasure), FinOps (§3.6 dashboards); read access is tenant-scoped
   call_id: string; trace_id: string; task_id: string; endpoint_id: string;
   pipeline_version: string;        // component@semver + model_id + snapshot + endpoint_region + prompt_hash (S2)
-  tenant_id: string | null; matter_id?: string; dataclass: DataClass; residency: Residency;
+  tenant_id: string | null;        // payload field (snake_case allowed, v1.0 D2); the event envelope uses `tenantid`
+  matter_id?: string; dataclass: DataClass; residency: Residency;
+  processing_geo: "IN" | "APAC" | "US" | "GLOBAL" | "EU";  // provider-reported where available (F8); 01_master §7.24
   input_chars: number; output_chars: number; tokens_in: number; tokens_out: number; cache_read_tokens: number;
   usd: number; latency_ms: number; schema_valid: boolean; repaired: boolean; escalated_from?: string;
   inputs_ref: string; outputs_ref: string;   // pointers into tenant-scoped encrypted store; never inline in ops logs
@@ -390,6 +421,8 @@ route(task, request, depth=0):
   if request.residency == IN_ONLY: return QUEUE(request) if request.async else FAIL_CLOSED
   raise NoQualifiedEndpoint
 ```
+*Contract hooks (v1.0 D19.2, D21.8):* `FAIL_CLOSED` on a synchronous request surfaces to P8/P10 as verification reason code `RESIDENCY_NO_QUALIFIED_ENDPOINT` (P8-owned registry); a queued IN_ONLY request that is later served by the degraded self-hosted pool, or an IN_PREFERRED request served outside India, records `degradations[].kind = RESIDENCY_FALLBACK`; serving from a lower-ranked qualified endpoint after a circuit-breaker trip records `MODEL_FALLBACK`.
+
 *Review fixes to this sketch:* the earlier version checked `IN_ONLY` emptiness only after the loop, let cost ordering override the IN-first ranking, did not meter failed or escalated calls, ignored language and OCR slices (so a model never qualified on Hindi could serve a Hindi judgment), and allowed unbounded escalation recursion.
 The last rule matters. **Residency fails closed.** An outage of in-India endpoints must never silently route a privileged prompt abroad.
 
@@ -431,6 +464,9 @@ Other open-weight families (Llama, Mistral, DeepSeek, BharatGen Param) were not 
 ### 4.6 Eval gates, promotion and drift
 ```
 candidate (task_id, endpoint, prompt_variant)
+     announced as control-plane event model.endpoint.candidate.v1 {endpoint_id, task_ids[], model_snapshot, prompt_hash}
+     (Model Gateway registry → P8 offline gate; v1.0 D21.3; topic ops.*, dataclass PUBLIC, 01_master §6.2 / §14 R-31);
+     parser/prompt releases use release.candidate.v1 {release_id, component@semver} from CI → P8 the same way
   → offline gate: P8 gold set, overall + every slice (hi/regional, ocr_low, court tiers, BNS/IPC crosswalk)
        pass iff score ≥ promote_threshold
             AND every zero-tolerance sentinel suite passes
@@ -449,8 +485,10 @@ candidate (task_id, endpoint, prompt_variant)
 ### 4.7 Fallbacks and degradation
 | Situation | Behaviour |
 |---|---|
-| Primary endpoint 5xx/timeout | Circuit breaker opens after 5 failures in 30 s. Next qualified endpoint (same residency) is used. |
+| Primary endpoint 5xx/timeout | Circuit breaker opens after 5 failures in 30 s. Next qualified endpoint (same residency) is used and a `MODEL_FALLBACK` degradation is recorded (v1.0 D19.2). |
 | All premium endpoints down (sync, P6) | Memo is queued, and the user sees "queued: model capacity". Premium roles are **never** silently downgraded to unqualified models. |
+| Budget cap reached (`max_cost_usd`, step caps) | Fewer agent roles or a cheaper *qualified* endpoint; `BUDGET` degradation with `affected_claim_ids[]` (D19.2). |
+| Source stale / index lagging / coverage gap | `SOURCE_STALE`, `INDEX_LAG` or `COVERAGE_GAP` degradation, mirrored in `EvidenceBundle.warnings[]`; P10 shows "status current to <law_current_to>" (D19.2, D20.12). |
 | Bulk tasks, provider down | Batch jobs pause. P4 backlog alarms fire at >24 h lag. |
 | Price change | Registry updated, and the router re-optimises automatically. The cost dashboard shows the delta. |
 | Model retirement notice | Candidate replacement enters the gate the same week. Retirement date goes into the risk register. |
@@ -555,7 +593,7 @@ The threat is concrete. The opposing side's petition may contain white-on-white 
 
    Flagged spans are excluded from default context and shown to the lawyer as "hidden text found". Some are legitimately interesting evidence.
 2. **Trust labels on every span and chunk (S5; v1.0 D9).** The context assembler wraps each span in a typed envelope `{trust_label, anchor_id, text}`. The model is told that envelope contents are data. This is a *soft* control, and we assume it fails sometimes.
-3. **Dual-LLM / plan-then-execute (hard control).** The P6 *planner* sees only USER_INPUT, TENANT_WORK_PRODUCT, MatterContext structured fields and PLC_OFFICIAL metadata. This is the v1.0 D9 rule: only PLC_OFFICIAL, TENANT_WORK_PRODUCT and USER_INPUT may influence control flow. It emits a fixed plan (issues × retrieval calls × agent roles). *Quarantined reader* calls process TENANT_OPPOSING_DOC/PLC_THIRD_PARTY text (and every other data-only label: TENANT_CLIENT_DOC, TENANT_CORRESPONDENCE) into typed schemas: `opponent_claims[]`, `dates[]`, `cited_authorities[]`. Their outputs can fill fields but cannot add plan steps [XC-33].
+3. **Dual-LLM / plan-then-execute (hard control).** The P6 *planner* sees only USER_INPUT, TENANT_WORK_PRODUCT, MatterContext structured fields and PLC_OFFICIAL metadata. This is the v1.0 D9 rule: only PLC_OFFICIAL, TENANT_WORK_PRODUCT and USER_INPUT may influence control flow. It emits a fixed plan (issues × retrieval calls × agent roles). *Quarantined reader* calls process TENANT_OPPOSING_DOC/PLC_THIRD_PARTY text (and every other data-only label: TENANT_CLIENT_DOC, TENANT_CORRESPONDENCE, TENANT_COURT_RECORD per v1.0 D21.12) into typed schemas: `opponent_claims[]`, `dates[]`, `cited_authorities[]`. Their outputs can fill fields but cannot add plan steps [XC-33].
 4. **No egress in untrusted contexts.** Any call whose context contains untrusted labels gets `tools_allowed = [retrieval_read_only]`. It has no web fetch, no email and no external URLs. Rendered output cannot contain remote images or arbitrary links (LLM05). Models never emit URLs. They emit `anchor_id`s, and the renderer builds links server-side from the anchor registry, so no model-chosen query string can carry data out (review addition). CaMeL-style capability tracking [XC-34] is the target design if write-capable tools are ever added (it solved 77% of AgentDojo tasks with provable security vs 84% undefended [XC-34]).
 5. **Verification backstop.** Every claim needs anchors that P8 verifies against the anchor text. An injected "fabricated case" fails resolution, and an injected mis-statement fails entailment. Claims whose only support is TENANT_OPPOSING_DOC anchors go into `StrategyMemo.opponent_claims` as `claim_type: RECORD_FACT` ("opponent asserts"). P8 marks UNSUPPORTED any `LEGAL_PROPOSITION` Claim that lacks at least one `support` anchor on a PLC Work (`wrk_…`), so an injected proposition cannot be promoted to law. (Review fix: the earlier wording used a claim type that is not in spine §H.)
 6. **Red-team corpus.** A standing set of 500+ injected documents (Hindi, English, mixed; visible and hidden payloads) runs in CI against P6. The metric is attack success rate, target <1% on tier-1-affecting outputs [NOVEL — unvalidated target].
@@ -601,19 +639,21 @@ Public judgments are not always safe to republish verbatim. Three triggers recur
 
 Design **[NOVEL — unvalidated]** (spine change S9, adopted as v1.0 D16: event `doc.redacted.v1` carrying a `RedactionOverlay`):
 1. A redaction is a bitemporal `RedactionOverlay` (schema in §1.3.1). It never edits the raw blob or deletes an anchor (spine §C). Raw bytes stay content-addressed; the unredacted manifestation moves to a restricted legal-hold tier. Masking is an overlay: indexes, snippets, exports and P8 quote checks use the masked rendition, and there is no masked `expression_key` (v1.0 D16). The Work records `access_restriction{name_search_suppressed[], masked_expression_required, court_prohibition}`. A source takedown reaches us from P0 as `raw.captured.v1` with `change_kind=SUPPRESSED`, which consumers must tombstone and purge through this same overlay path.
-2. `doc.redacted.v1` (v1.0 D4/D16; formerly `plc.redaction.v1` in this doc) fans out to:
+2. `doc.redacted.v1` (v1.0 D4/D16; formerly `plc.redaction.v1` in this doc) is produced by P0 (source suppression, captured court orders), P1 (statutory identity masking detected in parsing) and ops/legal (manual) (v1.0 D20.3), on topic `plc.doc.redacted.v1` (D20.16). Consumers de-duplicate on `overlay_id` (`ovl_…`). It fans out to (consumer list per v1.0 D21.3):
+   - P1, whose anchor read API serves the masked rendition;
    - P2, which re-chunks and re-embeds the affected chunks under the next `index_generation`;
    - P3, which masks the entity mentions;
    - P4, which re-renders impact explanations and manifests that quote the span (added for v1.0 D4, which lists P4 as a consumer);
    - P5/P8 caches, which evict by `work_id`;
    - P7 tenant cells, which apply the overlay to PLC text cached in matters (v1.0 D4 consumer);
+   - P8 (quote checks and audit caches), P9 (training/eval datasets that quote the span) and P10 (rendered cards, digests, exports) (v1.0 D21.3);
    - trace stores, which purge bodies containing the span;
-   - replica bundles (§9).
+   - replica bundles for D3/D4/D4h (§9).
 
-   Every consumer writes its ack. An overlay counts as applied only when all acks are in.
+   Every consumer acknowledges with **`redaction.applied.v1`** {overlay_id, consumer, applied_at, generations_purged[]} (v1.0 D19.3; schema in §1.3.1). P0 keeps the redaction ledger, joins acks to overlays and alerts on any `purge_sla` breach. An overlay counts as applied only when every expected consumer (including each registered replica, `REPLICA:<id>`) has acked.
 3. The context assembler applies overlays before any Gateway call. Masked text therefore never reaches a model and cannot be regurgitated.
 4. P1 runs a victim-identity detector on sexual-offence judgments (BNS/IPC sexual-offence provisions, POCSO) and queues suspected unmasked names for HITL. This only detects; masking needs a VERIFIED overlay.
-5. SLO: a VERIFIED overlay reaches SaaS within 4 h and reaches D2/D3 and D4/D4h replicas (formerly B/C) with the next bundle (≤24 h / ≤48 h). The overlay's `purge_sla` records the target. Any residual exposure in replicas is disclosed to the requester.
+5. SLO (reconciled with P2, 01_master §14 R-24; v1.0 D20.3): a VERIFIED overlay is applied to every **serving** path (indexes, snippets, caches, anchor API) within **≤1 h**, and to **derived** stores (embeddings, trace stores, datasets, digests) within **≤24 h**. D1 and D2 cells read the shared PLC (D2 through the stateless read path, v1.0 D19.7), so they inherit the serving SLO. D3/D4/D4h replicas apply it with the **next bundle** (≤24 h replica-lag SLO, D19.7). The overlay's `purge_sla{serving_h: 1, derived_h: 24, replica: NEXT_BUNDLE}` records the target. The earlier XC target of 4 h for SaaS is superseded. Any residual exposure in replicas is disclosed to the requester.
 
 ---
 ## 6. Latency budgets (end-to-end)
@@ -650,17 +690,25 @@ Principle: **show evidence fast, show conclusions only when verified.** Lawyers 
 | SC/HC judgment with **tier-1 impact** → `matter.alert.v1` (provisional, labelled "machine-detected, unverified"), via `impact.detected.v1` lifecycle PROVISIONAL broadcast on `plc.impact.public.v1` and the tenant-cell Impact Matcher (v1.0 D3/D5) | p95 ≤ 6 h from capture |
 | Same alert **HITL-verified** | ≤ 1 business day (IST) |
 | Daily digest (P10) cut-off | 06:30 IST, covering everything captured by 23:59 IST previous day |
+| Source coverage gap → status disclosure (v1.0 D20.12) | A gap adds reason_code `COVERAGE_GAP` and sets `definitive=false` without changing status. If the gap exceeds the per-source threshold (default 72 h for HOT sources; 7 days for WARM/COOL sources that can bind the forum), a GOOD status degrades to UNKNOWN; negatives never lose their status on a gap. P10 shows "status current to <law_current_to>" (P4 Freshness). |
 
-Routing rule: capture events for SC judgments and for any document that cites a Work referenced in an active matter go to the **real-time path** (non-batch endpoints). Everything else can use batch (−50% [XC-1][XC-3][XC-4]).
+**Routing rule (v1.0 D19.4; closes Q15 and 01_master §14 R-36).** P4 never knows tenant interest (D3), so lane admission uses public signals only:
+- *Extraction lane:* a capture goes to the real-time path (non-batch endpoints) if the pre-screen below admits it.
+- *Impact lane:* **every impact_tier-1 impact** takes the real-time lane and is broadcast as PROVISIONAL on `plc.impact.public.v1`. So does every `judgment.expected.v1` for a larger or constitution bench, and every one whose `referenced_authorities[]` names a precedent (v1.0 D21.18).
+- *Other impacts:* significance = public citation footprint of the affected root (citation in-degree / PPR centrality). Those above a threshold take the real-time lane **[NOVEL — unvalidated]**; starting configuration `rt_footprint_min_indegree = 25` (tunable against the ≤15% real-time-share target).
+- Everything else uses batch (−50% [XC-1][XC-3][XC-4]).
+- Each tenant cell's Impact Matcher (P7, `impact-match-core`) decides matter-level urgency locally. An unattributed union watch-list admitted through the P9 Privacy Gate (k≥5 tenants, decoy-padded) is a **post-GA optimisation, not MVP** (D19.4).
+
+*Original rule (superseded; kept for traceability):* capture events for SC judgments and for any document that cites a Work referenced in an active matter go to the real-time path. It required tenant reliance sets in the PLC, which contradicts v1.0 D3.
 
 **Review note.** With ~50 firms, most new judgments cite *some* Work that is referenced in *some* active matter. The second trigger would therefore route nearly everything to the real-time path and lose the batch discount. The trigger is narrowed as follows. A cheap real-time pre-screen (citation extraction plus a small negative-treatment classifier) sends a document to the real-time path only if one of these holds:
 - it is an SC judgment;
 - it is a larger-bench decision;
-- it has ≥1 candidate negative-treatment mention (`OVERRULES`, `OVERRULES_IN_PART`, `DECLARES_PER_INCURIAM`, `NOT_FOLLOWED`, `DOUBTS`, `REFERS_TO_LARGER_BENCH`, `STRIKES_DOWN`, `READS_DOWN`) of a matter-referenced Work.
+- it has ≥1 candidate negative-treatment mention (`OVERRULES`, `OVERRULES_IN_PART`, `DECLARES_PER_INCURIAM`, `NOT_FOLLOWED`, `DOUBTS`, `REFERS_TO_LARGER_BENCH`, `STRIKES_DOWN`, `READS_DOWN`) of any Work (the earlier wording "of a matter-referenced Work" is superseded; see the v1.0 note).
 
 Target: real-time share ≤15% of the daily delta (estimate).
 
-**v1.0 note (D3).** The PLC holds no tenant dependency sets, and P4 never stores them, so "matter-referenced Work" cannot be evaluated on the PLC side. The original routing rule and the third trigger above are therefore restated. The trigger becomes: ≥1 candidate negative-treatment mention of *any* SC/HC Work above a citation-footprint threshold **[NOVEL — unvalidated]**. P4 publishes the resulting `impact.detected.v1` as PROVISIONAL, and each tenant cell's Impact Matcher decides locally which matters are affected. If this pushes the real-time share above 15%, the fallback is an unattributed union watch-list admitted through the P9 Privacy Gate, the pattern v1.0 D4 uses for case-tracking feeds. That fallback needs a ruling (Q15). P0's `judgment.expected.v1` ("pronounced, text awaited", v1.0 D16) also routes to the real-time path.
+**v1.0 note (D3).** The PLC holds no tenant dependency sets, and P4 never stores them, so "matter-referenced Work" cannot be evaluated on the PLC side. The original routing rule and the third trigger above are therefore restated. The trigger becomes: ≥1 candidate negative-treatment mention of *any* SC/HC Work above a citation-footprint threshold **[NOVEL — unvalidated]**. P4 publishes the resulting `impact.detected.v1` as PROVISIONAL, and each tenant cell's Impact Matcher decides locally which matters are affected. If this pushes the real-time share above 15%, the first lever is the footprint threshold. The unattributed union watch-list admitted through the P9 Privacy Gate (the pattern v1.0 D4 uses for case-tracking feeds) was ruled a post-GA optimisation, not MVP (v1.0 D19.4; Q15 closed). P0's `judgment.expected.v1` ("pronounced, text awaited", v1.0 D16; `jex_` record IDs, D20.5) routes to the real-time path for larger/constitution benches (D19.4).
 
 ---
 
@@ -687,6 +735,7 @@ Target: real-time share ≤15% of the daily delta (estimate).
 | Freshness (SC capture ≤ 1 h) | 99% of days | |
 | Alert latency (provisional tier-1 ≤ 6 h) | 95% | |
 | Residency violations (`processing_geo` ≠ policy) | **0** | Sev-1; automatic kill-switch on the endpoint |
+| Redaction purge: VERIFIED overlays acked by every serving consumer within 1 h and every derived consumer within 24 h (`redaction.applied.v1`, §5.9) | 100% | any breach pages legal-ops and on-call (P0 ledger alarm, v1.0 D19.3) |
 
 ### 7.3 Data-quality checks (per stage, per source, daily)
 - **P0:** expected vs observed doc counts per source per weekday. A silent zero (e.g. "Bombay HC 0 today") is an outage or format change. Also tracked: HTTP error mix, byte-size distribution shift, and `change_kind=CHANGED` spikes (possible defacement).
@@ -708,7 +757,7 @@ Target: real-time share ≤15% of the daily delta (estimate).
 
 ### 7.4 Privacy in telemetry
 - Tenant-plane spans carry `tenant_id`, `matter_id` hash, `task_id` and `dataclass`. PLC-service spans do not (next bullet).
-- **PLC read path (v1.0 D3).** Synchronous PLC read APIs (Graph Query API, Index Access Layer, anchor API) called from tenant contexts are stateless. Tenant-attributable IDs, such as the work_ids and anchor_ids a tenant looked up, are logged only in the tenant-scoped audit store. PLC-side ops telemetry is tenant-redacted. D3/D4 deployments use a local PLC replica.
+- **PLC read path (v1.0 D3).** Synchronous PLC read APIs (Graph Query API, Index Access Layer, anchor API) called from tenant contexts are stateless. Tenant-attributable IDs, such as the work_ids and anchor_ids a tenant looked up, are logged only in the tenant-scoped audit store. PLC-side ops telemetry is tenant-redacted. D2 cells read the shared PLC through this stateless read path (same region; a local replica is optional); D3/D4/D4h deployments MUST use a local PLC replica (v1.0 D19.7).
 - For `dataclass ≥ TENANT_CONFIDENTIAL`, the Collector's redaction processor drops `gen_ai` input/output content attributes from the ops pipeline. Bodies are written to the tenant's KMS-encrypted object-store prefix (`inputs_ref`/`outputs_ref` in `LLMCallRecord`), with tenant-configurable retention (default 90 days). Langfuse receives only the pointer and metadata for tenant data classes; full bodies may go into Langfuse only for `PUBLIC` tasks. *Review fix:* a Langfuse project is a logical partition inside shared PostgreSQL/ClickHouse stores [XC-40]. Per-tenant key isolation of trace bodies was never established, and support for per-project customer-managed keys is **unverified**.
 - Ops dashboards are content-free.
 
@@ -735,7 +784,7 @@ Both are in India, so DR preserves residency. Each region is assumed to have 3 A
 - Quarterly DR failover drills, with one unannounced drill a year.
 - Monthly restore tests of a random tenant.
 - Immutable backups (Object Lock) guard against ransomware.
-- LLM dependency is covered by §4.7 fallbacks. For `IN_ONLY` tenants the last resort is the self-hosted model pool (Sarvam-105B/Qwen3-class) in the Indian GPU cloud, in *degraded mode*: the answer is labelled and a lower confidence cap is shown.
+- LLM dependency is covered by §4.7 fallbacks. For `IN_ONLY` tenants the last resort is the self-hosted model pool (Sarvam-105B/Qwen3-class) in the Indian GPU cloud, in *degraded mode*: the answer is labelled, a lower confidence cap is shown, and a `RESIDENCY_FALLBACK` entry is recorded in `degradations[]` (v1.0 D19.2).
 - Source outages are handled by P0 (retry, mirror, gap ledger). Gaps are visible to users ("Allahabad HC not refreshed since …").
 - CERT-In 6-hour incident reporting [XC-38] is part of the Sev-1 runbook: an incident commander checklist step at T+2 h.
 
@@ -777,14 +826,14 @@ Not confirmable in this pass:
 
 **Contract and spine fixes.**
 - **CloudEvents naming (S11).** Spine §G envelope names break the CloudEvents attribute-naming rule. (Accepted as spine v1.0 D2.)
-- **VerificationReport degradations (S8).** A silent `budget_degraded` field is now a proposed `degradations[]` field. (Not ruled in spine v1.0; §1.3.0, Q14.)
+- **VerificationReport degradations (S8).** A silent `budget_degraded` field is now a `degradations[]` field. (Not ruled in v1.0 D9; accepted as v1.0 D19.2, §1.3.0.)
 - **Claim typing.** "Opponent asserts" is now expressed with spine Claim types.
 - **`owner_phase` coverage.** It omitted P2, P4 and P7.
 - **Schemas.** Concrete schemas were added for S3–S5 and S8–S9 (§1.3.1).
 
 **Design gaps patched.**
 - **Gateway routing** (§4.3): language/OCR slice gating, fail-closed ordering, metering of every attempt, and bounded escalation.
-- **Cost model** (§3.2–3.4): tokenizer factor applied to serving (≈$77K at S-5M / ≈$89K at S-20M per month at 2,000 seats: the figures of record, v1.0 D18), Indic tokenizer factor λ_lang, OCR gate before enrichment, retry overhead, and vector memory with replicas.
+- **Cost model** (§3.2–3.4): tokenizer factor applied to serving (≈$77K at S-5M / ≈$89K at S-20M per month at 2,000 seats, ≈$0.105/Q&A and ≈$2.16/memo: the figures of record, v1.0 D18/D19.1), Indic tokenizer factor λ_lang, OCR gate before enrichment, retry overhead, and vector memory with replicas.
 - **Freshness:** cache eviction on `graph.delta.v1` status changes (§3.6), and a narrower real-time trigger (§6.2).
 - **Prompt injection** (§5.4): Unicode smuggling flags, PLC-text-is-data, and server-built links.
 - **PLC redaction and takedown** for Indian victim-identity and masking orders (§5.9). (Adopted as `doc.redacted.v1`, v1.0 D16.)
@@ -806,10 +855,10 @@ Not confirmable in this pass:
 | Deployment (v1.0 D17) | Who | PLC access | LLMs | Isolation | Indicative monthly infra (ex-LLM) |
 |---|---|---|---|---|---|
 | **D1. Pooled SaaS cell (India)** (formerly A; opens at GA) | small/mid firms | shared PLC service | Gateway: global or IN endpoints per tenant policy | logical (§5.5) | shared; ≈$17–30K for the whole platform (§3.4) |
-| **D2. Dedicated cell in our India cloud / D3. Customer VPC in the firm's own AWS/Azure India account** (formerly B; single-tenant silo; MVP = one D2 cell) | large firms with residency/procurement demands | **local PLC replica** (read-only) fed by signed daily deltas. Queries never leave the VPC, since query text is an A2 asset. | IN endpoints via private link (Bedrock `in.`, Azure southindia provisioned) + optional self-hosted | physical per tenant | ≈$8–15K/tenant (S-5M replica: 3× r7g.2xlarge search, Multi-AZ Postgres, 1–2 L40S) |
+| **D2. Dedicated cell in our India cloud / D3. Customer VPC in the firm's own AWS/Azure India account** (formerly B; single-tenant silo; MVP = one D2 cell) | large firms with residency/procurement demands | **D2:** the shared PLC through the stateless PLC read path (same region; a local replica is optional; v1.0 D19.7). **D3:** a mandatory **local PLC replica** (read-only) fed by signed daily deltas; queries never leave the VPC, since query text is an A2 asset. | IN endpoints via private link (Bedrock `in.`, Azure southindia provisioned) + optional self-hosted | physical per tenant | ≈$8–15K/tenant (S-5M replica: 3× r7g.2xlarge search, Multi-AZ Postgres, 1–2 L40S) |
 | **D4. On-prem / air-gapped** (formerly C) | firms that refuse any cloud | PLC replica shipped as signed snapshot + daily delta bundles pulled over a one-way channel | open-weight only (Sarvam-105B, Qwen3-235B-A22B; licences verified [XC-12][XC-13]) unless the firm allows IN cloud endpoints, in which case the deployment is D4h (below) | air-gap-capable | hardware capex (see sizing) + support |
 
-**Deployment names (spine v1.0 D17).** A→D1, B→D2 (our India cloud) or D3 (customer VPC), C→D4, C-lite→D4h. **MVP = one D2 dedicated cell for the design partner, running the same code as D1**; D1 opens at GA. Under v1.0 D3, D3 and D4 deployments read PLC only from a local replica.
+**Deployment names (spine v1.0 D17).** A→D1, B→D2 (our India cloud) or D3 (customer VPC), C→D4, C-lite→D4h. **MVP = one D2 dedicated cell for the design partner, running the same code as D1**; D1 opens at GA. Sequencing (v1.0 D19.10): MVP/M1 = one D2 cell; the deployment menu D1–D4h is published at GA (M3); the PLC Access API/MCP (v1.0 D13) follows M2 coverage. Any earlier "multi-tenant SaaS MVP" wording is superseded by D17. Under v1.0 D3 and D19.7, D3, D4 and D4h deployments read PLC only from a local replica, while D2 cells use the stateless read path.
 
 **On-prem sizing (S-5M replica, 100 seats; estimates):**
 - **Storage/search:** 3 search nodes (16 vCPU/128 GB, 4 TB NVMe each), 2 Postgres nodes (16 vCPU/128 GB), MinIO 3 nodes × 8 TB.
@@ -817,14 +866,14 @@ Not confirmable in this pass:
 - **Generation GPUs:** 1 node of 8× H100/H200 (or 4× H200) for a 100B-class MoE such as Sarvam-105B (10.3B active [XC-12]) or Qwen3-235B-A22B (22B active [XC-13]), serving P6 roles at reduced concurrency.
 - **Cloud-rental equivalent:** ≈₹15 lakh/month for 8× H100 at E2E list (8 × ₹255.55 × 730 h [XC-26]), or ≈$48K/month for p5.48xlarge in Mumbai [XC-20]. This is why D4 (formerly topology C) is priced as a premium tier, and why **D4h** (formerly the "C-lite" variant) exists. D4h keeps PLC + TPL on-prem and uses only IN cloud LLM endpoints under the firm's own cloud contract.
 
-**PLC replication package [NOVEL — unvalidated].** The package is a signed, content-addressed bundle per day. It holds new/changed `raw_id`s (optional), ParsedDocument deltas, index segments per `index_generation`, `graph.delta.v1` batches, `AuthorityView` recomputations (v1.0 D6), `doc.redacted.v1` overlays (applied before content, §5.9), and the `impact.detected.v1` manifests from `plc.impact.public.v1` that the on-prem Impact Matcher consumes (v1.0 D3). Each bundle carries a Merkle root that the replica verifies before applying. Replicas therefore stay byte-identical to SaaS PLC at a given generation, and P8 eval results transfer. Replica lag is an SLO: ≤ 24 h for D2/D3 (formerly B), ≤ 48 h for D4/D4h (formerly C).
+**PLC replication package [NOVEL — unvalidated].** The package is a signed, content-addressed bundle per day. It holds new/changed `raw_id`s (optional), ParsedDocument deltas, index segments per `index_generation`, `graph.delta.v1` batches, `AuthorityView` recomputations (v1.0 D6), `doc.redacted.v1` overlays (applied before content, §5.9), and the `impact.detected.v1` manifests from `plc.impact.public.v1` that the on-prem Impact Matcher consumes (v1.0 D3). Each bundle carries a Merkle root that the replica verifies before applying. Replicas therefore stay byte-identical to SaaS PLC at a given generation, and P8 eval results transfer. Replica lag is an SLO: **≤ 24 h for D3/D4/D4h** (v1.0 D19.7; the earlier split of ≤24 h for D2/D3 and ≤48 h for D4/D4h is superseded). D2 cells read the shared PLC and have no replica lag. When a bundle's overlays are applied, the replica emits `redaction.applied.v1` with consumer `REPLICA:<id>` (v1.0 D19.3). An air-gapped D4 replica records the ack locally and reports it in its next bundle-pull request, the only outbound message it sends **[NOVEL — unvalidated]**.
 
 ---
 
 ## 10. Failure-mode catalogue (cross-cutting)
 | ID | Failure | Trigger / red-team scenario | Detection | Blast radius | Mitigation |
 |---|---|---|---|---|---|
-| F1 | Silent source format change | HC site redesign; new PDF generator | P0 volume anomaly; P1 structure_conf drop (§7.3) | one source, days of gaps | parser versioning, gap ledger, reprocess via `reprocess.requested.v1` |
+| F1 | Silent source format change or outage | HC site redesign; new PDF generator; portal down | P0 volume anomaly and `source.health.v1`; P1 structure_conf drop (§7.3) | one source, days of gaps | parser versioning, gap ledger, reprocess via `reprocess.requested.v1`; affected `AuthorityView`s gain reason_code `COVERAGE_GAP` + `definitive=false`, and GOOD degrades to UNKNOWN once the gap exceeds the per-source threshold (72 h HOT / 7 days WARM-COOL; v1.0 D20.12); `COVERAGE_GAP` degradation on answers (D19.2) |
 | F2 | Scale collapse at 10M→20M | full HC dump ingested | index heap pressure, p95 search regression | all search | int8/binary quantisation (≈164 GB → 20 GB at S-20M, §3.4); shard by court/decade; tiered hot/cold |
 | F3 | Bad OCR poisons anchors | scanned 1980s HC judgments | OCR conf histogram; anchor text_hash churn | citations to those docs | OCR-confidence gating in P5 ranking; "low-quality source" badge; re-OCR queue with better VLM |
 | F4 | Hindi/regional judgment mis-handled | Hindi-only HC order; Textract has no Hindi support [XC-24] | language-ID slice metrics in eval gates | Hindi-belt courts | Indic-capable OCR/LLM endpoints required by the contract's `slices`; Sarvam-class models for Indic [XC-12] |
@@ -842,15 +891,15 @@ Not confirmable in this pass:
 | F16 | Legal challenge to corpus provenance | source ToS dispute | raw provenance + `terms_ref` (spine §G) | PLC sources | content-addressed provenance; takedown workflow (doc 21) |
 | F17 | Wrong temporal regime (confused user) | Lawyer asks about an offence committed before the new criminal codes commenced (BNS/BNSS/BSA, 1 Jul 2024 *(unverified in this pass)*) and gets BNS-based analysis | `as_of_legal_date` missing, or defaulted to today on a criminal matter | one matter; wrong legal conclusion | Default `as_of_legal_date` from `MatterContext.as_of_legal_date_default` / `temporal_context` (derived from `procedural_events[]`; `key_dates.cause_of_action` is now a derived view, v1.0 D9/D16); UI banner "law as on <date>"; P8 checks that every cited provision's expression is valid on that date; `CORRESPONDS_TO` crosswalk (v1.0 D16 `change_type` enum) shown alongside |
 | F18 | Translated judgment treated as authoritative | Hindi/regional expression of an SC judgment quoted in a memo | Claim support whose `expression_key` language is not the authoritative one | one memo | P8 requires `is_authoritative_expression=true` for quotations (S10); translations are shown as aids. Machine translations are MT renditions, never Expressions and never support anchors, so a claim anchored to MT fails P8 (v1.0 D8/D16). Official translations (e.g. HC-issued English translations) are Expressions with an `authoritative` flag. SC regional-language versions are understood to carry an "English text governs" disclaimer *(unverified)* |
-| F19 | Judgment pronounced but not yet uploaded | SC pronounces an overruling in open court; the PDF appears hours or days later | legal-news or cause-list signals with no `raw.captured.v1` | matters relying on the overruled case | Third-party reports (PLC_THIRD_PARTY) may set a provisional `CAUTION` with the source shown. Never NEGATIVE until the official text is captured and HITL-verified. P0 emits `judgment.expected.v1` from cause lists, daily orders and notices; P3 records an EXPECTED stub, and P4 may raise a PROVISIONAL impact flagged "text awaited" for constitution-bench and larger-bench pronouncements (v1.0 D16) |
+| F19 | Judgment pronounced but not yet uploaded | SC pronounces an overruling in open court; the PDF appears hours or days later | legal-news or cause-list signals with no `raw.captured.v1` | matters relying on the overruled case | Third-party reports (PLC_THIRD_PARTY) may set a provisional `CAUTION` with the source shown. Never NEGATIVE until the official text is captured and HITL-verified. P0 emits `judgment.expected.v1` from cause lists, daily orders and notices; P3 asks P1's identity service to mint an EXPECTED stub Work (P1 is the sole identity writer, v1.0 D20.4), and P4 may raise a PROVISIONAL impact flagged "text awaited" for constitution-bench and larger-bench pronouncements (v1.0 D16), or at any bench size on precedents named in `referenced_authorities[]` (D21.18); these take the real-time lane (D19.4) |
 | F20 | Upstream open dataset stalls or changes licence | the community HC/SC dumps [XC-15][XC-17] stop updating (SC dump is bi-monthly) or change terms | P0 freshness per source | backfill only | Dumps are for bootstrap only; deltas come from primary court sources (P0); CC-BY-4.0 attribution kept in `terms_ref` |
-| F21 | Redaction not propagated | court orders masking; a replica, cache or trace store still serves the name | overlay ack ledger (§5.9) | privacy/legal exposure | `doc.redacted.v1` overlay (S9 → v1.0 D16) with mandatory consumer acks; replica bundles apply overlays before content |
+| F21 | Redaction not propagated | court orders masking; a replica, cache or trace store still serves the name | P0 redaction ledger of `redaction.applied.v1` acks; `purge_sla` breach alarm (§5.9; v1.0 D19.3) | privacy/legal exposure | `doc.redacted.v1` overlay (S9 → v1.0 D16/D20.3) with mandatory `redaction.applied.v1` acks from every consumer (D19.3/D21.3); replica bundles apply overlays before content |
 | F22 | Indic cost blow-up | Hindi-heavy backfill tokenises at 2–3× | $/1K source chars sliced by `lang` (§3.6) | build budget | λ_lang in the cost model (§3.2); route Indic bulk to Indic-efficient self-hosted models once they pass the `lang=hi` slice gate |
 
 ---
 
 ## 11. Open questions and risks
-1. **Q1 — Real corpus shape.** Blended tokens/doc, pages/doc, OCR share and citations/doc are *estimates* (§2.2). A 10K-doc stratified measurement in P1 week 1 re-bases every cost figure here. Cost scales roughly linearly with `T` and `C`.
+1. **Q1 — Real corpus shape.** Blended tokens/doc, pages/doc, OCR share and citations/doc are *estimates* (§2.2). A 10K-doc stratified measurement, owned by P1 and run in M0 (v1.0 D19.8), re-bases every cost figure here and the 22_build_roadmap budget. Cost scales roughly linearly with `T` and `C`.
 2. **Q2 — In-India frontier capacity.** Claude has no in-India processing today [XC-2][XC-6]. If P8 shows Claude-class models materially ahead on P6 tasks, `IN_ONLY` tenants get lower quality. We need to track Bedrock `in.` profile expansion [XC-7] and Vertex asia-south1 support for Gemini 3.x (unverified).
 3. **Q3 — DPDP status of court-published personal data.** Does the DPDP exclusion for publicly available data (s.3(c)(ii); text verified [XC-42]) cover judgments published by courts? In other words, is a court "under an obligation under any law … to make such personal data publicly available" (limb B)? This decides whether PLC processing on global endpoints needs DPDP-grade controls. Owner: doc 21/legal.
 4. **Q4 — Reviewer economics.** $700/reviewer-month and 7,000 reviews/month are assumptions. HITL cost scales with the prioritisation share π; P3/P9 must validate it.
@@ -863,9 +912,9 @@ Not confirmable in this pass:
 11. **Q11 — Indic share and tokenizer inflation** (§2.2) are unmeasured. Together they set λ_lang, the Indic OCR budget and the `lang=hi` slice sizes in the gold sets.
 12. **Q12 — Legal basis for PLC redaction** (§5.9). Doc 21/legal must give a verified memo on the statutes and case law for victim-identity masking and de-indexing orders before GA.
 13. **Q13 — Spine envelope rename (S11)** must land before any producer ships, or every consumer needs a compatibility shim. **Resolved:** accepted as spine v1.0 D2 (`tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass`).
-14. **Q14 — Memo degradation disclosure (S8).** Spine v1.0 did not rule on `VerificationReport.degradations[]`. Until it does, the requirement in §3.6/§4.7 has no contract field that P6, P8 and P10 are bound to. Owner: principal architect with P8.
-15. **Q15 — Real-time trigger without tenant knowledge (§6.2).** Under v1.0 D3 the PLC cannot see matter references. The citation-footprint threshold, or an unattributed watch-list admitted through the Privacy Gate, needs a ruling and a measured real-time share.
-16. **Q16 — Redaction acks and overlay ID.** v1.0 D16 defines `purge_sla` but no consumer-ack event or ledger, and no `overlay_id` prefix in the D12 registry. The ack ledger in §5.9 is an XC operational requirement that P2, P3, P4, P5 and P7 must implement until the catalogue gains an ack mechanism.
+14. **Q14 — Memo degradation disclosure (S8).** Spine v1.0 D9 did not rule on `VerificationReport.degradations[]`. **Resolved:** accepted as v1.0 D19.2 (enum and mapping in §1.3.1; P10 must disclose). P6, P8 and P10 are now bound to the field.
+15. **Q15 — Real-time trigger without tenant knowledge (§6.2).** Under v1.0 D3 the PLC cannot see matter references. The citation-footprint threshold, or an unattributed watch-list admitted through the Privacy Gate, needs a ruling and a measured real-time share. **Resolved (ruling):** v1.0 D19.4. All tier-1 impacts take the real-time lane; other impacts use the public citation footprint; the union watch-list is post-GA. **Still open:** the footprint threshold and the measured real-time share (target ≤15%).
+16. **Q16 — Redaction acks and overlay ID.** v1.0 D16 defines `purge_sla` but no consumer-ack event or ledger, and no `overlay_id` prefix in the D12 registry. The ack ledger in §5.9 is an XC operational requirement that P2, P3, P4, P5 and P7 must implement until the catalogue gains an ack mechanism. **Resolved:** v1.0 D19.3 adds `redaction.applied.v1` (P0 keeps the ledger); D19.3/D20.5 register `ovl_`; D20.3 fixes producers, consumers and the canonical overlay (01_master §7.13).
 
 ---
 
