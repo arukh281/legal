@@ -15,7 +15,7 @@ This document has five jobs:
 5. Record the 30 architecture decisions that shape the system, with the alternatives rejected (§12).
 
 **Order of precedence for cross-phase contracts:**
-1. The decision record [01a_spine_decision_record.md](01a_spine_decision_record.md) (D1–D22) **together with** this document's §5–§9. The two are one baseline: this document incorporates every ruling D1–D21. If a passage here still disagrees with a D-ruling, the D-ruling wins and the passage is an editorial defect to be fixed.
+1. The decision record [01a_spine_decision_record.md](01a_spine_decision_record.md) (D1–D23) **together with** this document's §5–§9. The two are one baseline: this document incorporates every ruling D1–D21. If a passage here still disagrees with a D-ruling, the D-ruling wins and the passage is an editorial defect to be fixed.
 2. The ✱ resolutions of this document that no D-ruling covers (listed in §14 with owner and status).
 3. Each phase document's §2 (its "Spine v1.0 conformance" subsection records its dispositions).
 4. Spine v0.1 (reproduced as 01a Appendix A; historical).

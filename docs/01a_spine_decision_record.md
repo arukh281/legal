@@ -1,4 +1,4 @@
-# Spine v1.0 Decision Record (D1–D22)
+# Spine v1.0 Decision Record (D1–D23)
 
 The principal architect's rulings on every interface change proposed by the phase research, and on conflicts between phase documents. Precedence: this record and [01_master_architecture.md](01_master_architecture.md) §5–§9 override the provisional spine v0.1 (reproduced in Appendix A) and any phase document's own proposals. Phase documents record their dispositions in their "Spine v1.0 conformance" subsections.
 
@@ -173,6 +173,17 @@ Build (cascade): ≈$90K at 5M docs, ≈$180K at 10M, ≈$360K at 20M (all-premi
 3. **Topic spellings (R-37):** the 01_master §6.2 topic map is normative; phase documents have been updated to it; any older spelling is a read alias for one minor version only.
 4. **Redaction acks from tenant cells (R-38):** the expected-ack set for `redaction.applied.v1` is the control-plane **cell registry** (every active D1/D2 cell and every D3/D4/D4h replica). Each cell acks once per overlay with consumer `CELL:<cell_id>` (or `REPLICA:<id>`) and `tenantid` = null. Because every cell must apply every overlay, an ack reveals nothing about any tenant's interests; P0's ledger alerts on any registered cell that misses `purge_sla`.
 5. **Proposition.law_declared vs authority-core `form` (21_india):** `law_declared` (D20.7) records what the court itself said about the precedential status of its pronouncement; OBITER, SUB_SILENTIO, NON_SPEAKING_SLP and NO_MAJORITY are authority-core-internal `form` inputs derived from P1/P3 features, not `law_declared` values.
+
+
+## D23. Final quality-check rulings
+1. **Human-review throughput and cost (supersedes 13_cross_cutting's HITL line):** plan tier-1 review at **40–100 reviews per reviewer-day (≈800–2,000 per reviewer-month)**, not 7,000/month. At the 5M-document build this is ≈67–166 reviewer-months, ≈$47K–$233K at $700–$1,400 per reviewer-month, instead of $13.5K. The prioritisation share π (05_P3 §5.10) is the main lever, and the pilot measures real throughput (23 U-08). Reviewers are budgeted as staff in 22 §4; the compute/LLM build figures in D18/D19.1 are unchanged.
+2. **Per-cell redaction ack (refines D22.4):** inside a tenant cell, the P7 cell agent emits the single `CELL:<cell_id>` ack only after every cell-local store (P7, tenant P2 indexes, P5 caches, P9-tenant, the P10 tenant stage) has applied the overlay.
+3. **ResearchQuery optional fields:** `stance_target`, `requester` and the `budget.max_*` caps are optional with P5 defaults (stance_target = BOTH; caps from the tenant plan); 01_master §7.8 is normative on the defaults.
+4. **Work.integrity_flags single writer = P3.** P0 signals, P1's `withdrawn_at`/`suppressed_at` and the RECALLS predicate are inputs; only P3 writes the flags.
+5. **Alert de-duplication** in P10 keys on `dedupe_key` only; `subject_ids` are for display and filtering, never for de-duplication.
+6. **P8 `EvalRun.residency_scores`** are keyed by endpoint class (IN endpoints vs ANY endpoints); tenants with IN_PREFERRED see both.
+7. **Constitutional point-in-time (from 21 §7.1):** after a constitutional amendment is struck down, `resolve()` returns the pre-amendment expression as operative (not merely a flagged amended text); constitution application orders (e.g. under Art. 370) are a LegislativeAction source. P1 §5.7 and P3 §5.6 follow this.
+8. **"Verified" grades are machine-assisted.** Some WebFetch summaries of long PDFs and judgments were wrong during QC (DPDP Rules, EBC v. D.B. Modak). Before any tier-1 output relies on a legal source, a human must check it word for word against the primary text (P3 HITL and the M0 legal opinions).
 
 ---
 

@@ -861,6 +861,8 @@ Statuses are materialised as **valid-time segments**. For example, *N.N. Global*
 - **Validity overlay.** `STRIKES_DOWN`/`READS_DOWN` update `provision_version.validity` from the decision date. The text stays retrievable, but `provision_text()` always returns `{text, validity, reason_assertion_ids}`. This closes the "s.66A after *Shreya Singhal*" failure [P3-56]. Strike-downs by a High Court are territory-scoped with `contested=true` for central Acts *(21_india to settle)*. *v1.0 update: 21_india `rul_IN_PREC_24` (Kusum Ingots) settles that an HC order on the validity of a **Parliamentary Act** has effect throughout India, so the validity overlay gets `territory = ALL_INDIA`. The HC's reasoning stays PERSUASIVE outside its territory (rul 17), and that part is `contested`.*
 - **API.** `resolve(anchor, date, territory) → ProvisionVersion` is a single indexed lookup.
 
+> **Constitutional point-in-time (D23.7, final QC).** After a constitutional amendment is struck down (e.g. the 99th Amendment/NJAC: in force 13 Apr 2015, struck down 16 Oct 2015, with the pre-amendment system declared operative; see 21_india §7.1), `resolve()` returns the **pre-amendment expression as operative** for dates after the strike-down. It does not merely flag the amended text through the validity overlay. Constitution application orders (e.g. C.O. 272/273 of 2019 under Art. 370) are recorded as a `LegislativeAction` source.
+
 ### 5.7 Old ↔ new criminal-code crosswalk
 
 **Model.** `CORRESPONDS_TO` links an old-code provision anchor to a new-code provision anchor at the **finest matching granularity** (sub-section or clause). It is many-to-many.

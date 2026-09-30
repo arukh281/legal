@@ -270,7 +270,7 @@ Prompt instructions (~1,500 tokens) are identical across calls, so prompt cachin
 | **Recommended cascade** (cheap + 12% escalation to Opus 5.5 batch) | **$64K** | **$129K** | **$257K** |
 | OCR: managed (Textract, tiered $1.50/1K for the first 1M pages/month then $0.60/1K; English only [XC-22][XC-24]) vs self-hosted VLM @ $176/M pages | $4.5K vs $1.1K | $8.1K vs $2.1K | $15.3K vs $4.2K |
 | Embeddings (API proxy: voyage-4 → Gemini Emb 2 range; the v1.0 D1 default is self-hosted Qwen3-Embedding-4B, so treat this as an upper bound) | $0.9–3.1K | $1.9–6.3K | $3.8–12.5K |
-| HITL review of prioritised tier-1 edges | $13.5K (19 reviewer-months) | $27K | $54K |
+| HITL review of prioritised tier-1 edges | ~~$13.5K (19 reviewer-months)~~ **≈$47K–$233K (≈67–166 reviewer-months; D23.1)** | ~~$27K~~ ≈2× | ~~$54K~~ ≈4× |
 | GPU-hours for parsing/layout/RR models (estimate: 1 L40S-hour per 20K docs) | ≈$0.5K | ≈$1K | ≈$2K |
 | **Total build (recommended)** | **≈$90K** | **≈$180K** | **≈$360K** |
 
@@ -903,7 +903,7 @@ Not confirmable in this pass:
 1. **Q1 — Real corpus shape.** Blended tokens/doc, pages/doc, OCR share and citations/doc are *estimates* (§2.2). A 10K-doc stratified measurement, owned by P1 and run in M0 (v1.0 D19.8), re-bases every cost figure here and the 22_build_roadmap budget. Cost scales roughly linearly with `T` and `C`.
 2. **Q2 — In-India frontier capacity.** Claude has no in-India processing today [XC-2][XC-6]. If P8 shows Claude-class models materially ahead on P6 tasks, `IN_ONLY` tenants get lower quality. We need to track Bedrock `in.` profile expansion [XC-7] and Vertex asia-south1 support for Gemini 3.x (unverified).
 3. **Q3 — DPDP status of court-published personal data.** Does the DPDP exclusion for publicly available data (s.3(c)(ii); text verified [XC-42]) cover judgments published by courts? In other words, is a court "under an obligation under any law … to make such personal data publicly available" (limb B)? This decides whether PLC processing on global endpoints needs DPDP-grade controls. Owner: doc 21/legal.
-4. **Q4 — Reviewer economics.** $700/reviewer-month and 7,000 reviews/month are assumptions. HITL cost scales with the prioritisation share π; P3/P9 must validate it.
+4. **Q4 — Reviewer economics.** $700/reviewer-month and 7,000 reviews/month were assumptions; 7,000/month (~350/day) is not credible for tier-1 legal review. **Superseded by D23.1:** plan 40–100 reviews/reviewer-day (≈800–2,000/month). HITL cost scales with the prioritisation share π; P3/P9 must validate it.
 5. **Q5 — Cheap-model adequacy for treatment classification.** This is unproven for Indian judgments (§3.5 gate). If it fails, ε rises and build cost moves towards the mid-tier line (≈$110–142K at S-5M).
 6. **Q6 — Gemini 3.8 Flash price step on 1 Jan 2027** [XC-4]. It affects the cheap tier. Mitigate with multi-provider qualification before then.
 7. **Q7 — IndiaAI subsidised compute eligibility** for a commercial legal-tech firm [XC-27] is unclear. If eligible, self-hosting cost roughly halves again.

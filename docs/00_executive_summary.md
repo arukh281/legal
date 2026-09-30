@@ -12,7 +12,7 @@ We are building a **paragraph-anchored, time-aware, provenance-first model of In
 
 That graph is joined to a **tenant-isolated matter workspace**. When a notice arrives, the system produces a verified strategy memo, in which every sentence traces to a specific paragraph. When the law changes overnight, the affected paragraph in a firm's live memo or draft is flagged the next morning.
 
-The model is not the moat, because general models are near parity on legal research ([20 §6.1](20_competitive_teardown.md)). Nor is capital: the whole one-time corpus build is ≈$90K at 5M documents ([13 §3.3](13_cross_cutting.md)). The moat is the *combination* of a verified treatment ledger, matter-level propagation of changes, and a consented evaluation and feedback flywheel with partner firms. Each rests on elapsed time, calibrated review and a public track record, which money cannot buy quickly.
+The model is not the moat, because general models are near parity on legal research ([20 §6.1](20_competitive_teardown.md)). Nor is capital. The one-time corpus build is ≈$90K at 5M documents ([13 §3.3](13_cross_cutting.md)), and the whole 30-month programme (≈$8.6–14M, [22](22_build_roadmap.md)) is within reach of a funded startup. The moat is the *combination* of a verified treatment ledger, matter-level propagation of changes, and a consented evaluation and feedback flywheel with partner firms. Each rests on elapsed time, calibrated review and a public track record, which money cannot buy quickly.
 
 ## Why now, and why existing tools fall short
 
@@ -98,7 +98,7 @@ Eleven atomic phases (P0–P10) communicate only through versioned events (Cloud
 **Not moats**, because each is copyable within about 6 months: the model, the number of agents, raw corpus size, "citations retrieved, not generated", on-prem packaging, crosswalk *tables*, chat, digests and WhatsApp alerts.
 
 **The durable moat is the combination of M2 × M4 × M5.** No element is durable on its own:
-- **M2:** a *verified*, proposition-level treatment ledger. It grows only with *calibrated* reviewer-hours, elapsed time and an audited error record. Reviewer-hours themselves are cheap in India (tier-1 review at 5M documents is budgeted at ≈$13.5K), so a funded rival can buy the hours but not the calibration history.
+- **M2:** a *verified*, proposition-level treatment ledger. It grows only with *calibrated* reviewer-hours, elapsed time and an audited error record. Reviewer-hours themselves are cheap in India: tier-1 review at 5M documents is budgeted at ≈$13.5K, and even a several-fold overrun on that planning throughput would stay small. A funded rival can therefore buy the hours, but not the calibration history.
 - **M4:** matter-linked propagation of changes. Switching costs rise as firms load matters and act on alerts. Matter files are portable, however, so the stickiness comes from alert precision (which depends on M2), the alert and audit history, and workflow integration.
 - **M5:** a consented partner-firm gold set and feedback flywheel. Cross-firm signals need aggregates over at least 5 firms, so the flywheel compounds across firms only once five are live.
 
@@ -115,7 +115,7 @@ A public, reproducible Indian legal-AI benchmark (M6) turns trust into a go-to-m
 ## Scale, cost and latency (planning estimates; [13](13_cross_cutting.md))
 
 - **Corpus:** designed for **20M documents**. The open High Court dataset alone has 17.8M PDFs (≈1.25 TiB) and grows about 1.4M a year ([dataset stats](https://github.com/vanga/indian-high-court-judgments/blob/main/STATS.md)).
-- **One-time build:** ≈$90K at 5M documents and ≈$360K at 20M, using the cascade.
+- **One-time build (compute and LLM):** ≈$90K at 5M documents and ≈$360K at 20M, using the cascade. Human review of tier-1 edges comes on top. At a realistic 40–100 reviews per reviewer-day it is ≈$47K–$233K at 5M, budgeted as staff in the roadmap (D23.1).
 - **Monthly run:** ≈$77K–$89K at 2,000 seats.
 - **Unit costs** (tokenizer-corrected, the figures of record): ≈$0.105 per verified Q&A and ≈$2.16 per strategy memo.
 - **Latency:**

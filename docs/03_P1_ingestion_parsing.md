@@ -776,6 +776,9 @@ The official consolidated text is always emitted as the current expression (`der
 
 **Constitution**: same grammar with Articles (`art-21A`), clauses (`art-19.1.a`), Parts, Schedules; amendment Acts parsed identically.
 
+
+> **Constitutional point-in-time (D23.7, final QC).** After a constitutional amendment is struck down (e.g. the 99th Amendment/NJAC: in force 13 Apr 2015, struck down 16 Oct 2015, with the pre-amendment system declared operative; see 21_india §7.1), `resolve()` returns the **pre-amendment expression as operative** for dates after the strike-down. It does not merely flag the amended text through the validity overlay. Constitution application orders (e.g. C.O. 272/273 of 2019 under Art. 370) are recorded as a `LegislativeAction` source.
+
 ### 5.8 S7: mention extraction — citation grammar and statute mentions
 
 **Architecture** (eyecite-style [P1-27], Indian data): `reporters_in.yaml` → compiled regex set → Hyperscan (or Aho-Corasick prefilter) single pass over normalised text with an offset map back to original characters (so spans stay exact) → typed citation objects → antecedent resolution within the document.
