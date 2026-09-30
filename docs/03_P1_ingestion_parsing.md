@@ -79,7 +79,7 @@ The principal architect's spine v1.0 decision record (D1–D21, [01a_spine_decis
 | R-14 | P1 consumer table lacked `SUPPRESSED` | `SUPPRESSED` row in §2.1(a): tombstone, apply the P0 overlay, purge derived text, ack `redaction.applied.v1` |
 | R-15 | `metadata.authoritative_expression_key` missing | added to ParsedDocument.metadata, derived from `expression.authoritative` (§2.3) |
 | R-16 | rhetorical-role vocabularies differ | §5.6 table is the canonical `rr-labels@1.0` set; P2 and P5 map to it (§5.6) |
-| R-30 | CPC First-Schedule Order/Rule not expressible | P1 proposes grammar v1.1 unit `ord-` inside a schedule (`sch-1.ord-8.rule-1`), §2.5 S16 and §5.7; stays open until 01_master publishes grammar v1.1 |
+| R-30 | CPC First-Schedule Order/Rule not expressible | P1 proposes grammar v1.1 unit `ord-` inside a schedule (`sch-1.ord-8.rule-1`), §2.5 S16 and §5.7; **RESOLVED (D22.2)**: grammar v1.1 published in 01_master §5.3 |
 | R-35 | Anchor Read API owner and paths | owner P1; paths per 01_master §9.2 (`/plc/v1/anchors/…`, `:batch`, `citations:resolve`) (§2.4A) |
 
 **Obligations assigned to P1 by v1.0 and added in this revision**
@@ -96,7 +96,7 @@ The principal architect's spine v1.0 decision record (D1–D21, [01a_spine_decis
 - Alias status values: `RETIRED` → `SUPERSEDED`; `CONFLICT` is kept (union enum, 01_master §5.4, R-04).
 - Private anchors: `pdoc_…#p12` → `pdoc_…/v1#p12` (D8).
 - The takedown event is `doc.redacted.v1`. No `plc.redaction.v1` or `work.access_restricted.v1` event exists; court-ordered access restrictions become `Work.access_restriction{name_search_suppressed[], masked_expression_required, court_prohibition}` plus an overlay (D16).
-- Topics follow D20.16 (`{plane}.{domain}.{event}.v{n}`): P1 publishes `plc.doc.parsed.v1.{rt,bulk}`, `plc.identity.v1`, `plc.doc.redacted.v1`, `plc.acquire.requested.v1`, `plc.redaction.applied.v1` (acks) and, in tenant mode only, `tpl.<tenant>.pdoc.parsed.v1`.
+- Topics follow D20.16 (`{plane}.{domain}.{event}.v{n}`): P1 publishes `plc.doc.parsed.v1.{rt,bulk}`, `plc.identity.{merged,split}.v1`, `plc.doc.redacted.v1`, `plc.acquire.requested.v1`, `plc.redaction.applied.v1` (acks) and, in tenant mode only, `tpl.<tenant>.pdoc.parsed.v1`.
 - Court IDs use the canonical `crt_IN_…` form (01_master §5.2).
 - Deployment names: tenant-mode P1 runs in D1/D2 cells (per-tenant namespace), D3 customer VPC, and D4/D4h on-prem (D17).
 
@@ -183,7 +183,7 @@ Semantics: `QUARANTINED` documents are still emitted (so P4 knows they exist and
 
 All PLC-mode events carry `tenantid=null` and `dataclass=PUBLIC` (D2). They go out through the P1 Postgres outbox with Debezium onto Kafka (D1).
 
-**`identity.merged.v1` / `identity.split.v1` (P1 → P2, P3, P4, P5, P7, P8, P10; D4/D16/D21.3; topic `plc.identity.v1`, key `from_id`)**
+**`identity.merged.v1` / `identity.split.v1` (P1 → P2, P3, P4, P5, P7, P8, P10; D4/D16/D21.3; topic `plc.identity.{merged,split}.v1`, key `from_id`)**
 ```jsonc
 { "type": "identity.merged.v1", "tenantid": null, "dataclass": "PUBLIC",
   "data": { "kind": "WORK|CASE|ALIAS", "from_id": "wrk_STUB…", "to_id": "wrk_01J…",
@@ -743,7 +743,7 @@ illustration := "Illustration" "s"? (item)+
 schedule     := ("THE" ORDINAL? "SCHEDULE" | "SCHEDULE" ROMAN|DIGITS) items
 footnote_ref := SUPERSCRIPT_DIGITS | "[" … "]"                            # amendment markers in consolidated text
 ```
-Anchor mapping (spine §C): `sec-302`, `sec-302.1`, `sec-302.1.a`, `sec-302.1.a.i`, `sec-302.p1` (provisos numbered in order within their parent; a proviso to sub-section (1) is `sec-302.1.p1`), `sec-302.e1`, `sec-302.ill-a`, `sch-1.item-5`, `art-21A`, `rule-4.2`. *Proposed grammar v1.1 (§2.5 S16, 01_master §14 R-30):* Orders and Rules inside a schedule, as in the CPC First Schedule, map to `sch-1.ord-8.rule-1` (Order VIII rule 1; Roman order numbers are converted to Arabic, and lettered rule numbers keep their suffix, e.g. `ord-39.rule-2A`). Until 01_master publishes grammar v1.1, P1 emits these anchors only behind the feature flag `anchor_grammar_v11` and serialises them to v1.0 consumers as `sch-1.item-…` with an `anchor_alias` to the `ord-` form. Statute expression keys take the D16 form `lang@YYYY-MM-DD[~TERR]`, where `~TERR` is an ISO 3166-2:IN code for a state amendment (e.g. `en@2019-08-01~IN-MH`). Omitted provisions keep a tombstoned anchor with text "[Omitted]" and `valid_to`. A secondary AKN serialisation (eId e.g. `sec_302__subsec_1__para_a`) is emitted for interoperability.
+Anchor mapping (spine §C): `sec-302`, `sec-302.1`, `sec-302.1.a`, `sec-302.1.a.i`, `sec-302.p1` (provisos numbered in order within their parent; a proviso to sub-section (1) is `sec-302.1.p1`), `sec-302.e1`, `sec-302.ill-a`, `sch-1.item-5`, `art-21A`, `rule-4.2`. *Proposed grammar v1.1 (§2.5 S16, 01_master §14 R-30):* Orders and Rules inside a schedule, as in the CPC First Schedule, map to `sch-1.ord-8.rule-1` (Order VIII rule 1; Roman order numbers are converted to Arabic, and lettered rule numbers keep their suffix, e.g. `ord-39.rule-2A`). Grammar v1.1 is ratified (D22.2, 01_master §5.3): P1 emits `ord-`/`rule-` anchors by default; any earlier `sch-1.item-…` anchors for such units are aliased to the `ord-` form. Statute expression keys take the D16 form `lang@YYYY-MM-DD[~TERR]`, where `~TERR` is an ISO 3166-2:IN code for a state amendment (e.g. `en@2019-08-01~IN-MH`). Omitted provisions keep a tombstoned anchor with text "[Omitted]" and `valid_to`. A secondary AKN serialisation (eId e.g. `sec_302__subsec_1__para_a`) is emitted for interoperability.
 
 **Footnote parsing** (consolidated texts): footnotes of the form "Subs. by Act 22 of 2018, s. 3, for 'X' (w.e.f. 1-8-2018)" / "Ins. by …" / "Omitted by …" *(pattern family observed in India Code; exact variants to be catalogued)* are parsed by a grammar into `AmendmentInstruction` *hints* attached to the provision anchor.
 

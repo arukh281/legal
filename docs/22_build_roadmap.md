@@ -137,7 +137,7 @@ The durations below are estimates for a team of the size in §4. They assume eve
 | **B. Tenant** (P7) | D2 cell, ingestion (PDF/DOCX/EML), pdocs + private anchors, OpenFGA + SSO, KMS/DEKs, audit hash chain, Impact Matcher library (P4-owned `impact-match-core`) | MatterContext → P5/P6 (month 5); Impact Matcher ← P4 (month 5) |
 | **C. Intelligence** (P5, P6, P8 checks) | Built against a frozen SC sample from the AWS CC-BY dataset and a *mocked* `AuthorityView`; deterministic checks C0–C3, C5–C10, C12; Procedural Clock + RuleSpec golden tests | real `AuthorityView` (month 5) |
 | **D. Product** (P10) | Shell, source viewer (tile + bbox), badge component on the full vocabulary, command bar, alerts inbox, against contract mocks | P8 VerificationReport (month 5) |
-| **E. Legal and eval** | Opinions, legal profiles, doctrine registry `rul_IN_PREC_01..22`, binding table, crosswalk head (top ≈150 sections), RuleSpecs, gold guidelines, gold room | legal profiles (month 2); editors (month 3); gold v0 slices (months 4–6) |
+| **E. Legal and eval** | Opinions, legal profiles, doctrine registry `rul_IN_PREC_01..24`, binding table, crosswalk head (top ≈150 sections), RuleSpecs, gold guidelines, gold room | legal profiles (month 2); editors (month 3); gold v0 slices (months 4–6) |
 | **F. Platform** (XC) | IaC for ap-south-1 + ap-south-2 DR snapshots; Postgres 18, OpenSearch, Kafka (KRaft) + outbox/Debezium, Temporal, OpenFGA; Gateway v1; OTel + Langfuse + OpenLineage; injection controls 1–5 | everything; must lead by about 4 weeks |
 
 P9 is intentionally late. Its MVP needs the P3 queue and the P8 runner. Only the `FeedbackEvent` capture schema and `retrieval.served.v1` logging are built in M1, so logs exist before anyone trains on them (11_P9 §10).

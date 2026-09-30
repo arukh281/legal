@@ -334,7 +334,7 @@ Masking is an overlay. No masked `expression_key` is minted (D16). Indexes, snip
 | out | `doc.redacted.v1` | `plc.doc.redacted.v1` | `work_id` |
 | out | `case.status.observed.v1`, `court.causelist.published.v1`, `court.calendar.published.v1` | `plc.court.case_status.v1`, `plc.court.causelist.v1`, `plc.court.calendar.v1` | as in (d) |
 | in | `acquire.requested.v1` | `plc.acquire.requested.v1` | `target.scheme\|target.value` |
-| in | `source.recheck.requested.v1` | `plc.source.recheck.v1` | `court_id` |
+| in | `source.recheck.requested.v1` | `plc.source.recheck.requested.v1` | `court_id` |
 | in | `redaction.applied.v1` | `plc.redaction.applied.v1` (replicas relay acks through the bundle channel) | `overlay_id` |
 | in | `doc.parsed.v1` (for `referenced_authorities[]` and `work_id` look-up only) | `plc.doc.parsed.v1.{rt,bulk}` | `work_id` |
 

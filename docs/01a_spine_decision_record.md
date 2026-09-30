@@ -1,4 +1,4 @@
-# Spine v1.0 Decision Record (D1–D21)
+# Spine v1.0 Decision Record (D1–D22)
 
 The principal architect's rulings on every interface change proposed by the phase research, and on conflicts between phase documents. Precedence: this record and [01_master_architecture.md](01_master_architecture.md) §5–§9 override the provisional spine v0.1 (reproduced in Appendix A) and any phase document's own proposals. Phase documents record their dispositions in their "Spine v1.0 conformance" subsections.
 
@@ -165,6 +165,14 @@ Build (cascade): ≈$90K at 5M docs, ≈$180K at 10M, ≈$360K at 20M (all-premi
 17. **Private certified translations** (`v1.ht-en`, authoritative=true, lawyer-attested) may support RECORD_FACT claims only; never public-law claims.
 18. **judgment.expected.v1** adds optional `referenced_authorities[]` (e.g. precedents named in a reference order); P4 may raise PROVISIONAL impacts on them at any bench size when named.
 19. **P9 exposure signal** (public citation in-degree/recency + distinct tenant bucket count + optional S2 aggregate) — accepted as [NOVEL — unvalidated].
+
+
+## D22. Closing rulings (final lint pass)
+1. **Crosswalk qualifiers (R-02):** a crosswalk row is materialised as one or more `CORRESPONDS_TO` assertions whose qualifiers carry `crosswalk_row_id` (`xrn_…`) and `group_id` (`xwg_…`, registered prefix for crosswalk groups).
+2. **Anchor grammar v1.1 (R-30):** schedule fragments may nest Orders and Rules: `"sch-", unit_no, [ ".item-", unit_no | ".ord-", unit_no, [ ".rule-", unit_no ] ]` — e.g. CPC First Schedule O.VIII r.1 = `sch-1.ord-8.rule-1`; Roman numerals become Arabic; lettered rules keep their suffix (`ord-39.rule-2A`). Additive; any earlier `sch-1.item-…` anchors for such units are aliased. P1 emits it by default (feature flag retired).
+3. **Topic spellings (R-37):** the 01_master §6.2 topic map is normative; phase documents have been updated to it; any older spelling is a read alias for one minor version only.
+4. **Redaction acks from tenant cells (R-38):** the expected-ack set for `redaction.applied.v1` is the control-plane **cell registry** (every active D1/D2 cell and every D3/D4/D4h replica). Each cell acks once per overlay with consumer `CELL:<cell_id>` (or `REPLICA:<id>`) and `tenantid` = null. Because every cell must apply every overlay, an ack reveals nothing about any tenant's interests; P0's ledger alerts on any registered cell that misses `purge_sla`.
+5. **Proposition.law_declared vs authority-core `form` (21_india):** `law_declared` (D20.7) records what the court itself said about the precedential status of its pronouncement; OBITER, SUB_SILENTIO, NON_SPEAKING_SLP and NO_MAJORITY are authority-core-internal `form` inputs derived from P1/P3 features, not `law_declared` values.
 
 ---
 

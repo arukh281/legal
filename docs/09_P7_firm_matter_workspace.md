@@ -51,7 +51,7 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | PLC read path per deployment | **RULED D19.7** | D2 cells read the shared PLC through the stateless read path (same region), with a local replica optional. D3/D4/D4h **must** use a local replica with a ≤24 h replica-lag SLO (5.13). |
 | Real-time lane | **RULED D19.4** | P4 never knows tenant interest: every impact_tier-1 impact takes the real-time lane, and other impacts are prioritised by public citation footprint only. Matter-level urgency comes solely from the in-cell Impact Matcher (5.6). A tenant-union watch-list is post-GA and only via the Privacy Gate. |
 | Dependency-registration endpoint (R-35) | **RESOLVED (01_master §9.7)** | `POST /t/{ten}/matters/{mat}/dependencies` is a **tenant-internal** P7 endpoint that writes `matter_dependency` (callers: P6 `dependency_ids`, P10 `WATCHED`). Nothing is registered with P4 (D3). Its schema is in 2.2 (O12). |
-| Kafka topic naming | **RULED D20.16** | Tenant topics are `tpl.<tenant>.{domain}.{event}.v{n}` (e.g. `tpl.<tenant>.matter.alert.v1`, `tpl.<tenant>.pdoc.parsed.v1`, `tpl.<tenant>.erasure.v1`); PLC topics are `plc.…` (e.g. `plc.impact.public.v1`). 01_master §6.2 still shows the pre-D20.16 `ten.{t}.` prefix. |
+| Kafka topic naming | **RULED D20.16** | Tenant topics are `tpl.<tenant>.{domain}.{event}.v{n}` (e.g. `tpl.<tenant>.matter.alert.v1`, `tpl.<tenant>.pdoc.parsed.v1`, `tpl.<tenant>.erasure.{requested,applied,completed}.v1`); PLC topics are `plc.…` (e.g. `plc.impact.public.v1`). 01_master §6.2 still shows the pre-D20.16 `ten.{t}.` prefix. |
 
 **Renames and decisions this document now follows.**
 - **Envelope attributes (D2):** `tenant_id`/`causation_id`/`idempotency_key`/`schema_version` → `tenantid`/`causationid`/`idempotencykey`/`schemaversion`, and `dataclass` is added. **Privacy-Gate envelope rule:** any PLC-side event caused by tenant activity carries `tenantid`=null, a fresh trace root and no tenant causation chain. This covers `acquire.requested.v1` MATTER_WATCH requests for unresolved identifiers (5.11), which go only via the P9 Privacy Gate (D16).
@@ -80,7 +80,7 @@ All IDs are prefixed ULIDs. New private prefixes introduced by P7: `ten_` (tenan
 | I5 | Lawyer confirmations/edits of facts, issues, deadlines, privilege | P10 | `ConfirmationCommand` → also emitted as `feedback.recorded.v1` (TENANT_ONLY) |
 | I6 | Strategy outputs to index as matter dependencies | P6 (`StrategyMemo` via `strategy.memo.published.v1` / `strategy.memo.stale.v1`), P8 (`VerificationReport`) | by reference; P7 extracts cited public anchors (anchors, never chunk_ids; D8) |
 | I7 | Public-ID resolution | P1 citation resolver, P3 identifier_alias (read-only) | `resolve(raw_citation) → {target_id, confidence}` |
-| I8 | Erasure acknowledgements | P2 (tenant indexes), P5 (caches), P6 (memory), P8 (tenant eval/trace items), P9 | `erasure.applied.v1 {erasure_id, consumer, applied_at, scope}` on `tpl.<tenant>.erasure.v1` (D20.15, D21.3); aggregated by the erasure workflow (5.10) |
+| I8 | Erasure acknowledgements | P2 (tenant indexes), P5 (caches), P6 (memory), P8 (tenant eval/trace items), P9 | `erasure.applied.v1 {erasure_id, consumer, applied_at, scope}` on `tpl.<tenant>.erasure.{requested,applied,completed}.v1` (D20.15, D21.3); aggregated by the erasure workflow (5.10) |
 | I9 | Public masking / takedown | P0, P1, ops/legal | `doc.redacted.v1` (data = RedactionOverlay, 01_master §7.13) on `plc.doc.redacted.v1` (D16, D20.3) |
 
 ```ts
@@ -107,7 +107,7 @@ type Provenance = "CLIENT" | "FIRM_AUTHORED" | "OPPOSING_PARTY" | "COURT" | "THI
 | O5 | `feedback.recorded.v1` | P9 | FeedbackEvent (D9 merged P9+P10 schema: `actor_ref`, closed `reason_code`, `context{…}`, `consent_snapshot_id`; targets are anchors, never chunk_ids); `share_scope` defaults `TENANT_ONLY` |
 | O6 | Audit stream | tenant SIEM export, P8 (trace replay), regulators on request | `AuditEvent` (5.8) |
 | O7 | Authorization decisions | every service touching TPL data | `check(user, relation, object)`, `list_objects(user, relation, type)` |
-| O8 | `erasure.requested.v1` / `erasure.completed.v1` (D4, D20.15, D21.3) | request → P2, P5 (caches), P6 (memory), P8, P9; completion → P9 (its lineage ledger closes the request), P7 audit chain and the firm's erasure certificate | topic `tpl.<tenant>.erasure.v1`. Request data: `{erasure_id, scope TENANT\|MATTER\|CLIENT\|ACTOR, scope_ref, legal_basis DPDP_S12\|CONTRACT_END\|CONSENT_WITHDRAWN\|COURT_ORDER\|RTBF_MASKING, requested_at, deadline}`. Consumers ack with `erasure.applied.v1` (I8). **P7 is the only producer of `erasure.completed.v1`**, emitted once per `erasure_id` after every ack (schema in 5.10) |
+| O8 | `erasure.requested.v1` / `erasure.completed.v1` (D4, D20.15, D21.3) | request → P2, P5 (caches), P6 (memory), P8, P9; completion → P9 (its lineage ledger closes the request), P7 audit chain and the firm's erasure certificate | topic `tpl.<tenant>.erasure.{requested,applied,completed}.v1`. Request data: `{erasure_id, scope TENANT\|MATTER\|CLIENT\|ACTOR, scope_ref, legal_basis DPDP_S12\|CONTRACT_END\|CONSENT_WITHDRAWN\|COURT_ORDER\|RTBF_MASKING, requested_at, deadline}`. Consumers ack with `erasure.applied.v1` (I8). **P7 is the only producer of `erasure.completed.v1`**, emitted once per `erasure_id` after every ack (schema in 5.10) |
 | O9 | `ParseRequest` (D16) | P1 tenant mode (in-cell) | synchronous or queued; answered by `pdoc.parsed.v1` |
 | O10 | Tenant Execution Context (TEC) | P5, P6, P8, Model Gateway, index shards | signed ≤ 5-min token (D9; 5.2) |
 | O11 | Consent registry (`ConsentRecord`, `cns_`) | P9 (Privacy Gate), P8 (Design Partner Program gold-set eligibility) | **P7-owned core object (D21.16)**, written by the P7 admin console; normative schema and effective-consent rule in 2.3.8 (mirrored in 11_P9 §2.4). Snapshots are immutable and a new `consent_snapshot_id` is minted on every change. Read API `GET /t/{ten}/consent/effective?matter=&client=&actor=` → `{consent_snapshot_id, flags}` (p95 ≤ 20 ms, cached per snapshot). `privilege_flags.basis` (D16) is shown on the in-house consent screen (11_P9 §5.4) |
@@ -766,7 +766,7 @@ Root of trust: cloud KMS HSM (SaaS) | customer KMS/HSM (VPC) | on-prem HSM or so
 **Erasure procedure** (idempotent workflow, resumable; a Temporal workflow per D1):
 ```
 0. emit erasure.requested.v1 {erasure_id, scope TENANT|MATTER|CLIENT|ACTOR, scope_ref, legal_basis, requested_at,
-   deadline} on tpl.<tenant>.erasure.v1 (D4, D20.16; consumers P2, P5 caches, P6 memory, P8, P9 — D21.3); envelope
+   deadline} on tpl.<tenant>.erasure.{requested,applied,completed}.v1 (D4, D20.16; consumers P2, P5 caches, P6 memory, P8, P9 — D21.3); envelope
    tenantid set, dataclass TENANT_CONFIDENTIAL. Court-ordered masking of PUBLIC text is NOT an erasure: it travels
    as doc.redacted.v1 (D16)
 1. lineage = closure(derived_from, roots = pdocs/facts of scope)   # chunks, vectors, facts, assertions,

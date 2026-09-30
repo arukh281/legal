@@ -58,7 +58,7 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | `training.dataset.published.v1` consumers | **RULED D21.3** | Consumers are P3 and P5. |
 | `reprocess.requested.v1` schema | **RULED D21.15** (owner P4) | P9's `FEEDBACK`-reason requests use P4's schema (01_master §6.3). |
 | Unattributed watch-list for impact prioritisation | **RULED D19.4** | This is a post-GA optimisation, via the Privacy Gate only (k ≥ 5 tenants, decoy-padded); it is not in the P9 MVP. |
-| Kafka topic naming | **RULED D20.16** | Tenant-plane P9 topics are `tpl.<tenant>.feedback.v1`, `tpl.<tenant>.feedback.resolved.v1`, `tpl.<tenant>.eval.case.v1`, etc. Global-plane topics are `plc.kg.proposal.v1`, `plc.source.recheck.v1`, `plc.training.dataset.v1`, etc. |
+| Kafka topic naming | **RULED D20.16** | Tenant-plane P9 topics are `tpl.<tenant>.feedback.recorded.v1`, `tpl.<tenant>.feedback.resolved.v1`, `tpl.<tenant>.eval.case.{proposed,adjudicated}.v1`, etc. Global-plane topics are `plc.kg.proposal.v1`, `plc.source.recheck.requested.v1`, `plc.training.dataset.published.v1`, etc. |
 
 **Renames and decisions this document now follows.**
 - `kg.proposal.status.v1` → **`kg.proposal.resolved.v1`** (P3-owned; schema D21.11). P9's `NEEDS_EVIDENCE` maps to P3's `DEFERRED` + `public_note_code=NEEDS_EVIDENCE`.
@@ -85,7 +85,7 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | `doc.parsed.v1` for orders/judgments linked to a tenant's `case_id` | P1 | global topic, filtered by P7's case watch list inside tenant plane | used for outcome/argument-uptake labelling |
 | `MatterContext` | P7 (sync API) | tenant plane only | parties, forum, key dates (a derived view of `procedural_events[]`, D9) — used as the *scrub dictionary* for the gate; `privilege_flags.basis` (D16) informs in-house handling (§5.4) |
 | Consent registry (`ConsentRecord`, `cns_`; P7-owned, D21.16) | P7 admin console | sync API `GET /t/{ten}/consent/effective` (09_P7 O11) | tenant/practice-group/matter/client/actor level flags (§5.4); normative schema 09_P7 §2.3.8 |
-| `erasure.requested.v1` (D4) | P7 | tenant topic `tpl.<tenant>.erasure.v1` | matter, client, actor or tenant erasure; drives cascade (§5.12) |
+| `erasure.requested.v1` (D4) | P7 | tenant topic `tpl.<tenant>.erasure.{requested,applied,completed}.v1` | matter, client, actor or tenant erasure; drives cascade (§5.12) |
 | `erasure.completed.v1` (D21.3) | P7 | tenant topic | closes the erasure in P9's `erasure_ledger` once P7 has every consumer's ack |
 | `LLMCallRecord` (D19.9) | Model Gateway (13_cross_cutting §4.2; 01_master §7.24) | tenant-plane trace store | links each P9 model call to its lineage for erasure and audit (§5.12) |
 | Court identifiers to watch (`MATTER_WATCH` candidates) | P7 Court Sync (09_P7 §5.11) | tenant-plane gate queue | unresolved CNR / SC diary / case numbers of *public* proceedings; released unattributed (§5.5.4) |
@@ -272,7 +272,7 @@ type FeedbackResolved = { feedback_ids: string[] /* fb_ */; proposal_id?: string
   //   decision=DEFERRED ∧ public_note_code=NEEDS_EVIDENCE (D21.11); LOCAL_ONLY = the flag never crossed the gate
   delta_id?: string; graph_watermark?: number; note_key: string /* P10 i18n key, from public_note_code or a local gate-deny reason */ };
 
-// source.recheck.requested.v1 — global plane (plc.source.recheck.v1) → P0. Schema owner P9 (D20.9); Privacy-Gate envelope.
+// source.recheck.requested.v1 — global plane (plc.source.recheck.requested.v1) → P0. Schema owner P9 (D20.9); Privacy-Gate envelope.
 type SourceRecheckRequested = { request_id: string; court_ids: string[] /* crt_IN_… */;
   target: { work_id?: string; citation_text?: string; public_url?: string /* allowlisted domain, query string stripped, untrusted */ };
   reason: "BAD_LAW_FLAG"|"UNOFFICIAL_ONLY_COPY"|"OPS"; priority: "P1"|"P2"|"P3";

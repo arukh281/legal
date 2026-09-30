@@ -15,7 +15,7 @@ This document has five jobs:
 5. Record the 30 architecture decisions that shape the system, with the alternatives rejected (§12).
 
 **Order of precedence for cross-phase contracts:**
-1. The decision record [01a_spine_decision_record.md](01a_spine_decision_record.md) (D1–D21) **together with** this document's §5–§9. The two are one baseline: this document incorporates every ruling D1–D21. If a passage here still disagrees with a D-ruling, the D-ruling wins and the passage is an editorial defect to be fixed.
+1. The decision record [01a_spine_decision_record.md](01a_spine_decision_record.md) (D1–D22) **together with** this document's §5–§9. The two are one baseline: this document incorporates every ruling D1–D21. If a passage here still disagrees with a D-ruling, the D-ruling wins and the passage is an editorial defect to be fixed.
 2. The ✱ resolutions of this document that no D-ruling covers (listed in §14 with owner and status).
 3. Each phase document's §2 (its "Spine v1.0 conformance" subsection records its dispositions).
 4. Spine v0.1 (reproduced as 01a Appendix A; historical).
@@ -506,6 +506,7 @@ erDiagram
 | `prs_` | Procedural RuleSpec | P6 (stored in PLC registry) | PLC | **only** RuleSpecs; never a parse ID (D12, D20.5) |
 | `ter_` | Territory node | P3 | PLC | anchors use ISO 3166-2:IN codes, not `ter_` IDs |
 | `xrn_` | Crosswalk row | P3 (canon in 21_india) | PLC | D12, confirmed by D20.5. A crosswalk row is materialised as one or more `CORRESPONDS_TO` assertions (`asr_`) whose qualifiers carry the `xrn_` row ID and `group_id` `xwg_` ✱ (§14 R-02) |
+| `xwg_` | Crosswalk group (`CORRESPONDS_TO` qualifier `group_id`) | P3 (canon in 21_india) | PLC | D22.1 |
 | `xtr_` | Extraction run (`Assertion.extraction_run_id`) | P3 | PLC | D20.5. P3 examples using `xrn_` for extraction runs must change |
 | `gdl_` ✱ | Graph delta | P3 | PLC | used in 05_P3 O1 and 06_P4 O1 |
 | `sum_` | Summary (non-citable) | P2 | both | |
@@ -581,7 +582,7 @@ statute_frag    = unit , { "." , stat_seg } ;
 unit            = "sec-" , unit_no
                 | "art-" , unit_no
                 | "rule-" , unit_no
-                | "sch-" , unit_no , [ ".item-" , unit_no ] ;
+                | "sch-" , unit_no , [ ".item-" , unit_no | ".ord-" , unit_no , [ ".rule-" , unit_no ] ] ;   (* grammar v1.1, D22.2: sch-1.ord-8.rule-1 *)
 unit_no         = posint , { upper } ;                 (* 302 | 21A | 498A | 19AA *)
 stat_seg        = subsec | clause | proviso | explanation | illustration ;
 subsec          = posint , { upper } ;                 (* 1 | 1A *)
@@ -790,7 +791,7 @@ interface RawCaptured {
   near_dup_hint: { raw_id: string; source_id: string; simhash_hd: number }[];
   flags: { text_layer: "present"|"absent"|"unknown"; text_layer_quality?: string; malware_suspect: boolean;
            injection_suspect: boolean; soft_error_suspect: boolean; suspected_replacement: boolean; key_quality: "STRONG"|"WEAK" };
-  suppression?: { reason: string; authority_ref: string; scope: string } | null;   // set iff change_kind = SUPPRESSED
+  redaction_overlay_id?: string | null;   // ovl_…; set iff change_kind = SUPPRESSED (D16) — the overlay itself travels on doc.redacted.v1 (§7.13)
 }
 
 // doc.parsed.v1 — owner P1 (03_P1 §2.2 + D16). pdoc.parsed.v1 has the same shape with pdoc_id/pver instead of work ids.
@@ -1047,7 +1048,7 @@ interface Assertion { assertion_id: string; subject: string; predicate: Predicat
   extraction_run_id?: string /* xtr_ (D20.5) */; graph_watermark: number }
 type CrosswalkChangeType = "SAME_RENUMBERED"|"SAME_TEXT_SPLIT"|"MERGED"|"SPLIT"|"MODIFIED_SCOPE"|"MODIFIED_PENALTY"
   |"REPLACED_BY_DIFFERENT_OFFENCE"|"FUNCTIONAL_ANALOGUE"|"NEW_NO_PREDECESSOR"|"OMITTED";   // D16 canonical (21_india)
-// CORRESPONDS_TO assertions materialise crosswalk rows: qualifiers add crosswalk_row_id (xrn_ per D20.5; qualifier name ✱ §14 R-02), group_id (xwg_ ✱), granularity, penalty_delta,
+// CORRESPONDS_TO assertions materialise crosswalk rows: qualifiers add crosswalk_row_id (xrn_ per D20.5, D22.1), group_id (xwg_, D22.1), granularity, penalty_delta,
 // chain_prev, diff_ref, source_kind; always impact_tier 1 (D7, D16).
 type CrosswalkSourceKind = "OFFICIAL_TABLE"|"GAZETTE_TEXT_DIFF"|"JUDICIAL"|"EDITORIAL"|"THIRD_PARTY"|"MODEL";   // final, D20.11
 // P5's via_crosswalk penalty keys on CrosswalkChangeType; legacy P3 enums map via 05_P3 §5.7 (D20.11).
@@ -1810,14 +1811,14 @@ Each row compares the alternatives on accuracy, cost, latency, maintainability a
 | ID | Mismatch | Owner | Resolution under v1.0 | Status |
 |---|---|---|---|---|
 | R-01 | P1 `parse_id` used `prs_`; D12 assigns `prs_` to P6 RuleSpecs | P1 (+ P2, P3 examples) | Parse IDs use `par_`; `prs_` is only the P6 RuleSpec | **RESOLVED (D20.5)**; adopted in 03_P1, 04_P2, 05_P3 |
-| R-02 | D12 lists `xrn_` = crosswalk row; P3 used `xrn_` for `extraction_run_id` | P3 | `xrn_` = crosswalk row, `xtr_` = extraction run. Crosswalk rows materialise as `CORRESPONDS_TO` assertions carrying the `xrn_` row ID; group `xwg_` ✱ | **RESOLVED (D20.5)** for the prefixes (05_P3 uses `xtr_`). **OPEN (P3):** name the qualifier that carries the `xrn_` row ID and register `xwg_` (§7.5) |
+| R-02 | D12 lists `xrn_` = crosswalk row; P3 used `xrn_` for `extraction_run_id` | P3 | `xrn_` = crosswalk row, `xtr_` = extraction run. Crosswalk rows materialise as `CORRESPONDS_TO` assertions carrying the `xrn_` row ID; group `xwg_` ✱ | **RESOLVED (D22.1):** qualifiers `crosswalk_row_id` (`xrn_`) and `group_id` (`xwg_`) |
 | R-03 | `aud_` was both P8 citation audit (D12) and P7 audit event (09_P7 §2) | P7 | `aud_` = P8 citation audit only; P7 audit events use the distinct prefix `adt_` (§5.2) | **RESOLVED (✱, adopted)** in 09_P7 §2 and §5.8 |
 | R-04 | `identifier_alias.status`: P1 `PENDING\|ACTIVE\|CONFLICT\|RETIRED` vs D16 `ACTIVE\|PENDING\|REJECTED\|SUPERSEDED` | P1 | Union `PENDING\|ACTIVE\|CONFLICT\|REJECTED\|SUPERSEDED`; RETIRED → SUPERSEDED | **RESOLVED (✱, adopted)** in 03_P1 §2.4 |
 | R-05 | AuthorityView key `subject_id` (D6) vs `target_id` (05_P3; 12_P10 `CitatorBadge`; `graph.delta.status_changes`); 05_P3 lacked the `valid_from/valid_to` segment and `binding_basis.conflict` | P3, P10 | `subject_id` everywhere, `target_id` read-alias for one minor; P3 adds the missing fields (D6, D16) | **RESOLVED (✱, adopted)** in 05_P3, 04_P2, 12_P10 |
 | R-06 | `EvidenceBundle.graph_watermark` shown as a timestamp (07_P5) vs int64 (05_P3) | P5 | int64 | **RESOLVED (✱, adopted)** in 07_P5 §2.2 |
 | R-07 | Fact status `MACHINE` (P7 SQL) vs `PROPOSED` (D9) | P7 | Wire and storage value `PROPOSED` | **RESOLVED (✱, adopted)** in 09_P7 |
 | R-08 | `VerificationReport.degradations[]` (13_cross_cutting S8) was not ruled on in D9 | P8 + XC | `degradations[]{kind BUDGET\|SOURCE_STALE\|MODEL_FALLBACK\|RESIDENCY_FALLBACK\|INDEX_LAG\|COVERAGE_GAP, detail, affected_claim_ids[]}`, mirrored in `EvidenceBundle.warnings[]`, disclosed by P10 (§7.19) | **RESOLVED (D19.2)** |
-| R-09 | Court ID forms: `crt_sc`, `crt_dhc` (P0/P4), `crt_HC_DEL`/`crt_SC` (P5), `crt_IN_SC` (P1) | P3 registry; P4 examples | Canonical `crt_IN_…` per 03_P1 S8 | **RESOLVED (✱, adopted)** in 03_P1 and 07_P5. **OPEN (P4):** 06_P4 examples still show `crt_sc` / `crt_dhc`; replace with `crt_IN_SC` / `crt_IN_HC_DEL` |
+| R-09 | Court ID forms: `crt_sc`, `crt_dhc` (P0/P4), `crt_HC_DEL`/`crt_SC` (P5), `crt_IN_SC` (P1) | P3 registry; P4 examples | Canonical `crt_IN_…` per 03_P1 S8 | **RESOLVED:** 03_P1, 06_P4 and 07_P5 use `crt_IN_…` |
 | R-10 | Certified human-translation renditions (`v1.ht-en`) as claim support were undecided in D8 | P7, P8 | Lawyer-attested `ht-` renditions (`authoritative=true`) may support RECORD_FACT claims only, never public-law claims; `mt-` never (§5.3 A5) | **RESOLVED (D21.17)** |
 | R-11 | Court feeds, `judgment.expected.v1` and `source.recheck.requested.v1` had no names or payload schemas | P0 (P9 for recheck) | Court-feed events ratified; payloads finalised in 02_P0 §2.2A d; `judgment.expected.v1` per 02_P0 with `jex_` and `referenced_authorities[]`; recheck field list in §6.4 canonical until P9 confirms | **RESOLVED (D20.1, D20.5, D20.9, D21.18)** |
 | R-12 | `Chunk.binding_scope_tags[]` required by the P5 BIND leg was absent from 04_P2 | P2 + P3 | P2 owns the field, P3 supplies values, refreshed on `graph.delta.v1`, IAL filter (§7.2) | **RESOLVED (D21.2)** |
@@ -1838,15 +1839,15 @@ Each row compares the alternatives on accuracy, cost, latency, maintainability a
 | R-27 | Producers of `reprocess.requested.v1` beyond the spine (P3 O3; P5 `FRESH_CITER`) | P4 | P5 `FRESH_CITER` rejected: P5 shows "treatment pending" from the Freshness API. P3 single-work requests allowed ✱ (scope one `work_id`, RT lane, ≤1 per work per hour); schema owner P4 | **RESOLVED (D21.1, D21.15)** |
 | R-28 | Prefixes and paths: P5 `rq_`, P6 `sjb_`, P8 `vrp_`, P4 `cmp_`, P9 `fbk_`, P10 `dge_`, public `iss_`, P0 `exp_`, redaction `red_`/`rdo_`; P6 called `/research` and `/verify` | each owner | `qry_`, `job_`, `vr_`, `camp_`, `fb_`, `dig_`, `itp_`, `jex_`, `ovl_`; paths per §9 | **RESOLVED (D12, D19.3, D20.5)**; 08_P6 adopted the paths |
 | R-29 | A "text awaited" state for referred works (flow c) had no reason code | P3 | Reason code `TEXT_AWAITED` (open enum, forces `definitive=false`), also applied to `referenced_authorities[]` | **RESOLVED (✱, adopted; D21.18)** in 05_P3 §5.8 |
-| R-30 | The CPC First-Schedule Orders/Rules fragment (e.g. O.VIII r.1) is not expressible in the grammar; P6 RuleSpecs need it | P1, P6 | Proposed extension `sch-1.ord-8.rule-1` (new `ord-` unit inside a schedule) | **OPEN (P1 + P6 + spine owner):** ratify the EBNF delta in 03_P1 S16, then publish anchor grammar v1.1 in §5.3 |
+| R-30 | The CPC First-Schedule Orders/Rules fragment (e.g. O.VIII r.1) is not expressible in the grammar; P6 RuleSpecs need it | P1, P6 | Proposed extension `sch-1.ord-8.rule-1` (new `ord-` unit inside a schedule) | **RESOLVED (D22.2):** grammar v1.1 published in §5.3 |
 | R-31 | P8 consumed control-plane events (`model.endpoint.candidate.v1`, `release.candidate.v1`) that were not in the spine | XC | `model.endpoint.candidate.v1` is a catalogue event (Gateway → P8 offline gate); `release.candidate.v1` stays a control-plane event on `plc.release.candidate.v1` | **RESOLVED (D21.3)**; P8 stops polling the registry |
 | R-32 | The signature carrier for broadcast events was unnamed | P4 | CloudEvents extension `datasig` (JWS) on `plc.impact.public.v1` and `kg.proposal.resolved.v1` | **RESOLVED (✱, adopted)** in 05_P3, 06_P4, 11_P9 |
 | R-33 | Proposal outcome enums: P3 `DEFERRED` vs P9 `NEEDS_EVIDENCE`; broadcast routing | P3, P9 | `ACCEPTED\|REJECTED\|MERGED\|DEFERRED` + `public_note_code`; broadcast to all tenant planes | **RESOLVED (D21.11)** |
 | R-34 | Private (TPL) items in `EvidenceBundle` need `pdoc_id`, `pver`, `privilege_class`, provenance and an authz consistency token | P5, P7 | `items[].private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` (§7.9) | **RESOLVED (D21.13)** |
 | R-35 | Unowned or unnamed sync interfaces: the Anchor Read API ("P1/P2" in 10_P8), the P6 job API paths, the P7 dependency endpoint | P1, P6, P7 | Owners and paths in §9.2, §9.5 and §9.7; the dependency endpoint is tenant-internal | **RESOLVED (D20.3 for P1; ✱ adopted in 08_P6 and 09_P7)** |
 | R-36 | The 13_cross_cutting §6.2 real-time trigger ("cites a Work referenced in an active matter") required tenant reliance sets in the PLC, contradicting D3 | XC, P4 | Public signals only (§4.1) | **RESOLVED (D19.4)** |
-| R-37 | Topic spellings that predate D20.16 remain in phase documents (e.g. `plc.identity.v1`, `plc.source.recheck.v1`, `plc.index.generation.v1`, `plc.training.dataset.v1`, `tpl.<tenant>.erasure.v1`, `tpl.<tenant>.feedback.v1`, `tpl.<tenant>.eval.case.v1`) | P1, P2, P3, P4, P7, P8, P9, P10 | The §6.2 topic map governs (E7); old spellings are read aliases for one minor version | **OPEN (each owner):** replace with the §6.2 topic names in the next edit of each document |
-| R-38 | `redaction.applied.v1` from tenant cells: D19.3 lists consumer `P7` and `REPLICA:<id>`, but P0's ledger must know when **every** cell has applied an overlay | P0, P7 | Each ack carries only the public `overlay_id` and a consumer code, `tenantid=null` (§6.2) | **OPEN (P0 + P7):** fix the expected-consumer set for D1/D2 cells (one `P7` ack per cell keyed by an ops-registered cell ID, or one ack from the pooled D1 plane), without adding tenant attributes |
+| R-37 | Topic spellings that predate D20.16 remain in phase documents (e.g. `plc.identity.v1`, `plc.source.recheck.v1`, `plc.index.generation.v1`, `plc.training.dataset.v1`, `tpl.<tenant>.erasure.v1`, `tpl.<tenant>.feedback.v1`, `tpl.<tenant>.eval.case.v1`) | P1, P2, P3, P4, P7, P8, P9, P10 | The §6.2 topic map governs (E7); old spellings are read aliases for one minor version | **RESOLVED (D22.3):** phase docs updated to the §6.2 topic map |
+| R-38 | `redaction.applied.v1` from tenant cells: D19.3 lists consumer `P7` and `REPLICA:<id>`, but P0's ledger must know when **every** cell has applied an overlay | P0, P7 | Each ack carries only the public `overlay_id` and a consumer code, `tenantid=null` (§6.2) | **RESOLVED (D22.4):** expected-ack set = control-plane cell registry; acks carry `CELL:<cell_id>`/`REPLICA:<id>`, `tenantid` = null |
 
 ### 14.2 Open interface questions (substantive, not naming)
 1. **Scope of prospective and conditional effects.** It is unmeasured whether P3 can extract `effect/effective_from`, `date_basis` and `scope_predicates` (CORE, MADA-type rulings; 06_P4 §2.4 SP4-9). Until it can, `impact-match-core` returns `UNCERTAIN` and asks the lawyer for the governing date.

@@ -407,7 +407,7 @@ Coordination style: phases **choreograph** over events. Each phase is an idempot
 | `p4.recompute.v1.{rt,bulk}` (internal) | `target_id` | 24 | 7 d | re-keying gives a per-target mutex |
 | `plc.impact.public.v1` | `root.target_id` | 12 | **365 d**, compacted archive in S3 | retractions share the key, so they are ordered after the original |
 | `plc.reprocess.requested.v1` | `campaign_id` | 6 | 30 d | |
-| `plc.identity.v1`, `plc.source.health.v1`, `plc.index.generation.v1`, `plc.judgment.expected.v1`, `plc.doc.redacted.v1`, `plc.redaction.applied.v1`, `plc.acquire.requested.v1` | id | 3–6 | 90 d | Naming ratified by D20.16 (`{plane}.{domain}.{event}.v{n}`); 01_master publishes the canonical topic map |
+| `plc.identity.{merged,split}.v1`, `plc.source.health.v1`, `plc.index.generation.promoted.v1`, `plc.judgment.expected.v1`, `plc.doc.redacted.v1`, `plc.redaction.applied.v1`, `plc.acquire.requested.v1` | id | 3–6 | 90 d | Naming ratified by D20.16 (`{plane}.{domain}.{event}.v{n}`); 01_master publishes the canonical topic map |
 | `*.retry.{5m,1h,6h}`, `*.dlq` per consumer group | same as source | — | 30 d | Uber pattern [P4-28] |
 
 - **Lanes.** Kafka has no priorities, so each lane is a separate topic with its own consumer groups and quotas. Inside Temporal, lanes map to Task Queue priority (RT=1–2, daily=3, bulk=4–5) and to a fairness key per campaign [P4-19]. **Invariant:** bulk work can never starve RT, because they use different partitions, different consumer groups and a reserved worker pool.
