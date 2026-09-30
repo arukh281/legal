@@ -53,6 +53,7 @@ Phase documents remain authoritative for their *internal* design (§5 of each).
 | 22_build_roadmap.md | Sequencing, MVP gates (the competitive minimums), team and milestones. |
 | 23_risk_register.md | Consolidated risks with owners, mitigations and triggers. |
 | 24_bibliography.md | Merged, de-duplicated reference list of all documents. |
+| [25_final_quality_check.md](25_final_quality_check.md) | Answers to the brief's five final quality questions, the requirements traceability matrix, the interface audit, and the moat, buildability and citation audit. |
 
 ### 1.3 Reading paths
 - **Engineer building phase X.** Read §3 (your row), then §6 (events you produce and consume), §7 (objects), §8.2 (open mismatches that touch you), §9 (APIs you serve and call), then your phase document's §2 and §5.
