@@ -62,7 +62,7 @@ This section records how the principal architect's spine v1.0 decision record (D
 
 **Renames and conventions this doc now follows**
 - CloudEvents extension attributes are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (PUBLIC for every P0 event), plus `traceparent` (D2). Payload fields keep snake_case.
-- `change_kind` values are NEW\|CHANGED\|UNCHANGED\|DELETED\|REAPPEARED\|METADATA_CHANGED\|SUPPRESSED (D16).
+- `change_kind` values are `NEW|CHANGED|UNCHANGED|DELETED|REAPPEARED|METADATA_CHANGED|SUPPRESSED` (D16).
 - Takedown and masking travel on `doc.redacted.v1` with a RedactionOverlay (D4/D16). No `plc.redaction.v1` or `work.access_restricted.v1` event exists.
 - `rights_class` appears on `raw.captured.v1` and Manifestation (D9).
 - Deployments use the D17 names: the on-prem PLC replica feed serves **D4** (air-gapped: signed daily PLC delta bundles) and **D4h**. **D3** tenants use a local PLC replica (D3 read-path rule). The MVP is one **D2** dedicated cell.
@@ -243,13 +243,16 @@ Every event below uses the CloudEvents envelope with `tenantid=null` and `datacl
 **(c) `doc.redacted.v1` (P0/P1/ops/legal → P2, P3, P4, P5 caches, P7; D4/D16)**: P0 produces it for every applied `SuppressionOrder` (court takedown, anonymisation or suppression order; verified takedown; source-side re-masking, §5.10). Its `data` is the spine **RedactionOverlay**:
 ```json
 {"type":"doc.redacted.v1","tenantid":null,"dataclass":"PUBLIC",
- "data":{"overlay_id":"…","scope":"WORK|EXPRESSION|ANCHOR_SPANS",
+ "data":{"overlay_id":"ovl_…","work_id":"wrk_…","expression_key":null,   // work_id resolved via P1's manifestation lookup before emit (topic partition key)
+         "scope":"WORK|EXPRESSION|ANCHOR_SPANS",
          "kind":"SUPPRESS_ALL|MASK_SPANS|NAME_SEARCH_SUPPRESSED|COURT_PROHIBITION",
-         "targets":{"work_id":"wrk_…","raw_ids":["sha256:…"],"source_record_keys":["in.sc.judgments|…"]},  // work_id resolved via P1's manifestation lookup before emit (topic partition key); raw/record keys from P0
-         "spans":[],                                   // anchor spans for MASK_SPANS (usually supplied by P1/legal review)
-         "legal_basis":"COURT_ORDER:<order anchor/URL>|STATUTORY_BAR:<provision>|SOURCE_REMASKED|VERIFIED_TAKEDOWN",
-         "ordered_by":"crt_…|null","effective_at":"2026-10-01T00:00:00+05:30","purge_sla":"P14D"}}
+         "spans":[],                                   // [{anchor_id, span:[s,e], replacement?}] for MASK_SPANS (usually supplied by P1/legal review)
+         "legal_basis":{"type":"COURT_ORDER|STATUTE|SOURCE_TAKEDOWN|DPDP_REQUEST","ref":"<order anchor/URL or provision>","anchor_id":null},
+         "ordered_by":"crt_…|null","effective_at":"2026-10-01T00:00:00+05:30",
+         "purge_sla":{"serving_h":1,"derived_h":24,"replica":"NEXT_BUNDLE"},
+         "review_state":"PENDING_REVIEW|VERIFIED", "valid_from":"…", "recorded_at":"…"}}
 ```
+Field names follow the RedactionOverlay in 01_master_architecture §7.13. P0's own target keys (`raw_id`s, `record_key`s) stay in the `suppression` table (§2.4) and are not put on the event.
 Masking is an overlay. No masked `expression_key` is minted (D16). Indexes, snippets, exports and quote checks use the masked rendition.
 
 **(d) Tenant-agnostic court feeds (D4/D16)**: P0 owns every court-portal connector and publishes public feeds keyed by court and public identifier. No feed carries tenant attribution.
@@ -348,7 +351,7 @@ CREATE INDEX ON capture (source_id, fetched_at);          -- capture is range-pa
 | 4 | Spine §I bus | Recommend a Kafka-API log (Redpanda self-hosted, or MSK in ap-south-1) with a Postgres transactional outbox, and Temporal for durable workflows. P4 co-owns the decision. | Low event volume, but P4 needs replay and ordered partitions. Temporal gives checkpointed long backfills (§6.2). |
 | 5 | Spine §D schemes | `acquire.requested.v1.target.scheme` uses `URL` and `CITATION_STRING`, which are not spine alias schemes. They are request-only lookup keys and are **never** written to `identifier_alias`. `URL` maps to spine `ECOURTS_URL` only when the host is an eCourts host. | Makes an otherwise silent divergence explicit; keeps the alias table clean. |
 | 6 | `change_kind` for takedowns | No new `SUPPRESSED` kind. Suppression is `change_kind=DELETED` **plus** non-null `suppression{}`. Every consumer MUST test `suppression != null` before applying ordinary DELETED (withdrawal) semantics. | Keeps the spine enum stable. The trade-off is that a consumer that ignores `suppression` would merely mark withdrawal and keep derived text, so P8 carries a contract test (§8). If P4 prefers a distinct kind, `SUPPRESSED` is the fallback proposal. |
-| 7 | `source.health.v1` data | Add `expected_pending` (count of `expected_record` rows PENDING/OVERDUE) and `backing: LIVE_DELTA|DATASET_ONLY`. | P8/P10 must say "this court is covered only by a quarterly dataset" and "3 SC judgments pronounced today are not yet published", which a plain lag metric hides. |
+| 7 | `source.health.v1` data | Add `expected_pending` (count of `expected_record` rows PENDING/OVERDUE) and `backing: LIVE_DELTA\|DATASET_ONLY`. | P8/P10 must say "this court is covered only by a quarterly dataset" and "3 SC judgments pronounced today are not yet published", which a plain lag metric hides. |
 
 ---
 
@@ -819,13 +822,13 @@ The court website sees only our generic crawler fetching a public record.
 - **Suppression register.**
   - Entries are created from court orders (anonymisation or removal directions), statutory identity bars, and verified takedown requests. Candidate statutory bars, all *(unverified in this review; 21_india to confirm section numbers)*: disclosure of the identity of victims of sexual offences (IPC s.228A, carried into BNS 2023), POCSO Act s.23, and Juvenile Justice Act 2015 s.74.
   - P1 may raise `SuppressionOrder` **candidates** with reason `STATUTORY_BAR_SUSPECTED`, for example when NER finds a named minor or victim in a POCSO or sexual-offence judgment that the court failed to mask. They go into a human review queue and are applied with `scope: DISPLAY` pending decision, so the system fails closed on display and open on retention.
-    - *v1.0 mapping:* a DISPLAY-scope candidate becomes a `doc.redacted.v1` overlay with `kind=MASK_SPANS` (or `SUPPRESS_ALL` when the spans are unknown). Its `purge_sla` is set only when review confirms the candidate. P1 may also emit the overlay directly (D4).
+    - *v1.0 mapping:* a DISPLAY-scope candidate becomes a `doc.redacted.v1` overlay with `kind=MASK_SPANS` (or `SUPPRESS_ALL` when the spans are unknown) and `review_state=PENDING_REVIEW` (01_master §7.13). Serving is masked at once; derived-text purge and raw legal-hold follow `review_state=VERIFIED`. P1 may also emit the overlay directly (D4).
   - Each entry targets `raw_id`s, `record_key`s or `work_id`s.
   - On creation, P0 emits `raw.captured.v1` with **`change_kind=SUPPRESSED`** (v1.0 D16; formerly `DELETED` + `suppression{reason, authority_ref, scope}`) and, in the same outbox transaction, **`doc.redacted.v1`** carrying the RedactionOverlay (§2.2A c).
     - Downstream phases must tombstone and purge their derived text, embeddings, snippets and index entries per the overlay, within its `purge_sla`.
     - Name-search-only restrictions (e.g. *Laksh Vir Singh Yadav*, 21_india §2.5) use `kind=NAME_SEARCH_SUPPRESSED` and do **not** change `change_kind`, because the text stays retrievable by case number and citation.
   - Raw bytes move to a restricted legal-hold prefix and remain retrievable only by the legal role.
-- **Source-side masking.** If a court re-publishes a judgment with names masked, we see `CHANGED` and a suspected replacement. The newer masked version becomes canonical, and the unmasked prior version is automatically suppressed from display (`scope: DISPLAY`), because the court's re-publication expresses a masking intent. In v1.0 this is a `doc.redacted.v1` overlay with `legal_basis=SOURCE_REMASKED` on the prior version. No masked `expression_key` is created (D16).
+- **Source-side masking.** If a court re-publishes a judgment with names masked, we see `CHANGED` and a suspected replacement. The newer masked version becomes canonical, and the unmasked prior version is automatically suppressed from display (`scope: DISPLAY`), because the court's re-publication expresses a masking intent. In v1.0 this is a `doc.redacted.v1` overlay with `legal_basis.type=SOURCE_TAKEDOWN` (re-masked at source) on the prior version. No masked `expression_key` is created (D16).
 - **DPDP posture.** Because the s.3(c)(ii) exemption is arguable [P0-23], P0:
   - minimises: no scraping of litigant contact data or case-status pages beyond need;
   - logs the purpose on every source;

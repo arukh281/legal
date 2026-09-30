@@ -1291,3 +1291,187 @@ interface LLMCallRecord { call_id: string; trace_id: string; task_id: string; en
 - `CourtCalendar` (P0; D16).
 - `RuleSpec`, `MaintainabilityCheck`, `TriggerProfile` (P6; 08_P6 §5.5, §2.3).
 
+---
+
+## 8. Interface matrix and contract check
+
+### 8.1 Producer × consumer matrix
+
+**Legend — events:**
+- **P0:** RC `raw.captured`, SH `source.health`, JE `judgment.expected`, CF court feeds (case status, cause list, calendar).
+- **Acquisition requests:** AQ `acquire.requested`, SR `source.recheck.requested`.
+- **P1:** DP `doc.parsed`, ID `identity.*`, RD `doc.redacted`, PP `pdoc.parsed`.
+- **P2:** DI `doc.indexed`, GP `index.generation.promoted`.
+- **P3:** GD `graph.delta`, KR `kg.proposal.resolved`.
+- **P4:** IM `impact.detected`, RP `reprocess.requested`.
+- **P9:** KP `kg.proposal`, TD `training.dataset`, EC `eval.case.*`, FZ `feedback.resolved`.
+- **P8:** ER `eval.run`, VC `verification.completed`.
+- **P10:** DG `digest.edition`, IL `interaction.logged`, AS `alert.state`.
+- **Tenant plane:** MD `matter.document.ingested`, MA `matter.alert`, SM `strategy.memo.*`, RS `retrieval.served`, FR `feedback.recorded`, EZ `erasure.*`.
+
+**Legend — synchronous objects and APIs (in _italics_):**
+- _AV_ Graph Query API / AuthorityView; _IAL_ Index Access Layer; _AN_ Anchor Read API; _FS_ Freshness; _CSB_ `commit_status_batch`.
+- _EB_ EvidenceBundle; _RQ_ ResearchQuery; _MC_ MatterContext; _TEC_ Tenant Execution Context.
+- _VR_ VerificationReport; _VQ_ VerifyRequest; _CA_ CitationAuditReport / AuditRequest.
+- _PR_ ParseRequest; _SJ_ StrategyJobRequest; _PF_ PersonalizationProfile; _UP_ Upload/Matter commands.
+
+| Producer ↓ / Consumer → | P0 | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **P0** | — | RC | | JE | RC SH JE | | CF(cal) | CF | SH | | SH JE CF |
+| **P1** | AQ | — | DP ID RD _AN_ | DP ID RD _AN_ | DP ID RD | ID _AN_ | _AN_ | DP PP ID _AN_ | DP _AN_ | DP | DP ID _AN_ |
+| **P2** | | | — | | DI GP | DI GP _IAL_ | | | GP | | DI GP |
+| **P3** | AQ SR | RP | GD | — | GD _AV_ | GD _AV_ | _AV_ | GD KR | GD _AV_ | GD KR | GD _AV_ |
+| **P4** | AQ | RP | RP | RP _CSB_ | — | IM _FS_ | IM _FS_ | IM | IM _FS_ | | IM _FS_ |
+| **P5** | | RP✱ | RP✱ | RP✱ | | — | _EB_ | | RS | RS | _EB_ |
+| **P6** | | | | | | _RQ_ | — | SM | _VQ_ RS | FR RS | SM |
+| **P7** | | _PR_ | EZ | | | _MC_ _TEC_ | MD _MC_ _TEC_ | — | _MC_ _TEC_ | FR EZ _MC_ | MA MD |
+| **P8** | | | | | ER | | _VR_ | | — | VC EC | _VR_ _CA_ VC |
+| **P9** | SR AQ | RP | TD | KP TD | | TD _PF_ | _PF_ | EZ | EC | — | FZ |
+| **P10** | | | | | | _RQ_ | _SJ_ | _UP_ AS | _CA_ | FR IL AS | DG |
+
+### 8.2 Contract check (consumed object/event → producer → match under v1.0)
+
+✔ = fields match. ✱ = matches once the v1.0 rename or resolution in this document is applied. ✘ = open residual (§14).
+
+| # | Consumer needs | Producer | Fields relied on | v1.0 | Residual / resolution |
+|---|---|---|---|---|---|
+| C1 | P1 ← `raw.captured.v1` | P0 | `raw_id`, `change_kind`, `prior_raw_id`, `source_metadata`, `terms_ref`, `provenance_tier`, `rights_class` | ✱ | P1's consumer table lacks a `SUPPRESSED` row. v1.0: P1 tombstones and emits `doc.redacted.v1` (§14 R-14) |
+| C2 | P2, P3, P4 ← `doc.parsed.v1` | P1 | `quality.gate`, `work_id_status`, `case_ids`, `supersedes_parse_id`, `anchor_changes`, `CitationMention.context`, `AmendmentInstruction[]` | ✔ | Accepted in D16 |
+| C3 | P3 ← `metadata.authoritative_expression_key` | P1 | P3 input rule 5 | ✘ | Absent from 03_P1 §2.3. P1 adds it, derived from `expression.authoritative` (R-15) |
+| C4 | P2 ← `ParsedNode.rhetorical_role` flat + `role_confidence` | P1 | 04_P2 §2.1 flat shape | ✱ | P1 emits the object `{label, fine, dist, conf}` (D16). P2 reads `.label`/`.conf`. Label vocabularies differ (P1 `RATIO_CANDIDATE` vs P2 `RATIO`); P2 maps `*_CANDIDATE → *` for chunk boundaries only (R-16) |
+| C5 | P5 ← `Chunk` filter fields | P2 | `court_id`, `doc_type`, `decision_date`, `recorded_at`, `lang`, `opinion_type`, `binding_scope_tags[]`, `ocr_conf` | ✘ | All present except `binding_scope_tags` (R-12) |
+| C6 | P4, P5, P7, P8, P10 ← `graph.delta.v1` | P3 | `graph_watermark` (int64), `cause.kind`, `status_changes[].{definitive, reason_codes, valid_from}` | ✱ | `cause.kind` enum differs (P3: DOC/REVIEW/…; D4: EXTRACTION/HUMAN_REVIEW/…). v1.0 enum in §6.3 with mapping (R-17). `status_changes[].target_id` → `subject_id` (R-05) |
+| C7 | P5 ← `alias_changes[]` on `graph.delta.v1` | P3 | C1 cache invalidation | ✱ | Rejected as a delta field. Alias changes arrive as `identity.merged/split.v1 kind=ALIAS` from P1 (the alias owner); P5 subscribes |
+| C8 | P5, P6, P8, P10 ← `AuthorityView` | P3 | `status`, `definitive`, `reason_codes`, `binding_on_forum`, `binding_basis`, `graph_watermark` | ✱ | Field name `subject_id` (D6) vs `target_id` (05_P3, 12_P10); `valid_from/valid_to` and `binding_basis.conflict` missing from 05_P3 §2.2 (R-05) |
+| C9 | P5 ← `authority:batch` of ~600 ids at p95 ≤120 ms | P3 | 05_P3 SLO: 200 ids at 60 ms | ✘ | Open performance question (R-18) |
+| C10 | P7 Impact Matcher ← `impact.detected.v1` | P4 | 09_P7 §5.6 pseudo-code reads `change_kind == RETRACTED`, `effective_from`, `retrospective`, `review_state` | ✱ | Map to `lifecycle == RETRACTED`, `temporal_scope.legal_effect_from`, `temporal_scope.effect/retrospective_flag`, `verification.state`. P7 must update §5.6 (R-19) |
+| C11 | P10 ← `matter.alert.v1` | P7 | `subject_ids`, `definitive`, `revision`, `supersedes_alert_id`, `requires_ack` | ✔ | D5 merged. P7's envelope example `schema_version:"2"` becomes `schemaversion:"1.x"` (§13) |
+| C12 | P6, P8 ← `EvidenceBundle` TPL items | P5 | `source_layer`, `trust_label`, `private{pdoc_id, pver, privilege_class, authz_consistency}` | ✱ | P5 used `trust_level` with a different enum. v1.0 is `trust_label` per D9 (R-20) |
+| C13 | P8 ← `VerifyRequest.claims[]` | P6 | Claim + C2 extensions, `ledger_ref` | ✔ | |
+| C14 | P6 ← `VerificationReport` gate | P8 | `section_gates`, memo aggregation | ✱ | P8 S8-6 "any BLOCK ⇒ memo BLOCK" is replaced by the D9 rule in §7.19 (R-21) |
+| C15 | P6/P10 → P5 path `POST /research` | P5 | `POST /p5/v1/retrieve` | ✱ | Canonical path is `/p5/v1/retrieve`; `/research` is an alias for one minor version |
+| C16 | P8 ← Anchor Read API | P1 ("P1/P2" in 10_P8) | `speaker`, `opinion_role`, `ocr_conf`, `is_authoritative_expression`, siblings | ✱ | Owner fixed as P1 (§9.2) |
+| C17 | P6 ← `MatterContext.procedural_events[]`, `temporal_context` | P7 | D9/D16 | ✘ | 09_P7 §2.5 still shows `key_dates` only. P7 adds both, and `residency_policy` (R-22) |
+| C18 | P7 ← `MatterContext.fact_timeline[].status` | P7 → P6 | `PROPOSED\|CONFIRMED\|DISPUTED` (D9) | ✱ | P7 SQL uses `MACHINE`; the wire maps `MACHINE → PROPOSED` (R-07) |
+| C19 | P9 ← `retrieval.served.v1` | P5 | P9 needs `impression_id`, `items[].{position, slot, propensity, randomized}` | ✱ | The two docs define different payloads; the merged schema is in §6.4 (R-23) |
+| C20 | P3 ← `kg.proposal.v1` | P9 | `KgProposal` | ✔ | `exposure_bucket` source is invalid (R-13) |
+| C21 | P9, tenants ← `kg.proposal.resolved.v1` | P3 | decision enum, broadcast | ✱ | Merged enum; broadcast to tenant planes (§6.4) |
+| C22 | P6 ← `CourtCalendar`; P7 ← case status and cause lists | P0 | calendars and feeds | ✘ | No event names or schemas in 02_P0. Proposed in §6.4 (R-11) |
+| C23 | P2, P3, P5, P7 ← `doc.redacted.v1` | P1/ops | `RedactionOverlay` (D16) | ✱ | 13_cross_cutting §1.3.1 shape and the name `plc.redaction.v1` are superseded. Purge SLOs reconciled (R-24) |
+| C24 | P6 RuleSpec registry ← `impact.detected.v1` | P4 | `affected_ids` ∩ RuleSpec anchors | ✔ | Consumer added to the catalogue (08_P6 C8) |
+| C25 | P7 ← `pdoc.parsed.v1`; P1-tenant ← `ParseRequest` | P1 / P7 | D16 | ✔ | P7 must confirm the `ParseRequest` fields (03_P1 §2.1c) |
+| C26 | P9 ← `interaction.logged.v1`, `alert.state.v1` | P10 | S10-1/2 | ✔ | |
+| C27 | P5 ← `PersonalizationProfile` | P9 | bounded priors ≤10% of fused score | ✔ | |
+| C28 | P2 ← delta chunk embeddings for tenant TOPIC watches | P2 → P10 | 12_P10 reviewer note | ✘ | Not in 04_P2 (R-25) |
+| C29 | P0 ← `acquire.requested.v1` | P1, P3, P4, P9 | reason enum | ✱ | `PRONOUNCEMENT_EXPECTED` (P0) is not in D16's enum; added as optional (R-26) |
+| C30 | P7 `matter_dependency` ← `StrategyMemo.dependency_ids` | P6 | anchors and IDs, never chunk ids | ✔ | R7 |
+
+---
+
+## 9. Synchronous API catalogue
+
+All tenant-plane APIs require a TEC. All PLC read APIs are stateless for tenant contexts (R3). REST/JSON; gRPC where noted; SSE for streams. p95 values come from the owning document.
+
+### 9.1 Graph Query API — P3 (05_P3 §5.12; gRPC + REST)
+Every call takes `as_of_legal_date`, `as_known_at?`, `status_mode?` and `min_watermark?`, and returns the `graph_watermark` it read.
+
+| Endpoint | Signature | p95 |
+|---|---|---|
+| `POST /v1/authority:batch` | `{ids[≤500], forum{court_id, bench_strength?, state?}, as_of_legal_date, as_known_at?, status_mode?} → AuthorityView[]` | 60 ms / 200 ids |
+| `GET /v1/authority/{id}` | one AuthorityView + full reason chain with evidence | 30 ms |
+| `POST /v1/binding` | `{subject_id, forum, as_of_legal_date} → {binding_on_forum, basis}` | 10 ms |
+| `GET /v1/works/{id}/citing` · `/cited` · `/history` · `/propositions` | citator; outgoing treatments; case lineage; propositions | 150 / 100 / 80 / 80 ms |
+| `GET /v1/propositions/{id}` | proposition + status + treatments | 80 ms |
+| `GET /v1/provisions/{provision_ref}?date=&territory=` | `{version, text_ref, validity, in_force, lga timeline, reason_assertion_ids}` | 40 ms |
+| `GET /v1/provisions/{ref}/interpretations` | INTERPRETS / STRIKES_DOWN / READS_DOWN with binding | 150 ms |
+| `GET /v1/crosswalk?anchor=&direction=OLD_TO_NEW\|NEW_TO_OLD&date=` | CORRESPONDS_TO rows + change_type + carry-over | 40 ms |
+| `POST /v1/applicable-provisions` | `{offence_date, proceeding_stage, proceeding_started_on, provisions[]}` → `governing_code()` answers + rule_ids + contested | 50 ms |
+| `POST /v1/traverse` | `{seeds[], predicates[], direction, max_depth ≤3, filters, limit ≤5,000}` | 300 ms (depth 2) |
+| `POST /v1/ppr` | `{seeds[{id, weight}], predicates[], restart=0.15, max_nodes}` | 150 ms |
+| `GET /v1/assertions/{id}` (+`/justifications`, `?as_known_at=`) | audit replay | 50 ms |
+| `GET /v1/deltas?after_watermark=` | pull fallback for `graph.delta.v1` | 200 ms |
+| *internal* `commit_status_batch(results[], cause{kind: RECOMPUTE\|SCHEDULED, ref})` | P4 → KG Writer only | — |
+
+### 9.2 Anchor Read API — P1 (owner fixed ✱; D8; 10_P8 §2.1)
+| Endpoint | Signature |
+|---|---|
+| `GET /plc/v1/anchors/{anchor_ref}` | Accepts a `public_anchor`, `provision_ref` + `?date=&territory=`, or `pit_ref`. Returns `{anchor_id (resolved), text (masked rendition if overlaid), text_hash, quote_selector, spans[{page, bbox}], rhetorical_role, speaker, opinion_role MAJORITY\|CONCURRING\|DISSENT\|REFERENCE_ORDER, ocr_conf, lang, is_authoritative_expression, sibling_expressions[], state LIVE\|TOMBSTONED, forward_to?, aliases[], manifestation{source_url, fetched_at, rights_class}}` |
+| `POST /plc/v1/anchors:batch` | up to 500 anchor refs (P6 ledger build, P8 C1/C2 checks) |
+| `POST /plc/v1/citations:resolve` | `{raw_text \| parsed} → {candidates[{target_id, score, method}], cluster?}`. Tenant callers send normalised keys only (03_P1 §5.12) |
+| `GET /v1/raw/{raw_id}`, `/v1/captures`, `/v1/records/{source_id}/{record_key}`, `/v1/replay/{capture_id}`, `/v1/sources/{id}/health`, `POST /v1/acquire` | P0 raw read API (02_P0 §2.3; p95 ≤150 ms) |
+
+### 9.3 Index Access Layer — P2 (04_P2 §2.5)
+- `search(IndexQuery) → IndexHit[]`: lexical top-200 p95 120 ms; dense p95 150 ms.
+- `get_chunks(ids[])`.
+- `get_neighbours(anchor_id, before, after)`.
+- `get_card(work_id)`.
+- `get_provision(anchor_id, valid_at)`.
+- `embed_query(text, instruction_id)`: p95 40 ms; runs in the caller's boundary.
+
+Tenant scope is enforced server-side (`acl_principals`, `matter_id`). Scores are raw; fusion belongs to P5.
+
+### 9.4 Retrieval — P5 (07_P5 §2.3)
+| Endpoint | Signature | p95 |
+|---|---|---|
+| `POST /p5/v1/retrieve` | `ResearchQuery (+ MatterContext ref, TEC) → EvidenceBundle` | QUICK 0.9 s · STANDARD 5 s · DEEP 30 s per issue |
+| `POST /p5/v1/retrieve:stream` | as above; issues streamed as they complete | — |
+| `POST /p5/v1/revalidate` | `{bundle_ref \| item_ids[], forum, as_of_legal_date} → {changed[], new_status[], graph_watermark}` | 200 ms / 100 items |
+| `POST /p5/v1/lookup` | `{citation \| provision_ref, as_of_legal_date} → anchors` | 300 ms |
+| `POST /p5/v1/explain` | `{query_id, item_id} → feature vector, leg ranks, rule firings` | — |
+
+### 9.5 Strategy job API — P6 (paths ✱; 08_P6 §2.1, §5.4)
+| Endpoint | Signature |
+|---|---|
+| `POST /p6/v1/jobs` | `StrategyJobRequest → {job_id, status}` (idempotent on `idempotency_key`) |
+| `GET /p6/v1/jobs/{job_id}` | `{status RUNNING\|WAITING_HITL\|PUBLISHED\|FAILED\|CANCELLED, budget, spent, memo_id?}` |
+| `POST /p6/v1/jobs/{job_id}/signals/{confirm_dates\|confirm_issues\|approve_draft}` | Temporal signal carrying the lawyer's confirmations |
+| `POST /p6/v1/jobs/{job_id}:cancel` | — |
+| `GET /p6/v1/memos/{memo_id}` · `GET /p6/v1/drafts/{draft_id}` | StrategyMemo · DraftArtifact (streamed to the UI via the P10 SSE `/v1/stream/memo/{id}`) |
+
+### 9.6 Verification — P8 (10_P8 §2.1, §5.8)
+| Endpoint | Signature | p95 |
+|---|---|---|
+| `POST /p8/v1/verify` | `VerifyRequest → VerificationReport` (per section or answer) | answer ≈3.5 s; memo section ≤8 s (≤20 s with repair) |
+| `POST /p8/v1/reverify` | `{report_id \| claim_ids[], as_known_at} → VerificationReport (supersedes_report_id)` | ≤5 s / 200 claims |
+| `POST /p8/v1/audits` · `GET /p8/v1/audits/{audit_id}` | `AuditRequest → 202 {audit_id}` · `CitationAuditReport` (asynchronous) | ≤60 s for a 50-page order |
+
+### 9.7 Workspace — P7 (09_P7 §2.2, §5.2, §5.5, §5.7)
+| Endpoint | Signature | p95 |
+|---|---|---|
+| PEP `POST /t/{ten}/tec` *(internal)* | session + purpose + matter scope → signed TEC (≤5 min) | — |
+| `check(user, relation, object)` · `list_objects(user, relation, type)` | OpenFGA via the PEP. Deny-first. ListObjects truncation (default 1,000 results / 3 s [MA-8]) is detected and surfaced, never silent | 10 ms · 50 ms |
+| `GET /t/{ten}/matters/{mat}/context?version=latest\|n` | `MatterContext` | 150 ms (rebuild ≤5 s) |
+| `GET /t/{ten}/anchors/{private_anchor}` | `{text, page, bbox, privilege_class, trust_label}` | — |
+| `POST /t/{ten}/uploads` · `POST /t/{ten}/matters` · `POST /t/{ten}/confirmations` | UploadRequest · MatterCommand · ConfirmationCommand | upload → searchable p95 3 min |
+| `POST /t/{ten}/matters/{mat}/dependencies` ✱ | `{public_id, kind, as_of_legal_date?, source_ref}[]` (P6 `dependency_ids`, P10 `WATCHED`) | — |
+
+### 9.8 Freshness — P4 (06_P4 §2.2 O4)
+- `GET /p4/v1/freshness?court_id=` → `Freshness`.
+- `GET /p4/v1/freshness/forum?court_id=` → the minimum over the forum's binding hierarchy.
+- p95 ≤50 ms.
+
+### 9.9 Personalization — P9 (11_P9 §2.2, §5.9)
+- `GET /t/{ten}/p9/v1/personalization/profile?user=&matter=` → `PersonalizationProfile{memory_items[{memory_id, scope USER|MATTER|PRACTICE_GROUP|FIRM, text, kind}], ranking_priors{feature: offset}}`.
+- Offsets are bounded to |Δ| ≤10% of the fused score, and walls are honoured.
+- p95 <10 ms.
+
+### 9.10 BFF — P10 (12_P10 §2.3.5)
+| Endpoint | Signature |
+|---|---|
+| `POST /v1/command/resolve` | `{text, context} → CommandResolution` (suggestions ≤30 ms cached / ≤150 ms server) |
+| `GET /v1/badges?ids=&as_of_legal_date=&forum=` | `CitatorBadge[]` (batch ≤200; ≤120 ms) |
+| `GET /v1/anchors/{anchor_id}/view` | `AnchorView` with tiles + `quote_check` (click-to-source ≤400 ms) |
+| `GET /v1/today` · `GET /v1/digest/{edition_id}/me` | TodayModel · UserDigest |
+| `SSE /v1/stream/research/{query_id}` · `SSE /v1/stream/memo/{memo_id}` | evidence_card, coverage, claim_status, claim_removed, done · section_progress, claim_status, gate, stale |
+| `POST/PATCH/DELETE /v1/watch…` · `GET /v1/alerts` · `POST /v1/alerts/{ntf}/ack\|snooze\|feedback` | watchlists; notifications |
+| `POST /v1/citecheck` | Word add-in → `CiteCheckReport` (50 pages ≤10 s badges / ≤20 s quotes) |
+| `POST /v1/feedback` | FeedbackEvent (client fields) → 202; the server stamps `actor_ref`, `consent_snapshot_id`, `recorded_at` |
+
+### 9.11 PLC Access API / MCP — post-MVP (D13; owner P10 BFF, backed by P5 and P3)
+- `POST /api/v1/resolve_citation {raw_text}` → candidates.
+- `GET /api/v1/anchor/{public_anchor | pit_ref}`.
+- `POST /api/v1/authority_status {ids[], forum, as_of_legal_date}` → AuthorityView subset.
+- `POST /api/v1/research PublicResearchQuery` → `PublicEvidenceBundle`.
+
+The same four operations are exposed as MCP tools. The API is tenant-less and metered; every excerpt is filtered by `rights_class` (only `OFFICIAL` / `OPEN_LICENSED` text is returned; link-only otherwise).
+

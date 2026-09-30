@@ -997,7 +997,9 @@ This section was added by an independent adversarial review on 30 Sep 2026. Chan
 | Digest | English, 06:30, deterministic ranking | Hindi digest, weekly practice-area editions, client-facing digest templates (firm-branded, opt-in; subject to the Bar Council advertising/solicitation review, §11 Q11) |
 | Word | *(v1.1, week 8–12)* cite-check + insert authority + living citations | memo→draft tracked changes, table of authorities, criminal-code lint in full |
 | Mobile | PWA: Today, alerts, court day, snapshot | offline hearing packs, privacy mode enhancements |
-| External | — | PLC Access API / MCP for firm systems (competitive teardown recommendation [20_competitive_teardown]), subject to licensing and rate limits |
+| Deployment | one D2 dedicated cell for the design partner, running the same code as D1 (spine v1.0 D17) | D1 pooled (opens at GA), D2, D3, D4/D4h (P10 tenant plane + BFF in every cell; public stage via signed PLC delta bundle on D4/D4h) |
+| Freshness & pending judgments | "law current to" from P4 Freshness API on digest/memos/GOOD badges; "pronounced, text awaited" items from `judgment.expected.v1` in digest and CASE watches | + PROVISIONAL "text awaited" impact chips on affected authorities' badges |
+| External | — | **PLC Access API / MCP** (spine v1.0 D13; owner = P10 BFF, backed by P5/P3): `resolve_citation`, `get_anchor`, `authority_status`, `research(PublicResearchQuery)` → `PublicEvidenceBundle`; `rights_class`-filtered, metered, tenant-less (competitive teardown recommendation [20_competitive_teardown]), subject to licensing and rate limits |
 
 MVP deliberately includes the citator badge and click-to-source at full fidelity. They are the trust core, and a thin version would teach users the wrong habits.
 
@@ -1016,7 +1018,7 @@ MVP deliberately includes the citator badge and click-to-source at full fidelity
 9. **Seat-usage assumptions** drive ~73% of platform cost [13_cross_cutting Q9]. P10 telemetry must replace them within 90 days. This is a dependency on the §5.17 observability being live at launch.
 10. **Risk: habit formation depends on court-sync accuracy (P7/P0).** One wrong hearing date damages trust more than any AI error. Every date shows its source and observation time [09_P7 §5.11], and the missed-alert audit (§9) runs weekly.
 11. **Client-facing digests and Bar Council rules** *(added in review)*. Firm-branded digests sent outside the firm may engage the Bar Council of India Rules' prohibition on advertising and solicitation by advocates *(rule text not verified in this review)*. A legal opinion is needed before the Full-version feature, and it may confine the feature to existing clients only.
-12. **Requests to other phases** *(added in review)*. P1: populate `translation_status` per expression (§5.6 item 5). P0/P3: a "pronounced, text awaited" signal and predicate (§8). P3/P7: resolve the `iss_` prefix collision (S10-8). P2: publish per-document chunk embeddings for the day's delta to tenant planes, needed for TOPIC stage 1 (§5.9.2).
+12. **Requests to other phases** *(added in review)*. P1: populate `translation_status` per expression (§5.6 item 5). P0/P3: a "pronounced, text awaited" signal and predicate (§8) — *resolved by D16 (`judgment.expected.v1`)*. P3/P7: resolve the `iss_` prefix collision (S10-8) — *resolved by D12 (public topics → `itp_`)*. P1 `translation_status` — *resolved by D16 Expression authority attributes*. P2: publish per-document chunk embeddings for the day's delta to tenant planes, needed for TOPIC stage 1 (§5.9.2).
 
 ---
 

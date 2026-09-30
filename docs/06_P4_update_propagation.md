@@ -649,7 +649,12 @@ Commencement notifications, sunset clauses, ordinance lapse dates, and stays "un
   4. For each one, if *every* reason assertion of the current version is now retracted, it emits `lifecycle=RETRACTED` with `impact_version+1` and the explanation "Withdrawn: the earlier alert was based on a treatment our reviewers rejected". If some reasons survive, as in a coalesced impact, it emits `UPDATED` with the recomputed status, closure and severity; this can be a downgrade to severity 3.
   5. P7 marks alerts withdrawn, and memos whose STALE reason was only this impact return to their prior state after P8 re-verification.
   - Retractions are broadcast like originals, so they reach exactly the original audience without P4 knowing it (U-3, U-4).
-- **Knowledge correction versus law change.** Impacts caused by reprocessing or reclassification carry `cause_kind=RECLASSIFICATION` or `KNOWLEDGE_CORRECTION`. P10 phrases them as "our analysis changed", not "the law changed". The rules for such impacts:
+- **Knowledge correction versus law change.** Impacts caused by reprocessing or reclassification carry `cause_kind=RECLASSIFICATION` or `KNOWLEDGE_CORRECTION`. *Mapping from the root delta's D4 `cause.kind`:*
+  - `EXTRACTION` from a new official document → `LAW_CHANGE`.
+  - `EXTRACTION` with a `camp_…` ref, or `RECOMPUTE` after a doctrine-rule change → `RECLASSIFICATION`.
+  - `RETRACTION`, a `HUMAN_REVIEW` that rejects or corrects an earlier assertion, and `PROPOSAL` → `KNOWLEDGE_CORRECTION`.
+  - `SCHEDULED` → `SCHEDULED`.
+  - A `HUMAN_REVIEW` that *verifies* a PROVISIONAL impact produces a CONFIRMED version and keeps the original `cause_kind`. P10 phrases them as "our analysis changed", not "the law changed". The rules for such impacts:
   - they are consolidated per campaign;
   - they become severity 1 only for newly discovered, HITL-verified tier-1 negatives.
 - **Corrigenda.** A `TEXT_CORRECTED` impact names the anchors whose `text_hash` changed. Tenants whose memos quote those anchors get a severity-3 "quoted paragraph corrected" item. P8 re-checks quotes.
@@ -928,13 +933,13 @@ This review was adversarial. It re-fetched about 22 high-stakes sources: Indian 
 10. `reason_assertion_ids` in `root.new`, for conformance with spine §F.
 
 **Still open.**
-- (a) `commit_status_batch` and `cause.kind=RECOMPUTE|SCHEDULED` are not yet in the P3 doc. They need P3's acknowledgement (SP4-3).
+- (a) `commit_status_batch` and `cause.kind=RECOMPUTE|SCHEDULED` are not yet in the P3 doc. They need P3's acknowledgement (SP4-3). **Resolved:** adopted in spine v1.0 D4 and specified in 05_P3 §2.2 O5 and §5.12.
 - (b) P3 must extract `date_basis` and `scope_predicates`, and nobody has measured whether it can.
 - (c) The later PUCL 66A orders (2021–2022) and the BSA commencement date were not re-verified.
 - (d) The early-cutoff equivalence and the severity weights (§5.7.1) are unvalidated priors.
 - (e) The "reasons to follow" frequency in Indian courts is unquantified.
 - (f) P5/P6 per-ID Graph Query API reads from tenant cells are an access-pattern side channel outside P4's L1 rule. This needs a cross-cutting decision (13_cross_cutting). **Resolved in spine v1.0 D3 by the PLC read-path rule** (§5.6 L5): stateless PLC read APIs, no tenant-attributable ID logs outside the tenant audit store, tenant-redacted ops telemetry, and a local PLC replica in D3/D4/D4h.
-- (g) CloudEvents envelope naming (open question 6).
+- (g) CloudEvents envelope naming (open question 6). **Resolved:** spine v1.0 D2 lowercase names (`tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass`).
 
 ---
 
@@ -991,7 +996,7 @@ This review was adversarial. It re-fetched about 22 high-stakes sources: Indian 
 
    Decision needed from P9/P7.
 5. **Severity calibration.** The §5.7.1 weights are priors. Without partner feedback volume, severity-2 precision is unknown.
-6. **CloudEvents attribute naming.** 13_cross_cutting S11 proposes lower-case envelope names (e.g. `idempotencykey`). P4 follows whichever the principal architect adopts; the key grammar is unaffected.
+6. **CloudEvents attribute naming.** 13_cross_cutting S11 proposes lower-case envelope names (e.g. `idempotencykey`). P4 follows whichever the principal architect adopts; the key grammar is unaffected. *(Resolved by spine v1.0 D2. This doc now uses `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`.)*
 7. **P3 inline status latency.** If the KG Writer's inline first-order status slows commits at peak, move all status computation to P4 recompute. The contract is unchanged, because `status_changes` arrive in a follow-on delta.
 8. **Managed Kafka availability and pricing in Indian regions.** Not verified this session. The self-managed KRaft fallback is always available.
 9. **Temporal operational burden** for a small team. Temporal Cloud (Mumbai) reduces it but moves workflow metadata to a vendor. That metadata is PLC-only (no tenant data), so it is acceptable under spine §A. Confirm with 13_cross_cutting residency.

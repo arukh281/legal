@@ -51,7 +51,7 @@ Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spin
 - **Authority display (D6).** Cached authority badges in MatterContext and alerts are taken only from P3's `AuthorityView`, whose status stays 5-valued. "Under review" = CAUTION + `definitive=false` + `NEGATIVE_SIGNAL_UNDER_REVIEW`.
 - **Masking (D16).** P7 consumes `doc.redacted.v1` (RedactionOverlay). Masking is an overlay, with no masked expression_key or pver (2.4, 5.10).
 - **New events P7 produces:** `erasure.requested.v1` / `erasure.completed.v1` (P7 → P9, P2, P5, P6; 5.10).
-- **New events P7 consumes:** `identity.merged.v1` / `identity.split.v1`, `doc.redacted.v1`, `strategy.memo.published.v1` / `strategy.memo.stale.v1`, `pdoc.parsed.v1` (from P1 tenant mode, requested with `ParseRequest`), and P0's tenant-agnostic case-status, cause-list and daily-order feeds (2.4).
+- **New events P7 consumes:** `identity.merged.v1` / `identity.split.v1`, `doc.redacted.v1`, `strategy.memo.published.v1` / `strategy.memo.stale.v1`, `pdoc.parsed.v1` (from P1 tenant mode, requested with `ParseRequest`), `alert.state.v1` (from P10), and P0's tenant-agnostic case-status, cause-list and daily-order feeds (2.4).
 - **Crosswalk (D16).** IPC↔BNS dependency expansion follows P3 `CORRESPONDS_TO` rows with the canonical `change_type` enum (SAME_RENUMBERED … OMITTED); these rows are always impact_tier 1.
 - **Vector/lexical engines (D1).** Private indexes are per-tenant OpenSearch indexes (BM25 + k-NN in the same doc) behind P2's Index Access Layer. pgvector is used only for small D4 planes.
 
@@ -226,12 +226,13 @@ CREATE TABLE procedural_event (tenant_id text, matter_id text, event_id text /* 
 - `doc.redacted.v1` (D4/D16, data = RedactionOverlay) applies the overlay to every PLC text P7 caches or renders: MatterContext authority excerpts, alert explanations, exports and pdoc shadows of public orders. SUPPRESS_ALL → the text is purged within `purge_sla`, while the IDs stay as dependency keys. MASK_SPANS / NAME_SEARCH_SUPPRESSED / COURT_PROHIBITION → the masked rendition is used for snippets, exports and quote checks. P7 never creates a masked `pver` or expression_key. The same overlay model is used when a firm must mask names in its *own* pdocs (e.g. a court prohibition on naming a victim).
 - `strategy.memo.published.v1` / `strategy.memo.stale.v1` (P6, D4) feed the memo-derived `IN_MEMO_*` dependencies (I6) and STALE bookkeeping.
 - P0 tenant-agnostic case-status / cause-list / daily-order feeds (D4) feed the Court Sync Matcher (5.11).
+- `alert.state.v1` (P10, D4) carries the delivery, ack and escalation state per `alert_id` × recipient. P7 writes it to the audit chain (`ALERT_SENT`, ack) and to the alert record. P10's Notification Orchestrator runs the escalation timers, and P7 owns the escalation *policy* and the `requires_ack` flag (5.12).
 
 ### 2.5 Proposed spine changes
 
 *Dispositions under spine v1.0 are in 2.0. The schemas below have been updated to the v1.0 names; the original proposal wording is kept where it records the rationale.*
 
-1. **Tenant-side impact matching (changes `impact.detected.v1` routing; removes "P7 registers dependency fingerprints *for P4*").** P4 publishes `impact.detected.v1` with `tenant_id=null` and a *public* `affected_ids[]` closure; P7 matches it locally. *Justification:* the set of authorities a firm relies on (and the CNRs it tracks) is itself confidential strategy and, for criminal/insolvency matters, can reveal client identity; storing it in P4 (a PLC component) would violate spine A ("NOTHING flows TPL → PLC"). Broadcast-and-match works identically in SaaS, VPC and air-gapped modes (on-prem receives the same public event feed with the PLC delta bundle). Cost is negligible: an inverted-index lookup per affected ID (5.6). **v1.0: ACCEPTED as D3.** The topic is `plc.impact.public.v1`, matching runs P4's `impact-match-core`, and whole manifests are downloaded.
+1. **Tenant-side impact matching (changes `impact.detected.v1` routing; removes "P7 registers dependency fingerprints *for P4*").** P4 publishes `impact.detected.v1` with `tenantid`=null (envelope attribute, D2) and a *public* closure (`affected_ids[]` in v0.1; `affected[]` + manifest in D5); P7 matches it locally. *Justification:* the set of authorities a firm relies on (and the CNRs it tracks) is itself confidential strategy and, for criminal/insolvency matters, can reveal client identity; storing it in P4 (a PLC component) would violate spine A ("NOTHING flows TPL → PLC"). Broadcast-and-match works identically in SaaS, VPC and air-gapped modes (on-prem receives the same public event feed with the PLC delta bundle). Cost is negligible: an inverted-index lookup per affected ID (5.6). **v1.0: ACCEPTED as D3.** The topic is `plc.impact.public.v1`, matching runs P4's `impact-match-core`, and whole manifests are downloaded.
 2. **Generalize `matter.alert.v1`**. The current schema only covers impacts, but hearings, deadlines and new orders are the most-used alerts in Indian litigation practice. **v1.0: ACCEPTED-MODIFIED as D5 (merged P4 SP4-1 / P7 / P10 S10-3).** Normative schema:
 ```ts
 // matter.alert.v1 data (D5); envelope: tenantid = ten_…, dataclass = TENANT_CONFIDENTIAL (PRIVILEGED if explanation cites privileged anchors)
@@ -455,7 +456,7 @@ Every request into a cell is converted by the Policy Enforcement Point (PEP) int
 
 ### 5.3 Tenancy and storage layout (bridge model)
 
-| Layer | Pooled cell (≤ ~100 seats) | Dedicated cell (large firm) | Why |
+| Layer | D1 pooled cell (≤ ~100 seats) | D2 dedicated cell (large firm; the MVP design-partner cell) | Why |
 |---|---|---|---|
 | Control plane | shared | shared | holds no client content |
 | Postgres (SoR) | shared cluster, **schema per tenant** + `tenant_id` column + RLS `FORCE ROW LEVEL SECURITY` on every table (belt and braces) | dedicated cluster | schema-per-tenant makes per-tenant backup/restore/export/erasure simple; RLS catches code paths that cross schemas [P7-26] |
@@ -512,7 +513,7 @@ flowchart TD
 **5.4.4 Untrusted-content handling for LLM steps (INV-4).**
 1. *Hidden-text detector* before any LLM sees the text: flags white-on-white/near-zero-size fonts, off-page text, HTML comments/hidden CSS, zero-width characters, text layers that differ from OCR of the rendered page (render-vs-text diff). Flagged spans are kept (they can be evidence!) but wrapped and labelled as `hidden_text` and shown to the lawyer.
 2. *Tool-less extraction.* Fact/claim/deadline extraction calls are pure functions: input = one document's text (spotlighted with datamarking [P7-20]), output = JSON schema; no tools, no retrieval, no other documents, no memory. Output fields are validated deterministically (dates parse, anchors exist, quotes are exact substrings of the cited anchor text). This follows the "untrusted data processed by a quarantined model whose output cannot change control flow" pattern [P7-21][P7-22].
-3. *Control flow from trusted input only.* In P6 workflows the plan is derived from the lawyer's request and the matter's confirmed state; content from documents can only fill data slots.
+3. *Control flow from trusted input only.* In P6 workflows the plan is derived from the lawyer's request and the matter's confirmed state; content from documents can only fill data slots. Under spine v1.0 D9 this is enforced through `trust_label`: only `PLC_OFFICIAL`, `TENANT_WORK_PRODUCT` and `USER_INPUT` may influence control flow, and `TENANT_CLIENT_DOC` / `TENANT_OPPOSING_DOC` / `TENANT_CORRESPONDENCE` are data-only. The Model Gateway's `ModelTaskContract.allowed_trust_labels` rejects violations.
 4. *No exfil channels.* Model outputs rendered in P10 never auto-fetch URLs/images; links in outputs must resolve to PLC anchors or pdoc anchors; inference sandboxes have egress deny (lesson of EchoLeak [P7-18]).
 5. *Injection signal as evidence.* An injection attempt inside an opponent's document is itself a fact for the lawyer (possible misconduct) → `DOCUMENT_RECEIVED` alert carries a "suspicious embedded instructions" flag.
 
@@ -667,7 +668,8 @@ CREATE TABLE audit_event (
   object jsonb,               -- {type, id, matter_id, pver?}
   purpose text, decision text CHECK (decision IN ('ALLOW','DENY')), reason text,
   policy jsonb,               -- {authz_model_id, consistency_token, wall_ids[]}
-  llm jsonb,                  -- {route, model_id, prompt_hash, input_anchor_ids[], output_hash, tokens_in, tokens_out}
+  llm jsonb,                  -- {route, model_id, model_snapshot, endpoint_region, prompt_hash (D10 pipeline_version parts),
+                              --  input_anchor_ids[], output_hash, tokens_in, tokens_out, residency_policy}
   prev_hash bytea NOT NULL, hash bytea NOT NULL,           -- SHA-256(prev_hash || canonical_json(row without hash))
   PRIMARY KEY (tenant_id, seq));
 -- append-only: app role has INSERT only; UPDATE/DELETE revoked; trigger rejects seq gaps.
@@ -761,7 +763,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 - **Dedupe/idempotency:** `dedupe_key = hash(impact_id | source_event_id, matter_id)` (D5; was hash(alert_kind, matter_id, source_event_id)); consumers idempotent (spine G). **Alerts update in place.** A new `impact_version`, a lifecycle change (PROVISIONAL → CONFIRMED/UPDATED/RETRACTED) or a changed hearing keeps the `alert_id` and increments `revision`. A retraction is re-sent on *every* channel that carried the original, SMS/WhatsApp included (D5). `supersedes_alert_id` is used only when an alert's `alert_kind` changes.
 - **Schema:** merged D5 `matter.alert.v1` (2.5 (2)). `explanation.text` is a deterministic template, and badges cited in it come from P3 `AuthorityView` (D6).
 - **Channel sensitivity:** in-app and email carry full explanation; push/SMS/WhatsApp carry only `client_matter_no` + alert kind by default ("New order listed in 2024/LIT/0142") — no party names or content in third-party channels unless the firm opts in.
-- **Fatigue control:** severity 1 (hearing ≤ 24 h, deadline ≤ 48 h, own case reversed/overruled authority in our filed pleading, subject to P4's severity-1 rule for machine-detected impacts, D5) is immediate, bypasses quiet hours and sets `requires_ack`; severity 2 batched hourly; severity 3 in the daily digest (P10). Unacknowledged severity-1 alerts escalate to the matter lead and then the supervising partner.
+- **Fatigue control:** severity 1 (hearing ≤ 24 h, deadline ≤ 48 h, own case reversed/overruled authority in our filed pleading, subject to P4's severity-1 rule for machine-detected impacts, D5) is immediate, bypasses quiet hours and sets `requires_ack`; severity 2 batched hourly; severity 3 in the daily digest (P10). Unacknowledged severity-1 alerts escalate to the matter lead and then the supervising partner. The timers run in P10's Notification Orchestrator (Temporal), and each step comes back to P7 as `alert.state.v1` (D4) for the audit chain.
 
 ### 5.13 Deployment options
 

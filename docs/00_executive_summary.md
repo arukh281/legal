@@ -111,7 +111,7 @@ A public, reproducible Indian legal-AI benchmark (M6) turns trust into a go-to-m
 - **Corpus:** designed for **20M documents**. The open High Court dataset alone has 17.8M PDFs (≈1.25 TiB) and grows about 1.4M a year ([dataset stats](https://github.com/vanga/indian-high-court-judgments/blob/main/STATS.md)).
 - **One-time build:** ≈$90K at 5M documents and ≈$360K at 20M, using the cascade.
 - **Monthly run:** ≈$77K–$89K at 2,000 seats.
-- **Unit costs:** ≈$0.09 per verified Q&A and ≈$1.7 per strategy memo.
+- **Unit costs** (tokenizer-corrected, the figures of record): ≈$0.105 per verified Q&A and ≈$2.16 per strategy memo.
 - **Latency:**
 
 | Operation | Target (p95) |
@@ -125,6 +125,20 @@ A public, reproducible Indian legal-AI benchmark (M6) turns trust into a go-to-m
 | Human-verified alert | within 1 business day |
 
 ## Build plan ([22](22_build_roadmap.md)) and risks ([23](23_risk_register.md))
+
+**Timeline, team and budget** (estimates, starting October 2026):
+
+| Milestone | When | What |
+|---|---|---|
+| M0 Foundations | months 1–2 | legal opinions, partner papers, gold-set protocol, infrastructure |
+| M1 Partner demo | month 6 | an honest but not-yet-calibrated vertical slice |
+| M2 Pilot | months 7–12 | live matters at the partner; calibrated verification by month 12 |
+| M3 GA | month 18 | pooled SaaS opens |
+| M4 Full | month 30 | on-prem, PLC API/MCP, 20M-document corpus |
+
+- **Team:** grows from about 19 to about 70 FTE.
+- **Programme cost:** ≈$8.6–14M over 30 months, about 70% of it people.
+- **Critical path:** runs through human-reviewed tier-1 edges and verification calibration, not through model choice.
 
 **Build a thin vertical slice for the design partner first**, on a dedicated D2 cell running the same code as pooled SaaS. It covers:
 - the Supreme Court, plus the High Courts and tribunals in the partner's practice areas, plus central Acts including the BNS/BNSS/BSA crosswalk;

@@ -162,7 +162,7 @@ type KgProposal = {
 type EvalCaseCandidate = {
   candidate_id: string; scope: "TENANT_PRIVATE"|"GLOBAL";
   task: "RESEARCH_RETRIEVAL"|"CITATOR_TREATMENT"|"CLAIM_SUPPORT"|"MEMO_SECTION"|"DEADLINE";
-  input: { public_issue_ids?: string[]; question_template?: string; as_of_legal_date: string; forum?: object;
+  input: { public_issue_ids?: string[] /* itp_ (D12) */; question_template?: string; as_of_legal_date: string; forum?: object;
            private_input_ref?: string };                      // only for TENANT_PRIVATE
   expected: { must_include_anchors?: string[]; must_not_include_anchors?: string[];
               expected_treatment?: {assertion_id?: string; predicate: string}; expected_status?: string };
@@ -421,7 +421,7 @@ Rationale: DPDP s.17(1)(a) does not obviously cover vendor product improvement [
 type GateRelease = {
   release_id: string; sensitivity: "S0"|"S1"|"S2_AGG";
   signal: ReasonCode | "RELEVANT_GRADE" | "COURT_RELIED" | "MICRO_REVIEW_ANSWER";
-  target: { work_id?: string; anchor_id?: string; assertion_id?: string; mention_id?: string; public_issue_id?: string };
+  target: { work_id?: string; anchor_id?: string; assertion_id?: string; mention_id?: string; public_issue_id?: string /* itp_ (D12) */ };
   value?: { predicate?: string; object_public_id?: string; grade?: 0|1|2|3; answer?: "YES"|"NO"|"UNSURE" };
   evidence_public?: string[];        // public anchor_ids only
   public_url?: string;               // [review] urgent path only: canonical URL on an allowlisted public domain
@@ -471,7 +471,7 @@ def gate(candidate):                       # runs in p9-tenant, per candidate si
 Global-plane **aggregator** rules:
 - **S0**: release to proposals after 24 h delay; k_tenants ≥ 1 (objective defects are verifiable; the P3 editor confirms against the public source).
 - **S1**: release after 72 h delay; proposals show `n_tenants_bucket`, never tenant identity; auto-escalation to URGENT only via §5.5.3.
-- **S2_AGG** (full version only): counts per `(public_issue_id, anchor_id, grade)` published only when **k_tenants ≥ 5 and k_actors ≥ 10** within a 90-day window (a k-anonymity-style threshold [P9-42]), with Laplace noise calibrated to a per-tenant quarterly ε budget (starting ε = 1 per quarter per tenant for S2; unvalidated — to be set with a privacy review). Relevance grades require a `public_issue_id` assigned in-tenant by a classifier over P3's public issue taxonomy; the query itself never crosses.
+- **S2_AGG** (full version only): counts per `(public_issue_id, anchor_id, grade)` published only when **k_tenants ≥ 5 and k_actors ≥ 10** within a 90-day window (a k-anonymity-style threshold [P9-42]), with Laplace noise calibrated to a per-tenant quarterly ε budget (starting ε = 1 per quarter per tenant for S2; unvalidated — to be set with a privacy review). Relevance grades require a `public_issue_id` (`itp_`, D12) assigned in-tenant by a classifier over P3's public issue taxonomy; the query itself never crosses.
 - Revocation: on consent revocation, the tenant plane recomputes `HMAC(K_e, tenant_id)` for **every epoch key still held** (up to 13 months, i.e. the current and previous four quarters — *review correction: an earlier draft said only current and previous quarter, which left up to three quarters of releases un-revoked*), and all matching releases are tombstoned and excluded from the next dataset build; keys older than 13 months are destroyed, after which contributions are unlinkable (disclosed in the contract).
 
 #### 5.5.3 Urgent bad-law path [NOVEL — unvalidated]

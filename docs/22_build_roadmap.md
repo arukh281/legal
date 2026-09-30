@@ -244,7 +244,7 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
   - Indian Contract Act 1872;
   - Specific Relief Act 1963;
   - IPC, CrPC and Indian Evidence Act, with BNS, BNSS and BSA.
-- **Point-in-time and crosswalk.** Point-in-time versions only for the six criminal codes, manually verified (03_P1 §10). The crosswalk is `CORRESPONDS_TO` for the top ≈150 most-cited IPC/CrPC/IEA sections, human-verified, plus `governing_code()` (21_india MVP). The crosswalk matters to M1 because s.138 NI Act complaints are criminal complaints: procedure after 1 July 2024 is governed by BNSS with the s.531(2)(a) savings for pending matters [P4-49], and electronic bank records engage BSA s.63 [P6-43].
+- **Point-in-time and crosswalk.** Point-in-time versions only for IPC/CrPC/IEA and BNS/BNSS/BSA, manually verified (03_P1 §10). The crosswalk is `CORRESPONDS_TO` for the top ≈150 most-cited IPC/CrPC/IEA sections, human-verified, plus `governing_code()` (21_india MVP). The crosswalk matters to M1 because s.138 NI Act complaints are criminal complaints: procedure after 1 July 2024 is governed by BNSS with the s.531(2)(a) savings for pending matters [P4-49], and electronic bank records engage BSA s.63 [P6-43].
 - **Size.** ≈0.5–1M works (estimate, pending the M0 measurement).
 
 **Workflows** (P6 trigger families from 08_P6 §10, narrowed):
@@ -259,7 +259,7 @@ The DPDP marker uses the "about May 2027" commencement of most substantive oblig
 1. **Notice→memo** for W1–W3: steps S0–S9 in STANDARD mode, early-streamed deadlines with one-click date confirmation, adverse authorities pinned, and a VerificationReport per claim.
 2. **Citator badges** at full vocabulary with provenance and the binding chip, on the authority page, evidence cards and memos. Tier-1 negative edges are human-reviewed (R1+R2, two-person rule for SC) for the *practice-area head*. That head is every negative-treatment, direct-history or validity candidate whose cited work is among the most-cited authorities in the W1–W3 statutes; the cut-off is sized to editor capacity (≈100–300 tier-1 items/day with 3–5 editors, 05_P3 §5.14). Everything else shows CAUTION with `definitive=false`, never hidden (D6).
 3. **One end-to-end alert loop**: new SC or slice-HC decision → P0 → P1 → P3 `graph.delta.v1` → P4 `impact.detected.v1` (PROVISIONAL, then CONFIRMED after HITL) → P7 Impact Matcher in the D2 cell → `matter.alert.v1` → P10 inbox and email, with retraction parity. This is shown two ways:
-   - a time-travel drill replaying ≥ 20 historical overrulings and reversals against seeded demo matters (P4 drill recall ≥ 95%, 06_P4 §8);
+   - a time-travel drill replaying ≥ 20 historical overrulings and reversals against seeded demo matters (P4 matter-level alert recall ≥ 95% in time-travel drills, 06_P4 §7 item 8 and §9);
    - at least one live event during the demo window, if one occurs.
 4. **Cite-check**: P8 Citation Audit on an uploaded DOCX/PDF (an own draft or an incoming order) for SC/HC citations. It checks existence, resolution, status at date, quote match and binding for the forum. The Word add-in follows in M2.
 
@@ -571,7 +571,7 @@ This timeline follows the programme in 10_P8 §5.13: data classes D0–D4, gold 
 | S11 | Base rates or corpus shape off by 2× (13_cross_cutting Q1; 05_P3 Q4) | M1–M4 | M0 measurement | Linear rebasing; parse-depth profiles; OCR gate skips Tier B/C on garbage text |
 | S12 | Tier-1 review load exceeds editor capacity in big-judgment weeks | M1–M3 | queue age > SLA for 2 weeks | CAUTION shown immediately (an SLA breach delays certainty, not the warning, 05_P3 Q5); exposure-weighted priority; K-4 |
 | S13 | D4 demand distorts the roadmap (09_P7 top risk) | M2–M3 | sales asks for on-prem before GA | DP-10 gate; D3/D4h offered instead |
-| S14 | Competitive: an SCC Online/Manupatra content alliance with Harvey; incumbents expose treatment as data within 9–18 months (20_competitive_teardown §8) | M3 | watch-list signals (20 §7.4, quarterly) | Protect M1–M2 dates for minimums 1 and 4; accelerate the API only after DP-11 |
+| S14 | Competitive: an SCC Online/Manupatra content alliance with Harvey ("medium–high within 12–24 mo", 20_competitive_teardown §6.4 S1); incumbents copy the treatment graph in 9–18 months (§6.2) | M3 | watch-list signals (20 §7.4, quarterly) | Protect M1–M2 dates for minimums 1 and 4; accelerate the API only after DP-11 |
 
 Buffer policy: the M1 date is fixed and its scope is flexible; W3 is the first thing cut. M2 carries about 2–4 weeks of float (§2.2). M3 is planned with about 4 weeks (estimate).
 
