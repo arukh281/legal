@@ -1475,3 +1475,169 @@ Tenant scope is enforced server-side (`acl_principals`, `matter_id`). Scores are
 
 The same four operations are exposed as MCP tools. The API is tenant-less and metered; every excerpt is filtered by `rights_class` (only `OFFICIAL` / `OPEN_LICENSED` text is returned; link-only otherwise).
 
+---
+
+## 10. Technology stack, deployment, residency and model allocation
+
+### 10.1 Technology stack (D1, D16)
+
+| Concern | Choice | Notes / evidence |
+|---|---|---|
+| System of record | **PostgreSQL 18** (all PLC metadata, anchors, chunks, bitemporal assertions; per-tenant schemas) | Temporal `WITHOUT OVERLAPS` keys and PERIOD foreign keys [MA-5] |
+| Graph traversal | **In-memory CSR Graph Projection** rebuilt from Postgres, pinned to a watermark | Graph databases only as optional analytics exports. Revisit if SQL/PGQ ships or deep pattern queries are needed (05_P3 §5.13) |
+| Text + vector indexes | **OpenSearch** (BM25 + k-NN in the same document, on-disk 32× quantised vectors with rescoring) behind the IAL | [MA-6]; available in ap-south-1/ap-south-2. pgvector only for small on-prem tenant planes |
+| Event bus | **Apache Kafka 4.x (KRaft)** or MSK ap-south-1; Postgres outbox + Debezium Outbox Event Router; rt/bulk topics; retry + DLQ | Kafka 4.0 removed ZooKeeper [MA-3]; outbox router [MA-4]. Redpanda is API-compatible but BSL 1.1-licensed [MA-7]: allowed only inside our own SaaS cells after legal review, never shipped on-prem (06_P4 §5.2) |
+| Durable workflows | **Temporal** (self-hosted, or Temporal Cloud aws-ap-south-1/ap-south-2/gcp-asia-south1) | [MA-9]. Covers crawls, backfills, campaigns, P6 jobs and alert timers. DBOS fallback for small on-prem |
+| AuthZ | **OpenFGA** store per tenant (Zanzibar ReBAC), deny-first walls; Postgres FORCE RLS as backstop | [MA-8] |
+| Object store | S3 ap-south-1 (Object Lock governance for raw) / MinIO on-prem | |
+| Observability | OpenTelemetry (traceparent in CloudEvents; GenAI semconv pinned), self-hosted **Langfuse** in India, **OpenLineage** | [MA-11][MA-12] |
+| Embedder / reranker | Qwen3-Embedding-4B + Indian legal fine-tune (MRL 1024-d) / bge-reranker-v2-m3 or Qwen3-Reranker (MVP) → fine-tuned Qwen3-Reranker | Swappable behind contracts; the bake-off gate is ≥2 points of hybrid Recall@100 on Indian suites (04_P2) |
+| OCR | Self-hosted Apache-licensed OCR-VLM + classical second reader (critical-token consensus); managed fallback for PLC only | Final engine chosen on IC-OCR-Bench (03_P1 §5.3) |
+| Region | AWS **ap-south-1** primary, **ap-south-2** DR; Indian GPU cloud secondary for self-hosted models | 13_cross_cutting §8 |
+
+### 10.2 Deployment topologies (D17)
+
+| Topology | Who | PLC access | LLMs | Isolation | Status |
+|---|---|---|---|---|---|
+| **D1** pooled SaaS cell | small/mid firms | shared PLC services (stateless read path, R3) | Gateway routes per tenant `residency_policy` | schema per tenant + FORCE RLS, per-tenant indexes, keys and caches | GA |
+| **D2** dedicated cell (our India cloud) | design partner; large firms | local read-only PLC replica (signed daily bundles) | IN endpoints + optional self-hosted | separate DB clusters and worker pools; same code as D1 | **MVP (one D2 cell)** |
+| **D3** customer VPC | procurement-driven large firms | local replica, lag ≤24 h | IN endpoints over private link (Bedrock `in.`, Azure southindia provisioned) | physical per tenant | post-MVP |
+| **D4** on-prem / air-gapped | firms refusing cloud | signed snapshot + daily delta bundles (Merkle-rooted), lag ≤48 h | open-weight only (e.g. Sarvam-105B, Qwen3-235B-A22B) | air-gap capable | premium tier |
+| **D4h** on-prem stores + in-India cloud LLMs | on-prem firms without a GPU estate | as D4 | IN cloud endpoints under the firm's contract | as D4 | premium tier |
+
+The earlier A/B/C naming in 13_cross_cutting maps A→D1, B→D2/D3, C→D4, C-lite→D4h. On-prem generation sizing is one node of 8× H100/H200-class, ≈₹15 lakh/month at Indian GPU-cloud list price (13_cross_cutting §9, estimate).
+
+### 10.3 Residency routing (D15, verified Sep 2026)
+
+| Endpoint family | In-India processing? | Use |
+|---|---|---|
+| Claude, first-party API | **No** (`inference_geo` global/us only) [MA-13] | PUBLIC data, or tenants with residency `ANY` |
+| Claude on Bedrock from ap-south-1/2 | **No** (Global cross-Region inference) [MA-14] | same |
+| OpenAI GPT-5.6 on Bedrock, `in.` geo profiles | **Yes** [MA-15] | IN_ONLY tenants; premium P6 roles |
+| Azure OpenAI southindia, Standard regional / Regional Provisioned | **Yes** for the listed models (Data Zone Standard is APAC-wide: **No**) [MA-16] | IN_ONLY tenants |
+| Self-hosted open weights (Sarvam-105B, Qwen3) in Indian data centres | **Yes** [MA-17] | IN_ONLY fallback; D4 |
+
+**Routing rules.**
+- Per-tenant (with per-matter override) `residency_policy IN_ONLY | IN_PREFERRED | ANY` **fails closed**. An IN_ONLY request with no qualified IN endpoint is queued (async) or refused (sync), and never rerouted abroad (13_cross_cutting §4.3).
+- A P6 premium role needs ≥2 qualified IN endpoints before an IN_ONLY tenant is onboarded.
+- P8 publishes quality scores per residency tier, so any quality gap is measured and disclosed.
+
+### 10.4 Model allocation (D14)
+
+"Premium for KG construction, cheap for serving" is **refuted as a phase rule**. `model_tier = f(impact_tier, calibrated_uncertainty, residency)`.
+
+| Work | Allocation |
+|---|---|
+| KG construction (P3) | Cascade: deterministic rules → cue rules → distilled small classifier → premium LLM on the ≈5–12% hard or high-impact slice (dual provider for tier 1) → human for tier 1. Frontier LLMs reach only 79.1% / 67.7% on precedent-treatment classification [MA-18], so tier 1 cannot be machine-only |
+| Parsing (P1) | Rules and task-specific models first. GPT-4 zero-shot trails fine-tuned models on IL-TUR rhetorical roles (37.37 vs 69.01 macro-F1) [MA-19]; LLMs handle only the 5–15% residual, extractive-verified |
+| Serving graph facts (badges, status, binding) | **Zero LLM** (deterministic `authority-core`) |
+| P5 | Small models for routing, decomposition and stance; cross-encoder rerank; LLM listwise rerank only as a DEEP-mode feature |
+| P6 | Premium reasoning models for advocate vs opponent/bench, on **two different families**; mid tier for extraction and planning; IN endpoints for IN_ONLY |
+| P8 | Deterministic checks → small self-hosted NLI → LLM judge of a **different family** from the generator, only for uncertain or tier-1 claims |
+| Distillation | Premium and HITL verdicts train self-hosted classifiers, lowering the escalation share over time [NOVEL — unvalidated for this domain] |
+
+### 10.5 Model Gateway (13_cross_cutting §4)
+The Gateway is a thin in-house contract and routing service. OSS proxies and provider SDKs are used only as transport adapters.
+- Every call names a `task_id` (§7.23), never a model.
+- The router filters endpoints in this order: qualified for the task, `data_class_max`, language/OCR slice thresholds, residency, health and budget. It then orders by IN-first (for IN_PREFERRED), batch capability and expected cost.
+- Validation ladder: validate output → one repair call → at most one escalation hop. Every attempt is metered as an `LLMCallRecord`.
+- Snapshots are pinned. A provider alias upgrade counts as a new endpoint and must pass the gate: offline gold → 7-day shadow → canary 5/25/100% with auto-rollback. A weekly canary replay catches silent drift.
+- Cost is compared as **$/1K source characters**, which neutralises tokenizer differences (Claude 4.7+ produces ≈30% more tokens; 13_cross_cutting §3.1).
+- Each provider account and key is scoped per residency tier. Per-tenant, per-matter prompt caches; no cross-tenant semantic cache. Shared prompt caches have been shown to leak across users at several providers [MA-22].
+
+---
+
+## 11. Cross-cutting architecture
+
+### 11.1 SLO and latency-budget table
+
+| Class | SLI | Target | Source |
+|---|---|---|---|
+| Interactive | Citation lookup / go-to | p50 80 ms / p95 250 ms | 13_cross_cutting §6.1 |
+| | Hybrid search page (no LLM) | 300 ms / 800 ms | same |
+| | Click-to-source | 150 ms / 400 ms | same; 12_P10 |
+| | EvidenceBundle (1–3 issues) | 1.2 s / 2.5 s. Split: decomposition 400, retrieval 350, graph + status 250, rerank 450, stance 500, assembly 150, slack 400 ms | same |
+| | Q&A first evidence / first token / fully verified | 3 s / 6 s / 25 s (p95) | same |
+| | StrategyMemo (async) | early sections p95 2 min; full p50 7 min, p95 15 min; DEEP p95 30 min | 08_P6 |
+| | Upload → searchable (50 pp. text layer) | p50 60 s / p95 3 min (OCR scans p95 10 min) | 09_P7; 13_cross_cutting |
+| | AuthZ check / ListObjects / MatterContext | 10 ms / 50 ms / 150 ms | 09_P7 |
+| | Profile read / feedback ack | <10 ms / <100 ms | 11_P9 |
+| | Graph API authority:batch(200) / binding / traverse d2 | 60 / 10 / 300 ms | 05_P3 |
+| Freshness & alerts | Per-hop budgets | see §4.1 table | 02_P0–12_P10 |
+| | Provisional tier-1 alert / HITL-verified / retraction | ≤6 h p95 / ≤1 business day / ≤30 min | 06_P4; 13_cross_cutting §6.2 |
+| | Redaction: out of serving paths / all derived artefacts / replicas | ≤1 h / ≤24 h / next bundle. The legal outer bound is 2 weeks for RTBF directions (21_india) | 04_P2; D16 |
+| | Daily digest | ready 06:30 IST (headline edition 05:45) | 12_P10 |
+| Platform (30-day) | **Citation integrity** (anchor exists + quote hash matches) | **99.99%**; a breach is Sev-1 | 13_cross_cutting §7.2 |
+| | **Residency violations** | **0**; kill-switch | same |
+| | Search availability | 99.9% | same |
+| | Verified-claim precision (weekly audited sample) | ≥98% | same |
+| | Machine sev-1 false alerts | <1 per quarter; sev-1 precision ≥90%, sev-2 ≥70% | 06_P4 |
+| Recovery | TPL RPO/RTO · alert path · PLC stores · raw | 5 min/2 h · 15 min/2 h · 24 h/8 h · RPO 0 (rebuild from raw) | 13_cross_cutting §8.2 |
+
+### 11.2 Cost summary (D18; planning estimates pending the P1 10K-document measurement)
+- **Build (cascade).**
+  - ≈$90K at 5M docs, ≈$180K at 10M, ≈$360K at 20M.
+  - All-premium LLM enrichment alone would cost ≈$285K / $569K / $1.14M.
+- **Monthly run at 2,000 seats.**
+  - ≈$77K at a 5M corpus and ≈$89K at 20M (corrected figures).
+  - LLM serving is the dominant line; add a 1.1–1.2× planning multiplier for retries and escalation.
+- **Per unit.** Q&A ≈$0.086; strategy memo ≈$1.66.
+  - Tokenizer-corrected: ≈$0.105 and ≈$2.16 (13_cross_cutting §3.4).
+- **Scaling.** Corpus-driven costs (indexes, graph, delta enrichment) scale with N. Serving scales with usage.
+- **Re-processing.** 3–6 full re-runs a year cost $0.2–0.4M with the cascade vs $0.9–1.7M all-premium. Cheap bulk extraction is what makes continuous improvement affordable.
+- **Human review** of tier-1 edges, crosswalk rows and gold sets is the dominant non-compute cost:
+  - ≈100–300 tier-1 items/day, needing 3–5 editors (05_P3);
+  - ≈3,000+ partner lawyer-hours in Year 1 (10_P8).
+
+### 11.3 Security, trust boundaries and prompt-injection architecture
+**Trust boundaries** (§2.2):
+- Internet → P0: egress-only crawlers with declared India IPs; TLS verification by AIA chasing, never disabled.
+- PLC parsers: sandboxed, with no network access.
+- Tenant cell: TEC, PEP, OpenFGA, per-tenant keys, indexes and caches.
+- Model Gateway → providers: ZDR, no-training, verified `processing_geo`.
+- TPL → PLC: Privacy Gate only.
+
+Assets in priority order are A1–A7 (13_cross_cutting §5.1). Tenant *queries* are treated as confidential assets even when they touch only public law.
+
+**Prompt-injection architecture** (layered; 13_cross_cutting §5.4; 08_P6 §5.10; 09_P7 INV-4):
+1. **Detection at ingestion (P1).** Covers hidden text (same-colour, <2 pt, off-page, text-layer vs render-OCR diff), invisible Unicode (tags, zero-width, bidi) and embedded JS. Flagged spans are excluded from default context and shown to the lawyer as evidence.
+2. **Typed envelopes.** Every span carries `{trust_label, anchor_id, text}` in a typed envelope. This is a soft control and is assumed to fail sometimes. Spotlighting reduced indirect-injection success from >50% to <2% in its evaluation [MA-23].
+3. **Dual-LLM / plan-then-execute (hard control).** Plans come only from USER_INPUT, MatterContext structured fields and PLC_OFFICIAL metadata. Quarantined readers turn untrusted text into typed fields; they cannot add plan steps. CaMeL-style capability tracking is the target design if write tools are ever added [MA-24].
+4. **No egress in untrusted contexts.** Such calls get `tools_allowed = [retrieval_read_only]`. Models emit anchors, never URLs, and links are built server-side.
+5. **Verification backstop (P8).** A LEGAL_PROPOSITION with no `wrk_` support fails verification. Opponent assertions stay RECORD_FACT, labelled "opponent asserts".
+6. **Red-team CI corpus.** 500+ multilingual injected documents; target <1% attack success on tier-1 outputs [NOVEL — unvalidated target].
+
+**Tenant isolation.**
+- Per-tenant indexes, never a shared ANN graph with a filter.
+- Per-tenant KMS keys (BYOK/HYOK) and per-matter DEKs. Tenant embeddings are treated as sensitive as the text, because embeddings can be inverted into text [MA-25].
+- Honeytoken canary tenants and an output scanner for foreign `pdoc_` IDs.
+- No standing operator access; break-glass requires firm approval (09_P7; 13_cross_cutting §5.5).
+
+**Public-signal integrity.**
+- Signed impact broadcasts (E6).
+- Tier-1 assertions come only from official-source manifestations (05_P3 input rule 6).
+- Feedback produces proposals, never writes (R2).
+- Absolute per-actor and per-tenant caps. About 250 poisoned documents sufficed to backdoor models of all tested sizes, so caps must be absolute rather than proportional (11_P9 facts).
+
+### 11.4 Observability and lineage
+- **One trace spans P0→P10.** `traceparent` travels in every CloudEvent, and asynchronous hops link through `causationid` (except across the Privacy Gate, E5).
+- **LLM spans** use pinned OTel GenAI semantic conventions [MA-11]. Tenant bodies go only to the tenant-encrypted store (`inputs_ref`/`outputs_ref`). Langfuse receives pointers, and full bodies only for PUBLIC tasks [MA-12].
+- **Lineage has two layers.**
+  - Per-artefact `pipeline_version` (D10): `component@semver + model_id + model_snapshot + endpoint_region + prompt_hash`.
+  - Dataset-level lineage through OpenLineage. P9's `lineage_edge` graph drives purge-by-actor and erasure.
+- **Data-quality checks per stage** (13_cross_cutting §7.3):
+  - P0: silent-zero yield per source and weekday.
+  - P1: OCR-confidence drift, share of `u*` paragraphs, anchor-alias rate.
+  - P2: index count equals P1 count; XOR-digest reconciliation.
+  - P3: negative-treatment rate per court and month; contradiction count; CUSUM circuit breakers per method version.
+  - P5/P6/P8: BLOCK rate, adverse coverage, cost per memo.
+- **Audit replay.** Every answer can be reproduced "as known at" a past time: the bitemporal stores, `graph_watermark`, `index_generation`, `anchor_generation`, `context_version` and the signed `VerificationReport` together pin what the system knew.
+- **CERT-In.** ICT logs are kept ≥180 days in India; the Sev-1 runbook includes the 6-hour reporting step.
+
+### 11.5 Model-agnostic design
+- Contracts are expressed in our own objects (`Claim`, `anchor_id`, JSON schemas), never provider features. Provider citation blocks or "thinking" features may be used only inside adapters.
+- **Per-family prompt templates, one I/O schema.** Templates are hashed and promoted only through the eval gate (D11). A model swap is a registry change plus a gate run, not a code change.
+- **Bounded context.** EvidenceBundles stay small enough for 128K-context open models. The system never relies on 1M-token contexts to replace retrieval.
+- **Fallbacks never downgrade silently.** If no qualified model exists, the memo sections are withheld and the memo is PARTIAL, with the reason shown (08_P6 §5.4).
+- **Evaluation belongs to us.** Gold sets, sentinels and per-residency quality scores are proprietary assets (10_P8). Retrieval sets the ceiling of legal-RAG correctness, so embedder and reranker swaps are gated on Indian suites [MA-26].
+
