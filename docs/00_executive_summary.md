@@ -35,7 +35,7 @@ The model is not the moat, because general models are near parity on legal resea
 
 **Global players are already inside tier-1 Indian firms.** Shardul Amarchand Mangaldas and AZB & Partners deployed Harvey firm-wide in 2025 ([20 §3](20_competitive_teardown.md)). We therefore position as the **Indian-law intelligence and matter-monitoring layer that complements**, and can feed, such workspaces.
 
-## Architecture in brief (details: [01_master_architecture](01_master_architecture.md))
+## Architecture in brief (details: [01_master_architecture](01_master_architecture.md); interface rulings: [01a_spine_decision_record](01a_spine_decision_record.md))
 
 ```mermaid
 flowchart LR

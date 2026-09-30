@@ -1,6 +1,6 @@
 # 01 — Master Architecture: Integration of the Indian Legal-Intelligence Platform
 
-**Abstract.** This is the integration document of the blueprint. It fixes the cross-phase contract baseline **v1.0**: layers and trust boundaries, the canonical identifier and anchor grammar, the event catalogue, the core object catalogue, the synchronous APIs, the technology and deployment posture, and the decision log. Its inputs are the architecture spine v0.1, the principal architect's decision record D1–D18, and the §2 contracts of the eleven phase documents (02–12) and 13_cross_cutting. Where a phase document's §2 disagrees with v1.0, this document states the disagreement, names an owner and gives the resolution (§8.3, §14). The platform has four layers. The **Public Legal Corpus** (P0–P4) is tenant-agnostic. The **Intelligence services** (P5, P6, P8) run inside each firm's trust boundary whenever they touch private data. The **Tenant Private Layer** (P7 and tenant-side P9) holds each firm's data. The **Product surface** (P10) sits on top. The layers are joined by stable IDs, paragraph-level anchors, CloudEvents on Kafka, and one guarded path from tenant data to public data: the P9 **Privacy Gate**. Every legal claim the platform shows must trace to an anchor, meaning a specific paragraph or provision of a specific source text, and P8 verifies every claim before it is displayed.
+**Abstract.** This is the integration document of the blueprint. It fixes the cross-phase contract baseline **v1.0**: layers and trust boundaries, the canonical identifier and anchor grammar, the event catalogue, the core object catalogue, the synchronous APIs, the technology and deployment posture, and the decision log. Its inputs are the architecture spine v0.1, the principal architect's decision record D1–D18, and the §2 contracts of the eleven phase documents (02–12) and 13_cross_cutting. Where a phase document's §2 disagrees with v1.0, this document states the disagreement, names an owner and gives the resolution (§8.2, §14). The platform has four layers. The **Public Legal Corpus** (P0–P4) is tenant-agnostic. The **Intelligence services** (P5, P6, P8) run inside each firm's trust boundary whenever they touch private data. The **Tenant Private Layer** (P7 and tenant-side P9) holds each firm's data. The **Product surface** (P10) sits on top. The layers are joined by stable IDs, paragraph-level anchors, CloudEvents on Kafka, and one guarded path from tenant data to public data: the P9 **Privacy Gate**. Every legal claim the platform shows must trace to an anchor, meaning a specific paragraph or provision of a specific source text, and P8 verifies every claim before it is displayed.
 
 ---
 
@@ -9,7 +9,7 @@
 ### 1.1 Purpose and precedence
 This document has five jobs:
 1. State which component owns every shared object, event, identifier and store.
-2. Show that the output of each phase is exactly the input of the next, and list every place where that is not yet true (§8.3, §14).
+2. Show that the output of each phase is exactly the input of the next, and list every place where that is not yet true (§8.2, §14).
 3. Publish the formal grammars that more than one phase parses: the ID registry, the anchor EBNF and the alias schemes (§5).
 4. Give end-to-end flows with per-hop latency budgets (§4).
 5. Record the ~25 architecture decisions that shape the system, with the alternatives rejected (§12).
@@ -54,7 +54,7 @@ Phase documents remain authoritative for their *internal* design (§5 of each).
 | 24_bibliography.md | Merged, de-duplicated reference list of all documents. |
 
 ### 1.3 Reading paths
-- **Engineer building phase X.** Read §3 (your row), then §6 (events you produce and consume), §7 (objects), §8.3 (open mismatches that touch you), §9 (APIs you serve and call), then your phase document's §2 and §5.
+- **Engineer building phase X.** Read §3 (your row), then §6 (events you produce and consume), §7 (objects), §8.2 (open mismatches that touch you), §9 (APIs you serve and call), then your phase document's §2 and §5.
 - **Architect or reviewer.** Read §2, §4, §12, §13 and §14.
 - **Security or compliance.** Read §2.3, §6.1 (envelope and dataclass), §10.3, §11.3 and 13_cross_cutting §5.
 
@@ -261,7 +261,7 @@ sequenceDiagram
 | HITL-verified alert (envelope) / SC hard negative definitive | ≤1 business day / ≤4 business hours | 13_cross_cutting §6.2; 05_P3 SLOs |
 | Retraction published | ≤30 min | 06_P4 SLOs |
 
-**Real-time lane admission** (13_cross_cutting §6.2 review note). A capture goes to the `rt` lane only if one of three conditions holds: it is an SC judgment; it is a larger-bench decision; or a cheap pre-screen finds ≥1 candidate negative-treatment mention of a Work referenced in any matter. Tenants cannot be named in the PLC, so the last test uses the unattributed watch union (D4), never tenant identities. Target: `rt` ≤15% of the daily delta (estimate).
+**Real-time lane admission** (13_cross_cutting §6.2 review note). A capture goes to the `rt` lane only if a cheap pre-screen finds one of three conditions: it is an SC judgment; it is a larger-bench decision; or it contains ≥1 candidate negative-treatment mention. 13_cross_cutting states the third test as a negative mention "of a matter-referenced Work". The PLC cannot know which Works tenants rely on (D3), so v1.0 uses public proxies only ✱: a negative-treatment cue against any Work, weighted by that Work's citation in-degree and pending-reference status (§14 R-36). Target: `rt` ≤15% of the daily delta (estimate).
 
 ### 4.2 Flow (b): notice arrives → strategy memo
 
@@ -471,7 +471,7 @@ erDiagram
 
 **Form rules.**
 - Entity IDs are `prefix_` + a 26-character Crockford ULID.
-- Curated reference registries may use stable upper-snake mnemonics after the prefix. These are `crt_`, `ent_`, `rul_`, `ter_` and `rvw_` queues, e.g. `crt_IN_HC_ALL_LKO`, `ent_GOV_IN_UP`, `rul_IN_PREC_07`.
+- Curated reference registries may use stable upper-snake mnemonics after the prefix. These are `crt_`, `ent_`, `rul_` and `ter_`, e.g. `crt_IN_HC_ALL_LKO`, `ent_GOV_IN_UP`, `rul_IN_PREC_07`.
 - Works are **never** mnemonic (`wrk_ACT_NI` is invalid; 07_P5 §2.2).
 - IDs are ASCII-only (09_P7 §2.5-4).
 - A prefix is unique across the whole platform.
@@ -719,7 +719,7 @@ Merges and splits are reversible and announced by `identity.merged.v1` / `identi
 | `source.recheck.requested.v1` | P9-global, P3 → P0 | `plc.source.recheck.v1` | `court_id` | PUBLIC | Court-scoped re-poll hint (urgent bad-law, unofficial-only copy) |
 | `doc.parsed.v1` | P1 → P2, P3, P4, P7 (tracked-case orders), P9-tenant (filtered), P10 | `plc.doc.parsed.v1.{rt,bulk}` | `work_id` | PUBLIC | Parsed, identified, anchored document |
 | `identity.merged.v1` / `identity.split.v1` | P1 → P2, P3, P4, P5 caches, P7, P10 | `plc.identity.v1` | `from_id` | PUBLIC | Reversible re-keying of Work, Case or Alias |
-| `doc.redacted.v1` | P1 (on `SUPPRESSED`), ops/legal → P2, P3, P4, P5/P8 caches, P7, P10, replica bundler | `plc.doc.redacted.v1` | `work_id` | PUBLIC | `RedactionOverlay` masking or takedown, with acks |
+| `doc.redacted.v1` | P0 (suppression orders), P1 (on `SUPPRESSED`), ops/legal → P2, P3, P4, P5/P8 caches, P7, P10, replica bundler | `plc.doc.redacted.v1` | `work_id` | PUBLIC | `RedactionOverlay` masking or takedown, with acks |
 | `doc.indexed.v1` | P2 → P4, P5, P10 | `plc.doc.indexed.v1` | `work_id` | PUBLIC | Expression searchable (BASE) or enriched (FULL) |
 | `index.generation.promoted.v1` | P2 → P4, P5, P8, P10 | `plc.index.generation.v1` | `index_family` | PUBLIC | Alias swap to a new generation; rollback deadline |
 | `graph.delta.v1` | P3 → P2, P4, P5 caches, P7 (badges), P8, P9-global, P10 | `plc.graph.delta.v1.{rt,bulk}` | `subject` | PUBLIC | Assertions added, retracted or superseded; status changes; watermark |
@@ -1222,7 +1222,7 @@ interface ClaimVerification { claim_id: string; claim_hash: string;
 ```
 **Memo aggregation (D9, overriding 10_P8 S8-6).**
 - A tier-1 failure (deadline, limitation or maintainability) BLOCKs **that section**.
-- The memo gate is **PASS** if all sections PASS, **BLOCK** if no section is PASS or PARTIAL, and otherwise **PARTIAL** with `withheld_sections`.
+- The memo gate is **PASS** if all sections PASS and otherwise **PARTIAL** with `withheld_sections`. ✱ It is **BLOCK** only if no section is PASS or PARTIAL, i.e. nothing is showable.
 - An export requires a memo gate other than BLOCK, and only VERIFIED or PARTIAL claims leave the platform.
 
 ### 7.20 CitationAuditReport — owner P8 (10_P8 §2.3 O2)
@@ -1485,7 +1485,7 @@ The same four operations are exposed as MCP tools. The API is tenant-less and me
 |---|---|---|
 | System of record | **PostgreSQL 18** (all PLC metadata, anchors, chunks, bitemporal assertions; per-tenant schemas) | Temporal `WITHOUT OVERLAPS` keys and PERIOD foreign keys [MA-5] |
 | Graph traversal | **In-memory CSR Graph Projection** rebuilt from Postgres, pinned to a watermark | Graph databases only as optional analytics exports. Revisit if SQL/PGQ ships or deep pattern queries are needed (05_P3 §5.13) |
-| Text + vector indexes | **OpenSearch** (BM25 + k-NN in the same document, on-disk 32× quantised vectors with rescoring) behind the IAL | [MA-6]; available in ap-south-1/ap-south-2. pgvector only for small on-prem tenant planes |
+| Text + vector indexes | **OpenSearch** (BM25 + k-NN in the same document, on-disk 32× quantised vectors with rescoring) behind the IAL | [MA-6]; managed service available in ap-south-1/ap-south-2 [MA-31]. pgvector only for small on-prem tenant planes |
 | Event bus | **Apache Kafka 4.x (KRaft)** or MSK ap-south-1; Postgres outbox + Debezium Outbox Event Router; rt/bulk topics; retry + DLQ | Kafka 4.0 removed ZooKeeper [MA-3]; outbox router [MA-4]. Redpanda is API-compatible but BSL 1.1-licensed [MA-7]: allowed only inside our own SaaS cells after legal review, never shipped on-prem (06_P4 §5.2) |
 | Durable workflows | **Temporal** (self-hosted, or Temporal Cloud aws-ap-south-1/ap-south-2/gcp-asia-south1) | [MA-9]. Covers crawls, backfills, campaigns, P6 jobs and alert timers. DBOS fallback for small on-prem |
 | AuthZ | **OpenFGA** store per tenant (Zanzibar ReBAC), deny-first walls; Postgres FORCE RLS as backstop | [MA-8] |
@@ -1617,7 +1617,7 @@ Assets in priority order are A1–A7 (13_cross_cutting §5.1). Tenant *queries* 
 - Signed impact broadcasts (E6).
 - Tier-1 assertions come only from official-source manifestations (05_P3 input rule 6).
 - Feedback produces proposals, never writes (R2).
-- Absolute per-actor and per-tenant caps. About 250 poisoned documents sufficed to backdoor models of all tested sizes, so caps must be absolute rather than proportional (11_P9 facts).
+- Absolute per-actor and per-tenant caps. About 250 poisoned documents sufficed to backdoor models of all tested sizes, so caps must be absolute rather than proportional [MA-32].
 
 ### 11.4 Observability and lineage
 - **One trace spans P0→P10.** `traceparent` travels in every CloudEvent, and asynchronous hops link through `causationid` (except across the Privacy Gate, E5).
@@ -1641,3 +1641,165 @@ Assets in priority order are A1–A7 (13_cross_cutting §5.1). Tenant *queries* 
 - **Fallbacks never downgrade silently.** If no qualified model exists, the memo sections are withheld and the memo is PARTIAL, with the reason shown (08_P6 §5.4).
 - **Evaluation belongs to us.** Gold sets, sentinels and per-residency quality scores are proprietary assets (10_P8). Retrieval sets the ceiling of legal-RAG correctness, so embedder and reranker swaps are gated on Indian suites [MA-26].
 
+---
+
+## 12. Architecture Decision Log
+
+Each row compares the alternatives on accuracy, cost, latency, maintainability and defensibility. The full comparison tables are in the cited §6 of each phase document.
+
+| # | Decision | Alternatives considered (rejected) | Choice and rationale | Doc |
+|---|---|---|---|---|
+| AD-01 | Layer separation | (a) one multi-tenant KG with tenant overlays in the same store; (b) a full KG copy per tenant; (c) no cross-tenant learning | **PLC/TPL planes, one-way reference, Privacy Gate.** Tenant queries and matter data are privileged strategy (BSA s.132). (a) leaks by construction; (b) multiplies build and HITL cost N×; (c) forfeits the feedback moat | spine §A; 09_P7 §6; 11_P9 §6 |
+| AD-02 | Document model | (a) one record per PDF; (b) Akoma Ntoso XML as system of record | **FRBR-lite IDs (Work/Case/Expression/Manifestation/raw) with Case ≠ Work**, plus AKN eIds as a secondary serialisation. Point-in-time, language and corrigenda each need their own axis; AKN as SoR is heavyweight for 17M+ short orders | 03_P1 §6; 05_P3 §5.2 |
+| AD-03 | Unit of grounding | (a) chunk-level citation; (b) reporter (SCC) paragraphing; (c) raw character offsets | **Court-numbered paragraph and provision anchors, with an alias/tombstone protocol.** Chunks churn per generation; reporter arrangement is copyright-protected [MA-20]; offsets break on re-OCR | 03_P1 §5.10; D8; D16 |
+| AD-04 | Graph storage | (a) property-graph DB (Neo4j, Neptune); (b) RDF triple store; (c) embedded graph DB | **PostgreSQL 18 bitemporal assertion store + CSR projection.** Assertions are reified, time-ranged and evidence-carrying; hot queries are 1–3 filtered hops; one transactional SoR with PG18 temporal keys [MA-5]; licence and continuity risk of graph engines (05_P3 §5.13) | 05_P3 §5.13, §6 |
+| AD-05 | Edge semantics | (a) weighted plain edges; (b) "newest edge wins" temporal KG | **Reified Assertion** with evidence, method, calibrated confidence, `review_state`, impact tier, justification (JTMS) and bitemporal time. Retractions must cascade. A later but lower or smaller court cannot overrule a larger bench | 05_P3 §5.3–5.9 |
+| AD-06 | KG construction | (a) GraphRAG-style open IE; (b) all-premium LLM; (c) rules only | **Schema-first cascade** (rules → cues → distilled classifier → premium LLM on ≈5–12% → HITL for tier 1). KG-only RAG underperforms hybrid on legal QA [MA-27]. All-premium LLM enrichment costs ≈$285K vs a ≈$90K total cascade build at 5M (D18), and the gap multiplies with every re-run | 05_P3 §6; 13_cross_cutting §3.5 |
+| AD-07 | Authority and binding computation | (a) learned status classifier; (b) editorial-only status | **Deterministic `authority-core` doctrine library** with cited, versioned rules (`rul_IN_PREC_*`). Contested rules return both views. Explainable, auditable, zero LLM at serving | 05_P3 §5.6; 21_india |
+| AD-08 | Showing unverified negatives | (a) hide until HITL (misses "overruled yesterday"); (b) show machine output as definitive (false red flags) | **Asymmetric display.** A plausible negative shows immediately as CAUTION, never hidden and never definitive; definitive only after HITL for tier 1. False-red-flag rate is a first-class metric | D6; 12_P10 §5.5; 21_india |
+| AD-09 | Event backbone | (a) NATS JetStream; (b) Postgres queue; (c) Redpanda; (d) cloud pub/sub | **Kafka 4.x (KRaft) + transactional outbox**, with rt/bulk topics, retry and DLQ [MA-3][MA-4]. Replay, ordered partitions, on-prem portability. Redpanda's BSL rules it out for shipped software [MA-7] | 06_P4 §6.2 |
+| AD-10 | Durable workflows | (a) Airflow; (b) Step Functions; (c) DBOS; (d) Restate | **Temporal**: India-region cloud or self-host [MA-9], signals for human gates, priorities and fairness. DBOS as fallback for small on-prem | 06_P4 §6.3; 08_P6 §5.1 |
+| AD-11 | Impact fan-out to matters | (a) P4 stores tenant dependency fingerprints; (b) tenants query per ID; (c) a P4 instance per tenant | **Signed public broadcast + tenant-side `impact-match-core`**. (a) and (b) leak reliance sets (strategy, client identity); (c) duplicates PLC compute. Works unchanged in D1–D4 | D3; 06_P4 §5.6; 09_P7 §5.6 |
+| AD-12 | Text/vector engine | (a) Elasticsearch; (b) Vespa; (c) vector DB + separate BM25; (d) pgvector at 60M+ vectors | **OpenSearch**, BM25 + on-disk k-NN in one document, behind the IAL [MA-6]. One engine keeps the indexes consistent; the IAL makes an engine swap P2-internal | 04_P2 §6 |
+| AD-13 | Chunking | (a) fixed token windows; (b) RAPTOR clustering; (c) LLM context on every chunk | **Structure-aware paragraph groups** that never cross role, opinion or quote boundaries; deterministic headers; LLM context only where a dependency detector fires | 04_P2 §5, §6 |
+| AD-14 | Lexical vs dense | (a) dense-only; (b) InLegalBERT whole-document; (c) API embedder for tenant data | **Lexical first-class + fine-tuned multilingual dense (Qwen3-4B)**, chosen by bake-off. BM25 beats semantic models for Indian precedent retrieval [MA-28] | 04_P2; 07_P5 |
+| AD-15 | Fusion and ranking | (a) single linear score; (b) LLM rerank only; (c) sort by authority first | **Weighted RRF for candidates → cross-encoder → relevance-gated authority utility (U = r²·A), then monotone LambdaMART.** Authority can never lift irrelevant items; the hierarchy is encoded monotonically | 07_P5 §5–6 |
+| AD-16 | Adverse authority | (a) rely on ranking to surface it; (b) user-initiated contra search | **Mandatory per-issue adverse sweep + machine-checkable attestation + P6 adverse-accountability invariant.** "Inapplicable authority" is a leading hallucination cause in commercial tools [MA-29] | 07_P5 §5; 08_P6 §5.2 |
+| AD-17 | Agent orchestration | (a) free multi-agent debate; (b) single agent loop; (c) ReAct with tools | **Deterministic durable DAG with typed blackboard**: one opposing pass, one rebuttal, bench on a different model family, bounded loops. Termination is structural; debate multiplies cost without evidence of gain | 08_P6 §6 |
+| AD-18 | Citation generation | (a) free-text citations + post-hoc check; (b) retrieval-only quoting | **Closed-world Citation Ledger**: opaque handles, enum-constrained decoding, system-filled quotes. Fabrication is impossible by construction | 08_P6 §5.6 |
+| AD-19 | Deadlines and limitation | (a) LLM computes dates; (b) static lookup tables | **Deterministic Procedural Clock**: versioned, anchored RuleSpecs, court calendars, computed-by trace, sensitivity bands, lawyer-confirmed triggers | 08_P6 §5.5 |
+| AD-20 | Verification | (a) LLM-as-judge only; (b) citation-existence check only; (c) conformal filtering | **Warrant ladder**: deterministic checks → small NLI on the cited paragraph → heterogeneous judge → human. Pinpoint errors are the hard case (37–61% caught) [MA-30]; `UNVERIFIABLE` ≠ `UNSUPPORTED` | 10_P8 §5–6 |
+| AD-21 | Confidence shown to users | (a) raw probabilities; (b) nothing | **Four ordinal bands, each with an audited error rate**, calibrated per stratum. Fine-grained scores invite over-reliance | 10_P8 §5.6; 12_P10 |
+| AD-22 | Regression gating | (a) "no slice regresses >1 pt"; (b) manual sign-off | **Paired-bootstrap non-inferiority at δ_s = max(1 pt, 2·SE) + zero-tolerance sentinels + rolling windows** (D11). A 1-pt rule is noise on 200-item slices | 10_P8 §5.11 |
+| AD-23 | Model tiering | (a) premium for KG, cheap for serving (client hypothesis); (b) one model everywhere | **Risk-weighted allocation** (D14). Serving dominates spend; risk concentrates in tier-1 edges and P6 reasoning | 13_cross_cutting §3.5 |
+| AD-24 | Model access | (a) direct provider SDKs; (b) OSS proxy as the whole solution; (c) a single self-hosted model | **Thin in-house Gateway** with task contracts, eval-gated qualification, ≥2 endpoints per task and fail-closed residency. Survives provider swaps; the qualification matrix is proprietary | 13_cross_cutting §4.8 |
+| AD-25 | Tenancy and authorization | (a) pure RLS in shared tables; (b) silo-only; (c) RBAC only | **Bridge model** (pooled schema + FORCE RLS; dedicated cells, same code) + **OpenFGA ReBAC** with deny-first walls, pre-filter + post-verify | 09_P7 §6 |
+| AD-26 | Learning across tenants | (a) federated learning on raw signals; (b) share "anonymised" text; (c) no sharing | **Sensitivity-classed Privacy Gate** (S0/S1 codes on public IDs; S2 only as k≥5-tenant DP aggregates; S3 never). Proposals, never writes | 11_P9 §5.5, §6 |
+| AD-27 | Translations and masking | (a) MT as an Expression; (b) a masked `expression_key` (`en.m1`); (c) deleting text | **MT is never an Expression; masking is an overlay** (`doc.redacted.v1`). Claims must quote the court's text; anchors are never deleted | D8; D16 |
+| AD-28 | Primary UX | (a) chat-first assistant; (b) search-page-first | **Workspace-first terminal with a typed command grammar**; chat only as a matter-scoped panel; evidence streams first, claims turn from grey to verified | 12_P10 §6 |
+| AD-29 | MVP deployment | (a) pooled SaaS first; (b) on-prem first | **One D2 dedicated cell for the design partner, same code as D1**; D1 opens at GA | D17; 22_build_roadmap |
+
+---
+
+## 13. Contract versioning and evolution policy
+
+1. **Schema registry.**
+   - Every event type and every §7 object has a JSON Schema in a registry. The envelope `dataschema` carries the exact schema URI.
+   - Producers validate on publish.
+   - CI runs producer compatibility checks and consumer-driven contract tests.
+   - P8's regression suite includes the cross-phase contract tests, e.g. the tombstone/redaction contract of D16 and the anchor canary (10_P8 §5.11).
+2. **Compatibility within a type (`*.v1`).**
+   - Changes are additive only. `schemaversion` MINOR increments for additions.
+   - Consumers must ignore unknown fields. Required fields are never removed or retyped.
+   - Enums are declared **open** (reason codes, warnings, `change_kind` of impacts; consumers must handle an unknown value) or **closed** (Status, lifecycle, gate, `claim_type`, `review_state`). Adding a value to a closed enum is a breaking change.
+   - Registry compatibility mode: BACKWARD (06_P4 §5.2), applied transitively across all minor versions ✱.
+3. **Breaking change.**
+   - A breaking change needs a new type (`*.v2`), dual-published for a deprecation window: ≥90 days on SaaS, and ≥180 days where D4 replicas exist, because on-prem bundles lag.
+   - Replicas refuse bundles whose major version exceeds what they support.
+4. **Deprecated names and aliases.** Examples: `target_id` → `subject_id`; `/research` → `/p5/v1/retrieve`; snake_case envelope attributes → D2 names. Aliases are accepted on read for one MINOR version or 90 days, logged with a usage counter, then removed.
+   - **ID prefix renames** (§5.2) take effect before any production data exists (pre-MVP), so no migration is needed. After GA, a prefix is permanent.
+5. **Lineage versions.** Every artefact carries `pipeline_version` (D10). Reproducibility tuples:
+   - (`parse_id`, `anchor_generation`) for text;
+   - `index_generation` for retrieval;
+   - `graph_watermark` + `doctrine_version` for status;
+   - `p4_logic_version` for impacts;
+   - `verifier_version` + calibration date for verification;
+   - `context_version` for matter state.
+
+   A campaign names target versions, and rollback is bitemporal (supersede, never delete).
+6. **Governance.**
+   - A change to any object in §7, or to any event in §6.2, requires approval from the owning phase and the spine owner.
+   - Changes to Model Gateway task contracts go through the D11 gate.
+   - Changes to doctrine rules require R3 partner-panel approval (05_P3).
+   - The ID prefix registry changes only by PR to this document.
+
+---
+
+## 14. Residual inconsistencies and open interface questions
+
+### 14.1 Residual mismatches (each has an owner and a resolution; ✱ = resolved in this document, pending the owner's document edit)
+
+| ID | Mismatch | Owner | Resolution under v1.0 |
+|---|---|---|---|
+| R-01 | P1 `parse_id` uses `prs_`; D12 assigns `prs_` to P6 RuleSpecs | P1 | ✱ parse IDs use `par_` |
+| R-02 | D12 lists `xrn_` = crosswalk row; P3's only use is `extraction_run_id` | P3 + spine owner | ✱ `xrn_` = extraction run. Crosswalk rows are `CORRESPONDS_TO` assertions with group `xwg_`. Amend D12 |
+| R-03 | `aud_` is P8 citation audit (D12) and P7 audit event (09_P7 §2) | P7 | ✱ P7 audit events use `adt_` |
+| R-04 | `identifier_alias.status`: P1 `PENDING\|ACTIVE\|CONFLICT\|RETIRED` vs D16 `ACTIVE\|PENDING\|REJECTED\|SUPERSEDED` | P1 | ✱ union `PENDING\|ACTIVE\|CONFLICT\|REJECTED\|SUPERSEDED`; RETIRED → SUPERSEDED |
+| R-05 | AuthorityView key `subject_id` (D6) vs `target_id` (05_P3 §2.2; 12_P10 `CitatorBadge`; `graph.delta.status_changes`); 05_P3 lacks the `valid_from/valid_to` segment and `binding_basis.conflict` | P3, P10 | ✱ `subject_id` everywhere, `target_id` read-alias for one minor; P3 adds the missing fields (D6, D16) |
+| R-06 | `EvidenceBundle.graph_watermark` shown as a timestamp (07_P5) vs int64 (05_P3) | P5 | ✱ int64 |
+| R-07 | Fact status `MACHINE` (P7 SQL) vs `PROPOSED` (D9) | P7 | ✱ wire value `PROPOSED`; storage may keep `MACHINE` |
+| R-08 | `VerificationReport.degradations[]` (13_cross_cutting S8) was not ruled on in D9 | P8 + spine owner | ✱ accept as an optional additive field. Degraded output must be visible |
+| R-09 | Court ID forms: `crt_sc`, `crt_dhc` (P0/P4), `crt_HC_DEL`/`crt_SC` (P5), `crt_IN_SC` (P1) | P3 registry | ✱ canonical `crt_IN_…` per 03_P1 S8; examples to be corrected |
+| R-10 | Certified human-translation renditions (`v1.ht-en`) as claim support are undecided in D8 | P7, P8 | ✱ allowed only when P7 records certification; `mt-` never |
+| R-11 | Court feeds (case status, cause lists, daily orders, `CourtCalendar`) have no event names or schemas in 02_P0. D16 names `judgment.expected.v1` and D4 names `source.recheck.requested.v1`, but neither has a payload schema | P0 | ✱ names and fields proposed in §6.2 and §6.4; P0 to finalise |
+| R-12 | `Chunk.binding_scope_tags[]` required by the P5 BIND leg is absent from 04_P2 | P2 + P3 | ✱ P3 publishes each forum's binding universe; P2 materialises tags like its status mirror (≤2 min lag) |
+| R-13 | `KgProposal` priority uses "exposure from P4's impact index" (11_P9 §5.6), but P4 holds no tenant data (D3). The same issue affects P1 review priority "presence in tenant watchlists" | P9, P1 | ✱ Exposure derives only from Privacy-Gate releases (`n_tenants_bucket`) or S2 aggregates. P1 may use only the unattributed court-watch union count |
+| R-14 | 02_P0 §2.2/§2.5-6 still model takedown as `DELETED + suppression`; P1's consumer table lacks `SUPPRESSED` | P0, P1 | ✱ D16's explicit `SUPPRESSED`. P1 tombstones, emits `doc.redacted.v1` (SUPPRESS_ALL) and purges derived text |
+| R-15 | `metadata.authoritative_expression_key` is needed by P3 input rule 5 but absent from 03_P1 §2.3 | P1 | ✱ add it, derived from `expression.authoritative` |
+| R-16 | Rhetorical-role vocabularies differ: P1 `*_CANDIDATE` + fine labels; P2's 13-label list | P1 | ✱ P1 publishes the canonical label set; P2 and P5 map to it; P2 uses labels only for chunk boundaries |
+| R-17 | `graph.delta.v1.cause.kind`: P3 uses `DOC\|REVIEW\|PROPOSAL\|REPROCESS\|RULE_CHANGE\|IDENTITY`; D4 uses `EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL` | P3 | ✱ D4 set + `IDENTITY`. DOC→EXTRACTION; REVIEW→HUMAN_REVIEW; REPROCESS and RULE_CHANGE→RECOMPUTE, with `ref` = `camp_…` or the `rul_` version |
+| R-18 | P5 wants `authority:batch` for ~600 ids at p95 ≤120 ms; P3 commits 200 ids at 60 ms | P3, P5 | Open: load test in the MVP; fallback is two parallel 300-id calls |
+| R-19 | 09_P7 §5.6 matcher reads non-existent impact fields (`change_kind==RETRACTED`, `effective_from`, `retrospective`, `review_state`) | P7 | ✱ use `lifecycle`, `temporal_scope.legal_effect_from`, `temporal_scope.effect/retrospective_flag`, `verification.state`; call `impact-match-core.applicability()` rather than inline logic |
+| R-20 | Trust labelling: P5 `trust_level` (PLC_SECONDARY, TPL_*), P7 `trust` + `provenance`, 13_cross_cutting S5 (no TENANT_WORK_PRODUCT) | P5, P7 | ✱ D9 `trust_label` only. P7 mapping: CLIENT→TENANT_CLIENT_DOC; OPPOSING_PARTY→TENANT_OPPOSING_DOC; FIRM_AUTHORED→TENANT_WORK_PRODUCT; COURT, THIRD_PARTY, UNKNOWN→TENANT_CORRESPONDENCE (data-only). Whether to add `TENANT_COURT_RECORD` is open |
+| R-21 | P8 S8-6 memo aggregation ("any BLOCK ⇒ memo BLOCK") contradicts D9 | P8 | ✱ D9 rule as stated in §7.19 |
+| R-22 | 09_P7 §2.5 MatterContext lacks `procedural_events[]`, `temporal_context`, `residency_policy`, `facts{}`; `deadlines[].status` clashes with `Deadline.status` | P7 | ✱ add them (D9, D16); rename P7's field to `lifecycle` |
+| R-23 | `retrieval.served.v1` payload differs between 07_P5 §2.4 and 11_P9 §2.4 | P5 (+P9) | ✱ merged schema in §6.4 |
+| R-24 | Redaction: 13_cross_cutting uses `plc.redaction.v1` and an older overlay shape; SLOs differ (XC 4 h vs P2 1 h / 24 h) | XC, P2 | ✱ `doc.redacted.v1` + D16 overlay; serving ≤1 h, derived ≤24 h, replicas next bundle |
+| R-25 | P10 TOPIC watches need daily-delta chunk embeddings in tenant planes; not in 04_P2 | P2, P10 | ✱ P2 ships delta embeddings inside the digest / PLC bundle (PLC→TPL, the permitted direction) |
+| R-26 | `acquire.requested.v1.reason = PRONOUNCEMENT_EXPECTED` (P0) is not in D16's enum | P0 | ✱ add as an optional value |
+| R-27 | Producers of `reprocess.requested.v1` beyond the spine (P3 O3; P5 `FRESH_CITER`) | P4 | ✱ allowed with scope = one `work_id`, lane RT, ≤1 per work per hour; the P4 ledger observes |
+| R-28 | Prefixes and paths: P5 `rq_`, P6 `sjb_`, P8 `vrp_`, P4 `cmp_`, P9 `fbk_`, P10 `dge_`, public `iss_`; P6 calls `/research` and `/verify` | each owner | ✱ `qry_`, `job_`, `vr_`, `camp_`, `fb_`, `dig_`, `itp_`; paths per §9 |
+| R-29 | A "text awaited" state for referred works (flow c) has no reason code | P3 | ✱ proposed reason code `TEXT_AWAITED` (open enum) |
+| R-30 | The CPC First-Schedule Orders/Rules fragment (e.g. O.VIII r.1) is not expressible in the grammar; P6 RuleSpecs need it | P1, P6 | Open: proposed extension `sch-1.ord-8.rule-1` (new `ord-` unit inside a schedule) for grammar v1.1 |
+| R-31 | P8 consumes control-plane events (`model.endpoint.candidate.v1`, `release.candidate.v1`) that are not in the spine | XC | ✱ registered as `ops.*` events (§6.2) |
+| R-32 | The signature carrier for broadcast events is unnamed | P4 | ✱ CloudEvents extension `datasig` (JWS) |
+| R-33 | Proposal outcome enums: P3 `DEFERRED` vs P9 `NEEDS_EVIDENCE`; broadcast routing | P3, P9 | ✱ union enum; `kg.proposal.resolved.v1` broadcast to all tenant planes |
+| R-34 | Private (TPL) items in `EvidenceBundle` need `pdoc_id`, `pver`, `privilege_class` and an authz consistency token (09_P7 §2.5-7); D9 lists only `source_layer`, null `work_id` and null `authority` | P5, P7 | ✱ `items[].private{…}` sub-object (§7.9) |
+| R-35 | Unowned or unnamed sync interfaces: the Anchor Read API ("P1/P2" in 10_P8), the P6 job API paths, the P7 dependency-registration endpoint | P1, P6, P7 | ✱ owners and paths fixed in §9.2, §9.5 and §9.7 |
+| R-36 | The 13_cross_cutting §6.2 real-time trigger ("cites a Work referenced in an active matter") requires tenant reliance sets in the PLC, which contradicts D3 | XC, P4 | ✱ public proxies only (§4.1). Tenants still get matter-level urgency from their own Impact Matcher |
+
+### 14.2 Open interface questions (substantive, not naming)
+1. **Scope of prospective and conditional effects.** It is unmeasured whether P3 can extract `effect/effective_from`, `date_basis` and `scope_predicates` (CORE, MADA-type rulings; 06_P4 §2.4 SP4-9). Until it can, `impact-match-core` returns `UNCERTAIN` and asks the lawyer for the governing date.
+2. **Contested doctrine.** Open points: weight of SC obiter, precedential effect of stayed HC judgments, territorial effect of an HC strike-down of a central Act, and the governing HC for all-India tribunals. These return `UNDETERMINED` with `binding_basis.contested=true` until 21_india settles them.
+3. **Reporter pinpoints.** Can a user's SCC pinpoint be mapped to a court-numbered anchor without storing SCC's paragraph arrangement? This affects P1 quote anchoring and the P10 cite-check (04_P2 §11; [MA-20]); it needs a legal opinion.
+4. **Privilege and data-protection posture.** Does BSA s.132 cover vendor staff, and does DPDP s.3(c)(ii) cover court-published personal data? The first drives the default topology and the second drives endpoint policy for PLC tasks (09_P7; 13_cross_cutting Q3).
+5. **IN_ONLY model mix.** No in-India Claude processing is available [MA-13][MA-14]. The IN_ONLY quality gap must be measured by P8 before IN_ONLY onboarding.
+6. **Label supply.** The partner firm must supply lawyer-hours and consent (≈3k treatment labels, ≈1.5k graded issues, G-Claim 2,000). The P3, P5 and P8 calibration all depend on it.
+7. **Unverified HC neutral-citation formats.** The formats for five HCs, and whether single-bench and DB judgments share a number sequence, are unverified. The `NEUTRAL_HC` normaliser must stay data-driven (21_india).
+
+---
+
+## References
+
+[MA-1] CloudEvents. "CloudEvents Specification v1.0.2." CNCF. https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md — verified (via 06_P4 [P4-10])
+[MA-2] CNCF CloudEvents. "CloudEvents — Version 1.0 specification", Attribute Naming Convention. https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md — verified (via 13_cross_cutting [XC-44])
+[MA-3] Apache Kafka. "Apache Kafka 4.0.0 Release Announcement." 18 Mar 2025. https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/ — verified (via [P4-13])
+[MA-4] Debezium. "Outbox Event Router." Documentation. https://debezium.io/documentation/reference/stable/transformations/outbox-event-router.html — verified (via [P4-11])
+[MA-5] PostgreSQL Global Development Group. "PostgreSQL 18 Release Notes" (25 Sep 2025). https://www.postgresql.org/docs/18/release-18.html — verified (via [P3-40])
+[MA-6] OpenSearch Project. "Disk-based vector search" (on_disk mode). https://github.com/opensearch-project/documentation-website/blob/main/_vector-search/optimizing-storage/disk-based-vector-search.md — verified (via [P2-29])
+[MA-7] Redpanda Data. "Business Source License 1.1." https://github.com/redpanda-data/redpanda/blob/dev/licenses/bsl.md — verified (via [P4-15])
+[MA-8] OpenFGA. "Configuring OpenFGA" (listObjectsMaxResults default 1000; listObjectsDeadline default 3s). https://openfga.dev/docs/getting-started/setup-openfga/configuration — verified (via [P7-37])
+[MA-9] Temporal Technologies. "Temporal Cloud regions." https://docs.temporal.io/cloud/regions — verified (via [P4-18])
+[MA-10] Prior, M., Hof, A., Wais, N., Grabmair, M. "Risks and Limits of Automatic Consolidation of Statutes." NLLP 2025. https://aclanthology.org/2025.nllp-1.29 — verified (via [P1-33])
+[MA-11] OpenTelemetry. "GenAI semantic conventions." https://opentelemetry.io/docs/specs/semconv/gen-ai/ — verified (via [XC-39])
+[MA-12] Langfuse. "Self-hosting." https://langfuse.com/self-hosting — verified (via [XC-40])
+[MA-13] Anthropic. "Data residency." Claude Platform Docs, retrieved 2026-09-30. https://platform.claude.com/docs/en/manage-claude/data-residency — verified (via [XC-2])
+[MA-14] AWS. "Access Anthropic Claude models in India on Amazon Bedrock with Global cross-Region inference." AWS ML Blog, 2026-03-09. https://aws.amazon.com/blogs/machine-learning/access-anthropic-claude-models-in-india-on-amazon-bedrock-with-global-cross-region-inference — verified (via [XC-6])
+[MA-15] AWS. "Introducing OpenAI models on Amazon Bedrock for in-country inferencing in India." AWS ML Blog, 2026-08-27. https://aws.amazon.com/blogs/machine-learning/introducing-openai-models-on-amazon-bedrock-for-in-country-inferencing-in-india/ — verified (via [XC-7])
+[MA-16] Microsoft. "Region availability for Foundry Models sold by Azure." Microsoft Learn, updated 2026-09-04. https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability — verified (via [XC-8])
+[MA-17] Sarvam AI. "sarvam-105b" model card, Hugging Face, 2026. https://huggingface.co/sarvamai/sarvam-105b — verified (via [XC-12])
+[MA-18] Demir, M.M., Canbaz, M.A. "Validate Your Authority: Benchmarking LLMs on Multi-Label Precedent Treatment Classification." NLLP 2025; arXiv:2605.17691. https://arxiv.org/abs/2605.17691 — verified (via [P3-13])
+[MA-19] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024. https://arxiv.org/abs/2407.05399 — verified (via [P1-22])
+[MA-20] Supreme Court of India. Eastern Book Company & Ors v. D.B. Modak & Anr, (2008) 1 SCC 1; AIR 2008 SC 809 (12 Dec 2007), paras 40–42. https://indiankanoon.org/doc/1062099/ — verified (via [IN-3]; [CT-49])
+[MA-21] Supreme Court of India. Parvinder Singh v. Directorate of Enforcement, 2026 INSC 519 (19 May 2026), paras 26–34. https://indiankanoon.org/doc/46844204/ — verified (via [IN-34])
+[MA-22] Gu, C., Li, X.L., Kuditipudi, R., Liang, P., Hashimoto, T. "Auditing Prompt Caching in Language Model APIs." arXiv:2502.07776, 2025. https://arxiv.org/abs/2502.07776 — verified (via [P7-23])
+[MA-23] Hines, K. et al. "Defending Against Indirect Prompt Injection Attacks With Spotlighting." arXiv:2403.14720, 2024. https://arxiv.org/abs/2403.14720 — verified (via [P7-20])
+[MA-24] Debenedetti, E. et al. "Defeating Prompt Injections by Design" (CaMeL). arXiv:2503.18813, 2025. https://arxiv.org/abs/2503.18813 — verified (via [P7-21])
+[MA-25] Morris, J.X., Kuleshov, V., Shmatikov, V., Rush, A.M. "Text Embeddings Reveal (Almost) As Much As Text." EMNLP 2023. https://arxiv.org/abs/2310.06816 — verified (via [P2-54])
+[MA-26] Butler, A.-R., Butler, U. "Legal RAG Bench: an end-to-end benchmark for legal RAG." arXiv:2603.01710, 2026. https://arxiv.org/abs/2603.01710 — verified (via [P2-4])
+[MA-27] Ongris, J.G., Darari, F., Tobing, B.C.L., Faisal, D.R., Lee, O. "Benchmarking KG-based RAG Systems: A Case Study of Legal Documents." CEUR-WS Vol-4079, 2025. https://ceur-ws.org/Vol-4079/paper6.pdf — verified (via [P3-5])
+[MA-28] Paul, S., Ghumare, D., Goyal, P., Ghosh, S., Modi, A. "IL-PCSR: Legal Corpus for Prior Case and Statute Retrieval." EMNLP 2025. https://arxiv.org/html/2511.00268v1 — verified (via [P2-8])
+[MA-29] Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." arXiv:2405.20362 (2024); Journal of Empirical Legal Studies (2025). https://arxiv.org/html/2405.20362v1 — verified (via [P5-6])
+[MA-30] Verma, A. "Is this Citation on Point?" arXiv:2608.12571, 2026. https://arxiv.org/abs/2608.12571 — verified (abstract; via [P8-4])
+[MA-31] AWS. "Amazon OpenSearch Service endpoints and quotas" (ap-south-1, ap-south-2). https://docs.aws.amazon.com/general/latest/gr/opensearch-service.html — verified (via 04_P2 [P2-35])
+[MA-32] Souly, A., Rando, J., Chapman, E. et al. "Poisoning Attacks on LLMs Require a Near-constant Number of Poison Samples." arXiv:2510.07192, 2025. https://arxiv.org/abs/2510.07192 — verified (via 11_P9 [P9-14])
