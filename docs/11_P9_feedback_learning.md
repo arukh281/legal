@@ -31,17 +31,48 @@
 
 ## 2. Input and output contracts
 
+### 2.0 Spine v1.0 conformance
+
+Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spine v0.1 where they differ. This section records how each of P9's proposed changes (§2.5) was decided. The rest of the document has been edited to follow the decisions.
+
+| P9 proposal (§2.5) | Disposition | Effect on this document |
+|---|---|---|
+| 1. Extend FeedbackEvent | **ACCEPTED-MODIFIED as D9 (merged P9 + P10 S10-5)** | Accepted: `actor_ref`, closed `reason_code`, `context{query_id, trace_id, impression_id, position, surface, ranker_version, memo_id}`, `consent_snapshot_id` and `recorded_at`. Target kinds + `ANCHOR`, `CITATION_MENTION`, `DRAFT_SPAN`, `MEMORY_ITEM`. Actions + `FLAG_WRONG_TREATMENT`, `FLAG_PARSE_ERROR`, `FLAG_MISSING_AUTHORITY`, `USED_IN_FILING`, `RETRACT`. Four-valued `privilege_class`. `context.surface` **adds P10's `DIGEST`, `WORD_ADDIN`, `SOURCE_VIEWER`, `COMMAND_BAR`, `MOBILE`, `WHATSAPP`**. The ID prefix is `fb_` (D12), not `fbk_`. Targets are anchors, never chunk_ids (D8). `REVIEW_TASK` target / `MICRO_REVIEW_ANSWER` action are kept as a P9 extension that D9 did not rule on (§2.4). |
+| 2. Add `retrieval.served.v1` | **ACCEPTED as D4; schema owned by P5** | P5 → P8, P9 (tenant plane). 07_P5 §2.4 is authoritative and merges this doc's impression fields (`slot`, `propensity`, `randomized`, `features_ref`, `experiment.interleave`). The schema in §2.4 below is kept as P9's field requirements. |
+| 3. Add `kg.proposal.v1` (P9 → P3) | **ACCEPTED as D4** | `KgProposal` (`kgp_`) is a new core object (D9). |
+| 4. Add `eval.case.proposed.v1`, `training.dataset.published.v1` | **ACCEPTED as D4** | P8 owns `EvalCase` (`evc_`) and the gold sets (`gld_`). P9 emits candidates only. |
+| 5. Add `erasure.requested.v1` | **ACCEPTED as D4** (P7 → P9, P2, P5, P6) | The **producer of both `erasure.requested.v1` and `erasure.completed.v1` is P7** (D4). P9 reports its component receipt to P7's erasure workflow, and P7 publishes `erasure.completed.v1{component: "P9", …}` (§5.12). Masking of *public* text is not an erasure: it arrives as `doc.redacted.v1` (D16). |
+| 6. Add `feedback.resolved.v1` (P9 → P10), `source.recheck.requested.v1` (P9 → P0) | **ACCEPTED as D4** | P3 may also emit `source.recheck.requested.v1` (D4: P9/P3 → P0). |
+| 7. `Assertion.qualifiers.proposal_ids[]` | **ACCEPTED as D7** | — |
+| 8. `ResearchQuery.experiment{exp_id, arm}` + `personalization_profile_ref` | **ACCEPTED as D9** | — |
+| 9. Envelope rule for gate-crossing events; add `kg.proposal.status.v1` and `erasure.completed.v1` | **ACCEPTED-MODIFIED as D2 + D4** | The rule becomes the spine's **Privacy-Gate envelope rule**. *Any* PLC-side event caused by tenant activity (gate releases, `kg.proposal.v1`, `source.recheck.requested.v1`, `reprocess.requested.v1`, `eval.case.proposed.v1` GLOBAL, `training.dataset.published.v1` GLOBAL) carries `tenantid`=null, a fresh trace root and no tenant causation chain. Attribute names are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`. **`kg.proposal.status.v1` is REJECTED as a P9 event. It is replaced by `kg.proposal.resolved.v1`, produced by P3 (P3 → P9)** with data `{proposal_id, decision ACCEPTED\|REJECTED\|MERGED\|DEFERRED, resulting_assertion_ids[], reviewer_role, decided_at}` (05_P3 §2). The event carries no tenant IDs and is broadcast to every tenant plane, which matches locally. |
+
+**Renames and decisions this document now follows.**
+- `kg.proposal.status.v1` → **`kg.proposal.resolved.v1`** (P3-owned). P9's `NEEDS_EVIDENCE` maps to P3's `DEFERRED`.
+- Envelope attributes `tenant_id`/`causation_id`/`idempotency_key`/`schema_version` → **`tenantid`/`causationid`/`idempotencykey`/`schemaversion`**, plus **`dataclass`** (tenant-plane P9 events: `TENANT_CONFIDENTIAL`, or `PRIVILEGED` for WORK_PRODUCT/PRIVILEGED payloads; global-plane: `PUBLIC`).
+- **Gate policy (D11):** "no regression > 1 point" is replaced everywhere by **zero-tolerance sentinel suites + one-sided 95% paired-bootstrap non-inferiority at δ_s = max(1 pt, 2·SE_diff,s) per slice + rolling 3-release windows** (P8 owns `GateDecision`). This covers §5.7, §5.13 and §9.
+- `feedback_id` prefix `fbk_` → **`fb_`** (D12). `kgp_`, `evc_`, `gld_` and `evr_` follow the registry.
+- **Privacy Gate classes (D9)**: S0 objective defect · S1 legal status · S2 relevance/strategy (aggregates only, k ≥ 5 tenants, DP noise) · S3 private (never crosses). Only closed-vocabulary codes and public IDs cross.
+- **Impact topology (D3).** P4 stores no tenant dependency sets, so the proposal-priority *exposure* signal can no longer come from "P4's impact index". It is recomputed from global-plane data only (§5.6).
+- **Authority display (D6).** Badges are driven only by P3 `AuthorityView`. A tenant's own unreviewed flag is shown as a *separate tenant annotation*, never as a change of badge status (§5.5.3).
+- **MT (D8/D16).** Machine translations are not Expressions. A flag on an MT rendition is a `TRANSLATION_ERROR` for P1/P2, never a treatment proposal.
+- **Masking (D16).** P9 applies `doc.redacted.v1` (RedactionOverlay) to eval cases, dataset examples and memory items that quote public text (§5.8, §5.12).
+
 ### 2.1 Inputs
 
 | Input | Producer | Transport | Notes |
 |---|---|---|---|
 | `feedback.recorded.v1` (FeedbackEvent, extended — §2.4) | P10, P6, P7 | event bus, tenant-scoped topic | explicit actions + edits + outcomes |
-| `retrieval.served.v1` (**new**, §2.4) | P5 (and P6 for memo citations), rendered by P10 | tenant-scoped topic | impression log: what was shown, in which order, with which propensity |
-| `graph.delta.v1` | P3 | global topic | to resolve proposals ("accepted/rejected") and to learn from reviewer decisions |
+| `retrieval.served.v1` (D4; **schema owned by P5**, 07_P5 §2.4) | P5 (and P6 for memo citations), rendered by P10 | tenant-scoped topic | impression log: what was shown, in which order, with which propensity |
+| `interaction.logged.v1` (D4) | P10 | tenant-scoped topic | implicit signals (open source, dwell, copy, pin, export) joined on `impression_id` (UI impressions `uim_`) |
+| `alert.state.v1` (D4) | P10 | tenant-scoped topic | delivery/ack state for alert-precision labels |
+| `graph.delta.v1` | P3 | global topic | to learn from reviewer decisions (`cause.kind` = HUMAN_REVIEW\|PROPOSAL) and to stale eval cases/memory on `status_changes` |
+| `kg.proposal.resolved.v1` (D4; replaces `kg.proposal.status.v1`) | P3 | global broadcast → every tenant plane | `{proposal_id, decision, resulting_assertion_ids[], reviewer_role, decided_at}`; tenant planes match `proposal_id` locally (§5.6) |
+| `doc.redacted.v1` (D16; RedactionOverlay) | P0/P1/ops/legal | global topic | re-mask eval cases, dataset examples, memory items (§5.8, §5.12) |
 | `doc.parsed.v1` for orders/judgments linked to a tenant's `case_id` | P1 | global topic, filtered by P7's case watch list inside tenant plane | used for outcome/argument-uptake labelling |
-| `MatterContext` | P7 (sync API) | tenant plane only | parties, forum, key dates — used as the *scrub dictionary* for the gate |
+| `MatterContext` | P7 (sync API) | tenant plane only | parties, forum, key dates (a derived view of `procedural_events[]`, D9) — used as the *scrub dictionary* for the gate; `privilege_flags.basis` (D16) informs in-house handling (§5.4) |
 | Consent registry (`ConsentRecord`) | P7 admin console | sync API | tenant/practice-group/matter/client level flags (§5.4) |
-| `erasure.requested.v1` (**new**) | P7 | tenant topic | matter, client, actor or tenant erasure; drives cascade (§5.12) |
+| `erasure.requested.v1` (D4) | P7 | tenant topic | matter, client, actor or tenant erasure; drives cascade (§5.12) |
 | `VerificationReport` | P8 | sync/event | P8 verdicts are *machine* labels used to cross-check human feedback |
 
 ### 2.2 Outputs
@@ -49,42 +80,45 @@
 | Output | Consumer | Plane | Contract |
 |---|---|---|---|
 | `kg.proposal.v1` (**new**) | P3 review queues | global | `KgProposal` (§2.4). Never an Assertion. P3 decides. |
-| `reprocess.requested.v1` (spine) | P1/P2/P3 | global | scope = specific `work_id`/anchor; reason `FEEDBACK_PARSE_ERROR` etc. |
+| `reprocess.requested.v1` (spine) | P1/P2/P3 | global | scope = specific `work_id`/anchor; reason `FEEDBACK` (P4's reprocess reason enum, 06_P4 O2), scope naming only the public work/anchor; Privacy-Gate envelope rule applies (`tenantid`=null, fresh trace root; D2) |
 | `source.recheck.requested.v1` (**new**, small) | P0 | global | targeted re-fetch of a court/source when a `FLAG_BAD_LAW` refers to a decision we do not yet hold (§5.5.3) |
 | `eval.case.proposed.v1` (**new**) | P8 | tenant *or* global | `EvalCaseCandidate` with scope `TENANT_PRIVATE` or `GLOBAL` |
 | `training.dataset.published.v1` (**new**) | P5 (LTR/reranker), P3 (treatment + citation-resolution classifiers) | global or tenant | immutable dataset manifest in object store (§2.4) |
 | Personalization API `GET /personalization/profile` | P5, P6 | tenant | `PersonalizationProfile` (memory items + ranking priors) |
 | `feedback.resolved.v1` (**new**) | P10 | tenant | tells the lawyer what happened to their flag ("accepted by editor, graph updated") — trust and engagement |
-| `kg.proposal.status.v1` (**new**, review) | all tenant planes (broadcast) | global → tenant | public proposal outcome; tenant planes match locally (§2.4, §5.6) |
-| `erasure.completed.v1` (**new**, review) | P7 | tenant | erasure receipt per component for DPDP records (§5.12) |
+| ~~`kg.proposal.status.v1`~~ | — | — | *Superseded (D4):* the public proposal outcome is **`kg.proposal.resolved.v1`, produced by P3** and consumed here (§2.1) |
+| Erasure component receipt | P7 erasure workflow | tenant | P9's receipt `{erasure_id, component: "P9", rows_deleted, artifacts_rebuilt[], completed_at}` goes to P7, which publishes `erasure.completed.v1` (D4: P7 is the producer) for DPDP records (§5.12) |
 
 ### 2.3 Hand-offs (who does what next)
-- P3 consumes `kg.proposal.v1` into its tiered review queue; accepted proposals become Assertions with `method.kind=HUMAN` and **`qualifiers.proposal_ids[]`** (spine change §2.5-7) so they can be traced and purged.
-- P5 trains/validates rankers from dataset manifests, registers them in the Model Gateway/model registry, and must pass P8 gates before serving.
+- P3 consumes `kg.proposal.v1` into its tiered review queue; accepted proposals become Assertions with `method.kind=HUMAN` (D7 `justification.kind` HUMAN) and **`qualifiers.proposal_ids[]`** (spine change §2.5-7, D7) so they can be traced and purged. P3 then emits `kg.proposal.resolved.v1` and a `graph.delta.v1` with `cause.kind=PROPOSAL`.
+- P5 trains/validates rankers from dataset manifests, registers them in the Model Gateway/model registry, and must pass P8 gates (D11 non-inferiority policy) before serving.
 - P8 adjudicates eval candidates (two-lawyer rule for GLOBAL scope) and adds them to regression suites.
 - P6/P5 read `PersonalizationProfile` at query time (≤10 ms cached read).
 
 ### 2.4 Schemas
 
-**FeedbackEvent (spine H, extended — additions marked `+`)**
+**FeedbackEvent (spine H, extended — additions marked `+`; merged P9 + P10 schema per spine v1.0 D9)**
 ```ts
 type FeedbackEvent = {
-  feedback_id: string;            // "fbk_<ULID>"
-  tenant_id: string;
+  feedback_id: string;            // "fb_<ULID>" (D12; was fbk_)
+  tenant_id: string;              // payload field; the envelope carries `tenantid` (D2)
   matter_id?: string;
   actor_role: "PARTNER"|"SENIOR_ASSOCIATE"|"ASSOCIATE"|"PARALEGAL"|"KM_LAWYER"|"CLIENT_USER"|"EDITOR";
   + actor_ref: string;            // tenant-scoped pseudonym "act_<hash>", never email
   target: { kind: "CLAIM"|"ITEM"|"ASSERTION"|"ANSWER"|"ALERT"
         /*+*/ |"ANCHOR"|"CITATION_MENTION"|"DRAFT_SPAN"|"MEMORY_ITEM"|"REVIEW_TASK", id: string };
+        // ids are anchors / public or private object IDs, never chunk_ids (D8). REVIEW_TASK is a P9 extension not ruled in D9.
   action: "ACCEPT"|"REJECT"|"EDIT"|"FLAG_WRONG_CITATION"|"FLAG_BAD_LAW"|"RELEVANT"|"IRRELEVANT"|"OUTCOME"
-        /*+*/ |"FLAG_WRONG_TREATMENT"|"FLAG_PARSE_ERROR"|"FLAG_MISSING_AUTHORITY"|"USED_IN_FILING"|"MICRO_REVIEW_ANSWER"
+        /*+*/ |"FLAG_WRONG_TREATMENT"|"FLAG_PARSE_ERROR"|"FLAG_MISSING_AUTHORITY"|"USED_IN_FILING"|"MICRO_REVIEW_ANSWER" /* P9 ext., not ruled in D9 */
         /*+*/ |"RETRACT";               // RETRACT = actor withdraws an earlier flag (feeds flip-rate, §5.11)
   + reason_code?: ReasonCode;     // closed vocabulary, see §5.2
   payload: ActionPayload;         // discriminated by action (EditPayload, OutcomePayload, TreatmentCorrection …)
   privilege_class: "PUBLIC_OBJECT_SIGNAL"|"CONFIDENTIAL"|"WORK_PRODUCT"|"PRIVILEGED";  // computed by P9 if absent; max() of computed and user-set
   share_scope: "TENANT_ONLY"|"DEIDENTIFIED_SHAREABLE";   // user/tenant intent; gate still decides
   + context: { query_id?: string; trace_id?: string; impression_id?: string; position?: number;
-               surface: "RESEARCH_LIST"|"MEMO"|"DRAFT_EDITOR"|"ALERT"|"CITATOR_PANEL"|"GRAPH_VIEW"|"REVIEW_TASK";
+               surface: "RESEARCH_LIST"|"MEMO"|"DRAFT_EDITOR"|"ALERT"|"CITATOR_PANEL"|"GRAPH_VIEW"|"REVIEW_TASK"
+                      /* + P10 surfaces (D9 / 12_P10 S10-5): */ |"DIGEST"|"WORD_ADDIN"|"SOURCE_VIEWER"|"COMMAND_BAR"|"MOBILE"|"WHATSAPP";
+               // impression_id = P5 retrieval.served.v1 impression, or a P10 UI impression `uim_…` (D12) for lists P5 did not rank
                as_of_legal_date?: string; ranker_version?: string; memo_id?: string };
   + consent_snapshot_id: string;  // consent state at capture time (§5.4)
   + recorded_at: string;          // RFC3339
@@ -92,7 +126,7 @@ type FeedbackEvent = {
 };
 ```
 
-**retrieval.served.v1 (new)** — one per rendered list; the missing piece for unbiased learning from implicit feedback [P9-1][P9-2].
+**retrieval.served.v1 (D4; schema now owned by P5 — 07_P5 §2.4 is authoritative and is a superset of the fields below)** — one per rendered list; the missing piece for unbiased learning from implicit feedback [P9-1][P9-2]. In P5's version `tenant_id` travels only in the envelope (`tenantid`), and `items[].work_id` is null for TPL items.
 ```ts
 type RetrievalServed = {
   impression_id: string; query_id: string; trace_id: string; tenant_id: string; matter_id?: string;
@@ -172,7 +206,7 @@ Impressions and feature snapshots: Parquet in the tenant's object-store prefix, 
 
 *[Review addition]* The following contracts were referenced above but not specified; they are needed to build.
 
-**Event envelope rules for P9 events (spine G).** All new P9 events use the CloudEvents envelope. Tenant-plane events carry `tenant_id`. **Every event emitted by `p9-global` (and every `GateRelease` on the egress queue) has `tenant_id: null`, a fresh `traceparent` root, `causation_id` = a global-plane ID (`release_id`/`proposal_id`), never a tenant-side `feedback_id`/`trace_id`, and `time` truncated to the hour.** Otherwise the envelope itself becomes a cross-gate linkage channel (see §2.5-9).
+**Event envelope rules for P9 events (spine G; = spine v1.0 D2 Privacy-Gate envelope rule).** All new P9 events use the CloudEvents envelope with the D2 extension names (`tenantid`, `causationid`, `idempotencykey`, `schemaversion`, `dataclass`, plus `traceparent`). Tenant-plane events carry a non-null `tenantid` and `dataclass` = `TENANT_CONFIDENTIAL` (or `PRIVILEGED`). **Every event emitted by `p9-global` (and every `GateRelease` on the egress queue) has `tenantid: null`, `dataclass: PUBLIC`, a fresh `traceparent` root, `causationid` = a global-plane ID (`release_id`/`proposal_id`), never a tenant-side `feedback_id`/`trace_id`, and `time` truncated to the hour.** Otherwise the envelope itself becomes a cross-gate linkage channel (see §2.5-9). Under D2 the rule binds *every* PLC-side event caused by tenant activity, not only P9's, and the gate egress validator enforces it.
 
 **ActionPayload (discriminated by `action`)**
 ```ts
@@ -201,11 +235,13 @@ type ConsentRecord = {
 // effective(candidate) = AND over all levels that apply to (tenant, practice group, matter, client, actor); missing level ⇒ inherit; missing tenant record ⇒ all false.
 ```
 
-**erasure.requested.v1** `data`: `{ erasure_id, scope: "TENANT"|"MATTER"|"CLIENT"|"ACTOR", scope_ref, legal_basis: "DPDP_S12"|"CONTRACT_END"|"CONSENT_WITHDRAWN"|"COURT_ORDER"|"RTBF_MASKING", requested_at, deadline }`. Receipt event `erasure.completed.v1` `data`: `{ erasure_id, component, rows_deleted, artifacts_rebuilt[], completed_at }`.
+**erasure.requested.v1** (D4; producer P7) `data`: `{ erasure_id, scope: "TENANT"|"MATTER"|"CLIENT"|"ACTOR", scope_ref, legal_basis: "DPDP_S12"|"CONTRACT_END"|"CONSENT_WITHDRAWN"|"COURT_ORDER"|"RTBF_MASKING", requested_at, deadline }`. `RTBF_MASKING` covers only P7-initiated erasure of *tenant-plane copies*. Masking of public text is a `doc.redacted.v1` RedactionOverlay (D16), which P9 applies directly (§5.12). Receipt event `erasure.completed.v1` (D4; **producer P7**, one per component) `data`: `{ erasure_id, component, rows_deleted, artifacts_rebuilt[], completed_at }`. P9 sends its component receipt to P7's erasure workflow, and P7 publishes it.
 
-**Proposal status broadcast** (`kg.proposal.status.v1`, global, public): `{ proposal_id, status: "ACCEPTED"|"REJECTED"|"MERGED"|"NEEDS_EVIDENCE", delta_id?, public_note_anchor? }`. Every tenant plane subscribes to the whole stream and matches `proposal_id → release_id → feedback_ids` locally; the global plane therefore never needs to know which tenant to notify.
+**Proposal resolution broadcast** (spine v1.0 D4: **`kg.proposal.resolved.v1`, produced by P3**, global, public; replaces this doc's earlier `kg.proposal.status.v1`): `{ proposal_id, decision: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED", resulting_assertion_ids[], reviewer_role, decided_at }` (05_P3 §2). The earlier P9 draft's `NEEDS_EVIDENCE` maps to `DEFERRED`. Its `delta_id?` is derivable from `resulting_assertion_ids[]` via the `graph.delta.v1` with `cause.kind=PROPOSAL`, and `public_note_anchor?` is not carried. Every tenant plane subscribes to the whole stream and matches `proposal_id → release_id → feedback_ids` locally, so the global plane never needs to know which tenant to notify.
 
 ### 2.5 Proposed spine changes
+*Dispositions under spine v1.0 are in §2.0. In summary: 1 → D9 (merged with P10), 2–6 → D4, 7 → D7, 8 → D9, 9 → D2 (with `kg.proposal.status.v1` replaced by P3's `kg.proposal.resolved.v1`).*
+
 1. **Extend FeedbackEvent** with `actor_ref`, `reason_code`, `context{query_id, trace_id, impression_id, position, surface, ranker_version, memo_id}`, `consent_snapshot_id`, `recorded_at`, new target kinds (`ANCHOR`, `CITATION_MENTION`, `DRAFT_SPAN`, `MEMORY_ITEM`), new actions (`FLAG_WRONG_TREATMENT`, `FLAG_PARSE_ERROR`, `FLAG_MISSING_AUTHORITY`, `USED_IN_FILING`), and a fourth `privilege_class` enum. *Why:* without the context link, feedback cannot be joined to what was shown, so it is unusable for learning-to-rank [P9-1]; without consent snapshots, the gate cannot prove lawful release.
 2. **Add `retrieval.served.v1`** (P5/P6 → P9, tenant-scoped) carrying positions, slots and propensities. *Why:* counterfactual LTR requires logged propensities [P9-1][P9-2]; clicks without impressions are biased beyond repair.
 3. **Add `kg.proposal.v1`** (P9 → P3). *Why:* principle P-1; P3's queue needs a typed input distinct from P1/P3 machine extraction.
@@ -214,7 +250,7 @@ type ConsentRecord = {
 6. **Add `feedback.resolved.v1`** (P9 → P10) and **`source.recheck.requested.v1`** (P9 → P0).
 7. **Assertion.qualifiers.proposal_ids[]** (optional). *Why:* purge-by-actor/tenant (anti-poisoning, §5.11) must find every edge a feedback-derived proposal influenced.
 8. **ResearchQuery.experiment{exp_id, arm}** and **`personalization_profile_ref`**. *Why:* interleaving/A/B assignment must be decided before retrieval and recorded for analysis.
-9. *[Review addition]* **Envelope rule for gate-crossing events (spine G).** Spine G's envelope carries `tenant_id`, `traceparent` and `causation_id`; if propagated unchanged across the Privacy Gate they re-link global records to tenant traces and defeat the gate. Proposed rule: events produced on the PLC side from gate releases must have `tenant_id=null`, start a new trace, and use only global-plane IDs as `causation_id`; the gate egress validator rejects any envelope that violates this. Also add `kg.proposal.status.v1` (public broadcast) and `erasure.completed.v1` (receipt) to the spine event table.
+9. *[Review addition]* **Envelope rule for gate-crossing events (spine G).** Spine G's envelope carries `tenant_id`, `traceparent` and `causation_id`; if propagated unchanged across the Privacy Gate they re-link global records to tenant traces and defeat the gate. Proposed rule: events produced on the PLC side from gate releases must have `tenant_id=null`, start a new trace, and use only global-plane IDs as `causation_id`; the gate egress validator rejects any envelope that violates this. Also add `kg.proposal.status.v1` (public broadcast) and `erasure.completed.v1` (receipt) to the spine event table. **v1.0:** the envelope rule is ACCEPTED as the D2 Privacy-Gate envelope rule. The broadcast is ACCEPTED-MODIFIED as P3's `kg.proposal.resolved.v1`. `erasure.completed.v1` is ACCEPTED with P7 as producer.
 
 ---
 
@@ -317,10 +353,11 @@ flowchart LR
     DS --> P3t[P3 classifier training]
     AGG -->|eval.case.proposed.v1 GLOBAL| P8g[P8 gold adjudication]
   end
-  P3q -->|feedback.resolved.v1 via tenant fan-out| P10c
+  P3q -->|kg.proposal.resolved.v1 broadcast - P3-owned, D4| RES[Tenant-side resolution matcher]
+  RES -->|feedback.resolved.v1| P10c
 ```
 
-Two deployable units: `p9-tenant` (one logical instance per tenant; containerized so it runs in SaaS, private cloud or on-prem) and `p9-global` (vendor-operated, PLC side). The **only** network path from `p9-tenant` to `p9-global` is the gate's outbound queue, which carries `GateRelease` records whose schema has no free-text field.
+Two deployable units: `p9-tenant` (one logical instance per tenant; containerized so it runs in SaaS, private cloud or on-prem, i.e. every spine v1.0 D17 deployment: D1 pooled, D2 dedicated cell (the MVP for the design partner), D3 customer VPC, D4/D4h on-prem) and `p9-global` (vendor-operated, PLC side). The **only** network path from `p9-tenant` to `p9-global` is the gate's outbound queue, which carries `GateRelease` records whose schema has no free-text field.
 
 ### 5.2 Feedback taxonomy and capture points
 
@@ -369,9 +406,9 @@ Two deployable units: `p9-tenant` (one logical instance per tenant; containerize
 
 ### 5.4 Consent model
 
-`ConsentRecord` levels, most restrictive wins: **tenant contract** (Public Corpus Improvement Programme: `S0` on/off, `S1` on/off, `S2_aggregate` on/off, `design_partner_gold` on/off) → **practice group** → **matter** (`privilege_flags.no_share`) → **client** (client-instructed opt-out) → **actor** (personal opt-out of memory). Defaults: S0 and S1 **on** for design partner (explicit written consent), **off** for new tenants until the admin opts in during onboarding (consent screen lists exact release schemas and shows sample gate ledger entries). S2 aggregate is off by default for all tenants. Every event carries the snapshot ID that was in force when it was captured; revocation stops future releases and triggers contribution removal where still linkable (§5.12; revocation mechanics §5.5.2).
+`ConsentRecord` levels, most restrictive wins: **tenant contract** (Public Corpus Improvement Programme: `S0` on/off, `S1` on/off, `S2_aggregate` on/off, `design_partner_gold` on/off) → **practice group** → **matter** (`privilege_flags.no_share`; `privilege_flags.basis` per D16) → **client** (client-instructed opt-out) → **actor** (personal opt-out of memory). Defaults: S0 and S1 **on** for design partner (explicit written consent), **off** for new tenants until the admin opts in during onboarding (consent screen lists exact release schemas and shows sample gate ledger entries). S2 aggregate is off by default for all tenants. Every event carries the snapshot ID that was in force when it was captured; revocation stops future releases and triggers contribution removal where still linkable (§5.12; revocation mechanics §5.5.2).
 
-*[Review addition] Corporate legal departments as tenants.* In-house counsel do not attract s.132 BSA privilege [P9-25], so for such tenants P9 must not rely on "privileged" labelling to protect content; the gate treats all matter-derived content identically regardless of `privilege_class` (it is excluded by construction, not by privilege), and the consent screen for in-house tenants states that the tenant itself is the client and signs as such. Conversely, where an in-house team instructs an external firm that is *also* a tenant, the two tenants' consents are independent; neither can release signals about the other's matter.
+*[Review addition] Corporate legal departments as tenants.* In-house counsel do not attract s.132 BSA privilege [P9-25]. Under spine v1.0 this is recorded as `MatterContext.privilege_flags.basis = NONE_IN_HOUSE` (D16, IN C9), so for such tenants P9 must not rely on "privileged" labelling to protect content; the gate treats all matter-derived content identically regardless of `privilege_class` (it is excluded by construction, not by privilege), and the consent screen for in-house tenants states that the tenant itself is the client and signs as such. Conversely, where an in-house team instructs an external firm that is *also* a tenant, the two tenants' consents are independent; neither can release signals about the other's matter.
 
 Rationale: DPDP s.17(1)(a) does not obviously cover vendor product improvement [P9-22]; ABA-512-style informed consent expectations [P9-15]; privilege waiver belongs to the client under BSA s.132 [P9-25]. Because S0/S1 releases contain no client personal data and no privileged communication (only public IDs and closed codes), the consent is primarily contractual and reputational, not a waiver of privilege; S2 and anything derived from matter content needs stronger, specific consent.
 
@@ -438,7 +475,7 @@ Global-plane **aggregator** rules:
 - Revocation: on consent revocation, the tenant plane recomputes `HMAC(K_e, tenant_id)` for **every epoch key still held** (up to 13 months, i.e. the current and previous four quarters — *review correction: an earlier draft said only current and previous quarter, which left up to three quarters of releases un-revoked*), and all matching releases are tombstoned and excluded from the next dataset build; keys older than 13 months are destroyed, after which contributions are unlinkable (disclosed in the contract).
 
 #### 5.5.3 Urgent bad-law path [NOVEL — unvalidated]
-A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` is often the *earliest* signal that a decision exists which P0 has not yet captured (e.g. a Supreme Court judgment uploaded late in the day). The gate releases a **minimal** S1 record immediately (no delay) containing only `{work_id, reason_code, optional public citation of the negative authority}`. `p9-global` then (1) emits `source.recheck.requested.v1` to P0 for the courts relevant to the target and the cited authority; (2) creates a P3 `POSSIBLE_NEGATIVE_TREATMENT_UNSEEN` proposal at `URGENT` priority; (3) if P0/P1 find and parse the negative authority, P3 decides and P4 propagates via `graph.delta.v1`/`impact.detected.v1`. Until P3 decides, P5 may show a "flag under review" CAUTION badge **only to the flagging tenant**; nothing changes globally on a single unreviewed flag (anti-poisoning).
+A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` is often the *earliest* signal that a decision exists which P0 has not yet captured (e.g. a Supreme Court judgment uploaded late in the day). The gate releases a **minimal** S1 record immediately (no delay) containing only `{work_id, reason_code, optional public citation of the negative authority}`. `p9-global` then (1) emits `source.recheck.requested.v1` to P0 for the courts relevant to the target and the cited authority; (2) creates a P3 `POSSIBLE_NEGATIVE_TREATMENT_UNSEEN` proposal at `URGENT` priority; (3) if P0/P1 find and parse the negative authority, P3 decides and P4 propagates via `graph.delta.v1`/`impact.detected.v1`. Until P3 decides, P5/P10 may show a "your firm flagged this — under review" **tenant annotation** beside the badge, **only to the flagging tenant**. Under spine v1.0 D6 the badge itself is driven only by P3's `AuthorityView` and is not changed by a tenant flag. A global CAUTION + `definitive=false` + `NEGATIVE_SIGNAL_UNDER_REVIEW` appears only if P3 records a plausible negative signal (D6 asymmetric display). Nothing changes globally on a single unreviewed flag (anti-poisoning). If the negative authority is a judgment P0 has already signalled as pronounced but not yet uploaded (`judgment.expected.v1`, D16), P3 attaches the proposal to its EXPECTED stub work, and P4 may raise a PROVISIONAL "text awaited" impact.
 
 *[Review addition] Abuse and load limits on the urgent path.* Because it skips the delay and triggers crawling, the urgent path is itself an attack surface (a tenant could mass-flag to exhaust P0's politeness budget on court portals and get our crawler IP-blocked). Controls: (i) at most one `source.recheck.requested.v1` per `(court_id, target work_id)` per 6 h, deduplicated globally; (ii) per-tenant budget of 20 urgent releases/day (excess are demoted to normal S1); (iii) recheck requests are *hints* that P0 schedules inside its existing per-source rate limits, never bypassing them; (iv) `public_url` evidence is fetched by P0 only if its domain is on the allowlist and is treated as untrusted content (it may itself be a prompt-injection vector for any LLM step in P1/P3). If P0 cannot find the negative authority within 48 h, the proposal is routed to an editor for manual source check and the flagging tenant's badge text changes to "flag not yet confirmed".
 
@@ -447,9 +484,9 @@ A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` 
 1. **Group** gate releases by target (`assertion_id` / `anchor_id` / `mention_id` / `work_id`) and signal type, over a rolling 30-day window.
 2. **Score**: `weighted_score = Σ weight_i` with per-tenant contribution capped at 40% of the score and per-actor at 1.0; `machine_agreement` from P8/P3 checks (e.g. quote-hash mismatch confirms `QUOTE_NOT_IN_SOURCE`).
 3. **Map to proposal kind** (deterministic table): `CITATION_RESOLVES_TO_WRONG_CASE` → `FIX_CITATION_RESOLUTION`; `WRONG_PARA` → `FIX_ANCHOR`; `WRONG_TREATMENT_LABEL` with predicate → `CHANGE_PREDICATE`; `OVERRULED` with public negative authority → `ADD_ASSERTION(OVERRULES)` + `POSSIBLE_NEGATIVE_TREATMENT_UNSEEN`; `OCR_GARBLED`/`WRONG_LANGUAGE_VERSION` → `reprocess.requested.v1` to P1 (no proposal).
-4. **Tier and priority**: `impact_tier` copied from the targeted Assertion (spine F) or from the proposal kind (negative treatment, validity, crosswalk = Tier 1). Priority = f(tier, weighted_score, machine_agreement, *exposure* = number of active matters citing the target, obtained as a count from P4's impact index without tenant identities). *[Review]* Exposure is passed to P3 only as a bucket `0 | 1–2 | 3–10 | 11+`; an exact count of 1 on an obscure authority would tell editors that some firm's live matter turns on it. Suggested priority score: `priority_score = tier_weight[tier] × (1 + log2(1 + exposure_mid)) × weighted_score × (0.5 + machine_agreement)` with `tier_weight = {1: 4, 2: 2, 3: 1}`; URGENT ≥ 12, HIGH ≥ 6, NORMAL ≥ 2, else LOW (starting values, unvalidated).
+4. **Tier and priority**: `impact_tier` copied from the targeted Assertion (spine F) or from the proposal kind (negative treatment, validity, crosswalk = Tier 1). Priority = f(tier, weighted_score, machine_agreement, *exposure*). *Spine v1.0 correction (D3):* P4 never stores tenant dependency sets, so an "active matters citing the target" count from P4 does not exist. `exposure` is instead computed on the global plane only, from public citation in-degree and recency (P3 Graph Query API) plus the number of distinct `tenant_bucket_key`s among gate releases on the target within one `key_epoch`. When S2 aggregates are live, a k ≥ 5-tenant, DP-noised reliance count may be added. *[Review]* Exposure is passed to P3 only as a bucket `0 | 1–2 | 3–10 | 11+`; an exact count of 1 on an obscure authority would tell editors that some firm's live matter turns on it. Suggested priority score: `priority_score = tier_weight[tier] × (1 + log2(1 + exposure_mid)) × weighted_score × (0.5 + machine_agreement)` with `tier_weight = {1: 4, 2: 2, 3: 1}`; URGENT ≥ 12, HIGH ≥ 6, NORMAL ≥ 2, else LOW (starting values, unvalidated).
 5. **P3 decides**. P9 recommends; P3 policy: Tier 1 and 2 always human; Tier 3 (e.g. `CITES` resolution, metadata) may be auto-applied by P3 when `machine_agreement ≥ 0.9` and at least two independent signals (or one editor). Accepted proposals become Assertions with `qualifiers.proposal_ids`.
-6. **Close the loop**: `graph.delta.v1` → P9 marks proposal resolved and publishes the public `kg.proposal.status.v1` broadcast (§2.4) → every tenant plane matches `proposal_id` against its own release ledger and emits `feedback.resolved.v1` to its flagging actors (tenant-side mapping from release → feedback_ids is kept only in the tenant plane; the global plane never addresses a tenant).
+6. **Close the loop**: P3 decides → P3 publishes the public **`kg.proposal.resolved.v1`** broadcast (D4; replaces this doc's earlier P9-published `kg.proposal.status.v1`) together with a `graph.delta.v1` (`cause.kind=PROPOSAL`) → `p9-global` marks the proposal resolved → every tenant plane matches `proposal_id` against its own release ledger and emits `feedback.resolved.v1` to its flagging actors (tenant-side mapping from release → feedback_ids is kept only in the tenant plane; the global plane never addresses a tenant).
 7. **Weak supervision for P3 models**: every adjudicated proposal becomes a gold label; unadjudicated gate releases enter P3's label model as one labeling function among others (rule citator, LLM classifier, P8 verifier) [P9-11]. Reviewer decisions update `actor_reliability` in tenant planes via the resolution fan-out (the tenant plane learns whether its actor was right; the global plane never learns who the actor was).
 8. **Active learning via micro-review.** P3 exposes a queue of high-uncertainty, high-exposure *public* edges. P9 routes them as `REVIEW_TASK` cards to consenting lawyers who recently opened that authority (they have the context), capped at 3 tasks per lawyer per week, with 10% honeypots (edges with known editor labels) to keep reliability estimates honest — a CAL-style loop [P9-12].
 
@@ -466,7 +503,7 @@ A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` 
 | LLM-judge graded labels on public queries | graded | calibrated against editor labels; distillation [P9-10] | global |
 | Editor/partner gold on public questions | graded, gold | two-lawyer adjudication | global |
 
-**Adverse-authority rule (principle P-4).** `IRRELEVANT` with reason `UNFAVOURABLE_BUT_RELEVANT` is recoded as *relevant* for the relevance objective and as `ADVERSE` for P5's stance model. Items in `ADVERSE_PINNED`/`BINDING_PINNED` slots are never used as position-biased click data. P5's ranking objective is trained per stance stratum, and every candidate ranker must pass an **adverse-recall guardrail**: on P8's gold set, recall@k of adverse binding authority may not fall by more than 1 point versus production. [NOVEL — unvalidated in legal search.]
+**Adverse-authority rule (principle P-4).** `IRRELEVANT` with reason `UNFAVOURABLE_BUT_RELEVANT` is recoded as *relevant* for the relevance objective and as `ADVERSE` for P5's stance model. Items in `ADVERSE_PINNED`/`BINDING_PINNED` slots are never used as position-biased click data. P5's ranking objective is trained per stance stratum, and every candidate ranker must pass an **adverse-recall guardrail**: on P8's gold set, recall@k of adverse binding authority must be **non-inferior** to production under the spine v1.0 D11 gate policy (one-sided 95% paired bootstrap at δ_s = max(1 pt, 2·SE_diff,s) on the adverse-binding slice, over a rolling 3-release window; this replaces the earlier "may not fall by more than 1 point" wording). [NOVEL — unvalidated in legal search.]
 
 **Propensity estimation.** (i) Intervention harvesting across ranker versions [P9-2] (free, requires `ranker_version` in logs); (ii) for bootstrapping, a *RandPair* swap of positions (k, k+1) for k ≥ 4 on 5% of lists in the `RANKED` region only — never touching pinned binding/adverse slots and never the top 3.
 
@@ -483,7 +520,7 @@ A lawyer's `FLAG_BAD_LAW` with reason `OVERRULED`/`REVERSED_ON_APPEAL`/`STAYED` 
 **Construction**:
 - **TENANT_PRIVATE** cases are created automatically from the failing trace (input = private query/matter snapshot reference; expected = must-include / must-not-include anchors, treatment, deadline). They run only in the P8 runner deployed in the tenant plane; results leave the tenant only as pass/fail counts per task family (S0-like metrics, no content).
 - **GLOBAL** cases require a public restatement: a lawyer (or an LLM draft approved by a lawyer) rewrites the failure as a question over *public* issues only, e.g. "Is [public anchor X] still good law on [public issue] as of 2025-06-30?" P8 then applies two-lawyer adjudication. Cases derived from S0/S1 releases (wrong citation, bad law) are naturally public and need no restatement.
-- De-duplication by hash of `(task, sorted expected anchors, as_of_legal_date)`; masking status from PLC (RTBF, statutory victim anonymity) is re-checked at every suite build so eval data never re-exposes masked names [P9-38].
+- De-duplication by hash of `(task, sorted expected anchors, as_of_legal_date)`; masking status from PLC (RTBF, statutory victim anonymity) is re-checked at every suite build so eval data never re-exposes masked names [P9-38]. Under spine v1.0 (D16) the check consumes `doc.redacted.v1` RedactionOverlays (SUPPRESS_ALL / MASK_SPANS / NAME_SEARCH_SUPPRESSED / COURT_PROHIBITION): cases quote the masked rendition, and SUPPRESS_ALL targets are withdrawn from suites within the overlay's `purge_sla`. Expected anchors that fall on an MT rendition are invalid, because MT is never a support anchor (D8).
 
 **Design-partner gold programme** (with P8): (1) *Gold room*: partner lawyers author public-law questions mirroring their practice areas, with expected authorities and adverse authorities, no client facts; (2) *Retrospective closed matters*: only with the client's written consent, lawyers author de-identified case studies (human-written, not auto-scrubbed) used as TENANT_PRIVATE or, after partner sign-off, GLOBAL cases; (3) *Live shadowing*: for opted-in matters, the partner's actual research and filed authorities become TENANT_PRIVATE regression cases. Inter-annotator agreement is measured on 10% overlap and reported per task family.
 
@@ -546,21 +583,24 @@ Anomaly detection runs daily: burst rate per actor, agreement-with-consensus z-s
    erasure or consent revocation, tombstone releases by tenant_bucket_key (if key still exists)
    and add to erasure_ledger → next weekly dataset build excludes them → retrain (exact unlearning
    by retrain; rankers are small enough to retrain weekly).
-5. Emit erasure receipt to P7 (for the tenant's DPDP records); 72-hour breach clock is a P7/13 concern.
+5. Send the P9 component receipt {erasure_id, component: "P9", rows_deleted, artifacts_rebuilt[], completed_at} to P7's
+   erasure workflow; P7 publishes erasure.completed.v1 (D4: P7 is the producer) for the tenant's DPDP records;
+   72-hour breach clock is a P7/13 concern.
 ```
+**Public-text masking (spine v1.0 D16).** `doc.redacted.v1` is not an erasure. On each RedactionOverlay both planes re-mask stored quotes of the affected work/spans: dataset examples, eval cases, memory items and gate-release `evidence_public` excerpts (IDs only, so usually nothing). SUPPRESS_ALL works are excluded from the next dataset build and the models are retrained. The same lineage machinery is used, with the overlay's `purge_sla` as the deadline.
 Global GOLD eval cases authored from closed matters are covered by the client consent obtained at creation; withdrawal of that consent triggers removal of the case.
 
 ### 5.13 Proving that the loop improves things
 
 Every change sourced from P9 ships through a **release train**:
-1. **Offline gates** (P8): no regression > 1 point on any gold slice (court level, language, practice area, adverse authority, pre/post-BNS); for rankers, a self-normalized IPS estimate on logged data whose 95% CI lower bound is ≥ 0 improvement [P9-1]; adverse-recall guardrail (§5.7).
+1. **Offline gates** (P8; spine v1.0 D11 gate policy, which replaces the earlier "no regression > 1 point on any gold slice"): zero-tolerance sentinel suites must pass 100%, and every gold slice (court level, language, practice area, adverse authority, pre/post-BNS, residency route) must pass a one-sided 95% paired-bootstrap **non-inferiority** test at δ_s = max(1 pt, 2·SE_diff,s), evaluated over rolling 3-release windows so repeated small losses cannot accumulate; for rankers, a self-normalized IPS estimate on logged data whose 95% CI lower bound is ≥ 0 improvement [P9-1]; adverse-recall guardrail (§5.7).
 2. **Online**: rankers → **constrained team-draft interleaving** [P9-3] (only the `RANKED` region is interleaved; pinned binding/adverse slots identical in both arms) [NOVEL — unvalidated]; memo/drafting features → A/B with per-user switchback weeks (N is small; users are their own controls). Primary metrics: claim acceptance rate, copy-to-draft/used-in-filing rate, edit distance of final vs generated [P9-7][P9-9], citation-flag rate per 100 claims (must fall), time-to-first-usable-memo.
 3. **Graph**: proposal precision (share accepted by P3), median time from flag to corrected edge, error recurrence rate (same defect class re-flagged after fix).
 4. **Loop health**: feedback coverage (share of memos with ≥1 structured action), label agreement, share of global training data by source, exploration rate, per-tenant data share, gate deny reasons.
 
 ### 5.14 Cross-cutting: security, cost at scale (≈5M+ docs), latency, observability, model-agnostic design
 
-**Security.** `p9-tenant` runs in the tenant's trust boundary (SaaS schema with per-tenant KMS keys, private cloud or on-prem); the gate's egress is a single mTLS queue with a fixed schema (no free-text fields), validated on both sides; the gate ledger is tenant-visible; vendor staff in `p9-global` see proposals without tenant identities; P3 editors are trained not to attempt re-identification (contractual). Tenant-plane LLM calls go through the Model Gateway with zero-retention providers or in-tenant models only.
+**Security.** `p9-tenant` runs in the tenant's trust boundary (SaaS schema with per-tenant KMS keys, private cloud or on-prem); the gate's egress is a single mTLS queue with a fixed schema (no free-text fields), validated on both sides; the gate ledger is tenant-visible; vendor staff in `p9-global` see proposals without tenant identities; P3 editors are trained not to attempt re-identification (contractual). Tenant-plane LLM calls go through the Model Gateway with zero-retention providers or in-tenant models only, under the tenant's `residency_policy` carried in the TEC (D9/D15: IN_ONLY tenants use only in-India endpoints or self-hosted models).
 
 **Cost.** P9 scales with *users*, not with the 5M+ document corpus. Assumption (unvalidated): 200 firms × 40 active seats × 25 rendered lists/day ≈ 200k lists/day × 20 items = 4M item rows/day; at ~300 bytes/row compressed ≈ 1.2 GB/day ≈ 0.45 TB/year — negligible object-store cost. LLM cost is dominated by preference extraction (~20k edits/day × ~3k tokens ≈ 60M tokens/day on a small model) and LLM-judge labelling of public queries (batch, cacheable); both are small next to P6 serving (pricing not verified here; 13 to price). Weekly reranker retraining is a few GPU-hours (estimate). *[Review addition] Cost guards:* preference extraction runs only on finalized spans whose normalized edit distance is ≥ 5% and ≤ 60% (smaller = noise, larger = rewrite, not a preference), batched per user per day; each tenant has a monthly P9 token budget in the Model Gateway (alarm at 80%, hard stop at 120% with extraction deferred, never capture); LLM-judge labels are cached on `(query_hash, anchor_id, judge_model_id, prompt_hash)` and only regenerated when the judge model changes; micro-review task generation is capped by editor-adjudication capacity. **The dominant cost is human review**: Tier-1 proposals must be read by editors; score thresholds and exposure-weighted priority are tuned to keep the queue within editor capacity (target: ≥70% proposal precision so editors are not wasting time).
 
@@ -646,10 +686,10 @@ Every change sourced from P9 ships through a **release train**:
 
 | Attack / condition | What breaks | Revision made |
 |---|---|---|
-| **10M+ documents** | Proposal targets spread thin; editors drown in long-tail flags | Priority by *exposure* (active matters citing target) × tier; Tier-3 auto-apply by P3; S0 defects batched per work into one proposal |
+| **10M+ documents** | Proposal targets spread thin; editors drown in long-tail flags | Priority by *exposure* (global-plane proxy per §5.6; P4 holds no tenant dependency sets, D3) × tier; Tier-3 auto-apply by P3; S0 defects batched per work into one proposal |
 | **Bad OCR** | Lawyers flag "misquote" when the real defect is OCR; P8 quote-hash checks give false mismatches | `OCR_GARBLED` reason routes to P1 reprocess, not to treatment; proposals on low-`ocr_conf` works get a P1 re-OCR first |
-| **Hindi/regional-language judgment** | Flags on an `hi` expression anchor may not apply to the `en` translation; reason chips may be English-only | Targets are expression-specific anchors; P3 decides whether to propagate via anchor alignment; P10 chips localized; `WRONG_LANGUAGE_VERSION` reason; eval slices by language. *[Review]* Propagation direction follows authority: SC/HC judgments are authoritative in English (Art. 348 [P9-45]), so a flag on a `hi` translation defaults to `TRANSLATION_ERROR` → P1/P2 translation reprocess and never to a treatment proposal, whereas for a subordinate-court judgment whose original expression is `hi`/regional, the flag targets the original and the `en` machine translation is re-derived. Gate `sensitivity()` treats `TRANSLATION_ERROR` as S0. |
-| **Precedent overruled yesterday** | Corpus lag; flags arrive before the source | Urgent bad-law path (§5.5.3): immediate minimal release, P0 recheck, URGENT P3; tenant-local CAUTION badge meanwhile. *[Review]* Derived artefacts go stale too: on every `graph.delta.v1` whose `status_changes` touch an anchor, P9 (i) marks eval cases whose `must_include_anchors`/`expected_status` reference it `STALE` for re-adjudication (GLOBAL cases keep their `as_of_legal_date`, so most stay valid bitemporally; TENANT_PRIVATE regression cases usually do not), (ii) flags memory items and ranking priors that cite the anchor ("rely on X for Y") for user review with a visible "authority status changed" badge, and (iii) excludes pre-change relevance labels on that anchor from the next dataset build unless they carry an `as_of_legal_date` before the change. |
+| **Hindi/regional-language judgment** | Flags on an `hi` expression anchor may not apply to the `en` translation; reason chips may be English-only | Targets are expression-specific anchors; P3 decides whether to propagate via anchor alignment; P10 chips localized; `WRONG_LANGUAGE_VERSION` reason; eval slices by language. *[Review]* Propagation direction follows authority: SC/HC judgments are authoritative in English (Art. 348 [P9-45]), so a flag on a `hi` translation defaults to `TRANSLATION_ERROR` → P1/P2 translation reprocess and never to a treatment proposal, whereas for a subordinate-court judgment whose original expression is `hi`/regional, the flag targets the original and the `en` machine translation is re-derived. Gate `sensitivity()` treats `TRANSLATION_ERROR` as S0. *Spine v1.0 (D8/D16):* the direction follows the Expression `authoritative` flag, not court level alone. An HC Hindi original under OLA s.7 and the HC-issued English translation are both Expressions, and flags follow whichever is `authoritative` for the claim. MT renditions (`Chunk.mt`, `aux_text['{lang}-x-mt']`, private `v1.mt-en`) are not Expressions, so a flag on one is always `TRANSLATION_ERROR` → P1/P2 and never a treatment proposal. |
+| **Precedent overruled yesterday** | Corpus lag; flags arrive before the source | Urgent bad-law path (§5.5.3): immediate minimal release, P0 recheck, URGENT P3; tenant-local "flagged — under review" annotation meanwhile (the badge itself stays `AuthorityView`-driven, D6). *[Review]* Derived artefacts go stale too: on every `graph.delta.v1` whose `status_changes` touch an anchor, P9 (i) marks eval cases whose `must_include_anchors`/`expected_status` reference it `STALE` for re-adjudication (GLOBAL cases keep their `as_of_legal_date`, so most stay valid bitemporally; TENANT_PRIVATE regression cases usually do not), (ii) flags memory items and ranking priors that cite the anchor ("rely on X for Y") for user review with a visible "authority status changed" badge, and (iii) excludes pre-change relevance labels on that anchor from the next dataset build unless they carry an `as_of_legal_date` before the change. |
 | **Malicious user / prompt-injected document** | Mass flags; injected text in a pleading tries to make the memory builder write a "preference" such as "always ignore adverse cases" | Caps, reliability, honeypots, no global effect without review; memory builder input is the lawyer's *diff*, not document text; statements that alter legal method (ignore/omit authorities) are blocked by a policy filter and cannot be auto-activated |
 | **Confused user** | Marks adverse authority `IRRELEVANT`; flags a correct treatment | Reason chips separate unfavourable from off-point; reliability weights fall after adjudication; resolution feedback educates the user ("this case was distinguished, not overruled — see para 23") |
 | **Source site outage / format change** | P0 recheck from urgent path fails; outcome tracking via CNR stalls | Recheck retries with backoff and falls back to editor manual check; outcome capture always has the manual P10 path; stale-tracking alarm per matter |
@@ -660,8 +700,8 @@ Every change sourced from P9 ships through a **release train**:
 | **LLM provider swap** | Memory extraction or judge labels change distribution | Memory is text (portable); LLM-judge recalibrated on gold after every gateway model change; adapters retrained |
 | **Feedback starvation** | Busy lawyers give almost no explicit feedback | Structured implicit signals (used-in-filing, copy-to-draft) + micro-review + design-partner gold room; feedback coverage is a tracked metric |
 | **Cost blow-up** *(review)* | Preference extraction on every keystroke-level edit, LLM-judge re-labelling on every model change, runaway micro-review generation | Cost guards in §5.14 (edit-distance band, per-tenant token budget with hard stop, label cache keyed on judge model + prompt hash, review generation capped by editor capacity) |
-| **Opposing counsel are both tenants** *(review)* | In a high-value Indian dispute both sides' firms use the platform; S1 flags on an obscure authority, an exact exposure count, or a fast status change could hint to the vendor (not the other tenant) that a live matter turns on it | No tenant identity in releases; exposure bucketed (§5.6); S1 72 h delay; tenant-local CAUTION badge only for the flagger; a global status change after P3 review is a public legal fact and is shown to everyone, which is the intended behaviour |
-| **Gate linkage side-channels** *(review)* | Per-actor float `weight`, deterministic `consent_snapshot_id_hash`, propagated `traceparent`/`causation_id`, and a single end-to-end trace would have re-linked releases to actors/tenants and survived key destruction | Weight quantized to 3 levels; consent attestation HMAC'd with the epoch key; envelope rule for gate-crossing events (§2.4, §2.5-9); traces split at the gate (§5.14); egress validator rejects violations |
+| **Opposing counsel are both tenants** *(review)* | In a high-value Indian dispute both sides' firms use the platform; S1 flags on an obscure authority, an exact exposure count, or a fast status change could hint to the vendor (not the other tenant) that a live matter turns on it | No tenant identity in releases; exposure bucketed (§5.6); S1 72 h delay; tenant-local "flagged" annotation only for the flagger (never a badge change, D6); a global status change after P3 review is a public legal fact and is shown to everyone, which is the intended behaviour |
+| **Gate linkage side-channels** *(review)* | Per-actor float `weight`, deterministic `consent_snapshot_id_hash`, propagated `traceparent`/`causation_id`, and a single end-to-end trace would have re-linked releases to actors/tenants and survived key destruction | Weight quantized to 3 levels; consent attestation HMAC'd with the epoch key; envelope rule for gate-crossing events (§2.4, §2.5-9; now spine v1.0 D2: `tenantid`=null, fresh trace root, no tenant `causationid` chain); traces split at the gate (§5.14); egress validator rejects violations |
 | **k-threshold evasion across key epochs** *(review)* | Quarterly `tenant_bucket_key` rotation made one tenant look like two within a 90-day window straddling a quarter | k-counts and per-tenant caps computed within a single `key_epoch` (§5.5.2) |
 | **Corporate legal department tenant** *(review)* | In-house counsel have no s.132 BSA privilege [P9-25]; "privileged" labels cannot be relied on to protect content | Gate excludes matter content by construction, not by privilege class; in-house consent flow (§5.4) |
 | **Urgent-path abuse** *(review)* | Mass `FLAG_BAD_LAW` exhausts P0 crawl politeness budget; court portals block our IPs | Global dedup per court/target per 6 h, per-tenant urgent budget, P0 rate limits never bypassed, allowlisted `public_url` treated as untrusted (§5.5.3) |
@@ -681,7 +721,7 @@ An independent adversarial review (citation audit of ~28 references by fetching 
 **Contract and spine fixes**
 - Five broken internal cross-references (§5.1, §5.6, §5.8, §5.9 ×2) corrected.
 - `FeedbackEvent` literal `"+ANCHOR"`-style notation (which would have been implemented as literal strings) replaced by comments; `REVIEW_TASK` target, `MICRO_REVIEW_ANSWER` and `RETRACT` actions added (both were used in §5 but missing from the schema).
-- Added missing schemas: `ActionPayload`, `ConsentRecord`, `erasure.requested.v1`/`erasure.completed.v1`, `kg.proposal.status.v1`, and an envelope rule for gate-crossing events (new §2.5-9).
+- Added missing schemas: `ActionPayload`, `ConsentRecord`, `erasure.requested.v1`/`erasure.completed.v1`, `kg.proposal.status.v1` (since superseded by P3's `kg.proposal.resolved.v1`, spine v1.0 D4), and an envelope rule for gate-crossing events (new §2.5-9; now spine v1.0 D2).
 
 **Design gaps patched**
 - Gate linkage side-channels: unquantized per-actor `weight`, deterministic `consent_snapshot_id_hash`, propagated CloudEvents `traceparent`/`causation_id`, and end-to-end traces across the gate — all would re-identify actors/tenants; fixed (§2.4, §5.5.1, §5.14).
@@ -713,7 +753,7 @@ An independent adversarial review (citation audit of ~28 references by fetching 
 | KG loop | Proposal precision (accepted by P3) | ≥ 70% |
 | KG loop | Median flag→fix time: Tier 3 / Tier 1 / urgent bad law | 2 days / 7 days / 24 h |
 | KG loop | Error recurrence after fix | < 5% |
-| Ranking | NDCG@10 on P8 gold, adverse-binding recall@10 | +3 pts / no drop > 1 pt |
+| Ranking | NDCG@10 on P8 gold, adverse-binding recall@10 | +3 pts / non-inferior per D11 (one-sided 95% paired bootstrap, δ_s = max(1 pt, 2·SE_diff,s), rolling 3-release window; replaces "no drop > 1 pt") |
 | Ranking | Interleaving win rate of new ranker | significant at p < 0.05 before promotion |
 | Eval | New adjudicated eval cases per month from feedback | ≥ 50 |
 | Personalization | Edit distance between generated and final drafts (per user, trend) | −20% after 8 weeks |
@@ -731,12 +771,12 @@ An independent adversarial review (citation audit of ~28 references by fetching 
 | Capture | Explicit actions + reason chips; `retrieval.served.v1`; used-in-filing; manual outcome capture | + micro-review tasks, alert feedback, auto outcome tracking via CNR |
 | Tenant plane | Feedback store, reliability weighting with role priors, TENANT_PRIVATE eval | + Dawid–Skene EM, tenant LTR heads |
 | Gate | S0 + S1 only, with written design-partner consent; ledger | + S2 aggregates with k ≥ 5 and DP noise; DP synthetic queries [P9-30] |
-| (a) KG | Proposals to P3; urgent bad-law path; resolution fan-out | + weak supervision into P3 classifiers; CAL-style micro-review |
+| (a) KG | Proposals to P3 (`kg.proposal.v1`); urgent bad-law path; resolution fan-out from P3's `kg.proposal.resolved.v1` | + weak supervision into P3 classifiers; CAL-style micro-review |
 | (b) Ranking | Global reranker from gold + LLM-judge labels; logs collected | + IPS LTR, intervention harvesting, constrained interleaving |
 | (c) Eval | Auto TENANT_PRIVATE cases; gold room; lawyer-restated GLOBAL cases | + retrospective consented matters at volume; per-tenant regression dashboards |
 | (d) Personalization | USER + MATTER memory, ranking priors | + PRACTICE_GROUP/FIRM memory with KM approval; opt-in LoRA adapters |
 | Outcomes | Manual capture; tenant eval use | + uptake analyzer; P6 calibration |
-| Governance | Lineage, erasure cascade, retention defaults | + automated purge-by-actor drills; shard-based adapter unlearning |
+| Governance | Lineage, erasure cascade (receipts to P7's `erasure.completed.v1`), `doc.redacted.v1` re-masking, retention defaults, D2 envelope validator at gate egress | + automated purge-by-actor drills; shard-based adapter unlearning |
 
 MVP build estimate (unvalidated): 2 backend engineers + 1 ML engineer + 0.5 privacy/legal reviewer for ~4 months, assuming P3 review queue and P8 runner exist.
 

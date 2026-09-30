@@ -21,11 +21,12 @@ P0 is cheap in compute (well under 1 TB/yr of new raw data). Its real cost is ad
 2. **Discovery**: listing pages, RSS/XML feeds, date-wise search pages, JSON back-ends of single-page-app (SPA) portals, bulk datasets and licensed APIs.
 3. **Capture**: HTTP and headless-browser fetch; WARC archival; content-addressed raw storage.
 4. **Scheduling**: hot/warm/cool polling classes, rolling re-scans, backfills, targeted acquisition.
-5. **Change detection and dedup at the source-record level**: NEW, CHANGED, UNCHANGED, DELETED, REAPPEARED, METADATA_CHANGED (proposed).
+5. **Change detection and dedup at the source-record level**: NEW, CHANGED, UNCHANGED, DELETED, REAPPEARED, METADATA_CHANGED and SUPPRESSED (both accepted in spine v1.0, D16).
 6. **Resilience**: outages, WAF blocks, TLS misconfiguration, soft errors, layout and format drift, and adapter repair.
 7. **Freshness, coverage and health SLOs**, and the reconciliation that measures them.
-8. **Takedown/suppression** handling when a court orders anonymisation or removal.
+8. **Takedown/suppression** handling when a court orders anonymisation or removal, including production of `doc.redacted.v1` (RedactionOverlay; v1.0 D16).
 9. The **`raw.captured.v1`** event and a read API over raw bytes and capture history.
+10. *(Spine v1.0 D4/D16)* `source.health.v1`, `judgment.expected.v1`, and the tenant-agnostic court feeds: case status by CNR, cause lists, daily orders and `CourtCalendar`. P0 owns every court-portal connector (§2.2A).
 
 **Out of scope, owned elsewhere**
 - OCR, text extraction, structural parsing, metadata normalisation, citation resolution, Work/Expression/Manifestation identity: **P1**. P0 passes `source_metadata` exactly *as published* and only gives near-duplicate *hints*.
@@ -41,6 +42,31 @@ P0 is cheap in compute (well under 1 TB/yr of new raw data). Its real cost is ad
 ---
 
 ## 2. Input and output contracts
+
+### 2.0 Spine v1.0 conformance
+
+This section records how the principal architect's spine v1.0 decision record (D1–D18) disposed of the §2.5 proposals, and which v1.0 names this doc now uses. Where the body of this doc and v1.0 differ, v1.0 wins.
+
+| §2.5 # | Proposal | Disposition |
+|---|---|---|
+| 1 | `raw.captured.v1` extensions (`capture_id`, `norm_fingerprint`, `warc{}`, `fetch_context{}`, `provenance_tier`, `listing_raw_id`, `first_seen_at`, `lang_hint`, `near_dup_hint[]`, `flags{}`, `suppression?`; `METADATA_CHANGED`) | **ACCEPTED-MODIFIED as D16 (+D9).** All fields accepted except `suppression{}`, which is replaced by the explicit `change_kind=SUPPRESSED` plus a `doc.redacted.v1` RedactionOverlay (see #6). D9 adds `rights_class` (OFFICIAL\|OPEN_LICENSED\|THIRD_PARTY_LINK_ONLY\|LICENSED_RESTRICTED\|USER_UPLOADED) to every capture and Manifestation (§2.2). |
+| 2 | New event `acquire.requested.v1` | **ACCEPTED as D4/D16.** The v1.0 `reason` enum is UNRESOLVED_CITATION\|MATTER_WATCH\|CORRIGENDUM_SUSPECTED\|COVERAGE_GAP\|**LINEAGE_WATCH**\|LOW_QUALITY_COPY\|OPS. `tenantid` is always null; MATTER_WATCH arrives only via the P9 Privacy Gate. This doc's P0-internal `PRONOUNCEMENT_EXPECTED` reason is **not** in the v1.0 enum: overdue pronouncement-watch rows now run `TargetedAcquireWorkflow` directly with `reason=COVERAGE_GAP` and `sub_reason=PRONOUNCEMENT_OVERDUE`, and the external signal is `judgment.expected.v1` (§2.2A). |
+| 3 | New event `source.health.v1` | **ACCEPTED as D4/D16**, with #7 folded in. |
+| 4 | Bus and workflow posture | **ACCEPTED-MODIFIED as D1/D16.** Final, not "co-decision with P4": Apache Kafka 4.x (KRaft) / MSK in ap-south-1 is the reference bus; Redpanda is acceptable because it is Kafka-API-compatible. A Postgres transactional outbox with Debezium runs in every producer. Real-time and bulk lanes use separate topics, each with retry and DLQ topics. Temporal (self-hosted, or Temporal Cloud in an India region) runs P0 schedules, sweeps and backfills. |
+| 5 | `URL` / `CITATION_STRING` are request-only schemes | **ACCEPTED as D16.** They are never written to `identifier_alias`. |
+| 6 | Takedown = `change_kind=DELETED` + `suppression{}` | **REJECTED (D16).** Takedowns and suppression orders use the explicit kind **`SUPPRESSED`**. This was the doc's own fallback proposal. P0 also emits **`doc.redacted.v1`** carrying a **RedactionOverlay**, and every consumer must tombstone and purge according to that overlay. `DELETED` now means only withdrawal at source. |
+| 7 | `source.health.v1` adds `expected_pending`, `backing` | **ACCEPTED as D16.** |
+| — | Open question 14 (`expected_record` → P4 interface) | **Resolved by D16:** new event **`judgment.expected.v1`** (P0 → P3, P4, P10), §2.2A. |
+| — | (new input) `source.recheck.requested.v1` | **D4:** P9/P3 → P0 targeted recheck. It is now listed as input (c2) in §2.1. |
+| — | (new obligation) Court-portal feeds | **D4/D16:** P0 owns every court-portal connector and publishes **tenant-agnostic** feeds: `CourtCalendar` (holidays, vacations, sitting days; consumed by P6's Procedural Clock), case status by CNR, cause lists and daily orders. The watch registry is an unattributed union, and P7 matches locally (§2.2A, §5.9). |
+
+**Renames and conventions this doc now follows**
+- CloudEvents extension attributes are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (PUBLIC for every P0 event), plus `traceparent` (D2). Payload fields keep snake_case.
+- `change_kind` values are NEW\|CHANGED\|UNCHANGED\|DELETED\|REAPPEARED\|METADATA_CHANGED\|SUPPRESSED (D16).
+- Takedown and masking travel on `doc.redacted.v1` with a RedactionOverlay (D4/D16). No `plc.redaction.v1` or `work.access_restricted.v1` event exists.
+- `rights_class` appears on `raw.captured.v1` and Manifestation (D9).
+- Deployments use the D17 names: the on-prem PLC replica feed serves **D4** (air-gapped: signed daily PLC delta bundles) and **D4h**. **D3** tenants use a local PLC replica (D3 read-path rule). The MVP is one **D2** dedicated cell.
+- ID prefixes follow D12. The P0-internal prefixes `acq_`, `crun_`, `cap_`, `lp_`, `cal_` and `exp_` do not collide with the registry.
 
 ### 2.1 Inputs
 
@@ -83,34 +109,51 @@ permitted_access_modes: [OPEN]        # OPEN | BULK_DATASET | LICENSED_API | HUM
 content_legal_basis: "Copyright Act s.52(1)(q)(iv)"   # or CC-BY-4.0, GODL, licence contract id
 redistribution: {display_full_text: true, attribution: null, restrictions: []}
 content_use: FULL_TEXT                # FULL_TEXT | METADATA_ONLY | SIGNAL_ONLY (e.g. news RSS used only to trigger acquisition; §5.4)
+rights_class: OFFICIAL                # v1.0 D9: OFFICIAL | OPEN_LICENSED | THIRD_PARTY_LINK_ONLY | LICENSED_RESTRICTED | USER_UPLOADED;
+                                      # stamped on every capture (raw.captured.v1.rights_class) and Manifestation; runtime filter for external/API output (D13)
 personal_data_notes: "judgments may contain victim identities — honour court masking; see 5.10"
 status: APPROVED | PROVISIONAL | BLOCKED
 reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
 ```
 
-**(c) `acquire.requested.v1` (proposed; see 2.5)**: targeted acquisition from P1, P3, P4, the P9 Privacy Gate or ops.
+**(c) `acquire.requested.v1` (accepted in spine v1.0, D4/D16; see 2.0)**: targeted acquisition from P1, P3, P4, the P9 Privacy Gate or ops.
 
 ```json
-{"type":"acquire.requested.v1","tenant_id":null,
- "data":{"request_id":"acq_01J…","reason":"UNRESOLVED_CITATION|MATTER_WATCH|CORRIGENDUM_SUSPECTED|COVERAGE_GAP|LOW_QUALITY_COPY|PRONOUNCEMENT_EXPECTED|OPS",
+{"type":"acquire.requested.v1","tenantid":null,"dataclass":"PUBLIC",
+ "data":{"request_id":"acq_01J…","reason":"UNRESOLVED_CITATION|MATTER_WATCH|CORRIGENDUM_SUSPECTED|COVERAGE_GAP|LINEAGE_WATCH|LOW_QUALITY_COPY|OPS",
   "target":{"scheme":"CNR|NEUTRAL_INSC|NEUTRAL_HC|CASE_NO|SC_DIARY_NO|GAZETTE_ID|URL|CITATION_STRING",
             "value":"DLHC010012342023","court_hint":"crt_dhc","date_hint":"2024-03-11"},
   "priority":"P1|P2|P3","deadline":"2026-10-01T12:00:00+05:30",
   "allowed_access_modes":["OPEN","LICENSED_API"]}}
 ```
 
-**(d) Operator directives**: `BackfillRequest{source_id, date_range, access_mode, budget}`, `SuppressionOrder{target, authority_ref(order anchor/URL), scope, effective_at}`, `PauseSource{source_id, reason}`.
+*v1.0 reason semantics (D16).*
+- `LINEAGE_WATCH` (from P4, 06_P4 SP4-7) asks P0 to poll a pending appeal or review of a status-relevant decision (a `REVIEW_OF`/`APPEAL_OF` edge to a pending SC or HC case). P0 serves it through the case-status and daily-order feeds (§2.2A), adding the identifier to the unattributed watch union.
+- `PRONOUNCEMENT_EXPECTED` from earlier drafts is not a v1.0 reason. Overdue `expected_record`s start `TargetedAcquireWorkflow` inside P0 with `reason=COVERAGE_GAP`, and `acquisition_request.sub_reason='PRONOUNCEMENT_OVERDUE'` is recorded internally (§2.4, §5.4).
 
-### 2.2 Output: `raw.captured.v1` (spine §G, with proposed extensions marked ★)
+**(c2) `source.recheck.requested.v1` (P9 Privacy Gate / P3 → P0; spine v1.0 D4)**: a targeted re-fetch of a court or source.
+- Triggers:
+  - P9 releases it when a lawyer's `FLAG_BAD_LAW` points to a decision we do not yet hold (11_P9 §5.5.3).
+  - P3 emits it for a dangling negative attestation, or for a document seen only on an unofficial mirror (05_P3).
+- P0 handles it like `acquire.requested.v1` with `reason=COVERAGE_GAP` (or `LOW_QUALITY_COPY` for mirror-only documents). It runs through the same legal gate and politeness budgets.
+- The event carries `tenantid=null` (D2), and P0 stores no tenant attribution.
+- P9's abuse limits apply before the event is emitted: at most one per `(court_id, target)` per 6 h.
+- The payload schema is owned by P9. P0 consumes the fields listed in 01_master_architecture §6.4: `{request_id, court_ids[], target{work_id?, citation_text?, public_url?}, reason BAD_LAW_FLAG|UNOFFICIAL_ONLY_COPY|OPS, priority, dedupe_window_h}`.
+  - `BAD_LAW_FLAG` is handled as a `COVERAGE_GAP` targeted acquisition, and `UNOFFICIAL_ONLY_COPY` as `LOW_QUALITY_COPY`.
+  - `public_url` is untrusted. It is fetched only if its host is on a registered source's allowlist.
+
+**(d) Operator directives**: `BackfillRequest{source_id, date_range, access_mode, budget}`, `SuppressionOrder{target, authority_ref(order anchor/URL), scope, effective_at}`, `PauseSource{source_id, reason}`. *(v1.0: an applied `SuppressionOrder` produces a `raw.captured.v1` with `change_kind=SUPPRESSED` and a `doc.redacted.v1` RedactionOverlay; `authority_ref` → `RedactionOverlay.legal_basis`/`ordered_by`, `effective_at` → `effective_at`; see §2.2A and §5.10.)*
+
+### 2.2 Output: `raw.captured.v1` (spine §G, with extensions marked ★, all accepted in v1.0 D16/D9)
 
 ```json
 {
  "id":"01J9ZK…", "type":"raw.captured.v1", "specversion":"1.0",
  "source":"p0/capture-worker@2.3.0", "time":"2026-09-30T15:04:11+05:30",
  "subject":"in.sc.judgments/31245-2019|2026-09-30|31245_2019_3_1501_61234_Judgement_30-Sep-2026",
- "tenant_id":null, "traceparent":"00-…", "causation_id":"crun_01J…",   // crawl_run_id, or acq_… for targeted captures
- "idempotency_key":"in.sc.judgments|<record_key>|nfp:pdftext-v1:9f3c…|NEW",
- "schema_version":"1.1",
+ "tenantid":null, "traceparent":"00-…", "causationid":"crun_01J…",   // crawl_run_id, or acq_… for targeted captures
+ "idempotencykey":"in.sc.judgments|<record_key>|nfp:pdftext-v1:9f3c…|NEW",
+ "schemaversion":"1.1", "dataclass":"PUBLIC",                         // D2 lowercase extension attributes
  "data":{
   "raw_id":"sha256:4be1…", "source_id":"in.sc.judgments",
   "source_record_key":"31245-2019|2026-09-30|31245_2019_3_1501_61234_Judgement_30-Sep-2026",
@@ -119,7 +162,7 @@ reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
   "storage_uri":"s3://plc-raw/sha256/4b/e1/4be1…", "byte_size":412233,
   "source_metadata":{"diary_no":"31245/2019","case_no":"C.A. No. 1234/2020","parties":"A v. B",
                      "bench":"HON'BLE …","judgment_date":"30-09-2026","language":"English","neutral_citation":"2026 INSC 812"},
-  "change_kind":"NEW",            // NEW|CHANGED|UNCHANGED|DELETED|REAPPEARED|METADATA_CHANGED★
+  "change_kind":"NEW",            // NEW|CHANGED|UNCHANGED|DELETED|REAPPEARED|METADATA_CHANGED★|SUPPRESSED★ (D16)
   "prior_raw_id":null, "crawl_run_id":"crun_01J…",
   "terms_ref":"lp_in.sc.judgments@2026-09-01",
   "capture_id":"cap_01J…",                                   // ★ one fetch event; raw_id is content identity
@@ -141,14 +184,17 @@ reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
            "injection_suspect":false,          // §5.13; inert in P0, consumed by P1/P5/P6
            "suspected_replacement":false,      // §5.6; CHANGED with high-but-not-identical similarity
            "key_quality":"STRONG|WEAK"},       // §5.5 rule 2 // ★
-  "suppression":null                                          // ★ {reason, authority_ref, scope} when takedown
+  "rights_class":"OFFICIAL",                                  // ★ D9: OFFICIAL|OPEN_LICENSED|THIRD_PARTY_LINK_ONLY|LICENSED_RESTRICTED|USER_UPLOADED (from LegalProfile)
+  "redaction_overlay_id":null                                 // ★ v1.0: set when change_kind=SUPPRESSED; points to the doc.redacted.v1
+                                                              //   RedactionOverlay. Replaces the earlier proposal suppression{reason, authority_ref, scope},
+                                                              //   whose fields now travel in the overlay (legal_basis, ordered_by, scope, kind).
  }}
 ```
 
 **Delivery semantics**
 - At-least-once delivery.
 - Ordered per partition key `source_id|source_record_key`.
-- Consumers de-duplicate on `idempotency_key`.
+- Consumers de-duplicate on the `idempotencykey` envelope attribute.
 - The event is published from a transactional outbox in the same Postgres transaction that commits the `capture` and `source_record` rows, so there is never an event without a capture, nor a capture without an event.
 
 **`UNCHANGED` policy.** Routine polls that confirm no change are **not** emitted. They only update `last_verified_at`. `UNCHANGED` is emitted only for explicit *verification sweeps*, for example after a backfill or on an audit request, so that P4 and P8 can see "still published as of D". This avoids tens of thousands of no-op events per day.
@@ -161,7 +207,67 @@ It never implies the law changed, and P1 treats it as `manifestation.withdrawn_a
 
 **Mass-delete guard (review addition).** If more than `breakers.max_deleted_frac` of a source's LIVE records would become DELETED in one sweep window, no DELETED events are released. They are written to the outbox with `held_reason='MASS_DELETE'` and an incident opens. This is the signature of a URL-scheme redesign (every old URL 404s), not of mass withdrawal. The human either releases the events or re-keys the records via an adapter fix.
 
-**Suppression** is different from DELETED. A court-ordered suppression carries `suppression{…}`, and downstream phases must tombstone derived text (§5.10).
+**Suppression** is different from DELETED. In spine v1.0 (D16), a court-ordered suppression or verified takedown is emitted as **`change_kind=SUPPRESSED`**, not as DELETED + `suppression{…}`. In the same outbox transaction P0 emits **`doc.redacted.v1`**, whose `data` is the RedactionOverlay (§2.2A). Downstream phases (P2, P3, P4, P5 caches, P7) must tombstone and purge derived text according to that overlay (§5.10). The mass-delete breaker does **not** hold SUPPRESSED events, because a legal order must never wait behind an adapter incident.
+
+### 2.2A Additional outputs required by spine v1.0
+
+Every event below uses the CloudEvents envelope with `tenantid=null` and `dataclass=PUBLIC` (D2). It is published through the same Postgres outbox and Debezium relay as `raw.captured.v1`.
+
+**(a) `source.health.v1` (P0 → P4, P8, P10; D16)**
+```json
+{"type":"source.health.v1","tenantid":null,"dataclass":"PUBLIC",
+ "data":{"source_id":"in.sc.judgments","status":"OK|DEGRADED|DOWN|BLOCKED","freshness_lag_p95":"PT18M",
+         "last_success_at":"2026-09-30T15:04:09+05:30","coverage_estimate":0.996,
+         "expected_pending":3,                       // expected_record rows PENDING/OVERDUE (§5.4)
+         "backing":"LIVE_DELTA|DATASET_ONLY","incident_id":null}}
+```
+
+**(b) `judgment.expected.v1` (P0 → P3, P4, P10; new in D16)**: a "pronounced, text awaited" signal from the pronouncement watch (§5.4). It is emitted on each `expected_record` state transition. The `idempotencykey` is `expected_id|state`. Field names follow 01_master_architecture §6.4.
+```json
+{"type":"judgment.expected.v1","tenantid":null,"dataclass":"PUBLIC",
+ "data":{"expected_id":"exp_01J…","court_id":"crt_IN_SC",
+         "case_ref":{"scheme":"CASE_NO|SC_DIARY_NO|CNR","value":"C.A. No. 1234/2020","parties":"A v. B"},
+         "bench":{"strength":5,"judge_ids":["jdg_…"]},          // strength drives P4's larger-bench PROVISIONAL rule
+         "pronounced_on":"2026-10-01",                           // expected_record.expected_on
+         "evidence_raw_id":"sha256:…","source_kind":"CAUSE_LIST|DAILY_ORDER|OFFICIAL_NOTICE",
+         "expected_by":"2026-10-02T10:00:00+05:30",             // D+24h overdue threshold
+         "state":"PENDING|MATCHED|OVERDUE|CANCELLED",
+         "matched_work_id":null}}                                // set (via P1 identity) when MATCHED
+```
+- Consumers:
+  - P3 records an EXPECTED stub Work.
+  - For constitution-bench or larger-bench pronouncements, P4 may raise a PROVISIONAL impact flagged "text awaited".
+  - P10 shows "pronounced, text not yet available".
+- Only official evidence (cause list, daily order, official notice) produces this event. Expected records created or refreshed only by a `SIGNAL_ONLY` news item stay P0-internal until official evidence appears, consistent with P4's rule that news never seeds impacts.
+
+**(c) `doc.redacted.v1` (P0/P1/ops/legal → P2, P3, P4, P5 caches, P7; D4/D16)**: P0 produces it for every applied `SuppressionOrder` (court takedown, anonymisation or suppression order; verified takedown; source-side re-masking, §5.10). Its `data` is the spine **RedactionOverlay**:
+```json
+{"type":"doc.redacted.v1","tenantid":null,"dataclass":"PUBLIC",
+ "data":{"overlay_id":"…","scope":"WORK|EXPRESSION|ANCHOR_SPANS",
+         "kind":"SUPPRESS_ALL|MASK_SPANS|NAME_SEARCH_SUPPRESSED|COURT_PROHIBITION",
+         "targets":{"work_id":"wrk_…","raw_ids":["sha256:…"],"source_record_keys":["in.sc.judgments|…"]},  // work_id resolved via P1's manifestation lookup before emit (topic partition key); raw/record keys from P0
+         "spans":[],                                   // anchor spans for MASK_SPANS (usually supplied by P1/legal review)
+         "legal_basis":"COURT_ORDER:<order anchor/URL>|STATUTORY_BAR:<provision>|SOURCE_REMASKED|VERIFIED_TAKEDOWN",
+         "ordered_by":"crt_…|null","effective_at":"2026-10-01T00:00:00+05:30","purge_sla":"P14D"}}
+```
+Masking is an overlay. No masked `expression_key` is minted (D16). Indexes, snippets, exports and quote checks use the masked rendition.
+
+**(d) Tenant-agnostic court feeds (D4/D16)**: P0 owns every court-portal connector and publishes public feeds keyed by court and public identifier. No feed carries tenant attribution.
+
+| Feed (object) | Content | Consumers | Cadence |
+|---|---|---|---|
+| **`CourtCalendar`** | `{calendar_id: cal_…, court_id, year, sitting_days_rule, holidays[]{date, name, basis}, vacations[]{from, to, vacation_benches}, source_raw_ids[], version, recorded_at}` | P6 Procedural Clock (deadline roll-over), P0 yield models (§5.4, §5.12), P7, P10 | On publication of the court's holiday list or notification; re-checked monthly |
+| **Cause lists** (`CauseListEntry`) | `{court_id, list_date, list_type, bench{bench_id?, coram_as_listed}, court_room, item_no, case_ref{scheme, value, case_id?}, parties_as_listed, advocates_as_listed[], purpose (e.g. FOR_PRONOUNCEMENT), listing_raw_id}` | P7 Court Sync Matcher (`HEARING_LISTED`), P0 pronouncement watch, P10 | On publication (typically the evening before) |
+| **Case status by CNR / case number** (`CaseStatusSnapshot`) | `{case_ref{scheme CNR\|CASE_NO\|SC_DIARY_NO, value, case_id?}, court_id, status_as_published, stage_as_published, next_date?, last_order_date?, observed_at, raw_id, access_mode}` | P7 (`HEARING_CHANGED`), P4 (`LINEAGE_WATCH`) | Daily off-peak for the watch union. Bounded by HUMAN_ASSISTED capacity where CAPTCHA-gated (§5.9) |
+| **Daily orders** | Ordinary `raw.captured.v1` captures, which P1 turns into `doc.parsed.v1` with doc_type ORDER | P1 → P3, P4, P7 (`NEW_ORDER`) | As the parent source's schedule class |
+
+- *Watch registry.* Per-identifier polling covers the **unattributed union** of identifiers from Privacy-Gate `MATTER_WATCH` and `LINEAGE_WATCH` requests (table `watch_identifier`, §2.4). It has no tenant columns. P7 matches feeds against its private watch list inside the tenant cell. Sensitive matters register nothing and rely on bulk cause-list and order sweeps (09_P7 §5.11).
+- *Event names.* D4 fixes these feeds and their ownership but does not name their events. This doc uses the names proposed in 01_master_architecture §6.4, all marked ✱ there as beyond the decision record:
+  - `court.calendar.published.v1` on topic `plc.court.calendar.v1`;
+  - `court.causelist.published.v1` on topic `plc.court.causelist.v1`;
+  - `case.status.observed.v1` on topic `plc.court.case_status.v1`.
+  
+  The objects in the table above are the P0-side records behind those events.
 
 ### 2.3 Synchronous read API (for P1, P4, P8 and ops)
 
@@ -172,6 +278,10 @@ GET  /v1/records/{source_id}/{record_key}         -> current state + version cha
 GET  /v1/replay/{capture_id}              -> WARC record (request+response+metadata) for audit/click-to-source
 GET  /v1/sources/{source_id}/health       -> freshness, coverage, last success, open incidents
 POST /v1/acquire                          -> same body as acquire.requested.v1 (ops/UI)
+GET  /v1/court-calendars/{court_id}?year=  -> CourtCalendar (v1.0 D16; P6 Procedural Clock)
+GET  /v1/cause-lists/{court_id}?date=      -> CauseListEntry[] (tenant-agnostic; whole-list download, no per-case lookup logging)
+GET  /v1/case-status?scheme=&value=       -> latest CaseStatusSnapshot (stateless; no tenant-attributable logs, D3 read-path rule)
+GET  /v1/expected?court_id=&state=        -> expected_record rows (mirrors judgment.expected.v1)
 ```
 
 ### 2.4 Internal system of record (PostgreSQL)
@@ -203,6 +313,19 @@ CREATE TABLE expected_record (          -- §5.4 pronouncement watch: items we k
   expected_id text PRIMARY KEY, source_id text, court_id text, case_ref jsonb /*as listed: case no, diary no, parties*/,
   expected_on date, evidence_raw_id text /*cause-list capture*/, state text /*PENDING|MATCHED|OVERDUE|CANCELLED*/,
   matched_capture_id text, created_at timestamptz, overdue_at timestamptz);
+-- spine v1.0 additions (D9, D16):
+ALTER TABLE capture ADD COLUMN rights_class text;                 -- D9, copied from the LegalProfile at capture time
+ALTER TABLE capture ADD COLUMN redaction_overlay_id text;         -- set when change_kind='SUPPRESSED'
+ALTER TABLE suppression ADD COLUMN overlay jsonb;                 -- the RedactionOverlay emitted on doc.redacted.v1
+ALTER TABLE acquisition_request ADD COLUMN sub_reason text;       -- P0-internal, e.g. PRONOUNCEMENT_OVERDUE (reason stays in the v1.0 enum)
+CREATE TABLE watch_identifier (scheme text, value text, first_requested_at timestamptz, last_requested_at timestamptz,
+  reasons text[] /*MATTER_WATCH|LINEAGE_WATCH*/, PRIMARY KEY (scheme, value));   -- unattributed union; no tenant columns, by design
+CREATE TABLE court_calendar (calendar_id text, court_id text, year int, body jsonb, version int, source_raw_ids text[],
+  recorded_at timestamptz, PRIMARY KEY (calendar_id, year, version));
+CREATE TABLE cause_list_entry (court_id text, list_date date, list_type text, item_no text, bench jsonb, case_ref jsonb,
+  purpose text, listing_raw_id text, PRIMARY KEY (court_id, list_date, list_type, item_no));
+CREATE TABLE case_status_snapshot (scheme text, value text, observed_at timestamptz, court_id text, body jsonb, raw_id text,
+  PRIMARY KEY (scheme, value, observed_at));
 CREATE INDEX ON capture (source_id, fetched_at);          -- capture is range-partitioned by month on fetched_at (§8)
 ```
 
@@ -214,6 +337,8 @@ CREATE INDEX ON capture (source_id, fetched_at);          -- capture is range-pa
 5. `PARTNER_CONTRIBUTED`.
 
 ### 2.5 Proposed spine changes
+
+*This table is the original proposal record. Spine v1.0 dispositions are in §2.0: #1, #2, #3, #5 and #7 accepted (#1 and #2 modified); #4 accepted-modified (Kafka 4.x/MSK primary, Redpanda acceptable); #6 rejected in favour of `change_kind=SUPPRESSED` + `doc.redacted.v1`.*
 
 | # | Target | Change | Justification |
 |---|---|---|---|
@@ -456,7 +581,7 @@ flowchart LR
   WP --> NF[Normalize + fingerprint + AV scan + simhash]
   NF --> CD[Change decision]
   CD --> PG[(Postgres: source_record, capture, outbox)]
-  PG --> OB[Outbox relay] --> BUS[[Kafka-API log: raw.captured.v1 / source.health.v1]]
+  PG --> OB[Outbox relay: Debezium] --> BUS[[Kafka 4.x log: raw.captured.v1 / source.health.v1 / judgment.expected.v1 / doc.redacted.v1 / court feeds]]
   BUS --> P1[P1 Parsing] & P4[P4 Propagation] & OPS[Health monitor]
   OPS --> SH[source.health.v1] 
 ```
@@ -475,7 +600,8 @@ flowchart LR
 | Normaliser/fingerprinter | Media sniffing; PDF text-layer hash or page-image perceptual hash; HTML boilerplate strip; canonical JSON; simhash64 | Python workers (CPU) |
 | AV/safety scan | ClamAV plus PDF structure checks (JS, embedded files, decompression bombs) → `flags.malware_suspect` | Sidecar |
 | Change decider | Record-level state machine (§5.6) | Postgres transaction |
-| Outbox relay | Publishes events in commit order per partition | Debezium or a simple poller |
+| Outbox relay | Publishes events in commit order per partition | Debezium (v1.0 D1: Postgres outbox + Debezium in every producer); a simple poller only for the on-prem D4 replica feed |
+| Court-feed publisher (v1.0) | Normalises cause lists, case-status snapshots and court calendars into the tenant-agnostic feeds (§2.2A d); maintains the unattributed `watch_identifier` union | Temporal activities + Postgres |
 | Health monitor | Yield models, freshness lag, error taxonomy, canaries; emits `source.health.v1` and pages on-call | Prometheus/OTel + rules |
 | Capture console | HUMAN_ASSISTED captures with full audit | Isolated VDI browser + WARC proxy |
 
@@ -487,19 +613,19 @@ flowchart LR
   - A daily run covers T-1…T-7.
   - A weekly run covers T-8…T-60.
   - A quarterly full sweep runs at the night-window rate.
-- **Calendar awareness.** Each source is bound to a court or office working-day calendar (vacations, holidays), so yield alerts do not fire on non-working days. A Saturday vacation-bench order still produces items, which is why the yield model is probabilistic, not a hard rule.
+- **Calendar awareness.** Each source is bound to a court or office working-day calendar (vacations, holidays), so yield alerts do not fire on non-working days. These calendars are the same tenant-agnostic `CourtCalendar` objects that P0 publishes for P6's Procedural Clock (v1.0 D16, §2.2A). A Saturday vacation-bench order still produces items, which is why the yield model is probabilistic, not a hard rule.
 - **Adaptive revisit** *(heuristic; to validate)*.
   - Learn each source's upload-time distribution, for example HCs uploading in evening batches.
   - Poll at 2× the base rate in the source's top upload-hour quantiles and at 0.5× elsewhere, subject to the SLO floor.
 - **Pronouncement watch** *(review addition; [NOVEL — unvalidated])*. This closes the "overruled yesterday" gap between pronouncement in court and upload.
-  1. Each evening, capture the next day's cause list for SC and Tier-A HCs. A per-court parser (`pattern_set`) extracts entries listed for pronouncement of judgment, and each becomes an `expected_record(state=PENDING, expected_on=D)`.
+  1. Each evening, capture the next day's cause list for SC and Tier-A HCs. A per-court parser (`pattern_set`) extracts entries listed for pronouncement of judgment, and each becomes an `expected_record(state=PENDING, expected_on=D)`. Every state change below emits `judgment.expected.v1` (v1.0 D16, §2.2A).
   2. On day D, the court's judgment listing polls every 5 min, 10:00–20:00 IST, and hourly on D+1.
   3. Each NEW capture is matched to PENDING rows by case number, diary number or normalised party names, and matched rows become MATCHED.
-  4. At D+24h, unmatched rows become OVERDUE. They trigger `acquire.requested.v1(reason=PRONOUNCEMENT_EXPECTED)`, which walks the ladder (IK search by court and date, then HUMAN_ASSISTED SCR), and they are counted in `source.health.v1.expected_pending`.
+  4. At D+24h, unmatched rows become OVERDUE. They trigger a targeted acquisition (v1.0: `reason=COVERAGE_GAP`, internal `sub_reason=PRONOUNCEMENT_OVERDUE`; formerly `PRONOUNCEMENT_EXPECTED`), which walks the ladder (IK search by court and date, then HUMAN_ASSISTED SCR), and they are counted in `source.health.v1.expected_pending`.
   5. A `SIGNAL_ONLY` news item naming a pronounced judgment creates or refreshes an expected record with lower confidence (`evidence_raw_id` = the RSS capture). It never creates content.
   6. Rows are CANCELLED when the next cause list shows the matter adjourned, or after D+14 with an ops note.
 
-  P4 can use MATCHED-vs-PENDING to show "judgment pronounced, text not yet available", instead of silently answering with stale law. The P4 interface is by `expected_id` and is not a spine event, so it is raised to P4 as an open question.
+  P4 can use MATCHED-vs-PENDING to show "judgment pronounced, text not yet available", instead of silently answering with stale law. *(Spine v1.0 D16 resolved the former open question: the interface is the spine event `judgment.expected.v1`, keyed by `expected_id`, to P3, P4 and P10. P3 records an EXPECTED stub Work, and P4 may raise a PROVISIONAL "text awaited" impact for larger-bench pronouncements.)*
 - **Priority lanes** map onto P1's lanes. Anything captured by the HOT class, or by a `MATTER_WATCH` or `UNRESOLVED_CITATION` request, is marked `priority: P1` in `fetch_context`, and P1 routes it to `L0-urgent`.
 - **Budgets.**
   - Backfill and delta use separate Temporal task queues and separate per-host budgets.
@@ -576,6 +702,11 @@ on sweep_complete(src, window, ok=True):
       r.absent_streak += 1
       if r.absent_streak >= 3 and direct_get(r.url) in {404, 410, soft404}:
           r.state = DELETED; emit DELETED
+
+on suppression_applied(order):                   # spine v1.0 D16 (§5.10)
+  for r in order.targets: r.state = SUPPRESSED
+  write outbox: raw.captured.v1(change_kind=SUPPRESSED, redaction_overlay_id) + doc.redacted.v1(RedactionOverlay)  # one transaction; never held by breakers
+# a later re-capture of a SUPPRESSED record is stored under legal hold and re-emitted only with the overlay still applied
 ```
 
 A `CHANGED` result on an SC or HC judgment is the main **corrigendum/replacement signal**. P1 decides between `en.r2` and a different Work re-using the URL. P0 adds `flags.suspected_replacement=true` when the text similarity (simhash Hamming distance ≤ 10) is high but not identical. That points to a corrigendum rather than a new document. The comparison is made directly against the record's prior `raw_blob.simhash64`, so no index lookup is needed.
@@ -613,7 +744,7 @@ Typical causes are a portal that regenerates every PDF with a new stamp (fix: ad
 - This gives tamper-evident proof that "this text was published at this URL at this time". That matters for disputes about when a judgment was uploaded and for the spine's `as_known_at` audit replay. It is **not** a certified copy, and the product must say so.
 
 **Storage policy**
-- S3 in ap-south-1, with MinIO for an on-prem PLC replica.
+- S3 in ap-south-1, with MinIO for an on-prem PLC replica (D3/D4/D4h deployments, v1.0 D17).
 - Object Lock in **governance** mode, so only a two-person-approved legal-takedown role can remove objects (§5.10).
 - Versioning on.
 - Lifecycle: WARCs move to infrequent-access after 90 days and to archive tier after 1 year. CAS raw blobs stay in the standard tier, because P1 reprocessing reads them. There is a second reason: tiering ~25M small (~75 KB) objects would incur per-object transition charges and archive-tier per-object overhead, which roll-up WARCs (1 GB) avoid *(pricing mechanics per provider; confirm with India-region quote)*.
@@ -667,11 +798,16 @@ Mean time to repair (MTTR) target: ≤ 1 working day for Tier A and ≤ 3 days f
 4. On NOT_FOUND, re-queue at a back-off of 1 d, 3 d, 7 d, then close and report to P3/P8. A citation that cannot be sourced gets `resolution=UNSOURCED`.
 
 **Tenant privacy** *[NOVEL — unvalidated]*. Which public cases a firm is watching is itself confidential, because it reveals strategy. So:
-- a `MATTER_WATCH` request is emitted only by the **P9 Privacy Gate**, with `tenant_id=null`;
+- a `MATTER_WATCH` request is emitted only by the **P9 Privacy Gate**, with `tenantid=null` and a fresh trace root, carrying no tenant causation chain (v1.0 D2 Privacy-Gate envelope rule);
 - the gate pools identical requests across tenants and releases them in hourly batches mixed into the general sweep;
 - P0 stores no tenant attribution, and P7 keeps the tenant-side audit.
 
 The court website sees only our generic crawler fetching a public record.
+
+**Tenant-agnostic court feeds (v1.0 D4/D16).**
+- Watched identifiers enter the unattributed `watch_identifier` union. Case-status snapshots, cause-list entries and daily orders for the whole union, plus the bulk cause-list and order sweeps, are published as public feeds (§2.2A d).
+- P7's Court Sync Matcher matches them locally inside the tenant cell. P0 never learns which tenant, or how many tenants, watch an identifier.
+- `LINEAGE_WATCH` requests from P4 (pending appeals or reviews of status-relevant decisions) join the same union.
 
 **Capacity ceiling for watched cases (review finding).** HC case status and district-court orders sit behind CAPTCHAs (§3.1). Automated capture for watched matters is therefore bounded by HUMAN_ASSISTED capacity: 200 captures/day/source by default, one operator ≈ 60–100 captures/hour *(assumption)*. P0 must not promise automated interim-order tracking for thousands of watched cases.
 - Beyond the cap, `MATTER_WATCH` requests return `BLOCKED_LEGAL` with `retry_via: TENANT_UPLOAD`.
@@ -683,10 +819,13 @@ The court website sees only our generic crawler fetching a public record.
 - **Suppression register.**
   - Entries are created from court orders (anonymisation or removal directions), statutory identity bars, and verified takedown requests. Candidate statutory bars, all *(unverified in this review; 21_india to confirm section numbers)*: disclosure of the identity of victims of sexual offences (IPC s.228A, carried into BNS 2023), POCSO Act s.23, and Juvenile Justice Act 2015 s.74.
   - P1 may raise `SuppressionOrder` **candidates** with reason `STATUTORY_BAR_SUSPECTED`, for example when NER finds a named minor or victim in a POCSO or sexual-offence judgment that the court failed to mask. They go into a human review queue and are applied with `scope: DISPLAY` pending decision, so the system fails closed on display and open on retention.
+    - *v1.0 mapping:* a DISPLAY-scope candidate becomes a `doc.redacted.v1` overlay with `kind=MASK_SPANS` (or `SUPPRESS_ALL` when the spans are unknown). Its `purge_sla` is set only when review confirms the candidate. P1 may also emit the overlay directly (D4).
   - Each entry targets `raw_id`s, `record_key`s or `work_id`s.
-  - On creation, P0 emits `raw.captured.v1` with `change_kind=DELETED` and `suppression{reason, authority_ref, scope}`. Downstream phases must tombstone their derived text and index entries.
+  - On creation, P0 emits `raw.captured.v1` with **`change_kind=SUPPRESSED`** (v1.0 D16; formerly `DELETED` + `suppression{reason, authority_ref, scope}`) and, in the same outbox transaction, **`doc.redacted.v1`** carrying the RedactionOverlay (§2.2A c).
+    - Downstream phases must tombstone and purge their derived text, embeddings, snippets and index entries per the overlay, within its `purge_sla`.
+    - Name-search-only restrictions (e.g. *Laksh Vir Singh Yadav*, 21_india §2.5) use `kind=NAME_SEARCH_SUPPRESSED` and do **not** change `change_kind`, because the text stays retrievable by case number and citation.
   - Raw bytes move to a restricted legal-hold prefix and remain retrievable only by the legal role.
-- **Source-side masking.** If a court re-publishes a judgment with names masked, we see `CHANGED` and a suspected replacement. The newer masked version becomes canonical, and the unmasked prior version is automatically suppressed from display (`scope: DISPLAY`), because the court's re-publication expresses a masking intent.
+- **Source-side masking.** If a court re-publishes a judgment with names masked, we see `CHANGED` and a suspected replacement. The newer masked version becomes canonical, and the unmasked prior version is automatically suppressed from display (`scope: DISPLAY`), because the court's re-publication expresses a masking intent. In v1.0 this is a `doc.redacted.v1` overlay with `legal_basis=SOURCE_REMASKED` on the prior version. No masked `expression_key` is created (D16).
 - **DPDP posture.** Because the s.3(c)(ii) exemption is arguable [P0-23], P0:
   - minimises: no scraping of litigant contact data or case-status pages beyond need;
   - logs the purpose on every source;
@@ -830,10 +969,14 @@ Scores are relative (++ best, −− worst).
 The candidates were a Kafka-API log (Redpanda or MSK), NATS JetStream and a pure Postgres queue. P0's requirements are:
 - ordered partitions by record;
 - replay ≥ 30 days;
-- self-hostable for the on-prem PLC replica;
+- self-hostable for the on-prem PLC replica (D4/D4h);
 - a mature CDC/outbox ecosystem.
 
 The Kafka API satisfies all four, and at 10–50k events/day any choice performs. **Recommendation: Kafka API with a Postgres outbox.** Final decision with P4.
+
+**Decided in spine v1.0 (D1, D16).** The bus is Apache Kafka 4.x (KRaft) or MSK in ap-south-1. Redpanda is acceptable because it is API-compatible. Every producer uses a Postgres transactional outbox with Debezium. Real-time and bulk lanes are separate topics, each with retry and DLQ topics. Temporal runs P0 schedules and backfills. For P0 this means:
+- delta sweeps publish on the real-time lane;
+- `BackfillWorkflow` publishes on the bulk lane.
 
 ### 6.7 Summary scorecard on the standard criteria (review addition)
 
@@ -890,7 +1033,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 | **Confused tenant user** | A request to fetch a sealed or in-camera case, or one under a victim-identity bar | Targeted acquisition fetches only publicly listed material; suppression-register and statutory-bar checks run before any capture is exposed; NOT_FOUND is reported honestly. |
 | **Source outage or format change** | Zero yield, soft errors, redesign | Error taxonomy (§5.8); auto-pause; last-good replay; rolling re-scan recovers the gap; LLM-assisted repair; MTTR SLO. |
 | **Court upgrades to hCaptcha or blocks cloud ASNs** | OPEN adapters for that court die | The ladder degrades to MoU, IK and human-assisted; the coverage incident is visible to users via `source.health.v1`; business escalation. |
-| **Takedown or anonymisation order** | Derived copies persist in indexes and caches | Suppression emits `DELETED+suppression`; P2/P3/P5 must tombstone (contract test in P8's regression suite). |
+| **Takedown or anonymisation order** | Derived copies persist in indexes and caches | Suppression emits `change_kind=SUPPRESSED` plus `doc.redacted.v1` (RedactionOverlay; v1.0 D16, replacing the earlier `DELETED+suppression`). P2, P3, P4, P5 caches and P7 must tombstone and purge within `purge_sla` (contract test in P8's regression suite). |
 | **Open dataset withdrawn or relicensed** | Loss of the backfill basis | Bytes already captured under CC-BY remain licensed. The provenance upgrade (§5.11) steadily replaces `OPEN_DATASET` manifestations with official ones. |
 | **Regulatory shift** (MeitY rules on scraping, DPDP rules) | The legal basis changes | Legal profiles have a `review_due`; a TermsWatch workflow diffs ToU and robots weekly; a kill-switch per source. |
 | **Clock/timezone errors** | "Freshness" and `first_seen_at` off by 5.5 h | All timestamps are RFC 3339 with offset. Source dates are stored as published strings (P1 normalises). NTP monitoring. |
@@ -900,7 +1043,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 | **Stored XSS via replay** (review) | A compromised court page is served back through `/v1/replay` into an analyst's or tenant's browser | Replay is served from an isolated cookieless domain with a CSP sandbox; HTML is served as an attachment (§5.7). |
 | **Dataset-only courts look current** (review) | In the MVP, HCs without delta adapters are only as fresh as the quarterly dataset, but answers do not say so | `source.health.v1.backing=DATASET_ONLY`, with a P10 per-court "current as of" date (§5.1). |
 | **Watched-case demand exceeds lawful capacity** (review) | CAPTCHA-gated case-status and order pages cannot be automated; tenants expect interim-order tracking | Human-assisted cap with honest `BLOCKED_LEGAL` and `retry_via: TENANT_UPLOAD`; P7 handles firm uploads (§5.9). |
-| **Unmasked victim identity in a court-published judgment** (review) | Display of barred identities | P1 raises `STATUTORY_BAR_SUSPECTED` candidates; `scope: DISPLAY` suppression pending review (§5.10). |
+| **Unmasked victim identity in a court-published judgment** (review) | Display of barred identities | P1 raises `STATUTORY_BAR_SUSPECTED` candidates; `scope: DISPLAY` suppression pending review, emitted as a `doc.redacted.v1` MASK_SPANS overlay (§5.10). |
 
 ### 8.R Independent review findings
 
@@ -931,7 +1074,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 9. A statutory-bar suppression-candidate flow from P1 (§5.10).
 10. Dataset-only court disclosure (§5.1).
 11. New catalogue rows: cause lists, news `SIGNAL_ONLY`, defunct fora (§5.1).
-12. Schema fixes: `causation_id` prefix; `priority`, `acquisition_request_id`, `injection_suspect`, `suspected_replacement`, `key_quality` and `text_layer_quality` were used in prose but missing from the event schema; the reason enum gained `LOW_QUALITY_COPY` and `PRONOUNCEMENT_EXPECTED`.
+12. Schema fixes: `causation_id` prefix; `priority`, `acquisition_request_id`, `injection_suspect`, `suspected_replacement`, `key_quality` and `text_layer_quality` were used in prose but missing from the event schema; the reason enum gained `LOW_QUALITY_COPY` and `PRONOUNCEMENT_EXPECTED`. *(Spine v1.0 kept `LOW_QUALITY_COPY`, added `LINEAGE_WATCH`, and folded `PRONOUNCEMENT_EXPECTED` into `COVERAGE_GAP` + `judgment.expected.v1`; §2.0.)*
 13. Spine changes 5–7 made explicit (§2.5).
 14. A §6.7 scorecard on the standard criteria.
 
@@ -940,7 +1083,7 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 - (b) Real SC/HC volumes: the only source is a secondary NJDG summary.
 - (c) Whether Indian cloud ASNs pass Akamai.
 - (d) Cause-list parser precision and news-RSS ToU.
-- (e) The P4 interface for `expected_record` (not a spine event yet).
+- (e) ~~The P4 interface for `expected_record` (not a spine event yet).~~ Resolved in spine v1.0: `judgment.expected.v1` (D16, §2.2A).
 - (f) Threshold calibration: nfp volatile lines, legacy-font probe, breaker fractions.
 - (g) Human-assisted capture is itself a legal question and may be disallowed, which would leave watched district-court matters to tenant upload only.
 
@@ -978,7 +1121,8 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
   - India Code central Acts (weekly snapshots) and the central e-Gazette;
   - NCLT (allowed paths), NCLAT, ITAT;
   - IK API for gap-fill.
-- **Platform**: Temporal, Postgres, S3 (ap-south-1), httpx + warcio, declarative adapters with fixture CI, `nfp` change detection, outbox → bus, legal gate, a basic yield alert, `raw.captured.v1` with the proposed extensions.
+- **Platform**: Temporal, Postgres, S3 (ap-south-1), httpx + warcio, declarative adapters with fixture CI, `nfp` change detection, outbox (Debezium) → Kafka bus, legal gate, a basic yield alert, `raw.captured.v1` with the v1.0 extensions (incl. `rights_class`, `change_kind=SUPPRESSED`), and `doc.redacted.v1` for takedowns.
+- **Spine v1.0 obligations in the MVP** (the MVP is one D2 dedicated cell, D17): `judgment.expected.v1` from the SC pronouncement watch; `CourtCalendar` for the SC and the partner's HCs (needed by P6's Procedural Clock); SC cause-list and daily-order feeds; `source.health.v1`. HC case-status feeds only for the watch union and within the HUMAN_ASSISTED cap.
 - **Review additions to the MVP** (all cheap):
   - mass-change and mass-delete breakers;
   - the text-layer quality probe;
@@ -1000,7 +1144,8 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 - Fixture-gated LLM repair.
 - `acquire.requested.v1` from P1/P3/P9.
 - `source.health.v1` to P8/P10.
-- An on-prem PLC replica feed (MinIO + bus mirror).
+- An on-prem PLC replica feed (MinIO + bus mirror) for D3/D4h; signed daily PLC delta bundles for air-gapped D4 (v1.0 D17).
+- Tenant-agnostic cause-list, case-status and daily-order feeds and `CourtCalendar` for all 25 HCs and Tier-B tribunals (v1.0 D16).
 - MoU feeds onboarded as they materialise.
 
 ---
@@ -1023,8 +1168,9 @@ This restates §6.2–6.6 on the five criteria the standards require. ++ is best
 11. **IK retention rights** (review). The IK ToU are silent on storing and caching fetched documents [P0-15]. Counsel must confirm whether IK-sourced text may be retained after termination. Until then, IK-only text is stored under a `LICENSED_THIRD_PARTY` prefix that can be purged on termination.
 12. **Bills and cause lists** (review). Bills fall outside s.52(1)(q) [P0-17]; cause lists are used for facts only. Counsel should confirm both, together with the ToU of news RSS used as `SIGNAL_ONLY`.
 13. **Real volumes** (review). The SC and HC daily figures rest on one secondary NJDG summary with ambiguous wording [P0-14]. Replace them with measured counts in month 1; until then capacity is sized at 3×.
-14. **Pronouncement watch → P4 interface** (review). `expected_record` is P0-internal. P4 must decide whether a "pronounced, text pending" state needs a spine event (candidate: extend `source.health.v1` or add `judgment.expected.v1`).
+14. **Pronouncement watch → P4 interface** (review). `expected_record` is P0-internal. P4 must decide whether a "pronounced, text pending" state needs a spine event (candidate: extend `source.health.v1` or add `judgment.expected.v1`). **Resolved by spine v1.0 D16:** `judgment.expected.v1` (P0 → P3, P4, P10) is accepted (§2.2A b).
 15. **Defunct fora** (review). Archives of abolished tribunals (e.g. IPAB, CLB, BIFR) may be offline or moved. 21_india should confirm the abolition dates and successor custodians before Tier C.
+16. **Court-feed event names and HUMAN_ASSISTED ceiling** (v1.0). D4 assigns P0 the tenant-agnostic case-status, cause-list, daily-order and `CourtCalendar` feeds, but the decision record does not name their events. §2.2A d uses the ✱-marked names proposed in 01_master_architecture §6.4, which the principal architect still has to ratify. CAPTCHA-gated case-status pages still cap per-CNR coverage (§5.9), so P7's `HEARING_CHANGED` SLO for district courts depends on the tenant-upload route.
 
 ---
 

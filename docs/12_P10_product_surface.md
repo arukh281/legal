@@ -45,39 +45,70 @@ Alert *generation* for matters (P7 §5.12); impact computation (P4); AuthorityVi
 
 ## 2. Input and output contracts
 
-All names follow the spine (§B–§H) and the extensions accepted in 05_P3 (`AuthorityView`), 08_P6 (`StrategyJobRequest`, `Deadline`, memo events), 09_P7 (generalized `matter.alert.v1`, `matter.document.ingested.v1`, private anchors) and 11_P9 (extended `FeedbackEvent`, `retrieval.served.v1`, `feedback.resolved.v1`). New P10-owned ID prefixes: `wl_` (watchlist), `wr_` (watch rule), `wh_` (watch hit), `ntf_` (notification), `chb_` (channel binding), `dge_` (digest edition), `dgi_` (digest item), `udg_` (user digest), `uim_` (UI impression, when P10 renders a list P5 did not; renamed in review from `imp_`, which P4/P7 already use for `impact_id`), `cck_` (cite-check run). Public IDs used here but defined elsewhere: `jdg_`, `crt_`, `ent_` (03_P1), `bnc_`, `iss_` public IssueTopic (05_P3 S3-5).
+### 2.0 Spine v1.0 conformance
+
+Spine v1.0 (the principal architect's decision record, D1–D18) supersedes spine v0.1 where they differ. This section records how each P10 proposal in §2.4 was decided. The rest of the document has been edited to follow the decisions.
+
+| P10 proposal (§2.4) | Disposition | Effect on this document |
+|---|---|---|
+| S10-1 `alert.state.v1` (P10 → P7, P9) | **ACCEPTED as D4** | — |
+| S10-2 `interaction.logged.v1` (P10 → P9) | **ACCEPTED as D4** | Joined on `impression_id`, which is either a P5 `retrieval.served.v1` impression or a P10 UI impression `uim_…` (D12). |
+| S10-3 `matter.alert.v1` fields `subject_ids[]`, `definitive`, `revision`, `supersedes_alert_id?`, `requires_ack` | **ACCEPTED as D5 (merged P4 SP4-1 / P7 2.5-2 / P10 S10-3)** | The merged schema also carries `impact_version?`, `lifecycle?` (PROVISIONAL\|CONFIRMED\|UPDATED\|RETRACTED), `dedupe_key = hash(impact_id\|source_event_id, matter_id)` and `explanation{text (deterministic template), anchors[]}`. Alerts update in place, and retractions reach every original channel (§2.1 I1, §5.8). |
+| S10-4 `digest.edition.published.v1` | **ACCEPTED as D4** | The edition ID prefix is `dig_` (D12), not `dge_`. `law_current_to` comes from the **P4 Freshness API** (§2.3.4, §5.10). |
+| S10-5 FeedbackEvent `context.surface` + DIGEST, WORD_ADDIN, SOURCE_VIEWER, COMMAND_BAR, MOBILE, WHATSAPP | **ACCEPTED as D9 (merged P9 + P10 FeedbackEvent)** | Feedback IDs are `fb_` (D12), not `fbk_`. |
+| S10-6 `AuthorityView` as the only badge input | **ACCEPTED as D6** | `AuthorityView` is the ONLY input for badges. Status stays 5-valued. "Under review" = CAUTION + `definitive=false` + reason code `NEGATIVE_SIGNAL_UNDER_REVIEW`, and coverage gaps = UNKNOWN + `COVERAGE_GAP`. `binding_on_forum` includes `UNDETERMINED`, and `binding_basis.conflict` LARGER_BENCH\|EARLIER_COEQUAL\|UNRESOLVED (D16). Asymmetric display: plausible unverified negatives show at once as CAUTION, never hidden and never definitive. |
+| S10-7 P10 as consumer of `doc.parsed.v1`, `doc.indexed.v1`, `graph.delta.v1` | **ACCEPTED (not separately ruled; D4 makes the producer the owner)** | The fields P10 relies on are normative in D4 (`graph.delta.v1` `status_changes[].{definitive, reason_codes}`, `graph_watermark`). P10 is also recorded as a consumer of `judgment.expected.v1` (D16: P0 → P3, P4, P10). |
+| S10-8 single ID registry; `imp_`/`iss_` collisions | **ACCEPTED-MODIFIED as D12** | The single registry is adopted: `imp_` = P4 impact, `uim_` = P10 UI impression. **The proposed fix for `iss_` is REJECTED**: P7 keeps `iss_` for private matter issues, and P3 renames the public issue-topic node to **`itp_`**. P10 therefore uses `itp_` for public ISSUE watches, `DocCard.issue_ids` and digest tags. Also `dge_` → **`dig_`** and `fbk_` → **`fb_`**. |
+| S10-9 `VerificationReport` gate `PARTIAL` | **ACCEPTED as D9** | Gate is PASS\|PARTIAL\|BLOCK, with `section_gates` and a withheld list. |
+
+**Renames and decisions this document now follows.**
+- **Envelope (D2).** The attributes are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`, plus `traceparent`. Public-plane P10 events (`digest.edition.published.v1`) carry `tenantid`=null and `dataclass=PUBLIC`.
+- **Impact topology (D3).** `impact.detected.v1` arrives on the public topic `plc.impact.public.v1` (`tenantid`=null). The Watch Matcher reads `affected[].id` inline, or downloads the *whole* manifest (`manifest_uri` + `manifest_sha256`) for large closures, and never makes per-ID lookups against the PLC.
+- **Freshness (D9 `Freshness`, P4).** Every "law current to" watermark (digest, memo footers, GOOD-badge footnote) comes from the P4 Freshness API: `law_current_to`, plus `capture_frontier`, `propagation_frontier`, `known_gaps` and `source_health`. `index.generation.promoted.v1` is used only for index-generation cache invalidation.
+- **`judgment.expected.v1` (D16).** Judgments that are pronounced but not yet uploaded are displayed as **"pronounced, text awaited"**, never as a citable authority (§5.5, §5.9, §5.10, §8).
+- **External surface (D13, post-MVP).** P10's BFF owns the **PLC Access API / MCP**, backed by P5/P3: `resolve_citation`, `get_anchor` (point-in-time anchor form), `authority_status`, and `research(PublicResearchQuery)` → `PublicEvidenceBundle`. It is `rights_class`-filtered, metered and tenant-less (§2.2 O8).
+- **MT (D8/D16).** Machine translations are display renditions, not Expressions, so they are never quotable or citable as support.
+- **Masking (D16).** Badges, DocCards, digest items, anchor tiles and snippets use the RedactionOverlay-masked rendition from `doc.redacted.v1`.
+- **Deployment names (D17).** D1 pooled SaaS · D2 dedicated cell (MVP = one D2 cell for the design partner, running the same code as D1) · D3 customer VPC · D4 on-prem/air-gapped · D4h on-prem stores + in-India cloud LLMs. The §6 decision labels are renamed **A1–A9** so they do not collide with deployment names or spine decision IDs.
+- **Durable workflows (D1).** The Notification Orchestrator runs on **Temporal**, the platform's workflow engine (DBOS fallback for small on-prem installs).
+
+All names follow the spine (§B–§H, as amended by spine v1.0 D1–D18) and the extensions accepted in 05_P3 (`AuthorityView`, D6), 08_P6 (`StrategyJobRequest`, `Deadline`, memo events), 09_P7 (merged D5 `matter.alert.v1`, `matter.document.ingested.v1`, private anchors) and 11_P9 (merged D9 `FeedbackEvent`, `retrieval.served.v1` (schema owned by P5), `feedback.resolved.v1`). New P10-owned ID prefixes: `wl_` (watchlist), `wr_` (watch rule), `wh_` (watch hit), `ntf_` (notification), `chb_` (channel binding), `dig_` (digest edition; D12, was `dge_`), `dgi_` (digest item), `udg_` (user digest), `uim_` (UI impression, when P10 renders a list P5 did not; renamed in review from `imp_`, which P4 uses for `impact_id`; confirmed by D12), `cck_` (cite-check run). Public IDs used here but defined elsewhere: `jdg_`, `crt_`, `ent_` (03_P1), `bnc_`, `itp_` public issue-topic node (05_P3; D12 renamed it from `iss_`, which now means only a P7 private matter issue).
 
 ### 2.1 Inputs
 
 | # | Input | Producer | Transport | P10 use |
 |---|---|---|---|---|
-| I1 | `matter.alert.v1` (P7-generalized: `alert_kind`, `severity`, `dedupe_key`, `recipients[]`, `explanation{text, anchors[]}`, `sensitivity`) | P7 | tenant bus | Alert Router → channels, inbox, digest |
-| I2 | `impact.detected.v1` (public broadcast, `tenant_id=null`) | P4 | global bus → tenant plane | Watch Matcher for non-matter watches (status changes of watched works/provisions) |
+| I1 | `matter.alert.v1`, merged D5 schema: `{alert_id, tenant_id, matter_id, alert_kind, severity 1\|2\|3, impact_id?, impact_version?, lifecycle?, source_event_id, dedupe_key = hash(impact_id\|source_event_id, matter_id), subject_ids[], definitive, revision, supersedes_alert_id?, requires_ack, due_at?, recipients[], explanation{text (deterministic template), anchors[]}, sensitivity}` | P7 | tenant bus | Alert Router → channels, inbox, digest; in-place updates by (`alert_id`, `revision`) |
+| I2 | `impact.detected.v1` (public broadcast on `plc.impact.public.v1`, `tenantid`=null; D3/D5 schema with `affected[]`, `manifest_uri`/`manifest_sha256`, `lifecycle`, `verification{definitive, review_state}`) | P4 | global bus → tenant plane | Watch Matcher for non-matter watches (status changes of watched works/provisions); whole manifests only, never per-ID lookups |
 | I3 | `doc.indexed.v1` + `DocCard` lookup (metadata, judges, parties, statutes/cases cited, summary ref) | P2 (+P1/P3 read APIs) | global bus → tenant plane | Watch Matcher (new documents); public Digest Composer |
 | I4 | `graph.delta.v1` (with `graph_watermark`, `status_changes[]` [05_P3 S3-3]) | P3 | global bus | Badge cache invalidation; digest "treatment changes" section |
 | I5 | `strategy.memo.published.v1`, `strategy.memo.stale.v1` | P6 | tenant bus | Memo ready/stale banners and notifications |
 | I6 | `matter.document.ingested.v1` | P7 | tenant bus | "Notice received → analysis started" notification |
 | I7 | `feedback.resolved.v1` | P9 | tenant bus | Closes the loop on the user's flag |
 | I8 | `source.health.v1` | P0 [02_P0 §2] | global bus | Coverage banners and digest coverage footer |
-| I9 | `index.generation.promoted.v1` | P2 [04_P2 §2] | global bus | "Law current to" watermark |
+| I9 | `index.generation.promoted.v1` | P2 [04_P2 §2] | global bus | Index-generation cache invalidation. The "law current to" watermark now comes from I12, per D9 `Freshness` |
 | I10 | Sync APIs: P5 `/research`, `/explain`; P3 `AuthorityView` batch; P6 job API; P8 streaming verification status; P7 matter/PEP/private-anchor APIs; public anchor store | P3/P5/P6/P7/P8 | HTTPS within tenant boundary | All interactive screens |
-| I11 | `digest.edition.published.v1` (**new**, §2.4) | P10-public | global bus / on-prem delta bundle | Tenant-stage digest personalisation |
+| I11 | `digest.edition.published.v1` (**new**, §2.4; D4) | P10-public | global bus / on-prem delta bundle | Tenant-stage digest personalisation |
+| I12 | P4 **Freshness API** (`GET /p4/v1/freshness[/forum]?court_id=…` → `law_current_to`, `capture_frontier`, `propagation_frontier`, `stage_lag_p95_min`, `known_gaps`, `source_health`) | P4 [06_P4 O4] | sync, read-only | "Law current to" on digest editions, memo footers and the GOOD-badge footnote; `law_current_to = null` ⇒ "currency unknown" |
+| I13 | `judgment.expected.v1` (D16) | P0 | global bus | "Pronounced, text awaited" items on Today, watch hits and digest (§5.9, §5.10); never rendered as a citable authority |
+| I14 | `doc.redacted.v1` (D16; data = RedactionOverlay) | P0/P1/ops/legal | global bus | Purge or mask cached DocCards, badges' quoted reasons, digest items, page tiles and hover previews within `purge_sla` |
 
 ### 2.2 Outputs
 
 | # | Output | Consumer | Contract |
 |---|---|---|---|
-| O1 | `feedback.recorded.v1` | P9 | Extended FeedbackEvent [11_P9 §2.4]; P10 sets `context.surface` (enum extended, §2.4) |
+| O1 | `feedback.recorded.v1` | P9 | Merged FeedbackEvent (D9) [11_P9 §2.4]; P10 sets `context.surface` (enum extended, §2.4 S10-5); `feedback_id` prefix `fb_` |
 | O2 | `interaction.logged.v1` (**new**) | P9 | Implicit signals joined to `retrieval.served.v1.impression_id` |
 | O3 | `alert.state.v1` (**new**) | P7 (audit, escalation record), P9 (alert precision) | Delivery, ack and escalation state per `alert_id` × recipient |
 | O4 | `StrategyJobRequest` | P6 | 08_P6 §2.1 (unchanged) |
-| O5 | `ResearchQuery` | P5 | spine §H; P10 fills `as_of_legal_date`, `forum`, `matter_id`, `perspective` and `experiment` [11_P9 §2.5-8] |
+| O5 | `ResearchQuery` | P5 | spine §H + D9 additions; P10 fills `as_of_legal_date`, `as_known_at`, `mode`, `forum`, `matter_id`, `perspective`, `residency_policy` (from the TEC) and `experiment` [11_P9 §2.5-8] |
 | O6 | `UploadRequest`, `MatterCommand`, `ConfirmationCommand` | P7 | 09_P7 §2.1 |
-| O7 | `digest.edition.published.v1` (**new**) | P10 tenant stage (all deployments) | §2.3.4 |
+| O7 | `digest.edition.published.v1` (**new**; D4) | P10 tenant stage (all deployments) | §2.3.4; envelope `tenantid`=null, `dataclass=PUBLIC` |
+| O8 | **PLC Access API / MCP** (post-MVP; D13; owner = P10 BFF, backed by P5/P3) | firm systems, third-party agents (tenant-less) | `resolve_citation`, `get_anchor` (point-in-time anchor form), `authority_status` (an `AuthorityView` subset, the same one used in-product), `research(PublicResearchQuery)` → `PublicEvidenceBundle` (NEUTRAL stance only). `rights_class`-filtered: excerpts and anchor text are returned only where the manifestation's `rights_class` ∈ {OFFICIAL, OPEN_LICENSED}, otherwise IDs/citations only (07_P5 §2.2b, gate G11). Output is RedactionOverlay-masked, metered per API key, and stateless under the PLC read-path rule (D3) |
 
 ### 2.3 P10-owned schemas
 
-**2.3.1 View contract for the citator badge.** Derived from `AuthorityView` [05_P3 §2.2]. It is pure presentation, and P10 never changes the status.
+**2.3.1 View contract for the citator badge.** Derived from `AuthorityView` [05_P3 §2.2], which under spine v1.0 D6 is the **only** input for badges. It is pure presentation, and P10 never changes the status. Tenant-local annotations, such as "your firm flagged this — under review" (11_P9 §5.5.3), are rendered *beside* the badge and never alter it.
 ```ts
 type CitatorBadge = {
   target_id: string;                         // wrk_… | prp_… | provision anchor
@@ -87,10 +118,12 @@ type CitatorBadge = {
   provenance: "VERIFIED"|"MACHINE"|"UNDER_REVIEW"|"MIXED";          // from AuthorityView.definitive + reason review_states
   confidence_band?: "HIGH"|"MEDIUM"|"LOW";   // only when provenance ≠ VERIFIED; from status_confidence
   scope_note?: string;                       // "on Proposition 2 only" (PARTIAL_NEGATIVE)
-  binding?: { value: "BINDING"|"PERSUASIVE"|"NOT_BINDING"|"UNDETERMINED"; basis_short: string; contested: boolean };  // UNDETERMINED per 05_P3 S3-2 (not yet in spine §H)
+  binding?: { value: "BINDING"|"PERSUASIVE"|"NOT_BINDING"|"UNDETERMINED"; basis_short: string; contested: boolean;
+              conflict?: "LARGER_BENCH"|"EARLIER_COEQUAL"|"UNRESOLVED" };  // UNDETERMINED + binding_basis.conflict now in spine v1.0 (D6/D16)
   top_reasons: Array<{ code: string; assertion_id: string; citing_work_id: string; citing_anchor: string;
                        court_level: string; bench_strength?: number; date: string;
-                       review_state: "MACHINE"|"PENDING_REVIEW"|"VERIFIED" }>;   // ≤3, most severe first
+                       review_state: "MACHINE"|"PENDING_REVIEW"|"VERIFIED" }>;   // ≤3, most severe first; details from P3 Graph Query API
+                                                                              // justification children at the SAME graph_watermark as the AuthorityView
   as_of: { status_mode: "CURRENT"|"HISTORICAL"; status_date: string; as_of_legal_date: string };
   graph_watermark: number;
   a11y_text: string;                         // full sentence for screen readers
@@ -105,13 +138,14 @@ CREATE TABLE watchlist (tenant_id text, watchlist_id text, owner_kind text CHECK
 
 CREATE TABLE watch_rule (tenant_id text, rule_id text, watchlist_id text,
   kind text CHECK (kind IN ('WORK','PROVISION','CASE','JUDGE','BENCH','COURT','PARTY','ADVOCATE','TOPIC','ISSUE','REGULATOR_FEED')),
-  target_id text,          -- wrk_|anchor (wrk_…#sec-…)|cas_|jdg_|bnc_|crt_|ent_|iss_|source_id ; NULL for TOPIC
+  target_id text,          -- wrk_|anchor (wrk_…#sec-…)|cas_|jdg_|bnc_|crt_|ent_|itp_ (public issue topic; D12)|source_id ; NULL for TOPIC
   match_key text,          -- added in review: 'name:'||norm(name) for PARTY/ADVOCATE watches with no ent_ yet;
                            -- norm = NFKC, casefold, strip honorifics/legal suffixes (Ltd, Pvt, M/s, Shri, Smt),
                            -- Devanagari→ISO-15919 transliteration, collapse spaces. Also indexed.
   topic_query jsonb,       -- ResearchQuery (perspective NEUTRAL) + min_score, for TOPIC
   topic_vec_ref text,      -- added in review: cached embedding of topic_query (per rule version) for §5.9.2 stage 1
   triggers text[],         -- NEW_CITING_DOC|STATUS_CHANGE|NEW_DECISION|AMENDMENT|NEW_VERSION|STRUCK_DOWN|LISTED|NEW_MATCH
+                           -- |PRONOUNCED_TEXT_AWAITED (judgment.expected.v1 / P4 PROVISIONAL impact; D16)
   filters jsonb,           -- {courts[], min_court_level, bench_strength_gte, langs[], practice_areas[]}
   min_severity int DEFAULT 3, last_watermark bigint, created_from jsonb /* {surface, ref} */,
   hits_30d int DEFAULT 0, not_relevant_30d int DEFAULT 0, precision_est real,  -- Beta(1+useful, 1+not_relevant) mean
@@ -157,7 +191,7 @@ type ChannelBinding = {
 type Notification = {
   notification_id: "ntf_…"; tenant_id: string; user_id: string;
   sources: Array<{ kind: "MATTER_ALERT"|"WATCH_HIT"|"MEMO_READY"|"MEMO_STALE"|"DOC_RECEIVED"|"FEEDBACK_RESOLVED"|"DIGEST"|"SYSTEM";
-                   id: string /* alr_|wh_|mem_|pdoc_|fbk_|udg_ */; revision: number }>;
+                   id: string /* alr_|wh_|mem_|pdoc_|fb_|udg_ (D12: fb_, was fbk_) */; revision: number }>;
   merge_key: string;               // hash(user_id, primary_subject_id, root_cause_event_id)
   severity: 1|2|3; definitive: boolean; matter_id?: string;
   title_key: string; params: Record<string,string>;           // rendered per channel & content_level
@@ -172,18 +206,21 @@ type Notification = {
 **2.3.4 Digest.** The public stage runs once, globally. The tenant stage runs per user, inside the tenant plane.
 ```ts
 type DigestItem = {               // PUBLIC plane — no tenant data
-  item_id: "dgi_…"; edition_id: "dge_20260930";
-  kind: "JUDGMENT"|"TREATMENT_CHANGE"|"LARGER_BENCH_REFERENCE"|"STATUTE_AMENDMENT"|"NEW_PROVISION_VERSION"|"NOTIFICATION"|"STRIKE_DOWN";
+  item_id: "dgi_…"; edition_id: "dig_20260930";   // D12: dig_ (was dge_)
+  kind: "JUDGMENT"|"TREATMENT_CHANGE"|"LARGER_BENCH_REFERENCE"|"STATUTE_AMENDMENT"|"NEW_PROVISION_VERSION"|"NOTIFICATION"|"STRIKE_DOWN"
+      | "PRONOUNCED_TEXT_AWAITED";   // from judgment.expected.v1 (D16): headline + court/bench/date only, no summary, no badge change
   subject_id: string;              // wrk_ | provision anchor | asr_
   headline: string;                // deterministic template from metadata (court, bench, parties short name, date)
-  summary: { summary_id: string /* sum_ from P2 */; claims: Claim[]; verification: { report_id: string; gate: "PASS"|"PARTIAL" } };  // PARTIAL gate per 10_P8 S8-1 (spine §H has PASS|BLOCK only)
+  summary: { summary_id: string /* sum_ from P2 */; claims: Claim[]; verification: { report_id: string; gate: "PASS"|"PARTIAL" } };  // gate PASS|PARTIAL|BLOCK is spine v1.0 (D9); BLOCK ⇒ headline-only
   badge: CitatorBadge;             // snapshot at composition time
-  tags: { court_ids: string[]; practice_areas: string[]; provision_anchors: string[]; issue_ids: string[]; lang: string };
+  tags: { court_ids: string[]; practice_areas: string[]; provision_anchors: string[]; issue_ids: string[] /* public itp_ */; lang: string };
   notability: { score: number; signals: string[] };   // e.g. SC_REPORTABLE, LARGER_BENCH, OVERRULES, STRIKES_DOWN, HIGH_CITATION_VELOCITY
   anchors: string[];
 };
 // event data for digest.edition.published.v1
-type DigestEditionPublished = { edition_id: string; cutoff_at: string /* 23:59 IST prev day */; law_current_to: string;
+type DigestEditionPublished = { edition_id: string; cutoff_at: string /* 23:59 IST prev day */;
+  law_current_to: string | null;   // from the P4 Freshness API (D9 Freshness): min over covered courts; null ⇒ "currency unknown"
+  known_gaps_uri?: string;         // P4 Freshness known_gaps at cutoff
   items_uri: string; n_items: number; coverage: Array<{ source_id: string; status: string; lag_hours: number }> };
 
 type UserDigest = {               // TENANT plane
@@ -202,7 +239,10 @@ type WhyCode = { code: "WATCHED_PROVISION"|"WATCHED_JUDGE"|"CITED_IN_MATTER"|"OP
 POST /v1/command/resolve   {text, context{matter_id?, as_of?}} → CommandResolution{kind, target_id?, fn, args, confidence, alternatives[≤5]}
 GET  /v1/badges?ids=…&as_of_legal_date=…&forum=…   → CitatorBadge[]   (batch ≤ 200; cache design §5.5 "Badge cache" — keyed per target, not by the global watermark)
 GET  /v1/anchors/{anchor_id}/view                   → AnchorView{text, page, bbox[], tile_urls[], manifestation{source_url, fetched_at},
-                                                        quote_check{quote_hash_ok}, ocr_conf, lang, alt_expressions[], privilege_class?}
+                                                        quote_check{quote_hash_ok}, ocr_conf, lang, is_authoritative_expression,
+                                                        alt_expressions[] /* Expressions only, each with authoritative/authority_basis (D16) */,
+                                                        mt_rendition? /* display-only MT (Chunk.mt / v1.mt-en); never quotable as support (D8) */,
+                                                        redaction? /* RedactionOverlay applied (D16) */, privilege_class?}
 GET  /v1/today                                      → TodayModel (court day, sev-1/2 open alerts, deadlines ≤7d, memo states)
 SSE  /v1/stream/research/{query_id}                 → evidence_card | coverage | claim_draft | claim_status | claim_removed | done
 SSE  /v1/stream/memo/{memo_id}                      → section_progress | claim_status | gate | stale
@@ -217,9 +257,11 @@ type CiteCheckReport = { cck_id: string; mentions: Array<{
     range_ref: string; raw_text: string; resolved_target_id?: string; resolution_confidence: number; candidates: string[];
     badge?: CitatorBadge;
     pinpoint?: { para?: string; anchor_id?: string; quoted_text?: string; quote_found: boolean; best_match_anchor?: string };
-    issues: ("UNRESOLVED"|"AMBIGUOUS"|"NEGATIVE"|"CAUTION"|"MACHINE_NEGATIVE_UNDER_REVIEW"|"QUOTE_NOT_FOUND"|"PARA_NOT_FOUND"
+    issues: ("UNRESOLVED"|"AMBIGUOUS"|"NEGATIVE"|"CAUTION"|"NEGATIVE_SIGNAL_UNDER_REVIEW" /* D6 reason code; was MACHINE_NEGATIVE_UNDER_REVIEW */
+            |"PRONOUNCED_TEXT_AWAITED" /* a judgment.expected.v1 stub touches this authority (D16) */|"QUOTE_NOT_FOUND"|"PARA_NOT_FOUND"
             |"OLD_CRIMINAL_CODE"|"PROVISION_NOT_IN_FORCE_ON_DATE"|"NOT_BINDING_ON_FORUM")[];
-    suggestion?: { kind: "CROSSWALK"|"LATER_AUTHORITY"|"CORRECT_PARA"; target_id: string; note_key: string } }>;
+    suggestion?: { kind: "CROSSWALK"|"LATER_AUTHORITY"|"CORRECT_PARA"; target_id: string; note_key: string;
+                   change_type?: string /* D16 crosswalk enum, e.g. SAME_RENUMBERED|MODIFIED_PENALTY|REPLACED_BY_DIFFERENT_OFFENCE */ } }>;
   summary: { n: number; negative: number; caution: number; unresolved: number; quote_mismatch: number };
   as_of_legal_date: string; graph_watermark: number };
 ```
@@ -233,13 +275,16 @@ type DocCard = {
   party_ents: string[] /* ent_ */; party_names_norm: string[];        // norm() as in watch_rule.match_key
   advocate_ents: string[]; advocate_names_norm: string[];
   cases_cited: string[] /* resolved wrk_, confidence ≥ 0.9 only */; statutes_cited: string[] /* provision anchors */;
-  issue_ids: string[] /* public iss_ */; source_id: string; summary_id?: string /* sum_ */;
+  issue_ids: string[] /* public itp_ (D12; was iss_) */; source_id: string; summary_id?: string /* sum_ */;
+  rights_class: string /* of the serving manifestation (D9); gates any external/API output */;
   quality: { ocr_conf: number; lang: string; structure_conf: number };
   card_version: number; pipeline_version: string;
 };
 ```
 
 ### 2.4 Proposed spine changes
+
+*Dispositions under spine v1.0 are in §2.0: S10-1, S10-2 and S10-4 → D4; S10-3 → D5 (merged); S10-5 → D9; S10-6 → D6; S10-7 accepted; S10-8 → D12 with the `iss_` fix reversed (public topics → `itp_`); S10-9 → D9. The table is kept as the proposal record.*
 
 | # | Target | Change | Justification |
 |---|---|---|---|
@@ -325,10 +370,14 @@ flowchart LR
     P3[P3 graph.delta / AuthorityView] --> DCP
     P8v[P8 verify summaries] --> DCP
     DCP -->|digest.edition.published.v1| BUS[(global bus / signed delta bundle)]
-    P4[P4 impact.detected.v1] --> BUS
+    P4[P4 impact.detected.v1 on plc.impact.public.v1 + Freshness API] --> BUS
+    P0j[P0 judgment.expected.v1] --> BUS
+    P0j --> DCP
+    APIX[PLC Access API / MCP - post-MVP, D13] -.-> P3
+    APIX -.-> P5x[P5 PublicEvidenceBundle]
     P0[P0 source.health.v1] --> BUS
   end
-  subgraph TPL["Tenant plane (per firm; SaaS cell, VPC or on-prem)"]
+  subgraph TPL["Tenant plane (per firm; D1/D2 SaaS cell, D3 VPC or D4/D4h on-prem)"]
     BUS --> WM[Watch Matcher]
     BUS --> DCT[Digest Composer — tenant stage]
     P7[P7 matter.alert.v1 / doc.ingested] --> AR[Alert Router + Fatigue Controller]
@@ -350,7 +399,7 @@ flowchart LR
     BFF --> ANC[Anchor View: public tiles + P7 private anchors]
   end
 ```
-**Stack decisions (justified in §6):** a TypeScript SPA (React-class framework, virtualised lists, a local IndexedDB cache of the user's matters and recent entities); a BFF in the tenant plane (REST + SSE, OpenAPI-typed, stateless, horizontally scaled); the Notification Orchestrator on the platform's durable-workflow engine (the same engine P0/P4 choose, so the platform runs one fewer engine); per-tenant PostgreSQL schema for P10 tables; Redis-class cache for badges, sessions and rate limits; page tiles (PNG/WebP, 150 dpi, with a text layer) pre-rendered at P1 parse time for public documents and on demand into the tenant bucket for private ones, served from an India-region CDN behind signed, short-lived URLs.
+**Stack decisions (justified in §6):** a TypeScript SPA (React-class framework, virtualised lists, a local IndexedDB cache of the user's matters and recent entities); a BFF in the tenant plane (REST + SSE, OpenAPI-typed, stateless, horizontally scaled); the Notification Orchestrator on the platform's durable-workflow engine, **Temporal** (spine v1.0 D1; the same engine P0/P4 use, so the platform runs one fewer engine; DBOS fallback on small on-prem); per-tenant PostgreSQL schema for P10 tables; Redis-class cache for badges, sessions and rate limits; page tiles (PNG/WebP, 150 dpi, with a text layer) pre-rendered at P1 parse time for public documents and on demand into the tenant bucket for private ones, served from an India-region CDN behind signed, short-lived URLs.
 
 ### 5.2 Information architecture
 
@@ -489,7 +538,7 @@ Heavily cited works (thousands of citing documents) show aggregated `treatment_s
 
 ### 5.5 Citator badge design (Indian vocabulary)
 
-**Mapping `AuthorityView` → `CitatorBadge`.** `reason_codes` come from 05_P3 §2.2.
+**Mapping `AuthorityView` → `CitatorBadge`.** `reason_codes` come from 05_P3 §2.2. Under spine v1.0 D6, `AuthorityView` is the only badge input and the status enum stays 5-valued. "Negative signal under review" is exactly `status=CAUTION ∧ definitive=false ∧ reason_codes ∋ NEGATIVE_SIGNAL_UNDER_REVIEW`, and "Coverage gap" is `status=UNKNOWN ∧ reason_codes ∋ COVERAGE_GAP`. A judgment that P0 has signalled as pronounced but whose text has not yet arrived (`judgment.expected.v1`, D16; P3 holds it as an EXPECTED stub Work) is displayed as **"pronounced, text awaited"**. On its own case page and in CASE watches it is shown directly. On *other* authorities a chip ("a judgment of <court/bench> pronounced on <date> may affect this — text awaited") appears only when P4 has raised a PROVISIONAL impact flagged "text awaited" that names them. The chip never changes the status by itself. If P3 records a plausible negative signal, the D6 CAUTION + `definitive=false` rule applies.
 
 | AuthorityView.status | Label (en) — chosen by top reason code | Shape | Colour (redundant) |
 |---|---|---|---|
@@ -504,13 +553,16 @@ Heavily cited works (thousands of citing documents) show aggregated `treatment_s
 **Rendering rules (normative):**
 ```ts
 function toBadge(v: AuthorityView, forum?: Forum): CitatorBadge {
-  const reasons = sortBySeverity(v.reason_codes, v.reason_assertion_ids);        // NEGATIVE codes first
+  const reasons = sortBySeverity(v.reason_codes, justification(v));   // NEGATIVE codes first; justification children fetched from
+                                                                       // P3 Graph Query API at v.graph_watermark (AuthorityView stays the only status input)
   const prov = v.definitive ? "VERIFIED"
              : reasons.some(r => r.review_state === "PENDING_REVIEW") ? "UNDER_REVIEW"
              : reasons.some(r => r.review_state === "VERIFIED") ? "MIXED" : "MACHINE";
   // R1: never upgrade. A machine NEGATIVE stays NEGATIVE-shaped (octagon), drawn dashed with "M" + band.
   // R2: never hide. status_confidence < 0.5 on a tier-1 negative → still shown as CAUTION "Negative signal under review", never GOOD.
-  // R3: GOOD requires coverage: if any source.health for the citing courts' window is DOWN/DEGRADED → append "coverage gap" note.
+  //     (= D6 asymmetric display: P3 emits CAUTION + definitive=false + NEGATIVE_SIGNAL_UNDER_REVIEW; P10 renders, never re-derives.)
+  // R3: GOOD requires coverage: if any source.health for the citing courts' window is DOWN/DEGRADED, or P4 Freshness lists known_gaps
+  //     for them → append "coverage gap" note; GOOD always carries "reflects official sources up to <P4 law_current_to>".
   // R4: HISTORICAL mode (research/audit) prints "status on <date>" in the label; CURRENT is the default for litigation.
   // R5: PARTIAL_NEGATIVE must carry scope_note naming the proposition(s); a badge without scope is a bug (CI check).
   return {...};
@@ -542,7 +594,7 @@ HISTORICAL badges for arbitrary dates are computed on a miss and cached only for
 2. **Click → source viewer drawer:** the page tile with a translucent bbox highlight over the anchor span (spine §C stores page + bbox). The text layer beneath is selectable. `[ ]` step through paragraphs. A header shows the manifestation provenance ("PDF from sci.gov.in, fetched 29 Sep 2026 18:04 IST, sha256 …") and a link to the original.
 3. **Quote integrity check:** P6/P8 quotes carry `quote_hash`. The viewer recomputes against `text_hash` and shows ✓ "quoted text found verbatim" or ⚠ "quote differs from source (OCR or edit)" with a side-by-side view. *Algorithm (added in review):* normalise both strings (NFKC, casefold, curly→straight quotes, de-hyphenate line breaks, collapse whitespace, drop `[…]` ellipses as gaps); exact substring → ✓; otherwise a sliding-window token-level similarity (1 − normalised Levenshtein on tokens) over the anchor ±1 paragraph. ≥0.95 → ⚠ "near-verbatim (likely OCR/typography)"; 0.80–0.95 → ⚠ "paraphrase — differs from source"; <0.80 → ✗ "not found in cited paragraph", followed by a search of the whole expression for a `best_match_anchor`. This is the lawyer's own 2-second verification. The Stanford failure mode (a real case cited for a proposition it does not contain [P10-20]) becomes visible at the point of reading.
 4. **OCR/structure quality:** if the page's `quality.ocr_conf` < 0.85 (default; tuned against P1's OCR gold set) or the paragraph number is synthetic (`u7`), a banner says "Scanned text — verify against the image; paragraph numbering inferred". The image is always shown, never only the OCR text.
-5. **Languages:** when the anchor is on a `hi` (or other) expression, the drawer shows the original with the aligned English translation side by side, labelled "machine translation — cite the original" unless an official translation expression exists. *Refined in review:* "official translation" has two distinct Indian cases, and the label must say which one applies. (a) Where a Governor has authorised Hindi or the State's official language for High Court judgments, s.7 of the Official Languages Act, 1963 requires the judgment to be "accompanied by a translation of the same in the English language issued under the authority of the High Court" [P10-36]. Here both expressions are court-issued: the original is the judgment, and the English translation is labelled "official translation (s.7 OLA)". (b) Vernacular translations that courts publish of *English* judgments for litigants may carry use restrictions. The drawer displays the court's own disclaimer text from manifestation metadata verbatim and never presents such a translation as citable. The `expression_key` metadata must therefore carry `translation_status ∈ {ORIGINAL, OFFICIAL_S7_OLA, COURT_PUBLISHED_RESTRICTED, MACHINE}` (a request to P1, §11).
+5. **Languages:** when the anchor is on a `hi` (or other) expression, the drawer shows the original with the aligned English translation side by side, labelled "machine translation — cite the original" unless an official translation expression exists. *Refined in review:* "official translation" has two distinct Indian cases, and the label must say which one applies. (a) Where a Governor has authorised Hindi or the State's official language for High Court judgments, s.7 of the Official Languages Act, 1963 requires the judgment to be "accompanied by a translation of the same in the English language issued under the authority of the High Court" [P10-36]. Here both expressions are court-issued: the original is the judgment, and the English translation is labelled "official translation (s.7 OLA)". (b) Vernacular translations that courts publish of *English* judgments for litigants may carry use restrictions. The drawer displays the court's own disclaimer text from manifestation metadata verbatim and never presents such a translation as citable. The `expression_key` metadata must therefore carry `translation_status ∈ {ORIGINAL, OFFICIAL_S7_OLA, COURT_PUBLISHED_RESTRICTED, MACHINE}` (a request to P1, §11). *Resolved by spine v1.0 D16:* Expressions carry `authoritative`, `derived`, `verification ROUNDTRIP_OK|UNVERIFIED`, `translation_of` and `authority_basis`. OLA s.7 Hindi originals and HC-issued English translations are both Expressions with `authoritative` set. **Machine translation is not an Expression anywhere** (public `Chunk.mt` / `aux_text['{lang}-x-mt']`; private `v1.mt-en`). P10 derives the label from these fields: `authority_basis` → "official translation (s.7 OLA)"; not authoritative with court disclaimer → "court-published, not citable"; MT rendition → "machine translation — cite the original". Copy-cite and quote insertion are disabled on MT text (a claim anchored to MT fails P8).
 6. **Private anchors** (`pdoc_…/v1#p12`) resolve through P7's O4 API with privilege-class banners ("Privileged — client communication"). The drawer never offers "share link" for privileged anchors.
 7. **Copy-cite:** `c` copies an Indian-format pinpoint using the neutral citation where available, plus the para ("2023 INSC 1, ¶ 45"). Reporter citation strings are shown only as stored facts (spine §D). No reporter pagination or headnotes are reproduced.
 8. **Flag from source:** `f` opens the reason chips `WRONG_PARA`, `QUOTE_NOT_IN_SOURCE`, `OCR_GARBLED`, `WRONG_LANGUAGE_VERSION` … → `feedback.recorded.v1` with `target.kind=ANCHOR` [11_P9 §5.2].
@@ -580,7 +632,7 @@ on event e ∈ {matter.alert.v1, watch_hit, memo.published/stale, doc.ingested, 
     else: add_to_digest(u, n)                          # sev-3
     emit alert.state.v1
 ```
-**Severity** comes from P7 for matter alerts [09_P7 §5.12]. P10 assigns it for watch hits by rule. *Full default table (completed in review; the draft ended with "and so on"):*
+**Severity** comes from P7 for matter alerts [09_P7 §5.12]. For `AUTHORITY_CHANGE` alerts it is computed by P4's `impact-match-core` and capped by P4's severity-1 rule for machine-detected impacts (D5). P10 assigns severity for watch hits by rule. *Full default table (completed in review; the draft ended with "and so on"):*
 
 | Watch trigger | Default severity | Notes |
 |---|---|---|
@@ -604,7 +656,7 @@ Users can *raise* severity on their own watches and change channels, but they **
 
 **Precision loop.** Every notification row has `useful / not relevant (reason) / wrong`. Per rule, `precision_est = (1+useful)/(2+useful+not_relevant)`. If `precision_est < 0.3` with ≥10 hits in 30 days, the rule state becomes `DEMOTED_TO_DIGEST`, and the user sees "I moved '<rule>' to your digest because you marked 8 of 11 as not relevant — [keep interrupting] [edit rule]". Matter sev-1 kinds are exempt. Their precision is reported to P4/P7 instead (the 13_cross_cutting SLO owners).
 
-**Retraction and verification (correction reach parity, §7 N1).** When a provisional machine-detected alert (`definitive=false`) is later verified, P7 sends `matter.alert.v1` with a new `revision` and `definitive=true` (spine change S10-3). P10 updates the inbox row in place and sends nothing more unless the severity rose. When it is **retracted** (P3 rejects the assertion → P4 → P7 revision with `alert_kind` unchanged and state RETRACTED), P10 sends a "Correction" on **every channel and to every recipient the original reached**. It also marks the item struck through, and the Word add-in's living citations (§5.11) re-render the next time a document is opened.
+**Retraction and verification (correction reach parity, §7 N1).** When a provisional machine-detected alert (`definitive=false`) is later verified, P7 sends `matter.alert.v1` with a new `revision` and `definitive=true` (spine change S10-3). P10 updates the inbox row in place and sends nothing more unless the severity rose. When it is **retracted** (P3 rejects the assertion → P4 `impact.detected.v1` with `lifecycle=RETRACTED` → P7 `matter.alert.v1` revision with `alert_kind` unchanged and `lifecycle=RETRACTED`, per the merged D5 schema), P10 sends a "Correction" on **every channel and to every recipient the original reached** (D5: "retractions reach every original channel"). It also marks the item struck through, and the Word add-in's living citations (§5.11) re-render the next time a document is opened.
 
 **Escalation workflow** runs as a durable workflow per sev-1 notification: timers survive restarts, and ack from any channel (in-app button, email link, WhatsApp quick-reply) cancels the chain. Every step emits `alert.state.v1`.
 
@@ -619,13 +671,13 @@ Users can *raise* severity on their own watches and change channels, but they **
 
 | Kind | Target | Triggers | Source events |
 |---|---|---|---|
-| WORK | `wrk_` | STATUS_CHANGE, NEW_CITING_DOC | `impact.detected.v1` (affected_ids), `doc.indexed.v1` + DocCard.cases_cited |
+| WORK | `wrk_` | STATUS_CHANGE, NEW_CITING_DOC, PRONOUNCED_TEXT_AWAITED | `impact.detected.v1` (`affected[].id` or whole manifest; D3; incl. P4 PROVISIONAL "text awaited" impacts, D16), `doc.indexed.v1` + DocCard.cases_cited |
 | PROVISION | statute anchor (any level) | AMENDMENT, NEW_VERSION, STRUCK_DOWN/READ_DOWN, NEW_CITING_DOC (interpreting) | `impact.detected.v1`, `graph.delta.v1` (AMENDS/SUBSTITUTES/INSERTS/OMITS/STRIKES_DOWN), DocCard.statutes_cited |
-| CASE | `cas_` (public proceeding not in a matter, e.g. a pending SC reference) | LISTED, NEW_DECISION, direct-history change | P7 court-sync feeds (read-only public), `doc.parsed.v1` |
+| CASE | `cas_` (public proceeding not in a matter, e.g. a pending SC reference) | LISTED, NEW_DECISION, PRONOUNCED_TEXT_AWAITED, direct-history change | P0's tenant-agnostic case-status / cause-list / daily-order feeds (D4; matched tenant-side, as P7 does), `judgment.expected.v1` (D16), `doc.parsed.v1` |
 | JUDGE / BENCH / COURT | `jdg_`, `bnc_`, `crt_` | NEW_DECISION (authored or on coram) | DocCard.judges / court |
 | PARTY / ADVOCATE | `ent_` or normalised name | NEW_DECISION naming the party or advocate (e.g., the opposing counsel's reported matters) | DocCard.parties / advocates |
 | TOPIC | saved `ResearchQuery` | NEW_MATCH above threshold | nightly replay (MVP) → streaming percolation (full) |
-| ISSUE | public `iss_` topic node | NEW_DECISION tagged with the issue | DocCard.issue_ids |
+| ISSUE | public `itp_` topic node (D12; was `iss_`) | NEW_DECISION tagged with the issue | DocCard.issue_ids |
 | REGULATOR_FEED | `source_id` (SEBI, RBI circulars, CBIC notifications, gazette) | NEW_DOC | `doc.indexed.v1` filtered by source |
 
 **5.9.2 Matching algorithm (tenant plane).**
@@ -638,7 +690,13 @@ on doc.indexed.v1 (public) d:
       if filters_ok(r, card): upsert watch_hit(r, cause=d.id, subject=d.work_id)   # UNIQUE → idempotent
   name_keys = {'name:'||norm(n) for n in card.party_names_norm ∪ card.advocate_names_norm}
   for r in watch_rule WHERE match_key = ANY(name_keys) AND state='ACTIVE': same upsert, why += NAME_MATCH (lower trust; shown as "name match")
-on impact.detected.v1 i: same with keys = i.affected_ids, trigger = STATUS_CHANGE / AMENDMENT
+on impact.detected.v1 i (plc.impact.public.v1): same with keys = i.affected[].id, or ALL ids of the whole downloaded manifest
+         (i.manifest_uri, verify i.manifest_sha256) when affected_count > 2,000; never per-ID lookups (D3); trigger = STATUS_CHANGE /
+         AMENDMENT; i.lifecycle = UPDATED|RETRACTED updates the existing watch_hit/notification in place (revision+1)
+on judgment.expected.v1 j (D16; 02_P0 §2.2A(b)): keys = {j.case_ref.case_id, j.court_id} ∪ name keys of j.case_ref.parties_as_listed;
+         trigger = PRONOUNCED_TEXT_AWAITED (sev-3; 2 when j.bench.bench_strength ≥ 5); state PENDING|MATCHED|OVERDUE|CANCELLED
+         updates the hit in place; rendered "pronounced, text awaited", never as a citable document. Effects on OTHER authorities
+         arrive only through P4's PROVISIONAL impact flagged "text awaited" (via impact.detected.v1 above)
 nightly 02:00 IST (MVP TOPIC) — two-stage "reverse percolation" (refined in review; the draft made one P5 call per rule):
   C = chunks of documents indexed since min(r.last_watermark)             # ~10⁴ docs/day → ~10⁵–10⁶ chunks, public embeddings from P2
   stage 1: for each TOPIC rule r: top-50 chunks in C by cosine(r.topic_vec, chunk) (+ BM25 on r's key terms) # brute force/ANN over one day's delta
@@ -646,7 +704,7 @@ nightly 02:00 IST (MVP TOPIC) — two-stage "reverse percolation" (refined in re
   stage 2: for surviving r: P5.research(r.topic_query ∧ work_id ∈ candidates(r), budget=small) → items ≥ r.min_score → hits
   dedupe identical topic_query hashes across users in the tenant before stage 2
 ```
-Ancestor expansion means a watch on `sec-138` fires for a citation of `sec-138.p1`. Complexity: one indexed lookup per document per tenant. With 10⁵ rules per large tenant and ~10⁴ documents a day, this is ~10⁴ index probes per tenant per day, which is trivial. TOPIC stage 1 is 2,000 rules × ~10⁶ chunks ≈ 2×10⁹ dot products, which takes seconds on one CPU node with a vector library. Stage 2 makes P5 calls only for the ≈10% of rules that survive, so a tenant makes ≈200 calls a night instead of 2,000 *(estimates; validate in load test)*. Budget: ≤2,000 TOPIC rules per tenant in MVP (config), with streaming percolation in the full version (§6 D5). NAME_MATCH hits (unresolved party or advocate names) are never raised above sev-3, because common Indian names (e.g. "State of Maharashtra", "Union of India", frequent surnames) collide. Rules whose `match_key` matched more than 50 documents in 7 days are auto-suggested for conversion to an `ent_` watch.
+Ancestor expansion means a watch on `sec-138` fires for a citation of `sec-138.p1`. Complexity: one indexed lookup per document per tenant. With 10⁵ rules per large tenant and ~10⁴ documents a day, this is ~10⁴ index probes per tenant per day, which is trivial. TOPIC stage 1 is 2,000 rules × ~10⁶ chunks ≈ 2×10⁹ dot products, which takes seconds on one CPU node with a vector library. Stage 2 makes P5 calls only for the ≈10% of rules that survive, so a tenant makes ≈200 calls a night instead of 2,000 *(estimates; validate in load test)*. Budget: ≤2,000 TOPIC rules per tenant in MVP (config), with streaming percolation in the full version (§6 A5). NAME_MATCH hits (unresolved party or advocate names) are never raised above sev-3, because common Indian names (e.g. "State of Maharashtra", "Union of India", frequent surnames) collide. Rules whose `match_key` matched more than 50 documents in 7 days are auto-suggested for conversion to an `ent_` watch.
 
 **5.9.3 Judge pages and watches (ethical limits).** A judge page shows the public profile, courts, benches sat on, and a *list* of authored and joined judgments (filterable), plus citator badges on them. It **does not** show grant/dismissal rates, time-to-disposal, "tendencies", or comparisons with other judges. NL queries of that shape are routed by P5/P6 to a fixed explanation. Reasons: the French precedent [P10-29], no calibration data, and the reputational risk with the Indian judiciary. P6 already applies the same rule [08_P6 §5.9]. This is a firm design constraint that can be revisited only by a documented legal and ethics review.
 
@@ -655,10 +713,10 @@ Ancestor expansion means a watch on `sec-138` fires for a citation of `sec-138.p
 ### 5.10 Daily digest pipeline
 
 **Stage A — public, once per day (PLC plane; cut-off 23:59 IST; published by 05:30 IST):**
-1. **Collect** everything indexed since the previous cut-off: `doc.indexed.v1` for judgments and orders (SC, HCs, tribunals), `graph.delta.v1` status changes (tier-1 changes only when VERIFIED, or when MACHINE with the machine label), statute events (AMENDS/COMMENCES/NOTIFIED), and larger-bench references.
+1. **Collect** everything indexed since the previous cut-off: `doc.indexed.v1` for judgments and orders (SC, HCs, tribunals), `graph.delta.v1` status changes (tier-1 changes only when VERIFIED, or when MACHINE with the machine label), statute events (AMENDS/COMMENCES/NOTIFIED), larger-bench references, and `judgment.expected.v1` signals (D16) in state PENDING/OVERDUE. The last become `PRONOUNCED_TEXT_AWAITED` items with the headline only, no summary and no badge change, labelled **"pronounced, text awaited"**. Tier-1 changes that are machine-detected (`definitive=false`) are included only as CAUTION-styled "under review" items (D6).
 2. **Select** notable items with a deterministic notability score. Signals: court level; reportable/neutral-citation flag; bench strength; OVERRULES/STRIKES_DOWN/REFERS_TO_LARGER_BENCH present; citation velocity in the first days; statute change in force. The SC is always included; HC and tribunal items are included when the score ≥ θ. Target size: whatever it is, the *tenant* stage chooses ≤15 per user. *Default formula (added in review; priors to be tuned on partner ratings):* `notability = 0.30·court_level (SC 1, HC 0.6, tribunal/NCLAT 0.5, other 0.2) + 0.20·[reportable or neutral citation] + 0.15·min(bench_strength,7)/7 + 0.20·[OVERRULES|STRIKES_DOWN|DECLARES_PER_INCURIAM|REFERS_TO_LARGER_BENCH present] + 0.10·[statute change in force] + 0.05·citation_velocity_pctile`, θ = 0.45. Edition size is capped at 400 items; overflow goes to the practice-area pages in-app.
 3. **Summarise** with P2's `Summary` object (`sum_…` with support anchors [04_P2 §2, proposed change 1]). P10 does not write summaries. Each summary is ≤3 claims, verified by P8 (`gate ∈ {PASS, PARTIAL}`; BLOCK → headline-only item with "summary unavailable").
-4. **Compose** `DigestItem` with a templated headline ("SC (3J) · 29 Sep · *A v. B* · IBC s.29A — ineligibility of related parties") and a snapshot `CitatorBadge`. Publish `digest.edition.published.v1` with a coverage footer from `source.health.v1`. On-prem tenants receive it in the signed PLC delta bundle.
+4. **Compose** `DigestItem` with a templated headline ("SC (3J) · 29 Sep · *A v. B* · IBC s.29A — ineligibility of related parties") and a snapshot `CitatorBadge`. Publish `digest.edition.published.v1` with a coverage footer from `source.health.v1` and **`law_current_to` read from the P4 Freshness API** at cut-off (D9 `Freshness`: the minimum over the courts the edition covers, with `known_gaps` listed; `null` ⇒ "currency unknown" is printed). On-prem tenants (D4/D4h) receive it in the signed PLC delta bundle. Items whose work carries a RedactionOverlay (`doc.redacted.v1`, D16) use the masked rendition, and SUPPRESS_ALL items are dropped and listed in the next edition's corrections block.
 
 **Stage B — tenant, per user (tenant plane; ready by 06:30 IST [13_cross_cutting §6.2]):**
 ```
@@ -701,12 +759,12 @@ Every item carries `why[]` rendered by template ("Because you watch s.29A IBC" /
 | Channel | Provider options (India-resident where possible) | MINIMAL payload (default) | STANDARD payload (firm opt-in) |
 |---|---|---|---|
 | In-app | own | full | full |
-| Email | firm SMTP relay (preferred for D3/D4) or India-region transactional email | kind + matter no. + link; digest without private text | + explanation text, no document excerpts |
+| Email | firm SMTP relay (preferred for D3/D4/D4h) or India-region transactional email | kind + matter no. + link; digest without private text | + explanation text, no document excerpts |
 | Push (web/FCM/APNs) | platform push services | "Sev-1 · 0142 · New order" | same (lock-screen previews off by default) |
 | WhatsApp | Cloud API with India local storage [P10-15] via the firm's own or a platform WABA | template: `{firm} alert: {kind} in {client_matter_no}. Open: {link}` + quick replies [Acknowledge][Snooze 1h] | + short public-law explanation (never private text) |
 | SMS | DLT-registered sender *(regime unverified)* | same as WhatsApp minimal | n/a |
 
-Deep links are short-lived signed tokens that require SSO login plus device binding. *Spec (added in review):* `link = https://<tenant-host>/l/<opaque 128-bit id>`. The server maps the id to (`notification_id`, `recipient usr_`, `target`, `exp` = 15 min for sev-1 and 72 h for digest pointers, `single_use_for_state_change=true`). The id carries no matter or party data. A `GET` only redirects to SSO and then to the target, and never changes state (see "Ack integrity", §5.8). Tapping a link never reveals content without authentication. Opt-in to WhatsApp is recorded (`ChannelBinding.opt_in`), and "STOP" or an in-app toggle revokes it [P10-14]. Tenants with `llm_policy.india_only` or D4 deployment get WhatsApp disabled by default.
+Deep links are short-lived signed tokens that require SSO login plus device binding. *Spec (added in review):* `link = https://<tenant-host>/l/<opaque 128-bit id>`. The server maps the id to (`notification_id`, `recipient usr_`, `target`, `exp` = 15 min for sev-1 and 72 h for digest pointers, `single_use_for_state_change=true`). The id carries no matter or party data. A `GET` only redirects to SSO and then to the target, and never changes state (see "Ack integrity", §5.8). Tapping a link never reveals content without authentication. Opt-in to WhatsApp is recorded (`ChannelBinding.opt_in`), and "STOP" or an in-app toggle revokes it [P10-14]. Tenants with `llm_policy.india_only` / `residency_policy = IN_ONLY` (D9) or a D4/D4h deployment (D17) get WhatsApp disabled by default.
 
 **Why no WhatsApp chatbot in MVP.** A conversational bot would put queries, and therefore strategy, into a third-party channel with international processing [P10-15]. It would also create an unaudited research surface. Revisit only with firm opt-in and content minimisation (§11).
 
@@ -783,7 +841,9 @@ Champions: one partner and two associates per practice group. Office-hours chann
 
 Scores: ++ strong, + adequate, − weak.
 
-**D1 — Primary interaction model**
+*(Decision labels A1–A9 below were D1–D9 before spine v1.0; they were renamed to avoid collision with the D17 deployment names D1–D4h and the spine decision IDs.)*
+
+**A1 — Primary interaction model**
 | Option | Accuracy/trust | Cost | Latency | Maintainability | Defensibility |
 |---|---|---|---|---|---|
 | Chat-first (one box, conversational) | − fluent prose invites over-reliance [P10-8] | + | + | ++ | − copyable in weeks |
@@ -791,7 +851,7 @@ Scores: ++ strong, + adequate, − weak.
 | Word-first only | + | + | + | + | − no push, no citator depth |
 *Choice:* the workspace, because the moat is the object model (anchors, AuthorityView, matters), and the UI must expose it. Chat stays as a panel for questions that don't fit a command.
 
-**D2 — Alert channel strategy**
+**A2 — Alert channel strategy**
 | Option | Accuracy/trust | Cost | Latency | Maintainability | Defensibility |
 |---|---|---|---|---|---|
 | Email + in-app only | + | ++ | − (partners in court miss it) | ++ | − |
@@ -799,49 +859,49 @@ Scores: ++ strong, + adequate, − weak.
 | **Content-minimal WhatsApp/push + full in-app/email (chosen)** | ++ | + (≤2 templates/user/day) | ++ | + | + trust with risk partners |
 *Choice:* reaches lawyers where they are (the WhatsApp norm [P10-26]) without moving privileged content.
 
-**D3 — Digest generation**
+**A3 — Digest generation**
 | Option | Accuracy | Cost | Latency | Maintainability | Defensibility |
 |---|---|---|---|---|---|
 | Per-user LLM-written digest | − one hallucination surface per user | − (users × items) | − (tight 06:30 window) | − | + |
 | Editorial team only | ++ | − (headcount; slow at HC scale) | − | − | + |
 | **Global verified summaries + deterministic personalisation (chosen)** | ++ (P8-verified once) | ++ | ++ | ++ | ++ (personalisation uses matter/watch graph competitors lack) |
 
-**D4 — Citator status display**
+**A4 — Citator status display**
 | Option | Accuracy/trust | Cost | Latency | Maintainability | Defensibility |
 |---|---|---|---|---|---|
 | KeyCite-style colour flags | + familiar | ++ | ++ | ++ | − fails 1.4.1 [P10-18]; hides machine/verified |
 | Numeric score (e.g., "authority 0.72") | − false precision; unreadable to lawyers | ++ | ++ | + | − |
 | **Indian-vocabulary badge: shape + label + provenance + binding chip (chosen)** | ++ | + | ++ | + | ++ encodes Art. 141/bench-strength logic |
 
-**D5 — Watch matching**
+**A5 — Watch matching**
 | Option | Recall | Cost | Latency | Maintainability | Defensibility |
 |---|---|---|---|---|---|
 | ID-only rules | − misses topic watches | ++ | ++ | ++ | − |
 | Streaming percolator for all rules | ++ | − (index per tenant) | ++ | − | + |
 | **ID streaming + nightly TOPIC replay via P5 (MVP) → percolation for high-priority topics (full) (chosen)** | + → ++ | ++ | + (topic hits next morning, matching digest cadence) | ++ reuses P5 ranking | + |
 
-**D6 — Client technology**
+**A6 — Client technology**
 | Option | Notes | Verdict |
 |---|---|---|
 | Native desktop (Electron) | Better offline and keyboard; heavier deployment and updates; IT approval burden in firms | Rejected for MVP |
 | Native mobile apps | Reliable push; two codebases; store reviews | Later, if PWA push proves unreliable on iOS |
 | **Web SPA + PWA (chosen)** | One codebase; instant updates; works in VPC/on-prem behind firm SSO | Chosen |
 
-**D7 — Word integration**
+**A7 — Word integration**
 | Option | Platforms | Deployment | Verdict |
 |---|---|---|---|
 | VSTO/COM add-in | Windows only | MSI/GPO; not in centralized deployment [P10-7] | Rejected (no Mac/web; legacy) |
 | **Office.js add-in (chosen)** | Web, Windows, Mac, iPad [P10-6] | Centralized deployment / catalog | Chosen |
 | `.docx` export/import only | any | none | Kept as fallback (§5.11.4) |
 
-**D8 — Uncertainty display**
+**A8 — Uncertainty display**
 | Option | Evidence | Verdict |
 |---|---|---|
 | Hide uncertainty (clean answers) | Encourages over-reliance [P10-8][P10-20] | Rejected |
 | Raw percentages | Confidence helps calibration [P10-9], but raw % implies precision our calibration cannot support per item | Rejected |
 | **Categorical bands + first-person specific hedges + coverage panel (chosen)** | [P10-9][P10-10] | Chosen; wording A/B-tested |
 
-**D9 — Mobile strategy**
+**A9 — Mobile strategy**
 | Option | Verdict |
 |---|---|
 | WhatsApp bot as the mobile product | Rejected: privilege, audit, third-party processing [P10-15] |
@@ -869,7 +929,7 @@ Scores: ++ strong, + adequate, − weak.
 | **10M+ documents** | Citator pages for landmark cases with 10⁴+ citing documents; digest candidate volume; watch fan-out | Aggregated treatment counts with negative rows first and never paginated away (§5.4 S4); notability pre-filter plus per-user top-15; watch matching by inverted index O(keys) per document (§5.9.2); tiles lazy for non-reportable pages (§5.17) |
 | **Bad OCR** | Bbox misaligned; quotes "not found" though present; synthetic para numbers | Image always shown; OCR-confidence banner; quote check falls back to fuzzy match with ⚠ rather than ✗; `FLAG_PARSE_ERROR` one tap → P1 reprocess; cite-check reports `PARA_NOT_FOUND` as a warning, not an error, when `ocr_conf` is low |
 | **Hindi/regional judgment** | English-only UI and summaries mislead; anchors on the translation get cited | Original-expression anchors are canonical; translation labelled "machine translation — cite the original"; Hindi UI option; reason chips localised; digest shows the original-language headline |
-| **Precedent overruled yesterday** | Memo, draft or digest still shows GOOD | P4→P7 impact → sev-1 alert if the authority is in a filed pleading; `strategy.memo.stale.v1` banner; living citations in Word; badge cache keyed by `graph_watermark`; "law current to" watermark on every output; machine-detected alert within 6 h, verified in ≤1 business day [13_cross_cutting §6.2]; retraction parity if wrong |
+| **Precedent overruled yesterday** | Memo, draft or digest still shows GOOD | P4→P7 impact → sev-1 alert if the authority is in a filed pleading; `strategy.memo.stale.v1` banner; living citations in Word; badge cache keyed by `graph_watermark` (superseded by per-target keys, §5.5); "law current to" watermark on every output (from the P4 Freshness API, D9); machine-detected alert within 6 h, verified in ≤1 business day [13_cross_cutting §6.2]; retraction parity if wrong |
 | **Malicious user / prompt-injected document** | Model output with links/images exfiltrates data; opponent PDF text instructs the model; insider bulk export | Restricted Markdown, no auto-fetch, link allow-list (§5.16); untrusted-document frame; export audit + rate limits; PEP re-check at send; WhatsApp payload cannot contain private text by construction (template variables are typed IDs) |
 | **Confused user** | Wrong as-of date (today vs cause of action); wrong matter context; junior treats machine flags as verified; ambiguous citation lands on the wrong case | Context chips on every screen and export; command bar shows the interpretation when confidence <0.9; provenance styling; export gate (N6); "why am I seeing this" on every alert; first-person uncertainty copy |
 | **Source outage / format change** | Digest silently misses a High Court; "no negative treatment" falsely reassuring | `source.health.v1` → coverage footer in the digest, a banner on Today, `UNKNOWN`/"coverage gap" note on GOOD badges for affected courts (rule R3); P7 `SYNC_STALE` alerts for hearings |
@@ -879,7 +939,7 @@ Scores: ++ strong, + adequate, − weak.
 | **Judge-analytics misuse** | User asks "how often does Justice X grant bail" | No such data model in P10; P5/P6 route to a fixed explanation; judge page shows lists only (§5.9.3) |
 | **Shoulder-surfing in court / lost phone** | Client identities exposed | Privacy mode blur; lock-screen previews off; device-bound offline cache ≤24 h with remote wipe |
 | **Digest pipeline late** (P2 summaries or P8 slow) | 06:30 SLO miss | Stage A publishes a headline-only edition at 05:45 if summaries are incomplete, then patches in place; stage B never waits for more than headline + badge |
-| **Pronounced but not yet uploaded** *(added in review)* | A judgment overruling an authority is pronounced in open court and reported by legal news the same day. The official text reaches the portal later, and until then the badge shows GOOD | Every CURRENT-mode GOOD badge carries the standing footnote "reflects judgments published on official sources up to <law current to>". The `FLAG_BAD_LAW` form accepts a news link or neutral citation and routes it to P3's urgent queue, which can open a provisional CAUTION "reported, text awaited" assertion (P3/P4 decision; open item §11). |
+| **Pronounced but not yet uploaded** *(added in review)* | A judgment overruling an authority is pronounced in open court and reported by legal news the same day. The official text reaches the portal later, and until then the badge shows GOOD | Every CURRENT-mode GOOD badge carries the standing footnote "reflects judgments published on official sources up to <law current to>". The `FLAG_BAD_LAW` form accepts a news link or neutral citation and routes it to P3's urgent queue, which can open a provisional CAUTION "reported, text awaited" assertion (P3/P4 decision; open item §11). **Resolved in spine v1.0 (D16):** P0 emits `judgment.expected.v1` from *official* evidence (cause list, daily order, official notice; news alone never qualifies). P3 records an EXPECTED stub Work, and for constitution/larger-bench pronouncements P4 may raise a PROVISIONAL impact flagged "text awaited". P10 displays these as **"pronounced, text awaited"** (§5.5, §5.9, §5.10), and the footnote's `law_current_to` comes from the P4 Freshness API. |
 | **Email link scanners / delegated phones** *(added in review)* | Mail-gateway link pre-fetch or a clerk's WhatsApp tap "acknowledges" a sev-1 alert that no lawyer has seen, and escalation stops | No state change on GET; ack by authenticated POST only; WhatsApp ack only pauses escalation for authority/own-order kinds; `delegate_of` bindings (§5.8 "Ack integrity") |
 | **Badge cache invalidation storm** *(added in review)* | A global-watermark cache key flushes all badges on every graph delta, so badge latency and P3 load spike | Per-target keys with targeted invalidation from `status_changes[]` (§5.5 "Badge cache") |
 | **Cost blow-up** *(added in review)* | Storm × WhatsApp templates; per-rule TOPIC P5 calls; tile egress for landmark judgments | Storm folding before fan-out; tenant WhatsApp spend cap (never suppresses sev-1 on other channels); two-stage TOPIC matching; CDN caching of tiles for the most-opened works (§5.17) |
@@ -895,8 +955,8 @@ This section was added by an independent adversarial review on 30 Sep 2026. Chan
 4. **Design gaps patched:** targeted badge-cache invalidation; ack integrity (link scanners, delegated phones, webhook signatures, nonces); a deep-link token spec; DPDP lawful basis for non-employees; name-transliteration watch keys; two-stage TOPIC matching; the full watch-hit severity table; the notability formula and θ; default confidence bands; the OCR threshold; the quote fuzzy-match algorithm; a digest stale-snapshot guard; feedback-poisoning caps; a WhatsApp spend cap.
 
 **Still open (not fixable inside P10):**
-- A "reported, text awaited" provisional assertion needs a P0 news/cause-list signal and a P3 predicate decision.
-- `translation_status` on expressions needs P1 to populate it from source metadata.
+- A "reported, text awaited" provisional assertion needs a P0 news/cause-list signal and a P3 predicate decision. *(Resolved by spine v1.0 D16: `judgment.expected.v1` + P3 EXPECTED stub + P4 PROVISIONAL "text awaited" impact.)*
+- `translation_status` on expressions needs P1 to populate it from source metadata. *(Resolved by spine v1.0 D16: Expression `authoritative`/`derived`/`verification`/`translation_of`/`authority_basis`; MT is never an Expression.)*
 - The WhatsApp quick-reply → service-window behaviour and the India utility INR rate remain unverified; Meta's page says only that a user message opens the window.
 - SMS DLT rules are still unverified (the TRAI regulation URL returned 404 in this review).
 - The client-facing firm-branded digest (Full version) may engage the Bar Council of India's rule against advertising and solicitation *(unverified; needs a legal opinion before build)*.

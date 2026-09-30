@@ -15,6 +15,8 @@ Three conclusions follow.
 
 Those four, together with a partner-firm evaluation flywheel, are the only parts of our design we rate as hard to copy. The biggest single threat is an incumbent content house pairing with a global AI platform, as LexisNexis and Harvey did in the US in June 2025 [CT-34]. Harvey is already deployed firm-wide at two tier-1 Indian firms [CT-26][CT-27], with a reported pilot at a third [CT-20, snippet].
 
+**Spine v1.0 note.** The design implications in §6–§8 use the final spine v1.0 names: `AuthorityView` (not bare AuthorityStatus), the impact broadcast `impact.detected.v1` on `plc.impact.public.v1` matched in each tenant cell by the Impact Matcher, the P9 Privacy Gate, `rights_class`, and the PLC Access API with `PublicResearchQuery` → `PublicEvidenceBundle`. The disposition of each spine change this document proposed is in §7.3.0. In this document "D1–D9" are teardown dimensions (§1.4). Spine decisions are cited as "v1.0 D#", and deployment options as "deployment D1–D4h".
+
 ---
 
 ## 1. Scope and method
@@ -56,13 +58,15 @@ Each product is scored against the capabilities our spine makes mandatory, so th
 |---|---|---|
 | D1 | Official-source provenance and daily freshness | P0, `raw.captured.v1` |
 | D2 | Paragraph-level anchors: click-to-source at the level of a numbered paragraph | P1, §C anchors |
-| D3 | Typed treatment / citator (followed, distinguished, overruled…), ideally at proposition level | P3, `Assertion`, `AuthorityStatus` |
+| D3 | Typed treatment / citator (followed, distinguished, overruled…), ideally at proposition level | P3, `Assertion`, `AuthorityView` (v1.0 D6) |
 | D4 | Point-in-time statutes and the IPC/CrPC/IEA → BNS/BNSS/BSA crosswalk | P3/P4, §E time model |
 | D5 | Retrieval depth: issue decomposition, agentic multi-step, authority-aware ranking | P5 |
 | D6 | Verification layer: existence check vs. semantic support check | P8 |
-| D7 | Private matter layer linked to public law, with alerts | P7, P4 `impact.detected.v1` |
-| D8 | Deployment and compliance: VPC/on-prem, residency, certifications | P7, cross-cutting |
+| D7 | Private matter layer linked to public law, with alerts | P7 Impact Matcher, P4 `impact.detected.v1` broadcast (v1.0 D3) |
+| D8 | Deployment and compliance: VPC/on-prem, residency, certifications | P7, cross-cutting (deployments D1–D4h, v1.0 D17) |
 | D9 | Published evaluation | P8 |
+
+*Label note:* D1–D9 above are teardown dimensions. They are not spine v1.0 decisions ("v1.0 D#") or deployment names ("deployment D1–D4h", doc 13 §9).
 
 ---
 
@@ -360,7 +364,7 @@ A dimension scorecard follows in §3.23.
 **Threat / borrow**
 - **Threat: medium–high.** Same thesis, fast product, freemium.
 - **Borrow:** the "by construction" framing for marketing.
-- **Our differentiator:** a support check (P8 entailment against the cited anchor) plus `AuthorityStatus`.
+- **Our differentiator:** a support check (P8 entailment against the cited anchor) plus `AuthorityView` badges (v1.0 D6).
 
 ### 3.8 Lexlegis.ai, India
 
@@ -388,7 +392,7 @@ A dimension scorecard follows in §3.23.
 
 **Threat / borrow**
 - **Threat: medium** in the tax/enterprise segment.
-- **Borrow:** the published tiered deployment menu. It supports making P7's deployment options (SaaS / VPC / on-prem) a Day-1 contract, not a later add-on.
+- **Borrow:** the published tiered deployment menu. It supports making P7's deployment options (SaaS / VPC / on-prem; deployments D1–D4h under spine v1.0 D17) a Day-1 contract, not a later add-on.
 
 ### 3.9 Lucio, India → global
 
@@ -407,7 +411,7 @@ A dimension scorecard follows in §3.23.
 
 **Threat / borrow**
 - **Threat: medium** for firm workspace budgets.
-- **Opportunity:** Lucio and Harvey are *integration targets* for our PLC API (§7).
+- **Opportunity:** Lucio and Harvey are *integration targets* for our PLC Access API / MCP (§7; spine v1.0 D13).
 
 ### 3.10 NyaySaathi, India
 - **Facts:** Noida-based. Daily judgment updates with AI Q&A; research across acts, sections, judgments and notifications; AI draft analysis for compliance and issue spotting; document generation; a mobile app with a free trial [CT-21, VC].
@@ -506,7 +510,7 @@ A dimension scorecard follows in §3.23.
 - Stanford: Westlaw AI-Assisted Research answered 41% accurately and hallucinated 33% (v1 preprint; a 42% figure attributed to the JELS version is *(unverified)*). It had the longest answers (≈350 words), and 61% of its hallucinations were reasoning errors [CT-38, IND].
 
 **Does well**
-- KeyCite inline in AI output: the pattern our `AuthorityStatus` must copy.
+- KeyCite inline in AI output: the pattern our `AuthorityView` badges must copy.
 - Agentic planning.
 - Editorial rubric evaluation.
 
@@ -665,13 +669,13 @@ Each pattern below appears in at least two products, or is measured independentl
 | # | Failure pattern | Evidence | Likely architectural cause | Our countermeasure (spine object / phase) |
 |---|---|---|---|---|
 | F1 | **Naive retrieval.** The right authority is never retrieved, so the answer is built on the wrong material. | Top cause of Lexis+ AI hallucinations (47%) [CT-38]. Manupatra's "AI analysis of the 10 most relevant results" [CT-4] is structurally exposed (inference). | A single query goes to one ranker, then top-k goes to the LLM. There is no issue decomposition and no per-issue recall budget. | P5 issue decomposition, multiple sub-queries per issue, hybrid lexical+dense+graph retrieval, and `EvidenceBundle.coverage.per_issue{binding_found, adverse_found, gaps}`. A gap is surfaced to the user, never papered over. |
-| F2 | **Inapplicable authority.** The case is real but does not apply: wrong jurisdiction, overruled, obiter, or from a non-binding court. | 38% of Lexis+ AI hallucinations; 23% for Westlaw [CT-38]. In India this becomes other-state High Court decisions presented as binding, and Supreme Court obiter presented as ratio (inference). | Ranking ignores the authority model, and chunks carry no rhetorical role. | `authority.binding_on_forum` computed from forum and hierarchy rules (Art. 141, bench strength); `rhetorical_role` on each Chunk; `AuthorityStatus` as a hard rank feature (P2/P3/P5). |
+| F2 | **Inapplicable authority.** The case is real but does not apply: wrong jurisdiction, overruled, obiter, or from a non-binding court. | 38% of Lexis+ AI hallucinations; 23% for Westlaw [CT-38]. In India this becomes other-state High Court decisions presented as binding, and Supreme Court obiter presented as ratio (inference). | Ranking ignores the authority model, and chunks carry no rhetorical role. | `authority.binding_on_forum` computed from forum and hierarchy rules (Art. 141, bench strength); `rhetorical_role` on each Chunk; `AuthorityView` as a hard rank feature (P2/P3/P5; v1.0 D6 makes AuthorityView the only input for P5 ranking features). |
 | F3 | **Reasoning errors in long syntheses.** | 61% of Westlaw hallucinations. Westlaw also gave the longest answers (~350 words) [CT-38]. | The LLM writes a free-form essay, and claims are never checked one by one. | P6 emits `Claim[]`, each with anchors. P8 verifies each claim. Strategic opinions must `depends_on_claim_ids`. Length budget: no ungrounded sentence ships. |
 | F4 | **Misgrounding.** A real citation is attached to a proposition it does not support. | Stanford counts misgrounded answers as hallucinations [CT-38]. Indian "retrieved, not generated" designs (Bharat.Law [CT-16]; LawCentral checks against IK [CT-23]) guarantee existence, not support (inference). | Verification checks that a citation *exists*, not that it *entails the claim*. | P8 entailment check at anchor level (`support_type: DIRECT\|INFERENCE`), with `quote` required, and status `UNSUPPORTED/CONTRADICTED`. |
 | F5 | **No typed Indian citator.** | Indian Kanoon exposes untyped "cited in N documents" [CT-49]. Incumbents describe treatment as editorial content [CT-4] but show no machine-typed, confidence-scored graph (inference). | Treatment was authored as human notes for human readers, not as data. | P3 `Assertion` with predicate, `confidence`, `evidence[]`, `review_state`, `impact_tier`, and proposition-level treatment (`prp_…`). |
-| F6 | **Temporal blindness.** The system answers with today's law for a past cause of action, or mixes IPC and BNS. | No Indian product publicly documents point-in-time statute answering or a first-class old-code/new-code crosswalk (absence of evidence; §3.23). | Statutes are indexed as single current text. | Spine §E `as_of_legal_date`; `expression_key lang@date`; `CORRESPONDS_TO` with `change_type` (P3/P5). |
+| F6 | **Temporal blindness.** The system answers with today's law for a past cause of action, or mixes IPC and BNS. | No Indian product publicly documents point-in-time statute answering or a first-class old-code/new-code crosswalk (absence of evidence; §3.23). | Statutes are indexed as single current text. | Spine §E `as_of_legal_date`; `expression_key lang@date`; `CORRESPONDS_TO` with the v1.0 D16 `change_type` enum (P3/P5). |
 | F7 | **Wrapper fragility and supplier conflict.** | Critics call Harvey "legal packaging for LLMs" [CT-32]. Legora is built on Claude while Anthropic ships legal tools [CT-44]. ChatGPT is at near-parity on US research [CT-39]. | Value sits in prompts and UI, which a model provider can replicate. | Model Gateway (spine §I). Value sits in PLC data, the graph, verification and the matter linkage, none of which a model provider has. |
-| F8 | **Matter context disconnected from the law.** | Paxton names it explicitly [CT-45]. Indian research tools show no matter layer; matter tools (CLAW, LawCentral) show no treatment layer (§3.23). | Two different products, two data models, no shared IDs. | TPL references PLC by stable IDs only; `impact.detected.v1` → `matter.alert.v1` (P4→P7→P10). |
+| F8 | **Matter context disconnected from the law.** | Paxton names it explicitly [CT-45]. Indian research tools show no matter layer; matter tools (CLAW, LawCentral) show no treatment layer (§3.23). | Two different products, two data models, no shared IDs. | TPL references PLC by stable IDs only; `impact.detected.v1` broadcast on `plc.impact.public.v1` → tenant-cell Impact Matcher → `matter.alert.v1` (P4→P7→P10; v1.0 D3). |
 | F9 | **Opaque evaluation and absolute claims.** | "Deterministic… not speculative" (Lexlegis [CT-18]), "0 fabricated citations" (Bharat.Law [CT-16]) and a self-reported "95% citation accuracy" (LawCentral [CT-23]) are all unaudited. CaseMine evaluates only internally [CT-10]. Stanford showed "hallucination-free" claims were overstated [CT-38]. | No independent Indian benchmark exists, so claims cost nothing. | P8 public benchmark with the partner firm, using a Stanford-style typology plus VLAIR-style weights (§7). |
 | F10 | **Multi-jurisdiction degradation.** | About −14 points on multi-jurisdiction questions for every VLAIR participant except ChatGPT [CT-39]. | Retrieval and synthesis tuned for a single jurisdiction. | Indian equivalent: 25 High Courts plus tribunals. Forum-aware binding, and cross-High-Court conflict detection (`CONFLICTS_WITH`) (P3/P5). |
 | F11 | **Incompleteness and refusal as a hidden failure.** | Ask Practical Law AI: 62% incomplete [CT-38]. Counsel Stack and Midpage had no-response failures [CT-39]. | Narrow corpora, plus a timeout or budget with no graceful degradation. | P5 budgets with partial results plus explicit `gaps`. P10 shows "what we could not find" rather than going silent. |
@@ -750,14 +754,14 @@ Time-to-copy is our estimate (inference). It assumes a competent team and fundin
 | # | Moat element | Why it is hard | Startup | Incumbent | Harvey | Durability |
 |---|---|---|---|---|---|---|
 | M1 | **Paragraph-anchored, bitemporal PLC with byte-level provenance from official sources** (spine §B–E) | Anchors at 5M+ scale that survive re-parsing (anchor aliases), across 25 High Court formats, bad OCR and vernacular text. Clean title: built from official copies, not a reporter's copyrighted editorial layer (*Eastern Book Co. v. D.B. Modak*, (2008) 1 SCC 1, para 41: copy-edited judgment text is not protected, but the editor's paragraph segregation, internal paragraph numbering and concurring/dissenting annotations are, as are headnotes, footnotes and editorial notes [CT-49]; see doc 21). | 12–18 mo | 6–12 mo (they own curated text) | 18+ mo or buy | Medium |
-| M2 | **Proposition-level typed treatment graph** with calibrated confidence, evidence spans, human review for `impact_tier=1` edges, and `AuthorityStatus` as of any date | Needs ratio/obiter segmentation, proposition normalisation, and Indian treatment idiom (per incuriam, sub silentio, reference to a larger bench, bench-strength logic). The value is the *verified-edge ledger*, which grows with reviewer-hours and time and cannot be backfilled overnight. Errors are costly and public. | 24+ mo | **9–18 mo** (editorial treatment notes can seed it [CT-4]) | Needs a partner | **High vs startups; medium vs incumbents** |
-| M3 | **Point-in-time statutes + IPC/CrPC/IEA→BNS/BNSS/BSA crosswalk carried through the treatment graph** (`CORRESPONDS_TO` with `change_type`) | Versioning Indian statutes needs amendment reconstruction (doc 21). The hard part is not the table but carrying IPC-era treatment to BNS provisions with `change_type` qualifiers, and answering "as of the cause-of-action date". | 6–12 mo | 3–9 mo | 12+ mo | Low alone; **high combined with M2** |
-| M4 | **Matter-linked impact propagation**: overruled yesterday → alert on the affected paragraph of today's draft or memo (P4 `impact.detected.v1` → P7 `matter.alert.v1`) | Needs M1+M2 *and* a tenant-isolated private layer with privilege controls *and* an event backbone. Incumbents are publishers with no matter layer (§3.23). Practice-management tools lack the graph. Once firms load matters, switching costs compound. | 12–18 mo | 12–24 mo (new business: holding privileged client data) | ~12 mo if it gains Indian graph data | **High** |
-| M5 | **Partner-firm gold set + privacy-gated feedback flywheel** (P8/P9) | Needs a consented, privilege-safe relationship. Lawyer-authored rubrics, the TR-style editorial evaluation [CT-37], take time. Accepted and rejected arguments feed reranker and treatment training. | 18–36 mo | 12–24 mo | **Could start now with SAM/AZB** [CT-26][CT-27] | Medium–high (execution-dependent; single-firm bias risk) |
+| M2 | **Proposition-level typed treatment graph** with calibrated confidence, evidence spans, human review for `impact_tier=1` edges, and `AuthorityView` as of any date (v1.0 D6: `status` + `definitive` + `reason_codes` + `binding_on_forum`) | Needs ratio/obiter segmentation, proposition normalisation, and Indian treatment idiom (per incuriam, sub silentio, reference to a larger bench, bench-strength logic). The value is the *verified-edge ledger*, which grows with reviewer-hours and time and cannot be backfilled overnight. Errors are costly and public. | 24+ mo | **9–18 mo** (editorial treatment notes can seed it [CT-4]) | Needs a partner | **High vs startups; medium vs incumbents** |
+| M3 | **Point-in-time statutes + IPC/CrPC/IEA→BNS/BNSS/BSA crosswalk carried through the treatment graph** (`CORRESPONDS_TO` at clause level, many-to-many, with the v1.0 D16 `change_type` enum, always `impact_tier` 1) | Versioning Indian statutes needs amendment reconstruction (doc 21). The hard part is not the table but carrying IPC-era treatment to BNS provisions with `change_type` qualifiers, and answering "as of the cause-of-action date". | 6–12 mo | 3–9 mo | 12+ mo | Low alone; **high combined with M2** |
+| M4 | **Matter-linked impact propagation**: overruled yesterday → alert on the affected paragraph of today's draft or memo. P4 broadcasts a signed `impact.detected.v1` on the public topic `plc.impact.public.v1`. Each tenant cell's Impact Matcher matches it against the private `matter_dependency` index, and P7 raises `matter.alert.v1` (v1.0 D3). P4 never holds tenant dependency sets. | Needs M1+M2 *and* a tenant-isolated private layer with privilege controls *and* an event backbone. Incumbents are publishers with no matter layer (§3.23). Practice-management tools lack the graph. Once firms load matters, switching costs compound. | 12–18 mo | 12–24 mo (new business: holding privileged client data) | ~12 mo if it gains Indian graph data | **High** |
+| M5 | **Partner-firm gold set + feedback flywheel through the P9 Privacy Gate** (P8/P9; v1.0 D9 classes S0–S3, S2 aggregates over k≥5 tenants) | Needs a consented, privilege-safe relationship. Lawyer-authored rubrics, the TR-style editorial evaluation [CT-37], take time. Accepted and rejected arguments feed reranker and treatment training. | 18–36 mo | 12–24 mo | **Could start now with SAM/AZB** [CT-26][CT-27] | Medium–high (execution-dependent; single-firm bias risk) |
 | M6 | **Public, reproducible Indian benchmark + verification track record** | Anyone can publish a benchmark. Nobody can backfill a multi-quarter public track record. VLAIR-style third-party audits are the credibility currency [CT-39]. | 6 mo to publish; years to earn | Same | Same | Medium |
 
 ### 6.3 Honest verdict
-1. **The durable moat is a combination: M2 × M4 × M5.** It rests on a verified treatment ledger, wired into matter-level propagation, and improved by a consented feedback loop.
+1. **The durable moat is a combination: M2 × M4 × M5.** It rests on a verified treatment ledger, wired into matter-level propagation (the v1.0 D3 impact broadcast matched by each tenant cell's Impact Matcher), and improved by a consented feedback loop that reaches the PLC only through the P9 Privacy Gate (v1.0 D9).
    - Each piece alone is copyable: M2 by incumbents in about 1–1.5 years, M4 by a workspace player in about a year.
    - Nobody in India currently shows public evidence of both (§3.23).
    - Our estimated lead is **18–30 months if we execute**, shrinking to **about 12 months** if an incumbent–workspace alliance forms (§6.4).
@@ -783,9 +787,9 @@ Time-to-copy is our estimate (inference). It assumes a competent team and fundin
 
 | Scenario | Likelihood (inference) | Impact | Early signal | Our response |
 |---|---|---|---|---|
-| **S1. SCC Online or Manupatra × Harvey content alliance**, mirroring LexisNexis–Harvey [CT-34] | Medium–high within 12–24 mo. Harvey is firm-wide at 2 tier-1 Indian firms, with a reported pilot at a third [CT-20][CT-26][CT-27] and has a Bengaluru office [CT-28]. | Severe at tier-1: "grounded Indian answers inside the tool firms already bought" | Joint announcements; Harvey India content hires | Make M4 (matter propagation) and M5 our lead. Offer our PLC API/MCP to Harvey, Lucio and Claude first (§7.1). Win the design partner's litigation practice before S1 lands. |
+| **S1. SCC Online or Manupatra × Harvey content alliance**, mirroring LexisNexis–Harvey [CT-34] | Medium–high within 12–24 mo. Harvey is firm-wide at 2 tier-1 Indian firms, with a reported pilot at a third [CT-20][CT-26][CT-27] and has a Bengaluru office [CT-28]. | Severe at tier-1: "grounded Indian answers inside the tool firms already bought" | Joint announcements; Harvey India content hires | Make M4 (matter propagation) and M5 our lead. Offer our PLC Access API/MCP (v1.0 D13; post-MVP) to Harvey, Lucio and Claude first (§7.1). Win the design partner's litigation practice before S1 lands. |
 | S2. Incumbent bundles AI free into the base subscription | Medium | Price pressure on research seats | Price-list changes | Do not sell "research chat". Sell matter monitoring and verified memos (M4, M6). |
-| S3. Foundation-model assistants plus open Indian data become "good enough" for small firms | High | Bottom of market commoditised | Frontier assistants citing IK / eSCR natively | Skip the solo segment at launch. Sell verification and authority status as an API to those assistants. |
+| S3. Foundation-model assistants plus open Indian data become "good enough" for small firms | High | Bottom of market commoditised | Frontier assistants citing IK / eSCR natively | Skip the solo segment at launch. Sell verification and authority status (`AuthorityView` subset) as an API to those assistants (PLC Access API, v1.0 D13). |
 | S4. A well-funded Indian startup (Bharat.Law, Lucio, Jhana) builds typed treatment | Medium | Erodes M2 lead | "Overruled / distinguished" signals in their UIs | Speed on tier-1 edge verification. Publish the benchmark (M6). |
 | S5. Government portals publish structured, versioned data (NJDG APIs, a versioned India Code) | Medium | Lowers corpus cost for all | Portal API announcements (doc 21) | Welcome it: it lowers our P0 cost. Our moat sits above the corpus. |
 
@@ -797,57 +801,87 @@ Time-to-copy is our estimate (inference). It assumes a competent team and fundin
 
 | # | Implication | Driven by | Phase / spine object |
 |---|---|---|---|
-| I1 | **Keep proposition-level treatment and `AuthorityStatus` in the MVP.** Negative treatment with `impact_tier=1` (overruled, per incuriam, reversed, recalled) must have human-reviewed coverage for the partner firm's practice areas at launch. This is M2; without it we are "another Bharat.Law". | F2, F5; §6.3 | P3 `Assertion.impact_tier=1`, `review_state` |
+| I1 | **Keep proposition-level treatment and `AuthorityView` (v1.0 D6) in the MVP.** Negative treatment with `impact_tier=1` (overruled, per incuriam, reversed, recalled) must have human-reviewed coverage for the partner firm's practice areas at launch. This is M2; without it we are "another Bharat.Law". | F2, F5; §6.3 | P3 `Assertion.impact_tier=1`, `review_state` |
 | I2 | **Verification must check support, not existence.** Every `Claim` needs a quote from the anchor and an entailment verdict. "Citations retrieved, not generated" is necessary but is the market's baseline, not our differentiator. | F4; [CT-16][CT-38] | P8 `VerificationReport` (`UNSUPPORTED/CONTRADICTED`) |
 | I3 | **Issue decomposition with coverage accounting** instead of a fixed top-k. Show "binding authority found / adverse authority found / gaps" per issue. | F1, F11; [CT-4][CT-38] | P5 `EvidenceBundle.coverage` |
-| I4 | **The forum-aware binding model is a first-class ranking feature**, not a label. | F2, F10; [CT-38][CT-39] | P5 `authority.binding_on_forum` |
-| I5 | **Inline citator flags in every output**, following the KeyCite-in-Deep-Research pattern [CT-37] and Shepard's Citation Agent [CT-35]. | F2 | P10 rendering of `AuthorityStatus`; P8 |
+| I4 | **The forum-aware binding model is a first-class ranking feature**, not a label. | F2, F10; [CT-38][CT-39] | P5 `authority.binding_on_forum` (from `AuthorityView`, incl. UNDETERMINED and `binding_basis`) |
+| I5 | **Inline citator flags in every output**, following the KeyCite-in-Deep-Research pattern [CT-37] and Shepard's Citation Agent [CT-35]. | F2 | P10 rendering of `AuthorityView` badges; P8 |
 | I6 | **Agentic research with explicit stopping criteria and budgets.** TR reports stopping criteria are hard and a comprehensive run takes about 10 min [CT-37]. Offer a fast first answer (P5 synchronous) plus a deep asynchronous run (P6), with a progress view. | F3, F11 | P6 workflow; ResearchQuery `budget` |
 | I7 | **Claim-level, length-disciplined outputs.** The longest answers had the most reasoning errors [CT-38]. StrategyMemo sections are `Claim[]`, not prose. | F3 | P6 `Claim`, `StrategyMemo` |
 | I8 | **Push, not pull.** Matter alerts, daily digests, WhatsApp and Word surfaces. Adoption evidence says chat alone stalls [CT-32]. Indian litigators already use WhatsApp alerts [CT-22]. Word-native UX wins drafting [CT-44]. | F12 | P10, P7 |
 | I9 | **Document-as-query as the primary entry point** ("notice arrives"), as CaseIQ does [CT-11], but ranked by authority rather than similarity. | F14 | P6 intake → P5 |
 | I10 | **Publish an Indian legal-AI benchmark** with the partner firm, before or at launch: Stanford typology (correct / incorrect / misgrounded / incomplete) plus VLAIR-style weights (accuracy, authoritativeness, appropriateness), with a held-out split, re-run quarterly. Invite competitors. | F9; [CT-38][CT-39] | P8 eval harness; P9 gold-set |
-| I11 | **Clean title.** The PLC text comes only from official or openly licensed sources. Reporter citations are stored as identifiers, never with reporter editorial text, paragraph segregation or paragraph numbering. Reporter pinpoints are resolved per mention (§7.3 item 3). This is needed so we can redistribute via API (I12) without IP risk. | EBC v. Modak, para 41 [CT-49]; spine §D | P0/P1; proposed `rights_class` (§7.3) |
-| I12 | **Distribute through others' assistants.** Expose PLC citation resolution, anchor text, `AuthorityStatus` and a limited EvidenceBundle over an authenticated API/MCP, following Midpage and Vaquill [CT-46][CT-47] and Lexis inside Harvey [CT-34]. This turns S1/S3 from threats into channels. The private tenant layer (TPL) is never exposed. | §2.3, §6.4 | Proposed spine change (§7.3) |
+| I11 | **Clean title.** The PLC text comes only from official or openly licensed sources. Reporter citations are stored as identifiers, never with reporter editorial text, paragraph segregation or paragraph numbering. Reporter pinpoints are resolved per mention (§7.3 item 3). This is needed so we can redistribute via API (I12) without IP risk. | EBC v. Modak, para 41 [CT-49]; spine §D | P0/P1; `rights_class` (adopted, v1.0 D9/D16; §7.3) |
+| I12 | **Distribute through others' assistants.** Expose PLC citation resolution, anchor text, an `AuthorityView` subset and a `PublicEvidenceBundle` (answering a `PublicResearchQuery`) over an authenticated API/MCP, following Midpage and Vaquill [CT-46][CT-47] and Lexis inside Harvey [CT-34]. This turns S1/S3 from threats into channels. The private tenant layer (TPL) is never exposed. | §2.3, §6.4 | PLC Access API / MCP, adopted as spine v1.0 D13 (post-MVP; owner P10 BFF) (§7.3) |
 | I13 | **Model-agnostic by contract.** Wrapper fragility and supplier–competitor conflict (Legora/Anthropic) are real [CT-44]. Lexis already routes across multiple models [CT-35]. | F7 | Spine §I Model Gateway (no change) |
-| I14 | **Deployment menu at launch** (SaaS / VPC / on-prem), because Indian enterprise buyers expect it [CT-18]. It is table stakes, not a moat. | §6.1 | P7, doc 13 |
+| I14 | **Deployment menu at launch** (SaaS / VPC / on-prem), because Indian enterprise buyers expect it [CT-18]. It is table stakes, not a moat. Under spine v1.0 D17 the menu is D1 pooled SaaS cell / D2 dedicated cell / D3 customer VPC / D4 on-prem (air-gapped) / D4h on-prem with in-India cloud LLMs. The MVP runs one D2 cell for the design partner on the same code as D1, and the full menu is published at GA. | §6.1 | P7, doc 13 |
 
 ### 7.2 What *not* to cut from the MVP (competitive minimums)
 1. Typed negative treatment with human review for `impact_tier=1` edges in the partner's practice areas (I1).
 2. Claim-level support verification (I2).
 3. Per-issue coverage with adverse authority surfaced (I3).
-4. At least one matter-alert loop end to end: a new Supreme Court or High Court decision → `impact.detected.v1` → alert on a partner matter (M4).
+4. At least one matter-alert loop end to end: a new Supreme Court or High Court decision → `impact.detected.v1` (broadcast on `plc.impact.public.v1`) → tenant-cell Impact Matcher → `matter.alert.v1` on a partner matter (M4; v1.0 D3).
 5. The benchmark harness (I10).
 
 Without these, the product is feature-equivalent to Bharat.Law or Prism and will lose on price and distribution.
 
 ### 7.3 Proposed spine changes (only those needed)
-1. **Add an external read surface: "PLC Access API / MCP"** (owner: P10, backed by P5/P3).
+
+#### 7.3.0 Spine v1.0 conformance (read first; overrides §7.3.1 where they differ)
+The principal architect's spine v1.0 decision record ruled on this document's proposals as follows. "v1.0 D#" cites that record.
+
+| # | Proposal | Disposition | What v1.0 fixes |
+|---|---|---|---|
+| 1 | External read surface "PLC Access API / MCP" | **ACCEPTED as v1.0 D13** (post-MVP) | Owner P10 BFF, backed by P5/P3. Operations: `resolve_citation`, `get_anchor` (incl. the point-in-time anchor form), `authority_status`, and `research(PublicResearchQuery) → PublicEvidenceBundle`. Filtered by `rights_class`, metered, tenant-less. `PublicEvidenceBundle` has no stance and is NEUTRAL only (v1.0 D9). `authority_status` now returns an **`AuthorityView` subset** (v1.0 D6), not a bare AuthorityStatus; the sketch below is updated. |
+| 2 | `rights_class` on Manifestation and `raw.captured.v1` | **ACCEPTED as v1.0 D9** (+ D16 raw.captured.v1) | Enum verbatim: OFFICIAL \| OPEN_LICENSED \| THIRD_PARTY_LINK_ONLY \| LICENSED_RESTRICTED \| USER_UPLOADED. It is the runtime filter for any external or API output. |
+| 3 | Reporter pinpoints on `CitationMention` | **ACCEPTED-MODIFIED as v1.0 D16** | Carried as `CitationMention.pin{kind, value, cited_anchor}` (plus `resolution_method`, `char_range`, `case_name_as_printed` …). Mapping: `Pinpoint.scheme` → `pin.kind`; `Pinpoint.value` → `pin.value`; `PinpointResolution.target_anchor_id` → `pin.cited_anchor`. This doc's `method` and `confidence` stay proposed sub-fields of `pin`, pending P1 (see §7.3.1 sketch). D16 also adopts the rule this proposal rests on: judgment paragraph anchors use only court-issued numbering, never a reporter's (*EBC v. D.B. Modak*). |
+| 4a | Predicate `RECALLS` | **ACCEPTED as v1.0 D7** | Tier-1. The recalled Work's `AuthorityView.status` becomes NEGATIVE, and is `definitive` only after HITL (v1.0 D6). |
+| 4b | Work-level `integrity_flags[]` | **NOT RULED in v1.0** (absent from D7/D9/D16; neither accepted nor rejected) | Interim: each flag is expressed as an evidenced Assertion and surfaces through `AuthorityView.reason_codes`. Overlaps to reconcile: `WITHDRAWN_FROM_SOURCE` with `raw.captured.v1` `change_kind` DELETED/SUPPRESSED (v1.0 D16); `CORRIGENDUM_PENDING` with `acquire.requested.v1` reason CORRIGENDUM_SUSPECTED. Open item for P3. |
+| — | `ResearchQuery.budget.max_input_tokens` (from §8.2) | **ACCEPTED as v1.0 D9** | `budget` = {latency_ms, max_items, max_cost_usd, max_llm_calls, max_input_tokens}. |
+
+**Renames this document now follows**
+
+| Pre-v1.0 wording in this doc | v1.0 name | Decision |
+|---|---|---|
+| `AuthorityStatus` as the badge, ranking feature and API payload | `AuthorityView` {subject_id, status, definitive, reason_codes[], status_confidence, status_mode, valid_from/valid_to, binding_on_forum, binding_basis, court_level, bench_strength, treatment_summary, graph_watermark} | D6 |
+| "unreviewed possible overruling" shown as CAUTION | status CAUTION + `definitive=false` + reason_code `NEGATIVE_SIGNAL_UNDER_REVIEW` | D6 |
+| `weakest_review_state`, `reason_predicates` in `authority_status` | `definitive`, `reason_codes` | D6 |
+| "P4 `impact.detected.v1` → P7 `matter.alert.v1`" (direct fan-out) | Impact broadcast on `plc.impact.public.v1` (`tenantid`=null) → tenant-cell **Impact Matcher** (P4-owned `impact-match-core`, run by P7) → `matter.alert.v1` | D3 |
+| "privacy-gated feedback" | P9 **Privacy Gate**, classes S0–S3 | D9 |
+| "PLC API" | PLC Access API / MCP | D13 |
+| limited EvidenceBundle / ResearchQuery for the API | `PublicEvidenceBundle` / `PublicResearchQuery` | D9, D13 |
+| `Pinpoint` / `PinpointResolution` | `CitationMention.pin{kind, value, cited_anchor}` | D16 |
+| `MatterContext.key_dates.cause_of_action` | `as_of_legal_date_default` / `temporal_context.substantive_event_date`, derived from `procedural_events[]` | D9, D16 |
+| "SaaS / VPC / on-prem" | deployments D1 / D2 / D3 / D4 / D4h | D17 |
+| `CORRESPONDS_TO` `change_type` (unspecified enum) | v1.0 D16 crosswalk enum (SAME_RENUMBERED … OMITTED) | D16 |
+
+#### 7.3.1 Proposals as submitted (dispositions in §7.3.0)
+1. **Add an external read surface: "PLC Access API / MCP"** (owner: P10, backed by P5/P3). *Adopted as v1.0 D13.*
    - Tenant-less, authenticated, metered.
-   - Operations: `resolve_citation(raw_text) → work_id + identifier_alias[]`; `get_anchor(anchor_ref) → text, text_hash, source link` (`anchor_ref` = `anchor_id` or the spine §C point-in-time form `wrk_…#frag@YYYY-MM-DD`); `authority_status(work_id|prp_id, as_of) → AuthorityStatus + reason_assertion_ids`; `research(PublicResearchQuery) → PublicEvidenceBundle` (public PLC only; `tenant_id`, `matter_id` and `perspective: CLIENT_SIDE` are not allowed).
+   - Operations: `resolve_citation(raw_text) → work_id + identifier_alias[]`; `get_anchor(anchor_ref) → text, text_hash, source link` (`anchor_ref` = `anchor_id` or the spine §C point-in-time form `wrk_…#frag@YYYY-MM-DD`); `authority_status(work_id|prp_id, as_of) → AuthorityView subset + reason_assertion_ids` (v1.0 D6; was "AuthorityStatus"); `research(PublicResearchQuery) → PublicEvidenceBundle` (public PLC only; `tenant_id`, `matter_id` and `perspective: CLIENT_SIDE` are not allowed).
    - Every response carries anchors and `pipeline_version`. Concrete schemas are in the contract sketch below.
    - *Justification:* the distribution pattern shown by Midpage [CT-46], Vaquill [CT-47] and Lexis-in-Harvey [CT-34]; it is our best response to threat S1/S3 (§6.4).
-2. **Add `rights_class` to Manifestation** (and pass it through `raw.captured.v1.data`): `OFFICIAL | OPEN_LICENSED | THIRD_PARTY_LINK_ONLY | LICENSED_RESTRICTED | USER_UPLOADED`.
+2. **Add `rights_class` to Manifestation** (and pass it through `raw.captured.v1.data`; *adopted as v1.0 D9/D16*): `OFFICIAL | OPEN_LICENSED | THIRD_PARTY_LINK_ONLY | LICENSED_RESTRICTED | USER_UPLOADED`.
    - P2/P5 must filter by `rights_class` for any external or API response. Text from `THIRD_PARTY_LINK_ONLY` / `LICENSED_RESTRICTED` is never redistributed.
    - *Justification:* I11/I12. External distribution makes redistribution rights a runtime constraint, not only a crawl-time note (`terms_ref`); reporter-editorial IP risk [CT-49].
-3. **Extend `CitationMention` with reporter pinpoints** (owner: P1; consumers P3, P8). *Added in the independent review.*
+3. **Extend `CitationMention` with reporter pinpoints** (owner: P1; consumers P3, P8). *Added in the independent review. Adopted in modified form as v1.0 D16 `CitationMention.pin{kind, value, cited_anchor}`.*
    - Indian lawyers pinpoint-cite the reporter's paragraph ("(1992) Supp 3 SCC 217, para 790"). The Supreme Court's own example in *EBC v. D.B. Modak* shows SCC renumbering registry paragraphs 85–92 as paras 790–803 of the combined judgment, and para 41 holds that this numbering and paragraph segregation attract copyright [CT-49].
    - The spine's anchor `p45` is "para 45 as numbered in the judgment" (official copy). A reporter pinpoint therefore often points to a *different* official paragraph. P8's support check silently fails, or checks the wrong paragraph, unless the pinpoint is resolved.
    - Rule: never build or persist a bulk reporter-para → official-para table derived from a reporter's copy. Resolve **per mention** from the citing text itself and store only the official anchor plus the method.
-4. **Add predicate `RECALLS` and a Work-level `integrity_flags[]`** (owner: P3; consumers P4, P5, P8). *Added in the independent review.*
-   - `RECALLS`: the issuing forum withdraws its own order. It sets the recalled Work's `AuthorityStatus` to `NEGATIVE` from the recall date, with `impact_tier=1`. `SETS_ASIDE` and `REVIEW_OF` do not capture this: they are appellate or review relations, and a recall can happen with no appeal on record.
+4. **Add predicate `RECALLS` and a Work-level `integrity_flags[]`** (owner: P3; consumers P4, P5, P8). *Added in the independent review. `RECALLS` adopted as v1.0 D7; `integrity_flags[]` not ruled (§7.3.0).*
+   - `RECALLS`: the issuing forum withdraws its own order. It sets the recalled Work's `AuthorityView.status` to `NEGATIVE` from the recall date, with `impact_tier=1`; the status is `definitive` only after HITL (v1.0 D6). `SETS_ASIDE` and `REVIEW_OF` do not capture this: they are appellate or review relations, and a recall can happen with no appeal on record.
    - `integrity_flags[]`: `RECALLED | AI_GENERATION_ALLEGED | CORRIGENDUM_PENDING | WITHDRAWN_FROM_SOURCE`. Each flag is set only through an Assertion with evidence, for example the High Court order recording that an ITAT order was "prima facie… Artificial intelligence driven" [CT-56].
-   - *Justification:* the Buckeye Trust recall shows AI-tainted adjudicatory output already exists in the Indian corpus. Any memo or matter that cited the recalled order must receive `impact.detected.v1`.
+   - *Justification:* the Buckeye Trust recall shows AI-tainted adjudicatory output already exists in the Indian corpus. P4 must broadcast `impact.detected.v1` for the recall on `plc.impact.public.v1`. Each tenant cell's Impact Matcher then reaches every matter that depends on the order, and P6 marks affected memos with `strategy.memo.stale.v1` (v1.0 D3/D4).
 
 **Contract sketch for items 1–4** (TypeScript-like; field names reuse spine §C–§H; numeric quotas are **[NOVEL — unvalidated]** starting values):
 
 ```ts
 type RightsClass = "OFFICIAL" | "OPEN_LICENSED" | "THIRD_PARTY_LINK_ONLY" | "LICENSED_RESTRICTED" | "USER_UPLOADED";
 
-// Item 2 — added to Manifestation and to raw.captured.v1.data
+// Item 2 — added to Manifestation and to raw.captured.v1.data (adopted: v1.0 D9/D16)
 interface Manifestation { manifestation_id: string; raw_ids: string[]; source_id: string; rights_class: RightsClass; terms_ref: string; }
 
-// Item 1 — PLC Access API / MCP. Tenant-less. Public PLC only.
+// Item 1 — PLC Access API / MCP (adopted: v1.0 D13; owner P10 BFF). Tenant-less. Public PLC only.
 interface PlcApiEnvelope<T> {
   request_id: string;              // ULID
   pipeline_version: string;        // spine §I
@@ -863,21 +897,35 @@ resolve_citation(raw_text: string): PlcApiEnvelope<{
 }>;
 get_anchor(anchor_ref: string /* anchor_id, or {work_id}#{fragment}@{YYYY-MM-DD} per spine §C */): PlcApiEnvelope<{
   anchor_id: string; text: string; text_hash: string; page: number; bbox: [number, number, number, number];
-  source_url: string; rights_class: RightsClass; tombstoned_to?: string; integrity_flags: string[];
+  source_url: string; rights_class: RightsClass; tombstoned_to?: string;
+  is_authoritative_expression: boolean;   // v1.0 D8 anchor read API; MT renditions are never returned as anchor text (v1.0 D16)
+  masked: boolean;                        // text is the masked rendition when a doc.redacted.v1 overlay applies (v1.0 D16)
+  integrity_flags: string[];              // NOT RULED in v1.0 (§7.3.0 item 4b)
 }>;
-authority_status(target_id: string /* wrk_… | prp_… */, as_of_legal_date: string): PlcApiEnvelope<{
-  status: "GOOD" | "CAUTION" | "NEGATIVE" | "PARTIAL_NEGATIVE" | "UNKNOWN";   // spine §F AuthorityStatus
-  weakest_review_state: "MACHINE" | "PENDING_REVIEW" | "VERIFIED";            // weakest among reason assertions
-  reason_predicates: string[];                                                // e.g. ["OVERRULES"]
-  reason_assertion_ids: string[];                                             // evidence detail via a lower-quota call
+authority_status(target_id: string /* wrk_… | prp_… */,
+                 opts?: { as_known_at?: string; as_of_legal_date?: string; status_mode?: "CURRENT" | "HISTORICAL" })
+  // v1.0 D6 date semantics: precedent status at as_known_at in CURRENT mode; statute text/validity at as_of_legal_date
+  : PlcApiEnvelope<{                      // an AuthorityView subset (v1.0 D6), not a bare AuthorityStatus
+  subject_id: string;
+  status: "GOOD" | "CAUTION" | "NEGATIVE" | "PARTIAL_NEGATIVE" | "UNKNOWN";   // enum unchanged (5-valued)
+  definitive: boolean;                    // replaces weakest_review_state ("MACHINE" | "PENDING_REVIEW" | "VERIFIED")
+  reason_codes: string[];                 // replaces reason_predicates (e.g. ["OVERRULES"]); e.g. NEGATIVE_SIGNAL_UNDER_REVIEW, COVERAGE_GAP
+  status_confidence: number; status_mode: "CURRENT" | "HISTORICAL";
+  valid_from: string; valid_to?: string; graph_watermark: string;
+  reason_assertion_ids: string[];         // evidence detail via a lower-quota call
 }>;
 research(q: PublicResearchQuery): PlcApiEnvelope<PublicEvidenceBundle>;
-// PublicResearchQuery  = ResearchQuery without tenant_id, matter_id, client_role; perspective fixed to NEUTRAL; budget.max_items <= 20
-// PublicEvidenceBundle = EvidenceBundle without items[].stance; excerpt only where rights_class ∈ {OFFICIAL, OPEN_LICENSED}
+// PublicResearchQuery  = ResearchQuery without tenant_id, matter_id, client_role; perspective fixed to NEUTRAL; budget.max_items <= 20;
+//                        v1.0 D9 fields also excluded: issue_hints[].client_position, stance_target, personalization_profile_ref,
+//                        experiment, residency_policy (no tenant context exists)
+// PublicEvidenceBundle = EvidenceBundle without items[].stance (NEUTRAL only, v1.0 D9); items are PLC-only (source_layer PLC);
+//                        items[].authority = AuthorityView subset; excerpt only where rights_class ∈ {OFFICIAL, OPEN_LICENSED}
 // Quotas per API key per day: authority_status 5,000; research 500; assertion-evidence detail 500.
 // Canary assertions (synthetic, never shown in-product) are seeded to detect bulk harvesting of the treatment ledger (§8.2 R8).
 
-// Item 3 — CitationMention extension (P1)
+// Item 3 — CitationMention extension (P1). v1.0 D16 name: CitationMention.pin{kind, value, cited_anchor};
+//   Pinpoint.scheme → pin.kind, Pinpoint.value → pin.value, PinpointResolution.target_anchor_id → pin.cited_anchor;
+//   method/confidence below remain proposed sub-fields of pin (not yet ruled)
 interface Pinpoint { scheme: "OFFICIAL_PARA" | "NEUTRAL_PARA" | "REPORTER_PARA" | "REPORTER_PAGE"; reporter?: string /* SCC, AIR, … */; value: string; }
 interface PinpointResolution {
   target_anchor_id?: string;
@@ -886,7 +934,7 @@ interface PinpointResolution {
 }
 // CitationMention.parsed.pinpoint?: Pinpoint;  CitationMention.pinpoint_resolution?: PinpointResolution
 
-// Item 4 — Predicate += "RECALLS";  Work.integrity_flags: ("RECALLED"|"AI_GENERATION_ALLEGED"|"CORRIGENDUM_PENDING"|"WITHDRAWN_FROM_SOURCE")[]
+// Item 4 — Predicate += "RECALLS" (adopted, v1.0 D7);  Work.integrity_flags (NOT RULED in v1.0): ("RECALLED"|"AI_GENERATION_ALLEGED"|"CORRIGENDUM_PENDING"|"WITHDRAWN_FROM_SOURCE")[]
 ```
 
 **Pinpoint resolution algorithm (item 3)** — [NOVEL — unvalidated] thresholds, to be tuned on the P8 gold set:
@@ -919,16 +967,16 @@ interface PinpointResolution {
 |---|---|---|---|---|
 | R1 | **10M+ documents** (district orders, tribunals) | Competitors advertise volume: CLAW "30 crore+ cases" [CT-22], LegitQuest 500M+ records, 500k/day [CT-12] | Running I1-style typed treatment with a model on every citation mention at 10M+ documents is unaffordable. Illustrative: 10M Works × 15 mentions × 2k tokens = 300B tokens. | Three-tier extraction (P3): (a) `CITES` by RULE for every resolved mention; (b) a small model only for mentions whose cited Work is SC/HC **or** that have a treatment cue within ±1 sentence (overruled, per incuriam, distinguished, doubted, referred to a larger bench, not followed); (c) a frontier model plus HITL only for `impact_tier=1` candidates. Sell a per-court **coverage matrix**, not a document count (§6.1). |
 | R2 | **Bad OCR** | ManuWorks and LawCentral advertise OCR [CT-5][CT-23]. No vendor publishes OCR-stratified accuracy. | I2 (support check) and I10 (benchmark) assume clean anchor text. On a garbled scan, entailment can pass on the wrong words or fail on the right ones. | P8: if the anchor's `quality.ocr_conf` < 0.85, a claim cannot reach `VERIFIED` on `DIRECT` support unless the quote is re-OCR'd at higher resolution or confirmed by a human (max `PARTIAL`). P10 falls back to page-image highlighting. I10 reports metrics per `ocr_conf` bucket (≥0.95 / 0.85–0.95 / <0.85). **[NOVEL — unvalidated]** |
-| R3 | **Hindi / regional-language judgment** | Multilingual claims are OCR-level (LawCentral: 10 languages [CT-23]) or speech-level (Adalat: Malayalam/English [CT-25]). No vendor shows treatment extraction in Hindi. | A Hindi High Court judgment that distinguishes or doubts an English precedent is invisible to English-only treatment extraction. The memo then misses adverse authority, which is exactly the F2 failure. | I10 benchmark: ≥10% non-English gold items, with per-language scores published. P3: a Hindi treatment-cue lexicon authored with partner reviewers. Machine translations are derived P2 artefacts, **not** `Expression`s. Claims quote the original-language anchor, with the translation shown alongside and labelled as machine translation. Only official translations become `Expression`s (§3.13). |
-| R4 | **Precedent overruled yesterday** | Midpage: "new cases appear within hours" [CT-46]. Incumbents publish no latency. | §7 says "push, not pull" (I8) but sets no freshness SLO, so M4 is unmeasurable. | P0/P4 SLOs **[NOVEL — unvalidated]**: SC/HC judgment parsed ≤ 6 h after it appears on the official site. A candidate negative-treatment assertion (MODEL, `impact_tier=1`) is surfaced as `CAUTION` with an "unreviewed possible overruling" banner ≤ 1 h after parse. `impact.detected.v1` → `matter.alert.v1` fan-out ≤ 15 min. HITL decision ≤ 1 business day, after which the status becomes definitive. This matches spine §F: tier-1 is not shown as definitive before HITL. |
-| R5 | **Recalled / AI-tainted order in the corpus** | Buckeye Trust: an ITAT order recalled, which the Karnataka HC recorded as "prima facie… Artificial intelligence driven" [CT-56] | The spine had no predicate for a same-forum recall and no integrity flag. A recalled order would keep `GOOD` status. | §7.3 item 4 (`RECALLS`, `integrity_flags`). P0: `change_kind=DELETED` on an official source triggers a `WITHDRAWN_FROM_SOURCE` review, never a silent deletion. P4 back-propagates to every matter that cited the order. |
-| R6 | **Prompt-injected input** | Document-as-query is the recommended entry point (I9, from CaseIQ [CT-11]). Distribution through assistants (I12) makes *our* output part of *their* prompt. | An uploaded notice carrying hidden text ("ignore adverse authorities") could suppress the `adverse_found` coverage that I3 promises. API text could carry instructions into third-party agents. | P6 intake strips hidden text (white-on-white, zero-width characters, off-page objects) and passes document content only as quoted data. `coverage.per_issue.adverse_found` is computed by P5 retrieval, **not** by the generating model, and P8 blocks a memo whose adverse section omits items P5 found. The PLC API returns text only in typed fields (`text`, `excerpt`), has no free-text "instructions" field, and uses static, versioned MCP tool descriptions. |
-| R7 | **Confused user** | Indian Kanoon habit: "cited in 101 documents" [CT-49] read as a quality signal. Reporter pinpoints ("SCC para 790") differ from official numbering [CT-49]. | Users will read citation counts as good law, enter reporter paragraph numbers, and ask "is X good law" for a 2022 cause of action. | P10: citation counts are never shown next to `AuthorityStatus` without a label. When the matter has `key_dates.cause_of_action`, `as_of_legal_date` defaults to it and the default is shown. Reporter pinpoints are resolved per §7.3 item 3, and the UI says "reporter para; official para unresolved" when resolution fails. |
-| R8 | **Moat leakage through our own API** | Lexis licensed Shepard's to Harvey [CT-34]. Midpage supplies data to five large companies [CT-46]. | I12 exposes `AuthorityStatus`. An incumbent or startup could harvest the verified-edge ledger (M2) through the API and seed its own graph (§6.3). | Quotas and evidence detail at lower quota (§7.3 sketch); synthetic canary assertions to detect harvesting; contract terms banning training and redistribution; status responses carry reason predicates, not proposition text. Open question: whether I12 should launch before M2 coverage passes the partner's practice areas (§8.R). |
-| R9 | **Source outage / format change** | LawCentral verifies against Indian Kanoon [CT-23], so an IK block or format change breaks its verification. | I2/I11 did not say that a third-party aggregator can never be the basis of a `VERIFIED` verdict. | P8 rule: support verdicts must cite an anchor whose Manifestation is `OFFICIAL` or `OPEN_LICENSED`. `THIRD_PARTY_LINK_ONLY` can seed discovery only. Every answer carries a per-source freshness stamp ("SC judgments current to <ts>"). P0 runs parser contract tests per source, and an alert fires on a structure-drift score. |
+| R3 | **Hindi / regional-language judgment** | Multilingual claims are OCR-level (LawCentral: 10 languages [CT-23]) or speech-level (Adalat: Malayalam/English [CT-25]). No vendor shows treatment extraction in Hindi. | A Hindi High Court judgment that distinguishes or doubts an English precedent is invisible to English-only treatment extraction. The memo then misses adverse authority, which is exactly the F2 failure. | I10 benchmark: ≥10% non-English gold items, with per-language scores published. P3: a Hindi treatment-cue lexicon authored with partner reviewers. Machine translations are derived P2 artefacts, **not** `Expression`s: they are MT renditions (public `Chunk.mt` / `aux_text['{lang}-x-mt']`, authoritative=false; v1.0 D8/D16). Claims quote the original-language anchor, with the translation shown alongside and labelled as machine translation; a claim anchored to MT fails P8. Only official translations become `Expression`s, carrying an `authoritative` flag (§3.13). |
+| R4 | **Precedent overruled yesterday** | Midpage: "new cases appear within hours" [CT-46]. Incumbents publish no latency. | §7 says "push, not pull" (I8) but sets no freshness SLO, so M4 is unmeasurable. | P0/P4 SLOs **[NOVEL — unvalidated]**: SC/HC judgment parsed ≤ 6 h after it appears on the official site. A candidate negative-treatment assertion (MODEL, `impact_tier=1`) is surfaced as `AuthorityView` status `CAUTION`, `definitive=false`, reason_code `NEGATIVE_SIGNAL_UNDER_REVIEW` (v1.0 D6), with an "unreviewed possible overruling" banner ≤ 1 h after parse. `impact.detected.v1` (lifecycle PROVISIONAL, broadcast on `plc.impact.public.v1`) → tenant-cell Impact Matcher → `matter.alert.v1` ≤ 15 min (v1.0 D3/D5). HITL decision ≤ 1 business day, after which the status becomes definitive. This matches spine §F: tier-1 is not shown as definitive before HITL. |
+| R5 | **Recalled / AI-tainted order in the corpus** | Buckeye Trust: an ITAT order recalled, which the Karnataka HC recorded as "prima facie… Artificial intelligence driven" [CT-56] | The spine had no predicate for a same-forum recall and no integrity flag. A recalled order would keep `GOOD` status. | §7.3 item 4 (`RECALLS`, `integrity_flags`). P0: `change_kind=DELETED` on an official source triggers a `WITHDRAWN_FROM_SOURCE` review, never a silent deletion. Under v1.0 D16, DELETED is emitted only after 3 absent sweeps + 404/soft-404, and a takedown is the separate kind `SUPPRESSED`, handled through `doc.redacted.v1`. P4 broadcasts `impact.detected.v1`, and each tenant cell's Impact Matcher reaches every matter that depends on the order (v1.0 D3). |
+| R6 | **Prompt-injected input** | Document-as-query is the recommended entry point (I9, from CaseIQ [CT-11]). Distribution through assistants (I12) makes *our* output part of *their* prompt. | An uploaded notice carrying hidden text ("ignore adverse authorities") could suppress the `adverse_found` coverage that I3 promises. API text could carry instructions into third-party agents. | P6 intake strips hidden text (white-on-white, zero-width characters, off-page objects) and passes document content only as quoted data. `coverage.per_issue.adverse_found` is computed by P5 retrieval, **not** by the generating model, and P8 blocks a memo whose adverse section omits items P5 found. The PLC Access API (v1.0 D13) returns text only in typed fields (`text`, `excerpt`), has no free-text "instructions" field, and uses static, versioned MCP tool descriptions. |
+| R7 | **Confused user** | Indian Kanoon habit: "cited in 101 documents" [CT-49] read as a quality signal. Reporter pinpoints ("SCC para 790") differ from official numbering [CT-49]. | Users will read citation counts as good law, enter reporter paragraph numbers, and ask "is X good law" for a 2022 cause of action. | P10: citation counts are never shown next to `AuthorityView` badges without a label. When the matter has a substantive event date (`MatterContext.temporal_context.substantive_event_date`, derived from `procedural_events[]`; `key_dates.cause_of_action` is now a derived view, v1.0 D9/D16), `as_of_legal_date` defaults to it (`as_of_legal_date_default`) and the default is shown. Reporter pinpoints are resolved per §7.3 item 3, and the UI says "reporter para; official para unresolved" when resolution fails. |
+| R8 | **Moat leakage through our own API** | Lexis licensed Shepard's to Harvey [CT-34]. Midpage supplies data to five large companies [CT-46]. | I12 exposes an `AuthorityView` subset. An incumbent or startup could harvest the verified-edge ledger (M2) through the API and seed its own graph (§6.3). | Quotas and evidence detail at lower quota (§7.3 sketch); synthetic canary assertions to detect harvesting; contract terms banning training and redistribution; status responses carry reason codes (formerly "reason predicates"), not proposition text. Open question: whether I12 should launch before M2 coverage passes the partner's practice areas (§8.R). |
+| R9 | **Source outage / format change** | LawCentral verifies against Indian Kanoon [CT-23], so an IK block or format change breaks its verification. | I2/I11 did not say that a third-party aggregator can never be the basis of a `VERIFIED` verdict. | P8 rule: support verdicts must cite an anchor whose Manifestation `rights_class` is `OFFICIAL` or `OPEN_LICENSED` (v1.0 D9). `THIRD_PARTY_LINK_ONLY` can seed discovery only. Every answer carries a per-source freshness stamp ("SC judgments current to <ts>"). P0 runs parser contract tests per source, and an alert fires on a structure-drift score. |
 | R10 | **Cost blow-up** | Prism and LawCentral pass cost through as credits [CT-7][CT-23]. TR Deep Research runs about 10 min [CT-37]. | §5.3 proposes flat seat pricing of ₹0.6–1.5 lakh/yr plus deep asynchronous runs (I6) with no per-run budget. | See §8.2. Enforce a per-run token budget in `ResearchQuery.budget` and a pooled firm quota of deep runs. |
 | R11 | **Benchmark gaming** | Every vendor makes unaudited claims (F9). I10 invites competitors. | A public gold set will be overfitted within a quarter. | I10: publish the method plus a public dev split. Keep a private held-out split rotated quarterly, with canary items to detect contamination. Report scores on the held-out split only. |
-| R12 | **India-specific identifiers** | The HC neutral citation seen in this review is `NC: 2025:KHC:37479` (Karnataka) [CT-56]. | Spine §D `NEUTRAL_HC` says "verify formats". A single regex will miss per-court codes and the `NC:` prefix. | P1: per-High-Court code table (`KHC`, `DHC`, …), parsed as `^(?:NC:\s*)?(\d{4}):([A-Z]{2,6}):(\d+)(?:-[A-Z]+)?$`, with unknown codes routed to review. The table is owned by doc 21. The optional suffix group is **[NOVEL — unvalidated]**. |
+| R12 | **India-specific identifiers** | The HC neutral citation seen in this review is `NC: 2025:KHC:37479` (Karnataka) [CT-56]. | Spine §D `NEUTRAL_HC` says "verify formats". A single regex will miss per-court codes and the `NC:` prefix. | P1: per-High-Court code table (`KHC`, `DHC`, …; v1.0 D16 normalises `NEUTRAL_HC` as court_code|bench_code|year|n|bench_type), parsed as `^(?:NC:\s*)?(\d{4}):([A-Z]{2,6}):(\d+)(?:-[A-Z]+)?$`, with unknown codes routed to review. The table is owned by doc 21. The optional suffix group is **[NOVEL — unvalidated]**. |
 
 ### 8.2 Cost arithmetic for R10 (illustrative, inference)
 
@@ -942,7 +990,7 @@ Assumptions, to be replaced from the Model Gateway price table (doc 13): blended
 
 Consequences:
 - Flat seat pricing works only with a **pooled firm quota of deep runs**, for example 250 runs per seat-year, pooled at firm level **[NOVEL — unvalidated]**.
-- `ResearchQuery.budget` must carry `max_input_tokens`. P6 must stop at the budget and return partial results with explicit `gaps` (F11).
+- `ResearchQuery.budget` must carry `max_input_tokens` (adopted in v1.0 D9). P6 must stop at the budget and return partial results with explicit `gaps` (F11).
 - Otherwise §5.3's corridor is not viable for the heaviest users.
 
 ### 8.R Independent review findings
@@ -955,7 +1003,7 @@ Consequences:
 5. **Lexlegis [CT-18].** "No hallucinations" and "DPDP certified" were not found verbatim. The page's actual wording and deployment modes are now quoted.
 6. **LegitQuest [CT-12].** The named customers were wrong ("HP" is not listed). Corrected.
 7. **EBC v. D.B. Modak [CT-49].** The holding was read in the judgment and upgraded to verified (para 41). This produced a **new design gap**, reporter-pinpoint resolution (§7.3 item 3).
-8. **Buckeye Trust.** The recall was confirmed through the Karnataka HC order [CT-56, new]. This produced a **new design gap**, the `RECALLS` predicate and `integrity_flags` (§7.3 item 4). The "non-existent judgments" detail remains unverified.
+8. **Buckeye Trust.** The recall was confirmed through the Karnataka HC order [CT-56, new]. This produced a **new design gap**, the `RECALLS` predicate and `integrity_flags` (§7.3 item 4; `RECALLS` adopted as v1.0 D7, `integrity_flags` not ruled). The "non-existent judgments" detail remains unverified.
 9. **Upgraded to verified:** CT-25 (Kerala, now with the memorandum date and pilot history), CT-30 (Harvey Tenet/LAB details), CT-34, CT-35, CT-36. Two items stay unverified: the TR "Westlaw Advantage 13 Aug" date and the Stanford "42% JELS" figure.
 10. **LawCentral.** Its self-reported "95% citation accuracy" was added as evidence for F9.
 
@@ -971,6 +1019,7 @@ Consequences:
 4. No Indian user-complaint evidence was gathered (§1.3).
 5. The sequencing of I12 (API) against M2 coverage is a strategy decision for doc 22.
 6. All R-table thresholds and SLOs are unvalidated.
+7. Spine v1.0 did not rule on `integrity_flags[]` or on the `method`/`confidence` sub-fields of `CitationMention.pin` (§7.3.0). Both need a P3/P1 decision before the PLC Access API ships.
 
 ---
 

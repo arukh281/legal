@@ -3,7 +3,7 @@
 **Abstract.** This document is the platform's *legal reference layer*. Other phases implement mechanisms. This one fixes the Indian legal facts and rules those mechanisms encode. It covers eight things:
 1. What official sources exist and what we may lawfully do with them.
 2. How Indian citations are formed and resolved: a formal grammar plus an alias strategy that includes observed neutral-citation formats for 20+ High Courts.
-3. The doctrine of precedent as machine rules. P3's doctrine engine can execute these directly (`binding_on_forum`, AuthorityStatus inputs), and every rule cites the case that establishes it.
+3. The doctrine of precedent as machine rules. P3's doctrine engine can execute these directly (`binding_on_forum`, `AuthorityView` inputs), and every rule cites the case that establishes it. Under spine v1.0 (D16), this registry is the canonical DoctrineRule source for P3's `authority-core`.
 4. An Indian treatment vocabulary that beats KeyCite and Shepard's on granularity and honesty.
 5. The IPC/CrPC/IEA → BNS/BNSS/BSA transition. This includes a 2026 Supreme Court holding that the unit of transition is the *proceeding*, not the case. That holding forces a spine change.
 6. Point-in-time law: commencement, ordinances, state amendments, and the limits of India Code.
@@ -16,7 +16,12 @@ Each legal proposition carries a verified citation with a URL. Where Indian law 
 
 ## 0. Conventions used in this document
 
-- **Rule IDs.** `rul_IN_<area>_<n>` are doctrine rules for P3's DoctrineRule registry (P3 proposes the `rul_` prefix, 05_P3 §2.4 S3-5). Each rule has:
+- **Spine v1.0.** This doc conforms to the spine v1.0 decision record (D1–D18). §10.4A gives the disposition of every proposed change (C1–C9) and the renames this doc follows. In summary:
+  - MT is a *rendition*, never an Expression;
+  - masking is a RedactionOverlay carried on `doc.redacted.v1`;
+  - the crosswalk enum in §6.4 is canonical;
+  - the rule registry in §4.1 is canonical for P3.
+- **Rule IDs.** `rul_IN_<area>_<n>` are doctrine rules for P3's DoctrineRule registry (P3 proposed the `rul_` prefix, 05_P3 §2.4 S3-5, registered in spine v1.0 D12). Per D6/D16, `rul_IN_PREC_*` is the **canonical** doctrine source that P3's `authority-core@semver` library implements. `AuthorityView.binding_basis.rule_ids` cite these IDs. Each rule has:
   - `authority` (anchor-grade citation);
   - `status`: `SETTLED` or `CONTESTED`;
   - `output`: the value it contributes.
@@ -135,17 +140,26 @@ It is not infringement to reproduce or publish four kinds of material [IN-1]:
 
 **Design rule `rul_IN_PRIV_1`.** Every Work carries `access_restriction`:
 ```json
-{ "name_search_suppressed": [{"party_entity_id":"ent_…","basis":"COURT_ORDER",
+{ "name_search_suppressed": [{"party_ref":{"name_as_printed":"…","spans":[{"anchor_id":"wrk_…/en#hdr","char_range":[0,0]}]},  // v1.0 D16: no ent_ for individuals
+                              "basis":"COURT_ORDER",
                               "order_ref":"wrk_…/en#p285","scope":"ALL_TENANTS",
                               "effective_from":"2026-06-12","verified_by":"rvw_…",
                               "order_source_raw_id":"sha256:…"}],
-  "masked_expression_required": false,
+  "masked_expression_required": false,   // v1.0 D16: "a masked rendition (RedactionOverlay) must be applied before display", not a masked expression_key
   "court_prohibition": null,
   "statutory_bar": null }          // "BNS_72" | "POCSO_23" | "JJ_74" (last two unverified) — set by P1 needs_masking
+                                   // v1.0 D16: Work.access_restriction is {name_search_suppressed[], masked_expression_required, court_prohibition};
+                                   // the statutory basis also travels as RedactionOverlay.legal_basis on doc.redacted.v1
 ```
-- `order_ref` is a spine §C anchor (`{work_id}/{expression_key}#{fragment}`) into the *ordering* judgment. `ent_` (party entity) is a new prefix; see spine change C6.
+- `order_ref` is a spine §C anchor (`{work_id}/{expression_key}#{fragment}`) into the *ordering* judgment. `ent_` (party entity) is a new prefix; see spine change C6. *(v1.0 D16 accepts `ent_` for **recurring institutional parties only**, with no global IDs for individuals. RTBF petitioners are individuals, so they are identified by `party_ref` (name as printed + anchor spans) and not by an `ent_` ID. The same spans go into the RedactionOverlay's `spans[]`.)*
 - `basis ∈ {COURT_ORDER, STATUTORY_BAR, SOURCE_REMASKED}`. **A suppression is activated only from a court order we have fetched from an official source** (`order_source_raw_id`), never from an emailed PDF alone. This blocks abuse by a person who forges or overstates an order to bury adverse judgments (red team §10.2).
-- **Upload-time gate (para 277 analogue).** P1 runs the `needs_masking` classifier *before* a Work becomes searchable. Sexual-offence and juvenile matters with a positive or uncertain score (≥0.2) are held in `QUARANTINED` display state until masked or cleared by review; the SLA target is 72 h **[NOVEL — unvalidated threshold]**.
+- **Upload-time gate (para 277 analogue).** P1 runs the `needs_masking` classifier *before* a Work becomes searchable. Sexual-offence and juvenile matters with a positive or uncertain score (≥0.2) are held in `QUARANTINED` display state until masked or cleared by review; the SLA target is 72 h **[NOVEL — unvalidated threshold]**. *(v1.0 D16: the hold is a provisional `doc.redacted.v1` overlay (`kind=MASK_SPANS`, or `SUPPRESS_ALL` when spans are unknown). It is a display state, distinct from P1's `quality.gate=QUARANTINED`.)*
+- **One event (v1.0 D16).** Every change to `access_restriction` is published as `doc.redacted.v1` carrying a RedactionOverlay:
+  - name-search restriction → `kind=NAME_SEARCH_SUPPRESSED`, `scope=WORK`;
+  - court masking order → `MASK_SPANS`, or `COURT_PROHIBITION` for s.52(1)(q)(iv) prohibitions;
+  - removal → `SUPPRESS_ALL`.
+  
+  Each overlay carries `legal_basis`, `ordered_by`, `effective_at` and a `purge_sla` of ≤ 14 days, per the para 284 two-week compliance. The separate `work.access_restricted.v1` event proposed in C6 is folded into `doc.redacted.v1`, while `Work.access_restriction` is kept.
 - P2 must exclude suppressed party names from the *lexical name field and entity facets*, while case number, citation, court and date retrieval still work.
 - P5 must not return the Work for a query whose only match is a suppressed name.
 - P10 must not surface the name in digests.
@@ -153,7 +167,7 @@ It is not infringement to reproduce or publish four kinds of material [IN-1]:
   - BNS s.72 (disclosure of identity of victims of certain offences) [IN-41];
   - POCSO and JJ Act analogues *(not re-verified here)*.
   
-  This anonymity is enforced at P1 as `needs_masking` detection on sexual-offence and juvenile matters. P1 then produces a masked Expression (`en.m1`) that becomes the display default (spine change C8).
+  This anonymity is enforced at P1 as `needs_masking` detection on sexual-offence and juvenile matters. P1 then emits a `doc.redacted.v1` RedactionOverlay (`kind=MASK_SPANS`, `legal_basis=STATUTORY_BAR:BNS_72`), and the *masked rendition* becomes the display, index, snippet, export and quote-check default (spine v1.0 D16). No masked `expression_key` is minted, and anchors keep their IDs. (This replaces the earlier proposal of a masked Expression `en.m1`, spine change C8, which v1.0 rejected; §10.4A.)
 
 ---
 ## 3. Citation systems: grammar and resolution
@@ -263,7 +277,7 @@ Dots and spaces inside abbreviations (`S.C.C.`, `S C C`, `Cri. L.J.`) and Devana
 
 ### 3.4 Resolution strategy (India-specific additions to P1 §5.9)
 
-**Alias trust tiers** stored as `identifier_alias.source` + `confidence`:
+**Alias trust tiers** stored as `identifier_alias.source` + `confidence`. *(Spine v1.0 D16 promotes the tier to an explicit `identifier_alias.trust_tier` column with exactly these T0–T4 definitions, alongside `status ACTIVE|PENDING|REJECTED|SUPERSEDED`; third-party never overrides T0.)*
 
 | Tier | Source | Examples | Auto-activate? |
 |---|---|---|---|
@@ -294,9 +308,14 @@ IK "Equivalent citations" lines mix full reports with notes of cases (`AIHC NOC`
 ---
 ## 4. The doctrine of precedent as machine rules
 
-P3's doctrine engine computes `binding_on_forum` and feeds AuthorityStatus (05_P3 §2.2–2.3). P5 ranks with it; P6/P8 must state it correctly. Below are the rules, each tied to an authority we read. Paragraph numbers refer to the court copy where we saw them.
+P3's doctrine engine computes `binding_on_forum` and feeds `AuthorityView` (05_P3 §2.2–2.3; spine v1.0 D6). AuthorityView is the only input for badges, P5 ranking features and P8 status checks. Its `status` is the 5-valued AuthorityStatus enum. P5 ranks with it; P6/P8 must state it correctly. Below are the rules, each tied to an authority we read. Paragraph numbers refer to the court copy where we saw them.
 
 ### 4.1 Rule registry
+
+**Canonical (spine v1.0 D16).** This registry is the canonical DoctrineRule source for P3's `authority-core@semver`.
+- P3 stores each rule in `doctrine_rule` with its `authority_anchor_ids` and `contested` flag. It returns both views for CONTESTED rules (D6).
+- The decision record cites `rul_IN_PREC_01..22`. Rules 23–24, added in the independent review (§8.R), are equally canonical.
+- Every rule ID below is what `AuthorityView.binding_basis.rule_ids` carries.
 
 | Rule ID | Rule | Authority (verified) | Status |
 |---|---|---|---|
@@ -338,7 +357,7 @@ Output ∈ `BINDING | PERSUASIVE | NOT_BINDING | UNDETERMINED`, plus `binding_ba
 | 1 | SC, `law_declared=YES` | Any HC, subordinate court, tribunal or authority | **BINDING** | 01, 02 |
 | 2 | SC, `OBITER` | Any non-SC forum | **PERSUASIVE** + `weight=HIGH`, `contested=true` | 12 |
 | 3 | SC, `SUB_SILENTIO` / `NON_SPEAKING_SLP` / `NO_MAJORITY` / `ART142_DIRECTION` / `EXPRESSLY_NOT_PRECEDENT` | Any | **NOT_BINDING** (as precedent; the parties remain bound) | 08, 10, 21, 23 |
-| 3a | HC X, `STRIKES_DOWN` / stays a **Parliamentary Act** provision | Any forum in India | Provision validity: `AuthorityStatus(provision)=NEGATIVE` (final) or `CAUTION` (interim stay), `territory=ALL_INDIA`. HC X's *reasoning*: row 7 rules apply (PERSUASIVE outside X) | 24, 17 |
+| 3a | HC X, `STRIKES_DOWN` / stays a **Parliamentary Act** provision | Any forum in India | Provision validity: `AuthorityView(provision).status=NEGATIVE` (final) or `CAUTION` (interim stay), `territory=ALL_INDIA`. HC X's *reasoning*: row 7 rules apply (PERSUASIVE outside X) | 24, 17 |
 | 4 | SC Bench of n judges | SC Bench of m judges | n > m → **BINDING**; n = m → **BINDING** (may doubt and refer); n < m → **PERSUASIVE** | 03–06 |
 | 5 | HC X (any Bench) | Court, tribunal or authority under X's superintendence (territory ∈ X's map) | **BINDING** | 13 |
 | 6 | HC X, Bench of a | HC X, Bench of f | a > f or a = f → **BINDING** (disagreement → reference); a < f → **PERSUASIVE** | 14 (+04 by analogy) |
@@ -357,8 +376,9 @@ Output ∈ `BINDING | PERSUASIVE | NOT_BINDING | UNDETERMINED`, plus `binding_ba
 
 **Our own machine must never declare anything per incuriam.** A detected irreconcilability yields `CAUTION` + `reason_code=POSSIBLE_PER_INCURIAM`, and is shown as an argument, not a status.
 
-**Status modifiers** (P3 AuthorityStatus, applied after binding is computed):
-- A pending reference or review does **not** change binding (rul 09). P10 shows it as an informational chip.
+**Status modifiers** (P3 `AuthorityView.status`, applied after binding is computed; v1.0 D6):
+- A pending reference or review does **not** change binding (rul 09). P10 shows it as an informational chip (v1.0: listed in `EvidenceBundle.coverage.per_issue.pending_references[]`, not in `status`).
+- A plausible but unverified negative signal is shown as `CAUTION` + `definitive=false` + `reason_code=NEGATIVE_SIGNAL_UNDER_REVIEW` until tier-1 HITL (D6). A coverage gap is `UNKNOWN` + `reason_code=COVERAGE_GAP`.
 - `STAYED` → `CAUTION` (rul 20).
 - `OVERRULES` with `effect=PROSPECTIVE|MOULDED` → the P3 date semantics apply (05_P3 §2.3), with conditions carried as anchored qualifiers (rul 18, 19).
 
@@ -388,7 +408,7 @@ def binding_on_forum(A: AuthorityRef, F: Forum, prop: Proposition|None) -> Bindi
     return NOT_BINDING([])   # district/trial courts
 ```
 
-Row 3a is not part of `binding_on_forum` (it concerns the *provision*, not the precedent). P3 applies it when computing the provision's AuthorityStatus: an HC `STRIKES_DOWN` edge whose object is a central Act gets `qualifiers.territory = "IN"` instead of the HC's territory, while a `STRIKES_DOWN` of a *state* Act keeps the state's territory.
+Row 3a is not part of `binding_on_forum` (it concerns the *provision*, not the precedent). P3 applies it when computing the provision's `AuthorityView` status: an HC `STRIKES_DOWN` edge whose object is a central Act gets `qualifiers.territory = "IN"` instead of the HC's territory, while a `STRIKES_DOWN` of a *state* Act keeps the state's territory.
 
 **Input types** (so P3 and P5 implement the same signature):
 ```ts
@@ -399,6 +419,8 @@ interface Forum { level: CourtLevel; court_id: string | null; bench: number | nu
   jurisdictional_hc?: string | null; date: string /* the as_of_legal_date for the question */; source: "USER" | "MATTER" | "ASSUMED" }
 interface Binding { value: "BINDING" | "PERSUASIVE" | "NOT_BINDING" | "UNDETERMINED"; rule_ids: string[]; contested: boolean;
   weight?: "HIGH" | "NORMAL"; conflict?: "LARGER_BENCH" | "EARLIER_COEQUAL" | "UNRESOLVED" }
+// v1.0 D6/D16: surfaced as AuthorityView.binding_on_forum + binding_basis{rule_ids, authority_anchor_ids, contested, conflict}.
+// `weight` is doctrine-engine-internal (not an AuthorityView field); consumers derive "strongly persuasive" from rule_ids ∋ rul_IN_PREC_12.
 ```
 
 `territory_to_hc(territory, at)` reads the `court_jurisdiction` table (§1), which is time-versioned. For example, before 1 Jan 2019 the forum for an Andhra Pradesh or Telangana matter resolves to the common Hyderabad HC [IN-52].
@@ -517,9 +539,17 @@ def governing_code(matter, stage):            # stage ∈ {OFFENCE, INVESTIGATIO
 
 This requires dates per proceeding, not one `as_of_legal_date`. See spine change C2 (§10.4).
 
+**Spine v1.0 (D16, C2 accepted-modified).**
+- **Raw record.** `MatterContext.procedural_events[]{event_type (controlled vocab), date, certainty, alt_dates, anchor, confirmed_by?, source EXTRACTED|LAWYER}` (P7) is the raw record of these dates.
+- **Derived view.** `temporal_context{substantive_event_date?, proceedings[]{stage, initiated_on, initiation_kind JUDICIAL|MINISTERIAL, concluded_on?}, filing_date?}` is derived from those events. It is exposed on MatterContext, and optionally on ResearchQuery. `as_of_legal_date` remains the default.
+- **Inputs.** `governing_code()` reads `matter.offence_date` from `temporal_context.substantive_event_date` and `matter.proceeding(stage)` from `temporal_context.proceedings[]`.
+- **Ownership.** This doc owns the procedure; P3 implements it, and the P6 procedural agent calls it.
+- **Unit of transition.** The proceeding stage. The offence date governs substantive law.
+- **Uncertain dates.** An event whose `alt_dates` straddle the cutover, or whose `certainty` is `ESTIMATED` (P7 values: EXACT|DEEMED|ESTIMATED) within the uncertainty window around 1 Jul 2024, yields `UNDETERMINED` (the straddling rule above).
+
 ### 6.4 Crosswalk data model
 
-`CORRESPONDS_TO` is a Tier-1 assertion (spine §F). P3 owns storage. This doc fixes the semantics.
+`CORRESPONDS_TO` is a Tier-1 assertion (spine §F). P3 owns storage. This doc fixes the semantics. **Under spine v1.0 (D7, D16), the `change_type` enum below is canonical.** P3 adopts it, together with `group_id`, `granularity`, `penalty_delta`, `chain_prev` and `source_kind`, using the mapping table below to migrate its earlier enum. Every row is `impact_tier 1`, clause-level and many-to-many (D7), and each row's ID uses the `xrn_` prefix (D12).
 
 ```ts
 type Correspondence = Assertion & {
@@ -538,13 +568,18 @@ type Correspondence = Assertion & {
     penalty_delta?: "SAME" | "HIGHER" | "LOWER" | "DIFFERENT_KIND";   // drives Art.20(1) warnings
     chain_prev?: AssertionId;  // CrPC1898 s.561A → CrPC s.482 → BNSS s.528
     source_kind: "GAZETTE_TEXT_DIFF" | "OFFICIAL_TABLE" | "JUDICIAL_STATEMENT" | "THIRD_PARTY" | "EDITORIAL";
+    // v1.0 D7/D16 canonical source_kind: OFFICIAL_TABLE | JUDICIAL | EDITORIAL | MODEL. Mapping:
+    //   OFFICIAL_TABLE → OFFICIAL_TABLE; JUDICIAL_STATEMENT → JUDICIAL;
+    //   GAZETTE_TEXT_DIFF → EDITORIAL once reviewers confirm our diff of the official Gazette texts (MODEL while it is an unreviewed machine alignment);
+    //   EDITORIAL → EDITORIAL; THIRD_PARTY → not a source_kind (IK annotations are cross-check evidence only, kept in evidence[]).
+    diff_ref?: string;         // v1.0 D7: pointer to the stored old↔new text diff (P1 alignment)
   };
 };
 ```
 
-**Reconciliation with 05_P3 §5.7** *(added in independent review; previously a silent divergence)*. P3's stored `change_type` enum is `{IDENTICAL_TEXT, RENUMBERED_EQUIVALENT, NARROWED, WIDENED, PUNISHMENT_CHANGED, MERGED, SPLIT, PARTIAL_OVERLAP}`. This doc's enum is finer and legal-classification oriented. Until the spine fixes one enum (C5), P3 stores **both**: `change_type` (P3 enum, used by P5's `via_crosswalk` penalty) and `legal_change_type` (this enum, used by P6/P8 and `PRECEDENT_CARRIES_TO`). Deterministic mapping:
+**Reconciliation with 05_P3 §5.7** *(added in independent review; previously a silent divergence; **settled by spine v1.0 D16: one enum, this doc's**, so `legal_change_type` is retired and its values *are* `change_type`; the table below is now P3's migration mapping from its pre-v1.0 enum, and the P5 `via_crosswalk` penalty keys on the canonical values)*. P3's stored `change_type` enum was `{IDENTICAL_TEXT, RENUMBERED_EQUIVALENT, NARROWED, WIDENED, PUNISHMENT_CHANGED, MERGED, SPLIT, PARTIAL_OVERLAP}`. This doc's enum is finer and legal-classification oriented. Until the spine fixes one enum (C5), P3 stores **both**: `change_type` (P3 enum, used by P5's `via_crosswalk` penalty) and `legal_change_type` (this enum, used by P6/P8 and `PRECEDENT_CARRIES_TO`). Deterministic mapping:
 
-| This doc (`legal_change_type`) | P3 `change_type` | Carry rule |
+| Canonical v1.0 `change_type` (formerly this doc's `legal_change_type`) | P3 pre-v1.0 `change_type` (legacy, for migration) | Carry rule |
 |---|---|---|
 | SAME_RENUMBERED, `text_similarity ≥ 0.97` | IDENTICAL_TEXT | GOOD |
 | SAME_RENUMBERED, `< 0.97` | RENUMBERED_EQUIVALENT | GOOD only with judicial pari-materia statement, else CAUTION |
@@ -573,7 +608,7 @@ type Correspondence = Assertion & {
 
 ### 6.5 Worked crosswalk (verified rows only; others must be built from text diff + review)
 
-| Old | New | change_type (our classification) | Evidence |
+| Old | New | change_type (canonical v1.0 enum, D16) | Evidence |
 |---|---|---|---|
 | IPC 302 | BNS 103 ("Punishment for murder") | SAME_RENUMBERED (sub-section 103(1)) | [IN-39][IN-41] |
 | IPC 420 | BNS 318(4) | SAME_RENUMBERED, `granularity=SUBSECTION` (SC cites "318") | [IN-40] snippet; [IN-37] |
@@ -603,7 +638,7 @@ type Correspondence = Assertion & {
 |---|---|---|
 | **Enactment ≠ commencement** | Acts commence on notified dates, often in stages. The DPDP Act illustrates this: Rules notified 13 Nov 2025; Rules 1, 2 and 17–21 in force immediately; Rule 4 (consent managers) after 12 months; Rules 3, 5–16, 22 and 23 after 18 months (AZB gives 12 Nov 2026 and 12 May 2027) [IN-59]. The Income-tax Act 2025 is in force from 1 Apr 2026 (08_P6 [IN-72]). | `LegislativeAction(kind=COMMENCES, target_anchor_set, effective_from, gazette_ref)`. Provision-level `valid_from`. Never use assent date as `valid_from` (consistent with P2 §5). |
 | **Ordinances** | Same force as an Act, but an ordinance "shall cease to operate at the expiration of six weeks from the reassembly of Parliament" unless disapproved earlier, and may be withdrawn (Art. 123(2)) [IN-8]. Art. 213 is the state analogue. Repeated re-promulgation is a "fraud on the Constitution" (*Krishna Kumar Singh*, 7-J, 2017), with separate opinions differing on what survives lapse [IN-28]. | Ordinance expression `valid_to = min(withdrawal, disapproval, reassembly+6 weeks)`. `valid_to` stays *provisional* until the Gazette shows replacement, lapse or disapproval. Survival of effects after lapse → `CONTESTED` flag, not auto-inference. |
-| **State amendments to central Acts** (Concurrent List) | A repugnant state law on a Concurrent List matter that has received Presidential assent "shall prevail in that State" (Art. 254(2)) [IN-9]. | **Territorial expressions.** The same Work has different text in different states on the same date (spine change C3). |
+| **State amendments to central Acts** (Concurrent List) | A repugnant state law on a Concurrent List matter that has received Presidential assent "shall prevail in that State" (Art. 254(2)) [IN-9]. | **Territorial expressions.** The same Work has different text in different states on the same date (spine change C3, accepted in v1.0 D16: `expression_key = lang@YYYY-MM-DD[~TERR]`). |
 | **Repeal and savings** | GCA s.6: a repeal does not revive, does not affect previous operation or accrued rights/liabilities, and saves pending proceedings "unless a different intention appears" [IN-47]. BNS s.358(4) expressly preserves s.6 [IN-31]. | Repeal ends the expression's `valid_to` for *new* conduct. Saved rights keep the old expression **operative** for events before repeal. P3 therefore evaluates by event date, not query date. |
 | **Retrospective and validating Acts** | Legislatures amend with retrospective effect to override judgments (`LEGISLATIVELY_OVERRIDDEN_BY`, §5) *(general practice; no specific instance re-verified here)*. | Bitemporal: a retrospective amendment enacted on T2 with `valid_from = T0 < T2` is recorded at T2. Queries `as_known_at < T2` see the old law (spine §E). |
 | **Judicially moulded retroactivity** | *MADA* (2024) moulded the past effect of a declaration [IN-26]. | `effect=MOULDED` + anchored `conditions[]` on the assertion (spine change C4). |
@@ -612,7 +647,7 @@ type Correspondence = Assertion & {
 
 ### 7.2 Point-in-time resolution contract
 
-`resolve(anchor, legal_date, territory)` does four things:
+`resolve(anchor, legal_date, territory)` does four things. Under spine v1.0 D16, statute expression keys take the form `lang@YYYY-MM-DD[~TERR]`, e.g. `en@2019-06-06~UP`. `TERR` is the ISO 3166-2:IN subdivision code without its `IN-` prefix, and the corresponding `ter_` ID follows D12. Point-in-time resolution takes `(date, territory)`, and an expression without `~TERR` is the all-India text.
 1. Pick the Work's expression whose `[valid_from, valid_to)` contains `legal_date`, filtered to `recorded_at ≤ as_known_at`.
 2. If a **territorial variant** exists for `territory`, pick it; otherwise pick the all-India expression.
 3. If an ordinance expression is `provisional`, return `status=PROVISIONAL` with the reason.
@@ -644,16 +679,18 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 - P0 reports later counts (~37,000 Hindi) *(not re-verified here)*.
 
 **Design rules**
-1. **Authoritative-expression flag.** For HC judgments under OLA s.7, the pronounced-language text and the HC-issued English translation are *both* Expressions of one Work (`hi`, `en`). `authoritative ∈ {ORIGINAL, OFFICIAL_TRANSLATION, OUR_MT}`.
+1. **Authoritative-expression flag.** For HC judgments under OLA s.7, the pronounced-language text and the HC-issued English translation are *both* Expressions of one Work (`hi`, `en`). Their authority labels are ORIGINAL and OFFICIAL_TRANSLATION. Earlier drafts also listed an `OUR_MT` value, which v1.0 removes.
+   - *Spine v1.0 D16 form.* Both carry `authoritative=true`, with `authority_basis=ORIGINAL` or `OLA_S7_HC_TRANSLATION` (P1 §2.4) and `translation_of` on the translation. This doc's label `OFFICIAL_TRANSLATION` maps to `OLA_S7_HC_TRANSLATION`. SC vernacular translations are `COURT_PUBLISHED_TRANSLATION` with `authoritative=false`.
+   - *No `OUR_MT` value.* Machine translation is **not an Expression at all** (rule 2), so no Expression carries this label.
    - Which of `hi` and `en` prevails on conflict is **not settled** by any authority we verified → `CONTESTED`.
    - P6/P8 quote the ORIGINAL and show the official translation alongside it.
 2. **Machine translation is never a citation source.**
-   - `OUR_MT` expressions (e.g. IndicTrans2 [IN-69]) exist for retrieval and for the lawyer's reading aid only.
+   - **MT renditions** (e.g. IndicTrans2 [IN-69]) are never Expressions (spine v1.0 D8/D16). On the public side they are node `aux_text['{lang}-x-mt']` / `Chunk.mt` with `authoritative=false`; on the private side they are display renditions such as `pdoc_…/v1.mt-en`. They exist for retrieval and for the lawyer's reading aid only.
    - Anchors are aligned to the original's paragraphs via P1's alignment record.
-   - A claim anchored to `OUR_MT` fails P8 verification by design.
+   - A claim anchored to an MT rendition fails P8 verification by design. MT renditions may be displayed and aligned, but they are never support anchors.
 3. **For statutes**, English is authoritative (Art. 348(1)(b)). Hindi statute texts are official translations (Authoritative Texts (Central Laws) Act, 1973 *(not re-verified)*). The display follows s.52(1)(r) limits for any translation we generate (§2.1).
 4. **Script and numeral normalisation** (Devanagari digits; "धारा" = section; Latin-script citations inside Hindi judgments) happen before citation extraction (P1 §5.8).
-5. **Missing official translation** *(added in independent review)*. OLA s.7 requires an HC-issued English translation [IN-11], but it may lag or be absent from the portal. Until it appears, the Hindi ORIGINAL is the only citable expression, and treatment edges proposed from `OUR_MT` are forced to `PENDING_REVIEW` with a bilingual reviewer. P0 re-polls for the official translation weekly for 90 days (§10.2).
+5. **Missing official translation** *(added in independent review)*. OLA s.7 requires an HC-issued English translation [IN-11], but it may lag or be absent from the portal. Until it appears, the Hindi ORIGINAL is the only citable expression, and treatment edges proposed from an MT rendition are forced to `PENDING_REVIEW` with a bilingual reviewer. P0 re-polls for the official translation weekly for 90 days (§10.2).
 6. **Confusable characters** *(added in independent review)*. Before the citation grammar runs, NFKC-normalise the text and map homoglyphs (Latin `O`/digit `0`, Cyrillic lookalikes, Devanagari digits) inside candidate spans only. A citation that resolves only *after* homoglyph repair is tagged `resolution_basis=REPAIRED` and never auto-activates an alias (T0/T1). This blocks both OCR noise and deliberately spoofed citations in uploaded TPL documents.
 
 ### 8.R Independent review findings
@@ -673,8 +710,8 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 1. *Laksh Vir Singh Yadav* reaches us directly. Principle (iv) obliges "other hosts" on receipt of a court masking order, and para 277 imposes an upload-time duty on IK for victim identity. Added: an upload-time masking gate, order-authenticity checks against RTBF abuse, and the CONTESTED intermediary question (§2.5, Q8).
 2. Two missing precedent rules: Art. 142 directions are not precedent (*Rafiq Masih*, rul 23), and an HC order on a central Act's validity has all-India effect (*Kusum Ingots*, rul 24). Both are wired into the decision table (rows 3, 3a) and the pseudo-code (§4).
 3. Typed inputs for `binding_on_forum` (§4.2), and SQL for `court_jurisdiction` with a no-overlap constraint (§1).
-4. A silent divergence from 05_P3's `change_type` enum was resolved with a mapping table and a `legal_change_type` field. Crosswalk rows now use P3's expression-independent `ProvisionRef` (S3-7) (§6.4).
-5. A silent spine divergence (`en.m1` masked expressions) is now explicit spine change C8 and reconciled with 04_P2's `doc.redacted.v1`. `order_ref` now uses spine-conformant anchor syntax.
+4. A silent divergence from 05_P3's `change_type` enum was resolved with a mapping table and a `legal_change_type` field. *(Spine v1.0 D16 then made this doc's enum the single canonical `change_type`; §6.4.)* Crosswalk rows now use P3's expression-independent `ProvisionRef` (S3-7) (§6.4).
+5. A silent spine divergence (`en.m1` masked expressions) is now explicit spine change C8 and reconciled with 04_P2's `doc.redacted.v1`. *(Spine v1.0 D16 rejected C8: masking is a RedactionOverlay on `doc.redacted.v1`, with no masked expression_key; §2.5, §10.4A.)* `order_ref` now uses spine-conformant anchor syntax.
 6. Privilege: `privilege_basis` for in-house-counsel tenants (C9).
 7. Cost: a crosswalk HITL budget (≈540 reviewer-hours) and a cost-control row in the red team (§6.4, §10.2).
 8. Freshness SLO for "overruled yesterday", and a masking-gate recall metric (§10.3).
@@ -701,7 +738,7 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 | **Right to be forgotten / masking** | *Laksh Vir Singh Yadav* (Delhi HC, 2026) directs name-search restriction for legal databases, and says a court's masking order obliges "other hosts" to disable name-based search [IN-55] | `access_restriction` (§2.5, spine change C6); upload-time masking gate |
 | **Bar Council of India Rules** (advocates' conduct) | BCI Rules Part VI, Ch. II, rule 36 bars advocates from soliciting work or advertising *(unverified in this session)*. BCI rules on registration of foreign lawyers and law firms (2022/2023) *(unverified)*. | Product features that publish a firm's "wins", rank advocates by outcomes, or route leads to advocates can expose **tenants** to conduct complaints. P9 outcome data stays tenant-internal. P10 has no public advocate-ranking or marketplace feature without a legal opinion. Open question Q10. |
 | **Hallucinated citations in Indian fora** | Documented Indian instance: an ITAT Bangalore order (Dec 2024) was recalled after it was reported to cite non-existent judgments (20_CT [IN-73]) | Justifies P8's hard gate. Also a sales argument: Indian benches now notice fake citations. |
-| **Data residency and on-prem demand** | No general DPDP localisation (s.16 negative list) [IN-56]. Model providers differ: one major provider offers India *storage* but not India *processing* (13_XC [IN-68]). Top Indian firms (Shardul Amarchand Mangaldas, AZB) adopted a US SaaS legal-AI vendor in 2025 (20_CT [IN-67]). | Evidence suggests **SaaS in an India region is acceptable to large firms** when security is strong. Private-cloud or on-prem is a premium tier for PSU and government-adjacent or high-sensitivity matters, not the default *(demand split unverified; validate with the design partner, 22_roadmap)*. |
+| **Data residency and on-prem demand** | No general DPDP localisation (s.16 negative list) [IN-56]. Model providers differ: one major provider offers India *storage* but not India *processing* (13_XC [IN-68]). Top Indian firms (Shardul Amarchand Mangaldas, AZB) adopted a US SaaS legal-AI vendor in 2025 (20_CT [IN-67]). | Evidence suggests **SaaS in an India region is acceptable to large firms** when security is strong. Private-cloud or on-prem (spine v1.0 D17: D3 customer VPC, D4 on-prem/air-gapped, D4h on-prem with in-India cloud LLM endpoints) is a premium tier for PSU and government-adjacent or high-sensitivity matters, not the default *(demand split unverified; validate with the design partner, 22_roadmap)*. The MVP is one D2 dedicated cell running the same code as the D1 pooled SaaS cell that opens at GA (D17). |
 
 ---
 ## 10. Design implications per phase
@@ -710,15 +747,15 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 
 | Phase | Must implement (from this doc) |
 |---|---|
-| **P0** | Gazette-first capture for all legal-change events (§1, §7). Capture court-prohibition, in-camera and masking signals and `terms_ref`. Never circumvent CAPTCHAs (`rul_IN_ACCESS_1`). Seed the `court_jurisdiction` table (25 HCs, benches, time-versioned) [IN-52]. Harvest SC `diary_no` from `view-pdf` URLs [IN-50]. Obtain each HC's neutral-citation notification (Gujarat, Patna, Telangana, AP and Sikkim formats unobserved). |
-| **P1** | Grammar §3.3 incl. slash/colon, zero-padding, `-DB/-FB`, line-break repair. Year-window check for publication-year reporters (§3.1). Opinion segmentation from the court copy only (EBC ¶41). `AMBIGUOUS_ACT` for post-2024 "482"-type mentions (§6.5). Harvest `correspondence_hint`s. Masked expressions for BNS s.72-type matters, via the upload-time gate (§2.5). `law_declared` signals (SLP non-speaking; speaking-order law; Art. 142 / "not a precedent" cues, rul 23). Hindi and regional cue lexicons. |
-| **P2** | Territory-aware statute chunks (`valid_from/valid_to` + `territory`). Suppressed-name exclusion from lexical name fields and facets (§2.5). Index `OUR_MT` expressions with an `authoritative` flag so retrieval can hit them but citation cannot. |
-| **P3** | Rule registry §4.1 and decision table §4.2. Competence check on OVERRULES (§5.3). `DISMISSES_IN_LIMINE` ≠ `AFFIRMS`. `effect=MOULDED`. All-India territory for HC `STRIKES_DOWN` of central Acts (row 3a). Store `legal_change_type` beside `change_type` (§6.4). Crosswalk model §6.4 with Tier-1 HITL. `PRECEDENT_CARRIES_TO` derivation. `access_restriction` on Work. Never machine-declare per incuriam. |
-| **P4** | Re-run AuthorityStatus when a reference is answered, a stay is vacated, or an ordinance lapses (timer events at reassembly+6 weeks). Backfill: re-test pre-May-2026 "which procedure" treatments against *Parvinder Singh*. Propagate takedown and masking within 2 weeks. The Delhi HC direction gave two weeks (para 284) [IN-55]. |
+| **P0** | Gazette-first capture for all legal-change events (§1, §7). Capture court-prohibition, in-camera and masking signals and `terms_ref`, and publish them as `doc.redacted.v1` overlays with `raw.captured.v1.change_kind=SUPPRESSED` for takedowns (v1.0 D16). Publish the tenant-agnostic `CourtCalendar`, cause-list, case-status and daily-order feeds (D4/D16), and `judgment.expected.v1`. Never circumvent CAPTCHAs (`rul_IN_ACCESS_1`). Seed the `court_jurisdiction` table (25 HCs, benches, time-versioned) [IN-52]. Harvest SC `diary_no` from `view-pdf` URLs [IN-50]. Obtain each HC's neutral-citation notification (Gujarat, Patna, Telangana, AP and Sikkim formats unobserved). |
+| **P1** | Grammar §3.3 incl. slash/colon, zero-padding, `-DB/-FB`, line-break repair. Year-window check for publication-year reporters (§3.1). Opinion segmentation from the court copy only (EBC ¶41). `AMBIGUOUS_ACT` for post-2024 "482"-type mentions (§6.5). Harvest `correspondence_hint`s. Masking for BNS s.72-type matters via the upload-time gate (§2.5). Under v1.0 D16 this is a `doc.redacted.v1` RedactionOverlay (`MASK_SPANS`), not a masked expression (C8 rejected). Court-issued paragraph numbering only (D16). `law_declared` signals (SLP non-speaking; speaking-order law; Art. 142 / "not a precedent" cues, rul 23). Hindi and regional cue lexicons. |
+| **P2** | Territory-aware statute chunks (`valid_from/valid_to` + `territory`). Suppressed-name exclusion from lexical name fields and facets (§2.5). Index MT renditions (`Chunk.mt` shadow field, `authoritative=false`; never Expressions, per v1.0 D16) so retrieval can hit them but citation cannot. Build every projection from the masked rendition when a RedactionOverlay applies. |
+| **P3** | Rule registry §4.1 and decision table §4.2. Competence check on OVERRULES (§5.3). `DISMISSES_IN_LIMINE` ≠ `AFFIRMS`. `effect=MOULDED`. All-India territory for HC `STRIKES_DOWN` of central Acts (row 3a). Adopt this doc's `change_type` enum as the single canonical crosswalk enum, with `source_kind` OFFICIAL_TABLE\|JUDICIAL\|EDITORIAL\|MODEL, and migrate the pre-v1.0 enum via the §6.4 mapping (v1.0 D16; `legal_change_type` retired). Crosswalk model §6.4 with Tier-1 HITL. Implement `rul_IN_PREC_*` in `authority-core` as the canonical DoctrineRule registry, and `governing_code()` (§6.3) over `temporal_context`. `PRECEDENT_CARRIES_TO` derivation. `access_restriction` on Work. Never machine-declare per incuriam. |
+| **P4** | Trigger AuthorityView recomputation when a reference is answered, a stay is vacated, or an ordinance lapses (timer events at reassembly+6 weeks). P3 commits the status through `commit_status_batch` (v1.0 D4). Backfill: re-test pre-May-2026 "which procedure" treatments against *Parvinder Singh*. Propagate takedown and masking within 2 weeks. The Delhi HC direction gave two weeks (para 284) [IN-55]. In v1.0 this is `doc.redacted.v1` with `purge_sla` ≤ P14D. |
 | **P5** | Rank by `binding_on_forum`. Never collapse to court level. Treat `UNDETERMINED` forums with a generic-HC profile plus a warning (as P5 already does). Fire the I8 CROSSWALK intent for both codes. Apply date-per-stage (§6.3). Suppress name-only hits on restricted Works. |
 | **P6** | The procedural agent uses `governing_code()` per stage. Memos state *which code and why* with the savings anchor (BNSS s.531(2)(a) ¶ / *Parvinder* ¶28). Memos distinguish BINDING from PERSUASIVE in claim text. SC obiter is phrased as "strongly persuasive" (rul 12, contested). |
-| **P7** | `MatterContext` carries a proceedings timeline (initiation dates per stage), not just `cause_of_action`. Privilege flags per BSA s.132, with `privilege_basis` by tenant type (in-house counsel not covered; C9). Regional-language district-court orders are the norm in case files (§8). |
-| **P8** | Block claims anchored to `OUR_MT`. Check the stated binding status against P3. Check "which code" claims against `governing_code()`. Treat a false red flag as an error class alongside missed negative treatment. |
+| **P7** | `MatterContext` carries a proceedings timeline (initiation dates per stage), not just `cause_of_action`. v1.0 D16: raw `procedural_events[]`, from which the derived `temporal_context` is exposed (§6.3). Privilege flags per BSA s.132, with `privilege_basis` by tenant type (in-house counsel not covered; C9). Regional-language district-court orders are the norm in case files (§8). |
+| **P8** | Block claims anchored to MT renditions (v1.0 D16). Block tier-1 claims whose only support is a `pg{n}` locator. Check the stated binding status against P3. Check "which code" claims against `governing_code()`. Treat a false red flag as an error class alongside missed negative treatment. |
 | **P9** | Lawyer corrections on treatment or crosswalk are `ASSERTION` feedback → P3 review queue. Never train on TPL-derived text beyond s.17(1)(a) purposes without the Privacy Gate. |
 | **P10** | Show forum and date assumptions on every status chip. Show pending references and stays as information, not red flags. Offer a "why this code applies" explainer. Show the takedown/RTBF state for PLC content. |
 
@@ -740,7 +777,7 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 | **RTBF abuse** (a litigant forges or overstates a "masking order" to bury adverse precedent) | Good law disappears from name search; opposing counsel cannot find it. | Suppression activates only from an order fetched from an official source (`order_source_raw_id`) and reviewed (§2.5). Suppression never removes a Work from citation, case-number or proposition retrieval (para 285 model). |
 | **Art. 142 / "not to be treated as a precedent" read as law** | A false BINDING, especially in service and tax matters, where such directions are common. | `law_declared ∈ {ART142_DIRECTION, EXPRESSLY_NOT_PRECEDENT}` → NOT_BINDING (rul 23, row 3). P1 cue list: "in exercise of our powers under Article 142", "shall not be treated as a precedent", "peculiar facts and circumstances". HITL on every SC proposition carrying such a cue. |
 | **HC strikes down a central Act; engine treats it as local** | A provision is shown GOOD in Chennai while a Delhi HC final order has struck it down. | Row 3a / rul 24 (*Kusum Ingots*): the provision's status is all-India, while the HC's reasoning stays persuasive outside its territory. |
-| **Hindi judgment with no official English translation yet** (OLA s.7 requires one, but it can lag or be missing on the portal) | Treatment cues in the Hindi original are missed, or an MT is quoted as law. | Hindi ORIGINAL is the citable expression. `OUR_MT` is used only to *propose* candidate treatment edges, which are forced to `PENDING_REVIEW` with a bilingual reviewer. P0 re-polls for the HC translation weekly for 90 days and adds it as `OFFICIAL_TRANSLATION` when it appears. |
+| **Hindi judgment with no official English translation yet** (OLA s.7 requires one, but it can lag or be missing on the portal) | Treatment cues in the Hindi original are missed, or an MT is quoted as law. | Hindi ORIGINAL is the citable expression. The MT rendition (never an Expression, v1.0 D16) is used only to *propose* candidate treatment edges, which are forced to `PENDING_REVIEW` with a bilingual reviewer. P0 re-polls for the HC translation weekly for 90 days and adds it as `OFFICIAL_TRANSLATION` (`authority_basis=OLA_S7_HC_TRANSLATION`, `authoritative=true`) when it appears. |
 | **In-house-counsel tenant assumes privilege** | Documents shown as "privileged" are not protected (2025 INSC 1275). | `privilege_basis` (§9, C9). Tenant onboarding captures tenant type. |
 | **Cost blow-up** (IK API per-call fees at 10M-doc backfill; HITL volume on Tier-1 edges; MT of district orders) | Unbounded spend. | IK is gap-filler only; the AWS CC-BY bulk sets are the backfill (§1). Tier-1 HITL is budgeted: crosswalk ≈540 reviewer-hours one-time (§6.4); treatment review is prioritised by `citation_count × forum_reach` so only the head of the distribution waits for humans; the long tail shows `definitive=false`. MT runs on demand per matter (TPL), never corpus-wide. |
 | **Legal-risk red team** | A bare-Act export breaches s.52(1)(q)(ii). Reporter paragraphing leaks via a third-party dataset. Name search on RTBF-protected parties. | "Original matter" requirement on statute outputs (§2.1). A provenance filter bans reporter-derived text (§2.2). `access_restriction` (§2.5). |
@@ -752,10 +789,12 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 - **Crosswalk precision.** 100% on displayed-definitive mappings (HITL). Coverage = share of IPC/CrPC/IEA sections with a reviewed mapping. Target 100% before GA of the criminal module.
 - **Which-code accuracy** on a gold set of ≥100 transition scenarios (built with the partner firm from real FIR/charge-sheet timelines). Target ≥97%, and 0 confident answers on UNDETERMINED cases.
 - **Citation resolution by scheme.** Precision ≥99.5% for T0/T1. Recall reported per HC neutral-citation format.
-- **Negative-treatment freshness** *(added in independent review)* **[NOVEL — targets unvalidated]**. From an SC judgment appearing on sci.gov.in to (a) a machine `CAUTION` signal (`definitive=false`) on every cited Work carrying an OVERRULES/OVERRULES_IN_PART cue: p95 ≤ 6 h; (b) Tier-1 HITL decision: p95 ≤ 2 business days for SC Benches of ≥3 judges. HC judgments: (a) ≤ 24 h after capture.
+- **Negative-treatment freshness** *(added in independent review)* **[NOVEL — targets unvalidated]**. From an SC judgment appearing on sci.gov.in to (a) a machine `CAUTION` signal (`definitive=false`, `reason_code=NEGATIVE_SIGNAL_UNDER_REVIEW`, per v1.0 D6) on every cited Work carrying an OVERRULES/OVERRULES_IN_PART cue: p95 ≤ 6 h; (b) Tier-1 HITL decision: p95 ≤ 2 business days for SC Benches of ≥3 judges. HC judgments: (a) ≤ 24 h after capture.
 - **Masking-gate recall.** Share of sexual-offence and juvenile Works caught by the upload-time gate before first display (§2.5). Target ≥99.5% on a reviewed sample of 1,000 such Works; zero known victim-identity displays.
 
 ### 10.4 Proposed spine changes
+
+*This table is the original proposal record. Spine v1.0 dispositions are in §10.4A.*
 
 | # | Target | Change | Justification |
 |---|---|---|---|
@@ -768,6 +807,30 @@ One `as_of_legal_date` per query is therefore insufficient (C2).
 | C7 | §D identifier_alias | `NEUTRAL_HC` value normalised as `{court_code}\|{bench_code}\|{year}\|{n}\|{bench_type}`. Add schemes `SCC_SUPP`, `SCC_SERIES`, `AIR_SCW`, `AIRONLINE`, `NJRS`. `SC_DIARY_NO` format `n/yyyy`. | Observed formats §3.1–3.2 [IN-51][IN-54]. |
 | C8 | §B expression_key (judgments) | Reserve suffix `.m{n}` for **masked expressions** (e.g. `en.m1`), alongside `.r{n}` for corrigenda. A masked expression reuses the source expression's fragment IDs (identity `anchor_alias`, method `MASK`) and becomes the display and index default. For the unmasked expression, 04_P2's `doc.redacted.v1` procedure applies unchanged (derived text purged from all generations, hashes kept). The court-issued raw blob stays in the object store under legal-hold access only, for provenance and for revocation (Delhi HC principle (v)). Register `doc.redacted.v1` (P2) and `work.access_restricted.v1` (C6) together in spine §G: the first masks *text*, the second suppresses *name search*. *(Previously a silent divergence: §2.5 used `en.m1` with no spine change, and P2 masked in place without an expression key.)* | Masking is retrospective and prospective (principle (iii)) [IN-55]; audit replay (spine §E) needs a stable key for "what we displayed when". |
 | C9 | §H MatterContext `privilege_flags` | `privilege_flags{basis: ADVOCATE_S132\|NONE_IN_HOUSE\|LITIGATION_WORK_PRODUCT_UNTESTED, advocate_ids[], asserted_by, asserted_at}` per TPL object | *In re: Summoning Advocates*, 2025 INSC 1275: s.132 does not cover in-house counsel [IN-62]. |
+
+### 10.4A Spine v1.0 conformance
+
+The principal architect's spine v1.0 decision record (D1–D18) disposed of C1–C9 as follows. Where this doc's body and v1.0 differ, v1.0 wins. The affected passages have been annotated in place.
+
+| # | Proposal | Disposition |
+|---|---|---|
+| C1 | `binding_on_forum` UNDETERMINED, `binding_basis{rule_ids, contested}`, `conflict`, `weight`; Proposition `law_declared` | **ACCEPTED-MODIFIED (D6, D16).** `AuthorityView` (P3-owned) is the only input for badges, ranking and P8 status checks. `binding_on_forum` is BINDING\|PERSUASIVE\|NOT_BINDING\|UNDETERMINED, and `binding_basis{rule_ids, authority_anchor_ids, contested}` gains **`conflict` LARGER_BENCH\|EARLIER_COEQUAL\|UNRESOLVED** (D16). **`weight` is not adopted** as an AuthorityView field: "strongly persuasive" SC obiter is expressed by PERSUASIVE + `contested=true` + `rule_ids ∋ rul_IN_PREC_12`. `law_declared` is not ruled on by v1.0; it stays a proposal to P3, which owns Proposition. |
+| C2 | `temporal_context{…}` on ResearchQuery + MatterContext | **ACCEPTED-MODIFIED (D16).** `MatterContext.procedural_events[]` is the raw record, and `temporal_context{substantive_event_date?, proceedings[]{stage, initiated_on, initiation_kind JUDICIAL\|MINISTERIAL, concluded_on?}, filing_date?}` is *derived* from it. It is exposed on MatterContext and optionally on ResearchQuery, and `as_of_legal_date` stays the default. `governing_code()` is owned here and implemented in P3 (§6.3). |
+| C3 | Territorial statute expressions `lang@YYYY-MM-DD[~TERR]` | **ACCEPTED (D16).** ISO 3166-2:IN codes; point-in-time resolution takes `(date, territory)` (§7.2). |
+| C4 | `effect=MOULDED` with `conditions[]{text, anchor_id}` | **ACCEPTED (D16).** |
+| C5 | Crosswalk `change_type` / `legal_change_type` + qualifiers | **ACCEPTED-MODIFIED (D7, D16).** A single enum is adopted, and **the canonical enum is this doc's** (§6.4), plus `group_id`, `granularity`, `penalty_delta` and `chain_prev`. `source_kind` is `OFFICIAL_TABLE\|JUDICIAL\|EDITORIAL\|MODEL` (mapping in §6.4); `diff_ref` is added. P3 migrates its pre-v1.0 enum via the §6.4 table, and `legal_change_type` is retired. Crosswalk rows are always `impact_tier 1`. |
+| C6 | `Work.access_restriction{…}` + event `work.access_restricted.v1` + prefix `ent_` | **ACCEPTED-MODIFIED (D16).** `Work.access_restriction{name_search_suppressed[], masked_expression_required, court_prohibition}` is **kept**. `work.access_restricted.v1` is **folded into `doc.redacted.v1`**: name-search suppression is a RedactionOverlay with `kind=NAME_SEARCH_SUPPRESSED`. `statutory_bar` travels as `RedactionOverlay.legal_basis`. `ent_` is accepted for recurring institutional parties only, with no IDs for individuals, so RTBF entries use `party_ref` spans (§2.5). |
+| C7 | `NEUTRAL_HC` normalisation; schemes `SCC_SUPP`, `SCC_SERIES`, `AIR_SCW`, `AIRONLINE`, `NJRS`; `SC_DIARY_NO` `n/yyyy` | **ACCEPTED (D16).** Alias rows also carry `trust_tier` T0–T4 (T0 court-issued … T4 model-inferred), and third-party never overrides T0. This matches §3.4's tiering. |
+| C8 | Masked expressions `.m{n}` (`en.m1`) | **REJECTED (D16).** Masking is a **RedactionOverlay** carried on **`doc.redacted.v1`** `{overlay_id, scope WORK\|EXPRESSION\|ANCHOR_SPANS, kind SUPPRESS_ALL\|MASK_SPANS\|NAME_SEARCH_SUPPRESSED\|COURT_PROHIBITION, spans[], legal_basis, ordered_by?, effective_at, purge_sla}`. Indexes, snippets, exports and quote checks use the masked rendition, and no masked `expression_key` exists. The audit-replay need ("what we displayed when") is met by the overlay's `overlay_id` + `effective_at` under the bitemporal model. The raw blob stays under legal hold (unchanged). Producers are P0, P1, ops and legal (not P2). |
+| C9 | `privilege_flags{basis, …}` | **ACCEPTED (D16).** `MatterContext.privilege_flags` gains `basis`. |
+
+**Renames this doc now follows**
+- "`OUR_MT` expressions" → **MT renditions**, which are never Expressions: `aux_text['{lang}-x-mt']` / `Chunk.mt` on the public side and `{pdoc_id}/v1.mt-en` on the private side. The `authoritative` labels ORIGINAL / OFFICIAL_TRANSLATION map to `authority_basis` ORIGINAL / OLA_S7_HC_TRANSLATION with `authoritative=true`.
+- Masked expression `en.m1` → RedactionOverlay on `doc.redacted.v1`. `work.access_restricted.v1` → `doc.redacted.v1`.
+- `legal_change_type` → `change_type` (canonical). `source_kind` values: GAZETTE_TEXT_DIFF/JUDICIAL_STATEMENT/THIRD_PARTY → EDITORIAL (or MODEL until reviewed)/JUDICIAL/(evidence only).
+- AuthorityStatus as the consumer-facing object → **`AuthorityView`** (the status enum stays 5-valued). "Under review" = `CAUTION` + `definitive=false` + `NEGATIVE_SIGNAL_UNDER_REVIEW`, and coverage gaps = `UNKNOWN` + `COVERAGE_GAP` (D6).
+- The DoctrineRule registry `rul_IN_PREC_01..24` (§4.1) is canonical for P3's `authority-core`.
+- Deployment names follow D17 (D1/D2/D3/D4/D4h), and ID prefixes follow D12 (`rul_`, `ter_`, `xrn_`, `rvw_`, `ent_`, `bnc_`, `crt_`).
 
 ### 10.5 Open questions and risks
 
