@@ -1,7 +1,7 @@
 # P2 — Enrichment and Indexing
 
 **Abstract.** P2 turns every `doc.parsed.v1` into retrieval-ready units and keeps all text indexes mutually consistent. It chunks judgments, statutes, the Constitution and notifications along their legal structure (paragraph groups that never cross a rhetorical-role boundary, provisions that never lose their provisos). It attaches deterministic context headers, and adds LLM-written context only where a chunk cannot be understood on its own. It builds anchored, entailment-checked digests ("case cards" and role-segment summaries) instead of copying reporter headnotes. It writes lexical, dense and (optionally) learned-sparse representations into versioned **index generations**. Postgres is the system of record, the indexes are disposable projections, and the outbox, external versioning and checksum reconciliation keep them in step. The evidence behind this design:
-- Indian retrieval benchmarks show BM25 beating dense models on precedent retrieval, while dense models win on statute retrieval [P2-8]. So lexical search is first-class, not a fallback.
+- Indian retrieval benchmarks show BM25 beating fine-tuned semantic models on precedent retrieval, while fine-tuned semantic models (best when run over *summaries*) win on statute retrieval [P2-8]. So lexical search is first-class, not a fallback.
 - Legal-tuned embedders lead general ones on the only large legal embedding benchmark, but that benchmark contains no Indian data [P2-3]. So the embedder is chosen by a bake-off on Indian data, behind an abstraction that makes a model swap cost a re-embed, not a re-architecture.
 - Retrieval sets the ceiling for legal RAG quality [P2-4].
 
@@ -37,7 +37,7 @@ Recommended stack:
 - **R1. Anchors are durable; chunks are disposable.** A chunk is a retrieval convenience that can be re-cut in any generation. Every chunk lists the anchors it covers, and all downstream citation uses anchors.
 - **R2. Postgres is the system of record; indexes are projections.** Any index can be rebuilt from Postgres plus the object store plus the embedding cache, without re-parsing.
 - **R3. Stable versus volatile fields.** Text-derived fields go into the vector-bearing documents. Fast-changing legal status (overruled, stayed) never does. An update in Lucene-family engines re-indexes the whole document [P2-37], which here means the vector too. Status lives in an overlay (the P4 store) plus a small P2 "status mirror" index.
-- **R4. Lexical is first-class.** On Indian precedent retrieval, BM25 (5-gram) scores 33.29 macro-F1@k against 24.67 for the best graph/semantic model. Dense wins on statutes (SAILER 21.69 against BM25 16.98). Ensembles and an LLM re-ranker win overall [P2-8].
+- **R4. Lexical is first-class.** On Indian precedent retrieval, BM25 (5-gram) scores 33.29 macro-F1@k against 24.67 for the best graph/semantic model (Para-GNN, full document, multi-task). Fine-tuned semantic models win on statutes: Para-GNN over case *summaries* 32.85 and SAILER 21.69, against BM25 (5-gram) 16.98. BM25+semantic ensembles and GPT-4.1 two-stage re-ranking win overall [P2-8].
 - **R5. Never lose legal context at a boundary.** Do not detach a proviso from its sub-section, do not merge counsel's arguments with the court's reasoning, and flag a quoted passage as a quotation.
 - **R6. Model-agnostic by construction.** An embedder swap is a new generation. At this corpus size a full re-embed costs low thousands of USD (§5.14), so there is no reason to lock in.
 
@@ -78,9 +78,15 @@ If `rhetorical_role` is missing or its confidence is below 0.6, P2 falls back to
 
 ```ts
 Chunk {
-  chunk_id: "chk_<base32(sha256(expression_ref|first_anchor|last_anchor|chunker_version))[:26]>", // deterministic → idempotent
+  chunk_id: "chk_<base32(sha256(tenant_id|expression_ref|chunk_kind|first_anchor|last_anchor|chunker_version))[:26]>",
+                                            // deterministic → idempotent within a generation. NOT stable across
+                                            // chunker versions: anything persisted outside P2 (feedback, P6 claims,
+                                            // P7 notes, P9 labels) MUST key on anchor_ids, never on chunk_id.
   tenant_id: null | "ten_…",                // null = PLC
-  work_id, expression_key, case_id?,        // spine §B
+  work_id, expression_key, case_id?,        // spine §B. Coalesced statute chunks: expression_key = first version of the interval
+  covered_expression_keys?: string[],       // ➕ statutes: every `lang@date` expression whose provision text is identical (§5.9)
+  authoritative: bool,                      // ➕ false for vernacular translations published "for the litigant's understanding" (§5.10)
+  translation_of?: { work_id, expression_key },   // ➕ link to the original-language expression
   anchor_ids: string[],                     // ordered; every anchor of the expression is covered by ≥1 chunk
   anchor_range: { first: anchor_id, last: anchor_id },
   chunk_kind: "JUDG_PARA_GROUP"|"JUDG_LONG_PARA_PART"|"JUDG_HEADER"|"JUDG_OPERATIVE_ORDER"|
@@ -88,18 +94,25 @@ Chunk {
   node_path: string,                        // e.g. "judgment/analysis/issue-2" or "act/part-II/ch-IV/sec-138/ss-1"
   section_heading?: string,
   rhetorical_role: string, role_source: "P1"|"FALLBACK",
+  opinion_author?: string, opinion_type?: "MAJORITY"|"CONCURRING"|"DISSENTING"|"PER_CURIAM"|"UNKNOWN", // ➕ court's own text only (§3.6)
   text: string,                             // exact source text of the covered anchors (never paraphrased)
   text_hash: "sha256:…", token_count: int, lang: "en"|"hi"|…, script: "Latn"|"Deva"|…,
   context_header: string,                   // deterministic (see §5.3)
   llm_context?: { text: string, method: pipeline_version },   // only when the dependency detector fires
   mt?: { text_en: string, model: string, qe_score: float },   // machine "shadow" translation; NEVER citable
   is_quotation: bool, quoted_source_ids?: string[],           // work_ids / anchors quoted
-  cited_work_ids: string[], cited_provision_anchors: string[],// from resolved CitationMention / StatuteMention
+  cited_work_ids: string[], cited_provision_anchors: string[],// from resolved CitationMention / StatuteMention (batched refresh, §5.11)
+  cited_citations_norm: string[],           // ➕ normalised citation strings as printed (facts, spine §D) — stable, never re-resolved
+  crosswalk_ref_ids?: string[],             // ➕ statutes: P3 CORRESPONDS_TO assertion ids (display only, §5.2B)
+  in_force?: bool, enacted_on?: date,       // ➕ statutes: uncommenced text has in_force=false, valid_from=null (§5.9)
   // denormalised stable metadata for filtering
   court_id, court_level, bench_strength?, decision_date?, doc_type, jurisdiction_state?,
   valid_from?: date, valid_to?: date,       // statutes/Constitution: provision-version interval (coalesced, §5.9)
   recorded_at: timestamp, superseded_at?: timestamp,          // bitemporal (spine §E)
-  quality: { ocr_conf, structure_conf, needs_review },
+  quality: { ocr_conf, structure_conf, needs_review, flags: string[] }, // ➕ flags e.g. INJECTION_PATTERN, BOILERPLATE_HEAVY,
+                                            //   PROTECTED_IDENTITY_RISK, NEAR_DUP_OF:<work_id>, MOJIBAKE
+  // tenant mode only (never present on PLC chunks):
+  matter_id?: string, acl_principals?: string[],   // ➕ enforced by the IAL as a mandatory filter (§5.13)
   prev_chunk_id?, next_chunk_id?, parent_view_ids: string[], // card / role-summary ids
   embeddings: [{ model_id, dims, dtype, vector_ref }],        // vector_ref → embedding store
   index_generation: "g7", doc_seq: int64,   // doc_seq = external version for idempotent upserts
@@ -135,7 +148,10 @@ A summary is a **navigation aid, never a source**. A P6 claim that uses a summar
 
 ```json
 {
-  "type": "doc.indexed.v1", "source": "p2/indexer@2.3.0", "subject": "wrk_01J…/en",
+  "id": "01J…(ULID)", "specversion": "1.0", "type": "doc.indexed.v1", "source": "p2/indexer@2.3.0",
+  "time": "2026-09-30T06:12:44Z", "subject": "wrk_01J…/en",
+  "tenant_id": null,                                  // PLC; tenant-mode events carry ten_… and never leave the tenant bus
+  "traceparent": "00-…", "causation_id": "<id of the doc.parsed.v1 event>", "schema_version": "1.1",
   "idempotency_key": "wrk_01J…/en|g7|doc_seq=42|BASE",
   "data": {
     "expression_ref": {"work_id": "wrk_01J…", "expression_key": "en"},
@@ -190,6 +206,40 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 5. **New event `doc.redacted.v1`** (producers: P1, ops or legal; consumers: P2, P3, P5 caches, P7 tenant caches). *Why:* court masking or takedown orders must purge text, embeddings (embeddings can be inverted into text [P2-54]), summaries, old generations and snapshots within an SLA. The spine has no deletion or redaction event.
 6. **Add `IndexQuery`/`IndexHit` (IAL) to §H**. *Why:* it decouples P5 from the engine DSL, so an engine swap becomes a P2-internal change.
 7. **Clarify:** machine translations are **not** Expressions. They live in `Chunk.mt`, and anchors always point to the original-language text or to an *official* translation expression. *Why:* an unofficial MT paragraph must never become a citable anchor.
+8. **Clarify statute anchors across coalesced intervals** (added by independent review). Spine §C makes an anchor expression-specific (`wrk/hi@2019-08-09#sec-3`), but P2 indexes one chunk per *distinct text interval* spanning several expressions (§5.9). Rule: the chunk stores `covered_expression_keys[]`; for a query with `valid_at = D` the IAL rewrites every returned anchor to the expression valid on D (same fragment; identical `text_hash` by construction), so P6/P8 always cite the point-in-time expression. *Why:* otherwise P5 receives the anchor of the first version in the interval, and the citation shows a version date that was not the one in force on D, even though the text is identical.
+9. **Add a work re-keying signal** (added by independent review). `doc.parsed.v1` allows a *provisional* `work_id`. When P1 later merges it into a resolved Work (or splits a wrongly merged one), P2 must move all chunks, cards and summaries (they are routed by `work_id`). Proposed: `doc.parsed.v1.data.replaces_work_ids[]` (or a separate `work.rekeyed.v1 {from_ids[], to_id, reason}`). P2 handles it as delete-under-old-id plus index-under-new-id in one outbox transaction. *Why:* without it, provisional IDs leave orphaned duplicates and split citation counts.
+10. **Chunk IDs are generation-scoped, anchors are durable** (clarifies spine §H `Chunk`). Any cross-phase persistence (FeedbackEvent targets, P6 claims, P7 notes) must reference `anchor_ids`, not `chunk_id`.
+
+### 2.7 P2-owned internal schemas (so engineers can build without guessing)
+
+```sql
+-- Postgres (system of record). Abbreviated; all tables also carry pipeline_version, recorded_at.
+CREATE TABLE expression_state (
+  serial_key text PRIMARY KEY,           -- expression_ref for judgments/notifications; work_id for statute-family docs (§5.9)
+  accepted_parse_id text NOT NULL, doc_seq bigint NOT NULL, chunk_set_hash bytea, content_digest bytea,
+  enrichment_level text CHECK (enrichment_level IN ('NONE','BASE','FULL')), status text  -- ACTIVE|QUARANTINED|SUPERSEDED_REV|REKEYED
+);
+CREATE TABLE chunk (
+  chunk_id text, index_generation text, tenant_id text, work_id text NOT NULL, expression_key text NOT NULL,
+  doc_seq bigint NOT NULL, text_hash bytea NOT NULL, body jsonb NOT NULL,     -- full Chunk object (§2.2)
+  tombstoned_at timestamptz, superseded_at timestamptz,
+  PRIMARY KEY (chunk_id, index_generation)
+);
+CREATE TABLE outbox (id bigserial PRIMARY KEY, kind text, serial_key text, doc_seq bigint, gens text[],
+                     payload jsonb, created_at timestamptz DEFAULT now(), relayed_at timestamptz);
+CREATE TABLE status_mirror (                       -- projection of P4 AuthorityStatus, bitemporal
+  target_id text,                                  -- wrk_… or prp_…
+  status text CHECK (status IN ('GOOD','CAUTION','NEGATIVE','PARTIAL_NEGATIVE','UNKNOWN')),
+  valid_from date NOT NULL, valid_to date,         -- legal time: status holds for as_of_legal_date in [from,to)
+  recorded_at timestamptz NOT NULL, superseded_at timestamptz,
+  reason_assertion_ids text[] NOT NULL, source_delta_id text NOT NULL,
+  PRIMARY KEY (target_id, valid_from, recorded_at)
+);
+```
+
+`plc-status` OpenSearch mirror doc (one doc per `target_id`, no vectors): `{target_id, kind: WORK|PROPOSITION, current_status, intervals: [{status, valid_from, valid_to}], reason_assertion_ids, last_delta_id, updated_at}`. A query with `as_of_legal_date = D` selects the interval containing D; `as_known_at` replays go to Postgres `status_mirror` (or P4), never to the mirror index.
+
+`reprocess.requested.v1` scope selector accepted by P2: `{selector: {work_ids?, court_ids?, doc_types?, decided_between?, lang?, parse_pipeline_version?, generation?}, stages: ["CHUNK"|"EMBED"|"ENRICH"|"ALL"], target_pipeline_version, reason, max_cost_usd, requested_by}`. P2 computes an estimate first; if `estimate > max_cost_usd` or `> 1,000 USD` of LLM spend, the job waits for an ops approval (§8, cost blow-up).
 
 ---
 
@@ -229,9 +279,9 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 - **BGE-M3**: one model producing dense, sparse and multi-vector outputs, 8,192 tokens, 100+ languages [P2-12]. It is weak on MLEB (69.44) [P2-3].
 - **Voyage**:
   - voyage-law-2 has 16k context and 1024 dimensions.
-  - The voyage-4 family (large/standard/lite/nano) has 32k context and dims 256–2048 with int8/binary output. Its members are *embedding-compatible with each other*, so you can index with the large model and query with the lite one. voyage-4-nano has open weights [P2-13].
+  - The voyage-4 family (large/standard/lite/nano) has 32k context and dims 256–2048; large/standard/lite also offer int8/binary output (nano is float-only in the API docs). Its members are *embedding-compatible with each other*, so you can index with the large model and query with the lite one. voyage-4-nano has open weights on Hugging Face [P2-13].
 - **Cohere Embed v4**: 128k context, dims 256–1536, multimodal [P2-15].
-- **Gemini embedding-001**: **only 2,048 input tokens**, dims 128–3072 [P2-16]. Too short for header + long-paragraph inputs without truncation.
+- **Gemini embedding-001**: **only 2,048 input tokens**, dims 128–3072 [P2-16]. Too short for header + long-paragraph inputs without truncation. The newer **gemini-embedding-2** raises the limit to 8,192 tokens (same 128–3072 dims) but its space is incompatible with 001, and it is API-only [P2-16].
 - **Jina v3**: weights licensed **CC-BY-NC-4.0**, so no commercial self-hosting without a licence [P2-17].
 - **Kanon 2 Embedder**: sold as a SageMaker model package deployed *in the customer's own AWS account*. 16,384-token context. $7.99 per host-hour. Vendor-claimed ~15k legal documents/hour on one g6.2xlarge [P2-18].
 - **Indian legal encoders**:
@@ -239,7 +289,7 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
   - SAILER: structure-aware pre-training for case retrieval [P2-47].
   - IndicSBERT: beats LaBSE and LASER on Indic cross-lingual sentence similarity [P2-49].
 - **Compression**:
-  - Binary quantisation cuts memory 32× and keeps ~92.5% of retrieval quality, up to ~96% with rescoring. int8 keeps ~99.3% with rescoring [P2-43].
+  - Binary quantisation cuts memory 32× and keeps ~92.5% of retrieval quality, up to ~96% with rescoring. int8 (4× smaller) keeps ~99% with rescoring [P2-43].
   - MRL gives up to 14× smaller embeddings at equal accuracy (ImageNet) [P2-44].
   - Compression tolerance is model-specific and must be measured [P2-43].
 - **Sparse and multi-vector**:
@@ -251,16 +301,17 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 ### 3.3 Indian retrieval evidence
 
 - **IL-PCSR** (EMNLP 2025): 6,271 query cases, 936 statutes and 3,183 precedents. Average precedent length 7,485 words. Macro-F1@k:
-  - Precedent retrieval: BM25-5gram 33.29, beating Para-GNN at 24.67.
-  - Statute retrieval: SAILER 21.69, beating BM25 at 16.98.
-  - Ensembles do better, and GPT-4.1 two-stage re-ranking is best (46.11 statutes, 43.31 precedents) [P2-8].
+  - Precedent retrieval: BM25-5gram 33.29, beating the best semantic/graph model (Para-GNN full-doc, multi-task) at 24.67; SAILER fine-tuned reaches only 12.64.
+  - Statute retrieval: fine-tuned semantic models win. Para-GNN over query-case *summaries* 32.85 (the paper calls this a ~77% relative gain over the best lexical variant, 18.59), SAILER 21.69, BM25-5gram 16.98.
+  - Ensembles (BM25 + semantic) do better, and GPT-4.1 two-stage re-ranking is best (46.11 statutes, 43.31 precedents) [P2-8].
+  - Design implication: *summaries as retrieval input* helped statute retrieval most, which supports indexing cards and role-segment summaries as separate views (§5.4), not only raw chunks.
 - **IL-TUR** (ACL 2024) has 8 tasks [P2-7]:
   - IL-PCR: 7,070 documents, average **8,096 words**.
   - IN-Abs summarisation: 7,130 documents, average **4,376 words**.
   - MILPaC legal MT: English ↔ 9 Indian languages.
-- **U-CREAT** (ACL 2023): event-filtered BM25 improved F1 by 25.3 on IL-PCR over word-level BM25 [P2-9].
+- **U-CREAT** (ACL 2023): event-based unsupervised retrieval "significantly increases performance compared to BM25" on IL-PCR and is faster [P2-9]. (The oft-quoted "+25.3 F1" figure is *(unverified)*: it is not in the abstract.)
 - **MTEB's AILA-casedocs** has only 50 queries over 186 documents [P2-51]. That is too small to choose a production model on.
-- **AILQA** (2026) built Indian legal RAG over about 7k documents with generic embedders and ChromaDB, and still saw ungrounded citations [P2-52].
+- **AILQA** (2026) built an Indian legal RAG baseline over ~7,221 documents (6,942 judgments, 15 Acts, 264 articles) with generic embedders (OpenAI Ada, Instructor-XL, mxbai), ChromaDB, 2,000-character chunks and top-3 cosine retrieval. On one test set, retrieved context *degraded* answers for Llama3-70B, Mixtral-8x7B and GPT-3.5, and the authors note that semantic retrieval returns passages that "share terminology with the query but concern a legally distinct issue" [P2-52].
 
 ### 3.4 Index engines
 
@@ -274,7 +325,7 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 - **Elasticsearch** added AGPLv3 alongside ELv2/SSPL in Aug 2024 [P2-36]. Updates re-index the whole document [P2-37].
 - **Vespa**: first/second-phase ranking on content nodes, a global phase in the container with ONNX/cross-encoders, and built-in `reciprocal_rank_fusion()` [P2-38]. This is the most expressive ranking engine.
 - **turbopuffer**: object-storage-native, with an AWS Mumbai region and BYOC [P2-39].
-- **pgvectorscale**: StreamingDiskANN plus label-filtered search. Vendor benchmark on 50M 768-dim vectors: 28× lower p95 latency than Pinecone at 99% recall [P2-41] (vendor claim).
+- **pgvectorscale**: StreamingDiskANN plus label-filtered search. Vendor benchmark on 50M 768-dim Cohere vectors: 28× lower p95 latency and 16× higher throughput than Pinecone's storage-optimised (s1) index at 99% recall [P2-41] (vendor claim).
 - **Consistency**: the transactional outbox guarantees a message is sent only if the DB transaction commits. It implies duplicates, so consumers must be idempotent [P2-42].
 
 ### 3.5 Summarisation of Indian judgments
@@ -286,16 +337,17 @@ Scores are returned raw and **uncalibrated**. Fusion is P5's job, using ranks, R
 ### 3.6 Legal constraints on enrichment
 
 *Eastern Book Company v. D.B. Modak*, SC, CA 6472/2004, decided 12 Dec 2007 [P2-28]:
-- Copyright subsists in reporter **headnotes, footnotes and editorial notes**.
-- Reproducing a judgment is not infringement under **s. 52(1)(q) Copyright Act** (para 13 as extracted).
+- Copyright subsists in reporter **headnotes, footnotes and editorial notes**; mere copy-editing of the judgment text (spelling, formatting, citations inserted) does not attract copyright.
+- Reproducing a judgment is not infringement under **s. 52(1)(q) Copyright Act** (as extracted in the judgment).
+- **Paras 41–42 (verified in the fetched text):** copyright *does* subsist in the reporter's (i) segregation of existing paragraphs into separate paragraphs, (ii) internal paragraph numbering, and (iii) labels such as "concurring", "partly dissenting", "dissenting". The Court directed that the respondents "shall not use the paragraphs made by the appellants in their copy-edited version for internal references" nor the editors' concurring/dissenting labels [P2-28].
 
-So we must generate our own digests from the official text and never ingest SCC/AIR headnotes. Whether SCC's paragraph breaks and numbering are protected is widely reported, but I did not confirm it in the fetched text (*unverified*). As a precaution, P1 anchors use only the court's own numbering (or synthetic `u` numbers), never a reporter's.
+So we must generate our own digests from the official text and never ingest SCC/AIR headnotes. This is a **hard requirement, not a precaution**: P1 anchors use only the court's own numbering (or synthetic `u` numbers), never a reporter's; P2's `opinion_type` (MAJORITY/CONCURRING/DISSENTING) must be derived from the court's own text (opinion headings, "I agree", author blocks), never copied from a reporter's labels; and P2 never ingests reporter-edited judgment text into the PLC; a tenant's licensed copies stay in that tenant's TPL (§5.5).
 
 ### 3.7 Cross-lingual
 
 - IndicTrans2 covers all 22 scheduled languages, with open models [P2-48].
 - Qwen3-Embedding and BGE-M3 are natively multilingual [P2-10][P2-12].
-- In MILPaC, the Azure baseline reached only BLEU 0.28 for legal MT [P2-7]. So MT text is a retrieval aid, never a source.
+- In MILPaC (English ↔ 9 Indian languages, 17,853 text pairs), the Microsoft Azure baseline reached BLEU 0.28, GLEU 0.32 and chrF++ 0.57 (0–1 scale) for legal MT [P2-7]. Useful for recall, not faithful enough to quote, so MT text is a retrieval aid, never a source.
 
 ### 3.8 Why this matters: hallucination is often retrieval failure
 
@@ -308,7 +360,7 @@ Magesh et al. found Lexis+ AI, Westlaw AI-AR and Ask Practical Law AI hallucinat
 | System/paper | What went wrong | Evidence | How we avoid it |
 |---|---|---|---|
 | Commercial legal RAG tools (Lexis+ AI, Westlaw AI-AR) | 17–33% hallucination despite "hallucination-free" claims. Many errors trace to wrong or insufficient retrieved context. | [P2-50][P2-4] | Retrieval units are anchor-exact. Quotation and role flags stop "echo" retrieval. Summaries are never citable. Recall is measured per view and per language (§9). |
-| Generic RAG stacks on Indian law (e.g. AILQA-style ChromaDB + generic embedders) | Ungrounded case citations. Generic embedders with no Indian tuning. | [P2-52] | Indian-data bake-off, fine-tuning on citation-context pairs, and lexical first-class. |
+| Generic RAG stacks on Indian law (e.g. AILQA-style ChromaDB + generic embedders, fixed 2,000-char chunks, top-3) | Retrieved context often *hurt* answers; semantically similar but legally distinct passages retrieved. Generic embedders with no Indian tuning. | [P2-52] | Indian-data bake-off, fine-tuning on citation-context pairs, and lexical first-class. |
 | Dense-only legal retrieval | On Indian precedent retrieval, BM25 beats semantic models (33.29 vs 24.67). | [P2-8] | One engine holds BM25 and dense in the same document. P5 fuses them, and every retrieval eval runs hybrid. |
 | Choosing embedders on MTEB-legal / AILA | AILA-casedocs is 50 queries/186 docs. MLEB authors report serious failings in MTEB's legal split. MLEB has no India. | [P2-51][P2-3] | Our own Indian eval suite (§5.6.3), with IL-PCSR, IL-PCR and partner-firm gold. Decisions are made on hybrid marginal gain. |
 | LegalBench-RAG pipeline with generic reranker | Cohere reranker *hurt* on specialised legal sets. | [P2-20] | P2 exposes raw candidates. P5 must pass a reranker eval gate on Indian data before any reranker ships. |
@@ -427,6 +479,7 @@ function chunk_provision(section_node, version_interval):
 - I3 no chunk mixes roles, opinions or quote/non-quote, unless `role_source=FALLBACK`.
 - I4 no proviso or explanation without its parent's anchor in the same chunk or the header.
 - I5 `text` equals the concatenation of anchor texts (byte-exact after normalisation), which guarantees click-to-source.
+- I6 (soft, flag only; added by review): a chunk where > 30% of tokens come from lines that repeat on ≥ 50% of the source pages (digital-signature stamps, "Signature Not Verified", page headers, neutral-citation footers) gets `quality.flags += BOILERPLATE_HEAVY` and a per-court metric to P1. Such text inflates BM25 matches on court names and dates.
 
 ### 5.3 Context headers: deterministic first, LLM only where needed
 
@@ -434,7 +487,8 @@ function chunk_provision(section_node, version_interval):
 
 `Supreme Court of India | 3-judge bench | 2024-02-05 | <Short title> | Analysis → Issue 2: limitation | ¶¶ 45–47 | cites: s.5 Limitation Act 1963; <case short names>`
 
-- Built from P1 metadata, the node path and resolved citations.
+- Built from P1 metadata, the node path and citations. Cited cases appear as the *citation strings as printed* (normalised), not as resolved short names, so a later change in P1/P3 citation resolution does not change the embedding input and force a re-embed (churn control, §5.11).
+- The header never includes a reporter citation the court did not itself print, and never any AuthorityStatus (R3).
 - The header is *prepended to the embedding input only*.
 - For BM25, header facts go into **separate fields** (`title`, `court`, `cited_*`) with their own boosts, not into `text`. This avoids inflating term frequency, which is a risk of Anthropic-style "contextual BM25".
 
@@ -449,7 +503,7 @@ The expectation is that 20–35% of long-judgment chunks fire (an estimate, to b
 
 The LLM prompt is extraction-only. Its output must mention only entities present in the document (checked against P1 entities), otherwise it is discarded. The result is stored in `llm_context` with its `pipeline_version`, and embedded with the chunk. It is never shown as source text.
 
-**Why not late chunking by default:** Qwen3-Embedding pools the last token, not a mean over token spans (per its model-card usage code; *unverified here*). Late chunking in the sense of [P2-2] would need a mean-pooling model. It remains a bake-off arm with BGE-M3, which supports 8k context [P2-12].
+**Why not late chunking by default:** Qwen3-Embedding uses last-token pooling, not a mean over token spans (verified in its model-card usage code [P2-10]). Late chunking in the sense of [P2-2] would need a mean-pooling model (or a re-trained span-pooling head). It remains a bake-off arm with BGE-M3, which supports 8k context [P2-12].
 
 ### 5.4 Multi-granularity views (a structure-derived tree, not a clustering tree)
 
@@ -502,7 +556,7 @@ Each view carries `work_id` and `anchor_ids`, so P5 can hop down (card → ratio
 Why this default:
 1. **Residency and privilege.** Query text carries client facts. It must be embedded inside India and, for on-prem firms, inside the firm, so open weights are required for the on-prem SKU. Embeddings are invertible [P2-54], so even tenant embeddings count as sensitive.
 2. **Multilingual** (100+ languages), which covers Hindi and regional-language judgments and cross-lingual queries.
-3. **32k context**, so a long paragraph plus its header never truncates. Gemini-001's 2,048-token cap [P2-16] fails this.
+3. **32k context**, so a long paragraph plus its header never truncates. Gemini-001's 2,048-token cap [P2-16] fails this; gemini-embedding-2 (8,192) passes on length but is API-only.
 4. **Apache-2.0 licence** [P2-10]. Jina v3 is non-commercial [P2-17].
 5. **MLEB 81.96** is within ~4 points of the leader [P2-3]. MLEB has no Indian data, and the legal-adaptation effect [P2-3] is what our fine-tune supplies.
 6. **Instruction-aware**, so P5 can pass per-intent query instructions ("retrieve statutory provisions applicable to these facts" vs "retrieve precedents on this issue"). IL-PCSR shows the two tasks behave differently [P2-8].
@@ -535,7 +589,7 @@ Training: InfoNCE with in-batch plus mined hard negatives, and MRL loss at {256,
 | **IN-Ret-Gold** | Partner-firm queries with lawyer-judged relevant anchors: 300 at MVP, growing to 1,500. At least 20% Hindi/regional or Hinglish. 10% are "as-of" statute queries. | nDCG@10, Recall@100, binding-authority recall (with P5) |
 | **IN-Ret-XL** | Hindi query → English doc, English query → Hindi doc | Recall@100 |
 | **IN-Ret-Noise** | Gold queries against OCR-degraded copies (synthetic character noise at CER 2/5/10%) | Relative recall drop |
-| **Ops** | Tokens/s per GPU, p95 query-embed latency, RAM at 1024-d binary, recall loss from quantisation | Absolute numbers |
+| **Ops** | Tokens/s per GPU, p95 query-embed latency, RAM at 1024-d binary, recall loss from quantisation, **filtered-ANN recall** at filter selectivity 0.1% / 1% / 10% (e.g. one HC + date range + role) against exact k-NN | Absolute numbers; filtered Recall@100 ≥ 0.95 of unfiltered at every selectivity, else switch that filter class to exact (brute-force) search over the filtered set |
 
 **Decision rule:**
 - Rank models on **hybrid** Recall@100: BM25 plus the model, fused by RRF (k=60) as P5's baseline.
@@ -568,7 +622,8 @@ Fields (OpenSearch mapping sketch):
  "decision_date":{"type":"date"}, "doc_type":{"type":"keyword"}, "rhetorical_role":{"type":"keyword"},
  "lang":{"type":"keyword"}, "jurisdiction_state":{"type":"keyword"},
  "cited_work_ids":{"type":"keyword"}, "cited_provision_anchors":{"type":"keyword"},
- "citations_raw_norm":{"type":"keyword"},        // "(2023) 5 SCC 1", "2023 INSC 1" → exact citation search
+ "cited_citations_norm":{"type":"keyword"},      // citations printed in this chunk: "(2023) 5 SCC 1", "2023 INSC 1"
+ "own_citations_norm":{"type":"keyword"},        // cards only: this Work's own identifier_alias values (all spine §D schemes)
  "valid_from":{"type":"date"}, "valid_to":{"type":"date"},
  "recorded_at":{"type":"date"}, "superseded_at":{"type":"date"},
  "is_quotation":{"type":"boolean"}, "ocr_conf":{"type":"half_float"},
@@ -582,10 +637,12 @@ Analyzers:
 - `legal_en_exact`: standard tokenizer + lowercase + ASCII folding, no stemming. It uses a pattern-capture filter that keeps `138(1)(a)`, `302/34`, `u/s`, `r/w` and `Art. 21A` intact *and* also emits their parts.
 - `legal_en_light`: adds a light English stemmer. "Held" and "holding" should match, but "appeal" and "appellant" must not collapse.
 - **Query-time** `synonym_graph` for legal abbreviations ("NI Act" ⇄ "Negotiable Instruments Act, 1881"; "u/s" ⇄ "under section"; "CrPC" ⇄ "Code of Criminal Procedure"). Synonyms are applied at query time only, so updating them never needs a re-index.
-- Hindi uses OpenSearch's `hindi` analyzer. Other scripts use `icu_analyzer` [P2-34], plus NFC and nukta normalisation.
+- Hindi uses OpenSearch's `hindi` analyzer and Bengali the `bengali` analyzer; every other Indic language uses `icu_analyzer` [P2-34], plus NFC and nukta normalisation. **Route by `lang`, not by script:** Marathi, Nepali, Konkani and Sanskrit are also Devanagari, and the Hindi stemmer and stopword list would mangle them. A per-`lang` sub-field is populated only for its language; unknown-language Devanagari goes to ICU only.
 - Old↔new code crosswalk expansion is **not** a synonym. It is a P5 query rewrite from P3 assertions, because the crosswalk carries confidence and HITL status.
 
 Lawyer operators supported through the IAL: exact phrase, proximity (`slop`), Boolean, field restriction (judge, bench, court, date range), citation lookup, and "cases citing X" at paragraph level (`cited_work_ids`).
+
+**Query safety (added by independent review).** The IAL builds engine DSL only from typed `IndexQuery` fields; raw DSL, scripts and regex are never accepted from callers. Cluster setting `search.allow_expensive_queries=false`; `indices.query.bool.max_clause_count` ≤ 1,024; wildcard only as a trailing `*` after ≥ 3 characters; `slop` ≤ 50; per-request timeout 2 s with partial results flagged; per-tenant and per-user rate limits at the IAL. This closes the query-side denial-of-service and cost blow-up paths (a single leading-wildcard or 10k-clause Boolean query can saturate a data node).
 
 ### 5.8 Index topology
 
@@ -609,7 +666,7 @@ flowchart TB
 
 - **Routing by `work_id`.** All chunks of a Work sit on one shard. That makes per-work deletes, "all chunks of work" fetches and neighbour lookups single-shard. Collapse by work works across shards anyway.
 - **Shard sizing:** 20–40 GB per primary. Force-merge generations after build, since they are read-mostly.
-- **`plc-status` mirror.** It is P2-maintained from `graph.delta.v1.status_changes`, holds about 5M small docs and has no vectors, so partial updates are cheap. It serves (a) P10 facets such as "only good law" and (b) P5's post-retrieval join when P5 prefers the engine over the P4 store. P4's store remains authoritative, and the mirror lags by ≤ 2 minutes at p95.
+- **`plc-status` mirror.** It is P2-maintained from `graph.delta.v1.status_changes`, holds about 5M small docs and has no vectors, so partial updates are cheap. It serves (a) P10 facets such as "only good law" and (b) P5's post-retrieval join when P5 prefers the engine over the P4 store. P4's store remains authoritative, and the mirror lags by ≤ 2 minutes at p95. The mirror stores **status intervals in legal time** (schema §2.7), not just the current value: a query with `as_of_legal_date` = 2023-06-01 must see a judgment as `GOOD` even if it was overruled in 2025, and a query for today must see `NEGATIVE` from the minute the delta lands. `as_known_at` replays are served from Postgres, not the mirror.
 - **Why not filter by status in the vector index:** adverse and negative authorities must be *surfaced and labelled*, not dropped (brief: adverse authority is mandatory). So P5 never pre-filters on status, and status never needs to live on the vector documents (R3).
 
 ### 5.9 Temporal model for statutes (as-of correctness)
@@ -625,12 +682,14 @@ Fields and semantics:
   - `known_at = K` replays filter `recorded_at <= K < coalesce(superseded_at, ∞)`.
 
   This implements spine §E for text retrieval.
+- **Serialisation key for statutes is `work_id`, not `expression_ref`.** A new consolidated version (a new `lang@date` expression) changes `valid_to` of the preceding interval's chunk, which belongs to an *older* expression. All statute-family writes for one Work are therefore serialised on `work_id`, and `doc_seq` is per Work. Updating `valid_to` rewrites that vector-bearing doc; this is accepted because amendments are rare (per provision, a handful per decade), unlike treatment changes (R3).
+- **Anchor rewriting for as-of hits** (proposed spine change 8): a coalesced chunk lists `covered_expression_keys[]`; the IAL returns anchors re-based to the expression in force on `valid_at`.
 - **Judgments:** `decision_date` is indexed. The IAL offers `decided_on_or_before`, but P5 decides whether to apply it. Overruling in India is generally retrospective (the declaratory theory), and prospective overruling is an exception (I.C. Golak Nath v. State of Punjab, 1967 — *unverified here; P3/P4 own this doctrine*). So a naive date filter on judgments can be legally wrong.
 
 ### 5.10 Multilingual and cross-lingual handling
 
 1. **Original text is canonical.** A Hindi or Marathi judgment is chunked in its own language, with `lang`/`script` set and anchors pointing to it.
-2. **Official translations** (for example, the Supreme Court's regional-language versions) are separate *expressions* (P1). P2 chunks them independently and links the pair via `translation_of` using P1's paragraph alignment. The card shows both.
+2. **Official translations** (for example, the Supreme Court's regional-language versions) are separate *expressions* (P1). P2 chunks them independently and links the pair via `translation_of` using P1's paragraph alignment. The card shows both. **Authority flag:** the Supreme Court's vernacular translations are published with a disclaimer that they are for the litigant's understanding and that the English version is authentic for official purposes *(unverified here; doc 21 to confirm the exact wording per court)*. Such expressions get `authoritative=false`: they are retrievable (cross-lingual recall) but P5/P6 must cite the English anchor aligned to them. Conversely, where a High Court judgment is *originally* in Hindi or a State official language, the original is authoritative and any English version is the translation; statute provisions for this (Official Languages Act 1963, s.7) are *(unverified here)*.
 3. **MT shadow.** For non-English originals with no official English version, IndicTrans2 [P2-48] produces `mt.text_en` per chunk, with a quality-estimation score. `mt_text_en` goes into lexical search at a lower boost, so English Boolean searches still find Hindi judgments. The dense vector is computed from the **original** text by default, relying on the multilingual embedder. The bake-off arm "embed(MT)" versus "embed(original)" decides this per language. MT is never citable and is shown in the UI as "machine translation".
 4. **Query side** (P5, recorded here for interface completeness): detect script and language, transliterate Hinglish ("dhara 302") to a canonical form, and search both `text.hi` and `mt_text_en`.
 5. **Script hygiene:** Unicode NFC, nukta and chandrabindu normalisation, and zero-width-joiner stripping in the analyzer. Legacy-font PDFs (Krutidev-style encodings) must be converted by P1; P2 rejects expressions whose `script` detection shows mojibake (a Devanagari ratio check).
@@ -642,7 +701,7 @@ Fields and semantics:
 - `doc_seq` is a per-expression monotonic counter, assigned by P2 when it *accepts* a parse. It becomes the OpenSearch **external version** [P2-33].
 - `expression_state(expression_ref PK, accepted_parse_id, doc_seq, chunk_set_hash, content_digest, enrichment_level, status)`.
 
-**Write path (per expression, serialised by an `expression_ref` lock)**
+**Write path (per `serial_key`, serialised by a lock on it: `expression_ref` for judgments and notifications, `work_id` for statute-family documents, §5.9)**
 
 ```
 on doc.parsed.v1(e):
@@ -666,6 +725,18 @@ outbox relay (at-least-once) → indexer:
 ```
 
 The outbox gives "emit only if committed", with duplicates allowed [P2-42]. External versioning makes duplicate and out-of-order index writes harmless. `idempotency_key = expression_ref|gen|doc_seq|level` lets consumers deduplicate.
+
+**Revisions, corrigenda and re-keying (added by independent review)**
+- A corrigendum or re-issued judgment arrives as a new expression of the same Work and language (`en.r2`). Without a rule, both `en` and `en.r2` stay live, which produces duplicate hits and serves the uncorrected text. Rule: when P2 accepts `lang.rN`, it sets `superseded_at = now` on all chunks, cards and summaries of the previous revision of that language (status `SUPERSEDED_REV`), and default search (`known_at` unset) returns only the latest revision. The old revision stays replayable via `known_at`.
+- Work re-keying (proposed spine change 9): chunks under a provisional `work_id` are tombstoned and re-indexed under the resolved `work_id` in one outbox transaction. The external-version check uses the new Work's `doc_seq`, so a late write under the old ID cannot resurrect it (the old-ID delete is issued with a version above any old `doc_seq`).
+
+**Churn control for citation-derived fields**
+- `cited_work_ids` changes whenever P1/P3 resolve a previously unresolved citation. This is very common during backfill (every newly ingested older judgment resolves citations in many later ones), and every change re-indexes a vector-bearing document (R3, [P2-37]).
+- Rule: resolution changes are accumulated in Postgres and flushed as partial updates at most **once per chunk per 24 h** in the backfill lane. The embedding input never contains resolved names (§5.3), so these flushes never trigger a re-embed. Monitor `citation_refresh_docs/day`; if it exceeds 5% of the corpus per day during backfill, pause the flush until backfill completes and serve "cases citing X" from P3's graph instead.
+
+**Near-duplicate Works (common judgments in batch matters)**
+- Indian courts often decide dozens of connected matters by one common judgment, and the same PDF is uploaded under each case number. If P1 models each as a separate Work, P2 would index N copies.
+- P2 computes a MinHash over each Work's ordered chunk `text_hash` set at BASE time. If Jaccard ≥ 0.95 with an existing Work, it sets `quality.flags += NEAR_DUP_OF:<work_id>`, and the IAL collapses near-dups by default (`collapse_by_work` uses the canonical id). It also emits a metric to P1 so that the entity model (one Work, many Cases) is fixed at source.
 
 **Reconciliation (the nightly safety net)**
 - For every expression, compute `content_digest = XOR_fold(H(chunk_id‖text_hash‖doc_seq))` in Postgres. Compute the same in OpenSearch with a scripted aggregation per `work_id` partition, or with a scroll-and-hash job over the partitions changed in the last 48h plus a rolling 1/30 of the whole corpus each night.
@@ -695,6 +766,7 @@ The outbox gives "emit only if committed", with duplicates allowed [P2-42]. Exte
   5. Purge P5 caches via the event.
   6. Rewrite snapshots newer than the redaction horizon, or expire them.
 - SLO: removed from search within 1h, from all artefacts within 24h.
+- Why this is not hypothetical in India: the Supreme Court has directed that no one may print or publish, in print, electronic or social media, the name of a rape victim or any facts that could identify her [P2-56]; and the Delhi High Court has ordered Indian Kanoon to block a judgment from search-engine access pending a right-to-be-forgotten petition [P2-55]. A legal-publishing index must be able to comply within hours, across every derived copy.
 
 ### 5.12 Index Access Layer (IAL)
 
@@ -785,6 +857,7 @@ Compute costs:
   - LLM enrichment is extraction-only: structured outputs, no tools, and outputs checked against source entities. This neutralises prompt injection embedded in documents (§8).
   - The redaction pipeline covers all copies.
 - **Cost:** as in §5.14. The levers are MRL dims, binary-in-RAM plus fp16-on-disk, dropping dense for short orders, selective LLM context, cache reuse across generations, and backfill lanes that yield to the daily lane.
+- **Cost guards (added by independent review):** every `reprocess.requested.v1` gets a cost estimate before any work runs (tokens × Model Gateway price sheet + GPU-hours); anything above `max_cost_usd` or USD 1,000 of LLM spend waits for ops approval. Daily LLM spend has a hard circuit breaker at 3× the trailing 7-day mean (the FULL lane pauses; BASE continues). A prompt or model change for `p2.card.v1` runs on a 1% canary slice and passes the summary gate before a corpus-wide re-card is allowed.
 - **Latency:** as in §5.15. The IAL is co-located with OpenSearch in the same AZ, and PLC query embedding is pooled on warm GPUs.
 - **Observability:**
   - Every artefact carries `pipeline_version`, and every event carries `traceparent`.
@@ -839,7 +912,7 @@ Scores: ++ strong, + good, 0 neutral, − weak, −− poor.
 | **Qwen3-Embedding-4B + Indian fine-tune** | + (81.96 before tuning) [P2-3] | ++ (self-host) | ++ | Apache-2.0 [P2-10] | **Chosen default** |
 | Qwen3-Embedding-8B | + (82.96) | + | ++ | Apache-2.0 | Upgrade path if 4B plateaus |
 | BGE-M3 | − (69.44) [P2-3] | ++ | ++ | Open | Late-chunking and sparse arm only |
-| Gemini embedding-001 | + (80.90) | + | 0 | API | Rejected: 2,048-token input cap [P2-16] |
+| Gemini embedding-001 / gemini-embedding-2 | + (80.90, 001) | + | − (API-only; no on-prem) | API | Rejected: 001 has a 2,048-token cap; -2 (8,192 tokens) is unbenchmarked on MLEB here and API-only [P2-16]. Eligible as a PLC-only bake-off arm |
 | OpenAI text-embedding-3-large | 0 (78.91) | + | − | API | Rejected |
 | Jina v3/v4 | 0 (v4 78.62) | + | + | v3 CC-BY-NC [P2-17] | Rejected on licence |
 | InLegalBERT (fine-tuned as bi-encoder) | ? (512 tokens, BERT-base) [P2-6] | ++ | ++ | MIT | Baseline arm only |
@@ -909,8 +982,8 @@ Scores: ++ strong, + good, 0 neutral, − weak, −− poor.
 |---|---|---|---|
 | **10M+ documents** (20M+, 240M+ vectors) | HNSW RAM, rebuild time, shard hotspots, reconciliation duration | Binary ANN in RAM + fp16 on disk (65 GB RAM at 20M); routing by work_id; split by doc_type/era; drop dense for short orders if the eval allows; rolling 1/30 nightly reconciliation; backfill lanes | A generation rebuild at 20M may take more than 72h, so size the GPU and bulk capacity per §5.14 |
 | **Bad OCR** (CER 5–15% on old HC scans) | BM25 misses tokens, embeddings drift, summaries hallucinate on garbage | `ocr_conf` on every chunk; char 3–5-gram field when `ocr_conf < 0.85`; skip LLM summaries below `ocr_conf 0.7` (card is extractive only, flagged); IN-Ret-Noise eval; `reprocess.requested` when P1's OCR improves | Very low-quality scans stay poorly retrievable. The UI must show "low OCR quality" |
-| **Judgment in Hindi or regional language** | English queries miss it; the analyzer can't stem; MT errors | Native chunking, Hindi or ICU analyzer, multilingual embedder, MT shadow in lexical search (never citable), IN-Ret-XL eval, official translations linked | Languages without a Lucene analyzer rely on ICU plus dense; MT quality varies (BLEU 0.28 baseline [P2-7]) |
-| **Precedent overruled yesterday** | Stale "good law" appearance | Status is never in vector docs; P5 joins the P4 store or the `plc-status` mirror (≤ 2 min); the card shows status from the overlay; chunks untouched | If the P3 edge is not yet extracted, status is `UNKNOWN`, not `GOOD` (P3/P4 behaviour) |
+| **Judgment in Hindi or regional language** | English queries miss it; the analyzer can't stem; MT errors | Native chunking, Hindi or ICU analyzer (routed by `lang`, not script — §5.7), multilingual embedder, MT shadow in lexical search (never citable), IN-Ret-XL eval, official translations linked with `authoritative` flag (§5.10) | Languages without a Lucene analyzer rely on ICU plus dense; MT quality varies (Azure baseline BLEU 0.28 / chrF++ 0.57 on 0–1 scale [P2-7]) |
+| **Precedent overruled yesterday** | Stale "good law" appearance; or, the reverse, a historical as-of query wrongly shows the case as overruled | Status is never in vector docs; P5 joins the P4 store or the `plc-status` mirror (≤ 2 min), which holds status **intervals** so `as_of_legal_date` is honoured (§2.7); the card shows status from the overlay; chunks untouched. The overruling judgment itself is searchable (BASE) within p95 15 min. P5 result caches keyed only by `index_generation` would stay stale, so P5 must also key caches on the mirror's `last_delta_id` or subscribe to `graph.delta.v1` | Gap between the overruling judgment being indexed (minutes) and P3 extracting the `OVERRULES` edge (hours, then HITL for tier-1). In that window the status is whatever P4 last computed. P2 cannot close this; P4/P10 should show "new citing judgment, treatment pending" when a Work acquires citing judgments newer than its last status computation |
 | **Prompt-injected document** (a public judgment quoting a malicious email, or a private upload by the opposing party) | LLM context or summary obeys the injected instructions; poisoned summary text in the index | Extraction-only prompts with JSON schema and no tools; summary sentences must be entailed by cited anchors and pass entity/number checks; an injection-pattern detector sets `quality.flags`; private docs are never summarised into the PLC; LLM text is never shown as source | A subtle but *entailed* misleading summary is still possible, so summaries stay non-citable |
 | **Confused user** (searches "Section 302" meaning BNS) | Wrong code version retrieved | The IAL supports `valid_at`; statute chunks carry intervals and `in_force`; crosswalk expansion is a P5 rewrite with P3 confidence; cards display "IPC (repealed 1 Jul 2024)"-style badges from metadata | Query understanding lives in P5 |
 | **Source outage or format change** (an HC switches PDF template) | P1 parse quality drops, so chunk invariants fail | Invariants I1–I5 quarantine bad expressions (nothing half-indexed); per-court invariant-failure dashboards; the old accepted parse stays live until a good parse arrives (no delete on P0 `DELETED`) | Freshness SLO breach for that court; alert P0/P1 |
@@ -921,6 +994,45 @@ Scores: ++ strong, + good, 0 neutral, − weak, −− poor.
 | **Embedding API deprecation or price change** | Forced migration | Open-weight default; generation mechanism; re-embed cost is a few thousand USD | Low |
 | **Duplicate manifestations** (same judgment from SC site, eCourts, IK-style mirror) | Duplicate hits | Chunks are per *expression*, not per manifestation; P1 picks the preferred manifestation, and upgrades re-chunk in place with stable anchors | Work-level dedup errors in P1 propagate here |
 | **Echo retrieval** (later case quoting the ratio outranks the original) | Wrong authority cited | Quote isolation plus `quoted_source_ids` (N3); P5 collapse rule | Quote detection recall depends on P1 |
+| **Corrigendum / re-issued judgment** (`en.r2`) *(review)* | Both revisions live; uncorrected text served and cited | Revision supersession rule (§5.11): previous revision gets `superseded_at`, default search sees only the latest; `known_at` replays still work | P1 must detect that a re-upload is a revision of the same Work |
+| **Common judgment across 40 connected matters** *(review)* | 40 identical Works flood the top-k; citation counts split | MinHash near-dup flag + canonical collapse in the IAL (§5.11); metric to P1 | Near-dups below the 0.95 threshold (e.g. different cause-title blocks) still surface separately |
+| **Provisional `work_id` later merged** *(review)* | Orphaned duplicate chunks under the old ID | Re-keying signal (proposed spine change 9), one-transaction move, versioned delete | Until the spine change lands, P2 relies on P1 emitting a `reprocess` for the old ID |
+| **Vernacular translation cited as authority** *(review)* | P6 quotes a non-authentic translation | `authoritative=false` on such expressions; P5/P6 must cite the aligned English anchor (§5.10) | The disclaimer wording per court is unverified; doc 21 |
+| **Victim identity or de-indexing order** *(review)* | Protected names searchable; contempt risk | `doc.redacted.v1` purge path. Plus a `PROTECTED_IDENTITY_RISK` screen [NOVEL — unvalidated]: if P1 metadata or cited provisions indicate a sexual-offence, POCSO or in-camera matrimonial matter and NER finds a person name in a victim/prosecutrix role, BASE indexing of the name-bearing chunks is held for masking review (the card and the rest of the judgment still index) [P2-55][P2-56] | Recall of the screen is unknown; names in unexpected paragraphs will slip through. Legal list of protected categories is for doc 21 |
+| **Query-side abuse** (leading wildcards, 10k-clause Booleans, scripted DSL) *(review)* | Node saturation; cost blow-up; possible data exposure via scripts | Typed `IndexQuery` only, no raw DSL; `allow_expensive_queries=false`; clause, slop and wildcard caps; 2 s timeout; per-tenant rate limits (§5.7) | A legitimate power user may hit limits; the IAL returns a clear "query too broad" error for P10 to explain |
+| **Poisoned private upload** (opposing party's document with hidden white text or keyword stuffing) *(review)* | The document dominates a firm's matter search; injected instructions reach P6 | P1 hidden-text detection (flag, do not index invisible text); `collapse_by_work` caps hits per document; injection-pattern flag; tenant content never enters PLC | Visible but manipulative text is indistinguishable from advocacy; P6 must treat all TPL text as untrusted |
+| **Cost blow-up** (prompt change triggers corpus-wide re-card; runaway retries) *(review)* | $2k–21k per unplanned re-card at 5M (§5.14); ×4 at 20M | Reprocess cost estimate + approval above USD 1,000; daily spend breaker; 1% canary before re-card (§5.16) | Price-sheet errors in the Model Gateway would mislead the estimator |
+| **Citation-resolution churn during backfill** *(review)* | Millions of vector-doc updates per day; indexing lag; merge pressure | Header uses printed citation strings (no re-embed); `cited_work_ids` flushed ≤ 1×/chunk/24 h; pause valve (§5.11) | "Cases citing X" in the index lags by ≤ 24 h during backfill; P3 graph is the fresher path |
+| **Marathi/Nepali judgment through the Hindi analyzer** *(review)* | Wrong stemming and stopwords; lexical recall drops | Analyzer routing by `lang`, not script (§5.7) | Wrong `lang` detection by P1 on short orders |
+
+### 8.R Independent review findings
+
+An adversarial review (legal-tech architecture + Indian legal research) re-fetched 30 of the highest-stakes references and red-teamed the design. Rows marked *(review)* in the table above were added by it.
+
+**Citation corrections**
+- IL-PCSR [P2-8]: the "dense wins on statutes" claim was framed on SAILER (21.69); the best statute model is actually Para-GNN over *summaries* (32.85). R4, §3.3 and the abstract are corrected, and the summaries-as-retrieval-input finding is now used to justify the card/role-summary views.
+- EBC v Modak [P2-28]: the document treated reporter paragraph numbering as an *unverified* risk. Paras 41–42 of the judgment (verified) hold that the reporter's paragraph segregation, internal numbering and concurring/dissenting labels are protected, and the Court directed that they not be used. This is now a hard requirement, extended to P2's `opinion_type`. SCC citation (2008) 1 SCC 1 confirmed.
+- AILQA [P2-52]: "still saw ungrounded citations" was not supported by the paper; replaced with what it does show (retrieved context degraded answers; legally distinct passages retrieved). Upgraded to verified.
+- U-CREAT [P2-9]: the "+25.3 F1" figure is not in the abstract; marked *(unverified)*.
+- Gemini [P2-16]: gemini-embedding-2 (8,192 tokens) added, so the rejection rests on API-only deployment, not only on the 2,048-token cap.
+- Smaller fixes: MILPaC BLEU scale (0–1, with chrF++ 0.57), int8 retention (~99%), voyage-4-nano float-only, pgvectorscale benchmark scope, Qwen3 last-token pooling (now verified).
+
+**Design and contract patches**
+- Chunk schema: added fields used elsewhere in the design but never declared (`opinion_*`, `in_force`, `enacted_on`, `crosswalk_ref_ids`, `authoritative`, `translation_of`, `covered_expression_keys`, `quality.flags`, tenant ACL fields). `chunk_id` now hashes `tenant_id` and `chunk_kind`, and is declared generation-scoped.
+- `doc.indexed.v1` example now shows the full spine §G CloudEvents envelope.
+- New proposed spine changes 8–10: anchor re-basing for coalesced statute intervals, a work re-keying signal for provisional `work_id`s, and "persist anchors, not chunk IDs".
+- New §2.7: Postgres DDL for `expression_state`, `chunk`, `outbox` and a **bitemporal `status_mirror`**. The original mirror stored only current status, which would have made `as_of_legal_date` queries show later overrulings.
+- Statute writes are serialised per `work_id` (a new version changes the previous interval's `valid_to`).
+- New rules for corrigenda (`rN` supersession), common-judgment near-dups (MinHash collapse), citation-resolution churn (printed strings in headers, 24 h batched `cited_work_ids`), analyzer routing by `lang`, query-side DoS limits, reprocess cost guards and a spend circuit breaker, and filtered-ANN recall in the Ops bake-off.
+- Redaction now cites Indian authority for why it is needed [P2-55][P2-56], and adds a `PROTECTED_IDENTITY_RISK` hold [NOVEL — unvalidated].
+
+**What remains open**
+1. The Indian embedder ranking is still unmeasured; every number in §5.14 that depends on throughput is a planning figure.
+2. The P3-extraction window after an overruling judgment lands (hours, plus HITL) cannot be closed by P2; P4/P10 must show "treatment pending".
+3. Vernacular-translation disclaimers and the Official Languages Act route for Hindi HC judgments are *unverified*; doc 21 must confirm per court.
+4. The statutory list of identity-protection duties and the purge SLA need legal sign-off; the identity screen's recall is unknown.
+5. Proposed spine changes 1–10 need the principal architect's decision; until change 9 lands, provisional-ID merges depend on P1 issuing a reprocess.
+6. The user-facing pinpoint problem: lawyers cite SCC paragraph numbers, which we may not store as an arrangement (§11 Q5).
 
 ---
 
@@ -938,6 +1050,9 @@ Scores: ++ strong, + good, 0 neutral, − weak, −− poor.
 - Robustness: relative recall drop at CER 5% ≤ 10%.
 - As-of statute correctness on the temporal gold set = 100%. The set includes BNS/IPC transition cases and retrospective amendments.
 - Pinpoint accuracy: gold anchor inside a returned chunk's `anchor_ids` at k=20.
+- As-of status correctness (with P4): on a gold set of overruled/partly overruled precedents, the mirror returns the correct `AuthorityStatus` for `as_of_legal_date` before and after the overruling date: 100%.
+- Duplicate exposure: share of top-10 result lists containing two Works flagged near-dup of each other, or two revisions of one judgment: < 0.5%.
+- Filtered-ANN recall at 0.1% / 1% / 10% selectivity ≥ 0.95 of unfiltered (§5.6.3 Ops).
 
 **Summaries**
 - Sentence entailment pass rate, and lawyer-audited faithfulness at ≥ 98% of sentences with no material error on the audit sample.
@@ -987,12 +1102,12 @@ Build generations and aliases in the MVP because they are cheap now. Retrofittin
 2. **Corpus distribution.** A1–A5 are assumptions, and the chunk count could be ±2×. P0/P1 must publish per-court length and page distributions in the MVP month.
 3. **Whether short orders need dense vectors at all.** This is a 20–30% saving. To be decided on IN-Ret-Gold.
 4. **Summary faithfulness at scale.** The NLI verifier's calibration for Indian legal English and Hindi is unmeasured. The partner-firm audit budget (hours per month) must be agreed with P9.
-5. **Copyright boundary of paragraph numbering** (EBC v Modak). Treated as protected pending legal review, so reporter numbering is never used for anchors (P1 and doc 21 to confirm) [P2-28].
-6. **Redaction obligations.** Which statutory and judicial masking duties apply to reproduced judgments (e.g. victim identity), and the required purge SLA. Doc 21 or legal counsel to confirm; the provisions are *unverified here*.
+5. **Copyright boundary of paragraph numbering** (EBC v Modak). *Resolved:* paras 41–42 hold that the reporter's paragraph segregation, internal numbering and concurring/dissenting labels are protected [P2-28]. Reporter numbering is never used for anchors or `opinion_type`. Remaining open point for doc 21/counsel: how to map a user's SCC pinpoint ("(2008) 1 SCC 1, para 41") to our court-numbered anchor without storing SCC's paragraph map (a citation-string fact vs. a protected arrangement).
+6. **Redaction obligations.** Judicial directions exist on victim identity [P2-56] and on court-ordered de-indexing [P2-55]; the full statutory list (e.g. the BNS/IPC victim-identity provisions, POCSO, in-camera matrimonial proceedings) and the required purge SLA are *unverified here*. Doc 21 or legal counsel to confirm; P2's `PROTECTED_IDENTITY_RISK` screen (§8) is a stop-gap, not compliance.
 7. **Engine long-term.** If P5 needs in-engine learned ranking with ONNX over 1,000+ candidates, Vespa's phased ranking [P2-38] may beat OpenSearch plus an external reranker. The IAL makes this a contained migration. Revisit at 12 months.
 8. **Hindi or regional MT shadow quality** for legal register [P2-7]. Sanctioned translation corpora (SC translations) would help. Doc 21 to assess availability and terms.
 9. **GPU supply in India regions** for self-hosted embedding at 20M. The fallback is the Kanon or Voyage VPC deployment for the PLC only, with query-time embedding still local.
-10. **Qwen3 pooling and late chunking compatibility** is *unverified*. Check before investing in the late-chunking arm.
+10. **Qwen3 pooling and late chunking compatibility.** Qwen3-Embedding uses last-token pooling [P2-10], so late chunking with it needs a span-pooling head; the late-chunking arm therefore runs on BGE-M3 (and voyage-context-3 as the trained alternative).
 
 ---
 
@@ -1006,14 +1121,14 @@ Build generations and aliases in the MVP because they are cheap now. Retrofittin
 - [P2-6] law-ai. "InLegalBERT" model card. Hugging Face. https://huggingface.co/law-ai/InLegalBERT — verified
 - [P2-7] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024. https://arxiv.org/html/2407.05399v2 — verified
 - [P2-8] Paul, S., Ghumare, D., Goyal, P., Ghosh, S., Modi, A. "IL-PCSR: Legal Corpus for Prior Case and Statute Retrieval." EMNLP 2025. https://arxiv.org/html/2511.00268v1 — verified
-- [P2-9] Joshi, A., Sharma, A., et al. "U-CREAT: Unsupervised Case Retrieval using Events extrAcTion." ACL 2023. https://aclanthology.org/2023.acl-long.777 — snippet
+- [P2-9] Joshi, A., Sharma, A., et al. "U-CREAT: Unsupervised Case Retrieval using Events extrAcTion." ACL 2023. https://aclanthology.org/2023.acl-long.777 — verified (abstract; the "+25.3 F1" figure not confirmed)
 - [P2-10] Qwen Team. "Qwen3-Embedding-4B" model card. Hugging Face, 2025. https://huggingface.co/Qwen/Qwen3-Embedding-4B — verified
 - [P2-11] Zhang, Y., Li, M., Long, D., et al. "Qwen3 Embedding: Advancing Text Embedding and Reranking Through Foundation Models." arXiv:2506.05176, 2025. https://arxiv.org/abs/2506.05176 — verified
 - [P2-12] Chen, J., Xiao, S., Zhang, P., Luo, K., Lian, D., Liu, Z. "M3-Embedding (BGE-M3)." arXiv:2402.03216, 2024. https://arxiv.org/abs/2402.03216 — verified
 - [P2-13] Voyage AI. "Embeddings" documentation (voyage-4 family, voyage-law-2). 2026. https://docs.voyageai.com/docs/embeddings — verified
 - [P2-14] Voyage AI. "voyage-context-3: focused chunk-level details with global document context." Blog, 2025. https://blog.voyageai.com/2025/07/23/voyage-context-3/ — verified
 - [P2-15] Cohere. "Cohere's Embed Models" (Embed v4). Docs. https://docs.cohere.com/docs/cohere-embed — verified
-- [P2-16] Google. "Embeddings" (gemini-embedding-001). Gemini API docs. https://ai.google.dev/gemini-api/docs/embeddings — verified
+- [P2-16] Google. "Embeddings" (gemini-embedding-001: 2,048 tokens; gemini-embedding-2: 8,192 tokens). Gemini API docs. https://ai.google.dev/gemini-api/docs/embeddings — verified
 - [P2-17] Jina AI. "jina-embeddings-v3" model card (license cc-by-nc-4.0). Hugging Face. https://huggingface.co/jinaai/jina-embeddings-v3 — verified
 - [P2-18] Isaacus. "Kanon 2 Embedder & Kanon Universal Classifier" (SageMaker model package). AWS Marketplace. https://aws.amazon.com/marketplace/pp/prodview-lquokmsovgpsm — verified
 - [P2-19] Qu, R., Tu, R., Bao, F. "Is Semantic Chunking Worth the Computational Cost?" arXiv:2410.13070, 2024. https://arxiv.org/abs/2410.13070 — verified
@@ -1024,8 +1139,8 @@ Build generations and aliases in the MVP because they are cheap now. Retrofittin
 - [P2-24] Shukla, A., Bhattacharya, P., Poddar, S., Mukherjee, R., Ghosh, K., Goyal, P., Ghosh, S. "Legal Case Document Summarization: Extractive and Abstractive Methods and their Evaluation." AACL-IJCNLP 2022. https://arxiv.org/abs/2210.07544 — verified
 - [P2-25] Deroy, A., Ghosh, K., Ghosh, S. "How Ready are Pre-trained Abstractive Models and LLMs for Legal Case Judgement Summarization?" arXiv:2306.01248, 2023. https://arxiv.org/abs/2306.01248 — verified
 - [P2-26] Deroy, A., Ghosh, K., Ghosh, S. "Applicability of Large Language Models and Generative Models for Legal Case Judgement Summarization." arXiv:2407.12848, 2024. https://arxiv.org/abs/2407.12848 — verified
-- [P2-27] Deroy, A., Ghosh, K., Ghosh, S. "A Tree-of-Thoughts Inspired Hybrid Approach for Legal Case Judgement Summarization using LLMs." arXiv:2606.28044, 2026. https://arxiv.org/abs/2606.28044 — snippet
-- [P2-28] Supreme Court of India. *Eastern Book Company & Ors v. D.B. Modak & Anr*, Civil Appeal 6472 of 2004, decided 12 Dec 2007 (reported AIR 2008 SC; (2008) 1 SCC 1 — SCC cite unverified). https://indiankanoon.org/doc/1062099/ — verified (headnote/footnote protection; s.52(1)(q) extract)
+- [P2-27] Deroy, A., Ghosh, K., Ghosh, S. "A Tree-of-Thoughts Inspired Hybrid Approach for Legal Case Judgement Summarization using LLMs." arXiv:2606.28044, 2026. https://arxiv.org/abs/2606.28044 — verified (abstract)
+- [P2-28] Supreme Court of India. *Eastern Book Company & Ors v. D.B. Modak & Anr*, Civil Appeal 6472 of 2004 (with CA 6905/2004), decided 12 Dec 2007, B.N. Agrawal & P.P. Naolekar JJ., (2008) 1 SCC 1. https://indiankanoon.org/doc/1062099/ — verified (headnote/footnote protection; s.52(1)(q); paras 41–42 on paragraph segregation, internal numbering and concurring/dissenting labels)
 - [P2-29] OpenSearch Project. "Disk-based vector search" (on_disk mode). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_vector-search/optimizing-storage/disk-based-vector-search.md — verified
 - [P2-30] OpenSearch Project. "Score ranker processor" (RRF, 2.19). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_search-plugins/search-pipelines/score-ranker-processor.md — verified
 - [P2-31] OpenSearch Project. "Pretrained models" (neural sparse, incl. multilingual-v1). Documentation. https://github.com/opensearch-project/documentation-website/blob/main/_ml-commons-plugin/pretrained-models.md — verified
@@ -1049,6 +1164,8 @@ Build generations and aliases in the MVP because they are cheap now. Retrofittin
 - [P2-49] Deode, S., Gadre, J., Kajale, A., Joshi, A., Joshi, R. "L3Cube-IndicSBERT." arXiv:2304.11434, 2023. https://arxiv.org/abs/2304.11434 — verified
 - [P2-50] Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." arXiv:2405.20362, 2024. https://arxiv.org/abs/2405.20362 — verified
 - [P2-51] MTEB. "AILA_casedocs" dataset card (FIRE 2019 AILA; 50 queries, 186 docs). Hugging Face. https://huggingface.co/datasets/mteb/AILA_casedocs — verified
-- [P2-52] Nigam, S.K., Mishra, S.K., Shallum, N., Ghosh, K., Bhattacharya, A. "AILQA: Evaluating AI-Driven Legal Question Answering Systems for the Indian Legal System." arXiv:2607.18825, 2026. https://www.alphaxiv.org/overview/2607.18825 — snippet
+- [P2-52] Nigam, S.K., Mishra, S.K., Shallum, N., Ghosh, K., Bhattacharya, A. "AILQA: Evaluating AI-Driven Legal Question Answering Systems for the Indian Legal System." arXiv:2607.18825, 2026. https://arxiv.org/abs/2607.18825 — verified (abstract + HTML body: ~7,221 docs, ChromaDB, Ada/Instructor-XL/mxbai)
 - [P2-53] OpenSearch Software Foundation (a Linux Foundation project). https://opensearch.org/foundation/ — verified
 - [P2-54] Morris, J.X., Kuleshov, V., Shmatikov, V., Rush, A.M. "Text Embeddings Reveal (Almost) As Much As Text." EMNLP 2023. https://arxiv.org/abs/2310.06816 — verified
+- [P2-55] Delhi High Court. *Jorawer Singh Mundy @ Jorawar Singh Mundy v. Union of India & Ors*, W.P.(C) 3918/2021, order of 12 Apr 2021 (Prathiba M. Singh J.) directing Indian Kanoon to block a judgment from search-engine access pending the petition. https://indiankanoon.org/doc/86889244/ — verified
+- [P2-56] Supreme Court of India. *Nipun Saxena v. Union of India*, decided 11 Dec 2018 (directions against publishing the name or identifying facts of rape victims in print, electronic or social media). https://indiankanoon.org/doc/53672964/ — verified

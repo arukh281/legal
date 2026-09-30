@@ -136,8 +136,14 @@ CREATE TABLE opponent_claim (tenant_id text, matter_id text, claim_id text, issu
 -- 2.3.4 Overlay graph (private assertions; spine F shape + tenant scope)
 CREATE TABLE private_assertion (
   tenant_id text, matter_id text, assertion_id text /* pasr_ */, subject text, predicate text, object text,
-  qualifiers jsonb, confidence real, evidence jsonb, method jsonb, review_state text,
+  qualifiers jsonb, confidence real, evidence jsonb /* [{anchor_id, span, quote_hash}] per spine F */,
+  method jsonb /* {kind: RULE|MODEL|HUMAN|IMPORT, name, version, prompt_hash?} */,
+  review_state text CHECK (review_state IN ('MACHINE','PENDING_REVIEW','VERIFIED','REJECTED','QUARANTINED')),
+  impact_tier smallint CHECK (impact_tier IN (1,2,3)),   -- spine F; e.g. ADVERSE_TO / DEADLINE_FROM = tier 1
+  valid_from date, valid_to date,                        -- spine F legal-time (NULL = open); e.g. GOVERNED_BY as-of window
   recorded_at timestamptz, superseded_at timestamptz, PRIMARY KEY (tenant_id, assertion_id));
+-- (review fix: v0 omitted spine-F fields valid_from/valid_to/impact_tier; now carried so P6/P8 treat private and
+--  public assertions uniformly. Private review_state VERIFIED = confirmed by a lawyer of this tenant.)
 -- predicates: EVIDENCES, CONTRADICTS, ASSERTS (party→claim), RAISES (claim→issue),
 -- RELIES_ON (issue|draft_para → public anchor/proposition), CITED_BY_OPPONENT, ADVERSE_TO,
 -- GOVERNED_BY (issue → statute anchor @as_of), CASE_OF (matter → cas_), DEADLINE_FROM (ddl → anchor)
@@ -145,12 +151,15 @@ CREATE TABLE private_assertion (
 
 -- 2.3.5 Dependencies (drive tenant-side impact matching, 5.6)
 CREATE TABLE matter_dependency (
-  tenant_id text, matter_id text, public_id text /* wrk_|cas_|prp_|anchor_id|provision@date */,
+  tenant_id text, matter_id text, public_id text /* wrk_|cas_|prp_|anchor_id (without @date) */,
+  match_key text NOT NULL,           -- canonical, language-agnostic key: anchor with expression_key stripped
+                                     -- (wrk_X/en#p45 -> wrk_X#p45), re-canonicalised nightly via anchor_alias (spine C)
+  as_of_legal_date date,             -- for GOVERNING_PROVISION: the date the provision must be read as of
   kind text CHECK (kind IN ('OWN_CASE','CITED_IN_OUR_DRAFT','CITED_BY_OPPONENT','IN_MEMO_FAVOURABLE',
       'IN_MEMO_ADVERSE','GOVERNING_PROVISION','WATCHED')), weight real,
   source_ref text /* memo/claim/pdoc anchor that created the dependency */, added_at timestamptz,
   PRIMARY KEY (tenant_id, matter_id, public_id, kind));
-CREATE INDEX ON matter_dependency (tenant_id, public_id);   -- inverted index for matching
+CREATE INDEX ON matter_dependency (tenant_id, match_key);   -- inverted index for matching
 
 -- 2.3.6 Court tracking
 CREATE TABLE hearing (tenant_id text, matter_id text, hearing_id text, case_id text, date date,
@@ -175,7 +184,7 @@ CREATE TABLE deadline (tenant_id text, matter_id text, deadline_id text, due_on 
 1. **Tenant-side impact matching (changes `impact.detected.v1` routing; removes "P7 registers dependency fingerprints *for P4*").** P4 publishes `impact.detected.v1` with `tenant_id=null` and a *public* `affected_ids[]` closure; P7 matches it locally. *Justification:* the set of authorities a firm relies on (and the CNRs it tracks) is itself confidential strategy and, for criminal/insolvency matters, can reveal client identity; storing it in P4 (a PLC component) would violate spine A ("NOTHING flows TPL → PLC"). Broadcast-and-match works identically in SaaS, VPC and air-gapped modes (on-prem receives the same public event feed with the PLC delta bundle). Cost is negligible: an inverted-index lookup per affected ID (5.6).
 2. **Generalize `matter.alert.v1`** — `data: {alert_id, tenant_id, matter_id, alert_kind: AUTHORITY_CHANGE|NEW_ORDER|HEARING_LISTED|HEARING_CHANGED|DEADLINE_DUE|DEADLINE_PROPOSED|DOCUMENT_RECEIVED|SYNC_STALE|WALL_VIOLATION_ATTEMPT, severity: 1|2|3, impact_id?, source_event_id, dedupe_key, due_at?, recipients[usr_], explanation{text, anchors[]}, sensitivity: STANDARD|RESTRICTED}` — the current schema only covers impacts; hearings/deadlines/new orders are the most-used alerts in Indian litigation practice.
 3. **New event `matter.document.ingested.v1`** (tenant-scoped, TPL-internal bus): `{tenant_id, matter_id, pdoc_id, pver, doc_type, provenance, trust, privilege_class, received_on, parsed_doc_uri, quality}` → P6 auto-starts the "notice/petition/order arrived" workflow; P10 notifies.
-4. **Private anchor grammar extension:** `{pdoc_id}/{pver}#{fragment}` where `pver` ∈ `v1..vn` (plays the role of `expression_key`); translations are `v1.hi→en` derived expressions. New fragment kinds for non-judgment media: `m12` (message 12 in a chat/email thread), `m12.att2` (attachment), `hdr.from|to|cc|date|subject` (email headers), `r15.c4` / `sheet2.r15.c4` (spreadsheet cell), `pg3.rg2` (region 2 of page 3 for images/handwriting), `t00:03:15-00:03:40` (audio/video time range).
+4. **Private anchor grammar extension:** `{pdoc_id}/{pver}#{fragment}` where `pver` ∈ `v1..vn` (plays the role of `expression_key`); translations are derived expressions keyed ASCII-only as `v1.mt-en` (machine translation of v1 into English; `v1.ht-en` for a human/certified translation) — the arrow form `v1.hi→en` used in drafts is display-only, never an ID (non-ASCII IDs break URLs, log scrubbers and bloom keys). New fragment kinds for non-judgment media: `m12` (message 12 in a chat/email thread), `m12.att2` (attachment), `hdr.from|to|cc|date|subject` (email headers), `r15.c4` / `sheet2.r15.c4` (spreadsheet cell), `pg3.rg2` (region 2 of page 3 for images/handwriting), `t00:03:15-00:03:40` (audio/video time range).
 5. **`MatterContext` extensions** (backward-compatible additions):
 ```ts
 interface MatterContext /* spine H, plus: */ {
@@ -196,6 +205,25 @@ interface MatterContext /* spine H, plus: */ {
 ```
 Only `CONFIRMED` facts/issues may be cited by P6 as `RECORD_FACT` claims without an "unconfirmed" label; `MACHINE` facts are usable as hypotheses only.
 
+Base spine-H fields that v0 left untyped, made concrete (no semantic change):
+```ts
+  parties: { party_id: string; name_enc_ref: string; role: string /* spine client_role vocabulary */;
+             is_client: boolean; advocates?: string[]; identifiers?: { scheme: "CIN"|"PAN_HASH"|"GSTIN"|"OTHER"; value: string }[] }[];
+  issues:  { issue_id: string; text: string; status: "CONFIRMED" /* only lawyer-confirmed per spine H */;
+             origin: "OPPONENT_CLAIM"|"FIRM"|"COURT_FRAMED"; governing_anchors: string[] /* public anchors @as_of */ }[];
+```
+
+6. **`impact.detected.v1` — additional `data` fields needed by tenant-side matching** (added by independent review): `change_kind: OVERRULED|PARTIALLY_OVERRULED|REVERSED|STAYED|AMENDED|REPEALED|STRUCK_DOWN|RETRACTED`, `effective_from` (legal date; spine E `valid_from`), `retrospective: boolean|null`, `review_state` of the reason assertions (so P7 can label MACHINE-state tier-1 impacts "provisional"), `supersedes_impact_id?` (for retractions/corrections), and a documented **severity scale** (P7 assumes `1 = most severe … 3 = informational`, same as `matter.alert.v1`; if P4 chooses otherwise, P7 maps via a versioned table). Without `effective_from` and `RETRACTED`, P7 cannot suppress prospective amendments for old causes of action nor withdraw a false "overruled" alert.
+7. **`EvidenceBundle.items[]` must admit private items.** Spine H items carry `work_id` and `authority{…}`, which do not exist for `pdoc_` anchors. Proposed: `item.source: PUBLIC|PRIVATE`; for PRIVATE items `work_id=null`, `pdoc_id`, `pver`, `privilege_class`, `trust`, `provenance`, `authority=null`, and the `authz_consistency` token used for the post-filter (5.7 rule 3). P8 uses `privilege_class` for the outbound-leak check (5.9.3). *(Divergence found in review: v0 relied on P5 putting private items in the bundle without saying how.)*
+
+**Event envelope example** (spine G; TPL-internal bus only):
+```json
+{ "id":"01J…","type":"matter.alert.v1","specversion":"1.0","source":"p7/alert-service@1.4.0",
+  "time":"2026-09-30T06:02:11Z","subject":"mat_01J…","tenant_id":"ten_01J…","traceparent":"00-…",
+  "causation_id":"<impact.detected.v1 id>","idempotency_key":"<dedupe_key>","schema_version":"2",
+  "data":{ "alert_id":"alr_…","alert_kind":"AUTHORITY_CHANGE","severity":1,"impact_id":"imp_…", "…":"see (2)" } }
+```
+
 ---
 
 ## 3. State-of-the-art survey (with citations)
@@ -203,14 +231,14 @@ Only `CONFIRMED` facts/issues may be cited by P6 as `RECORD_FACT` claims without
 ### 3.1 Multi-tenant SaaS isolation
 - **Silo / pool / bridge.** AWS's SaaS Lens frames isolation as a spectrum: *silo* (dedicated resources per tenant — strongest isolation, highest cost), *pool* (shared resources, isolation by policy — cheapest, weakest), and *bridge* (mixing the two per layer/service) [P7-25]. Real systems end up bridged: shared control plane, siloed or pooled data plane per service.
 - **Postgres RLS for pooled data.** AWS prescriptive guidance calls RLS *required* for pooled Postgres, recommends a runtime tenant variable (`current_setting('app.current_tenant')`) rather than one DB user per tenant, and enabling RLS on every tenant table [P7-26]. RLS moves isolation from developer discipline into the DBMS; it does not protect against a connection that sets the wrong tenant, table owners/superusers, or pooled connections that leak session state (engineering considerations, not in [P7-26]).
-- **Vector search in pooled stores.** Filtering a shared HNSW index by tenant wastes work and makes recall/latency vary by tenant size — small tenants' vectors are scattered among a large tenant's graph [P7-27]. Qdrant's guidance is payload partitioning with an `is_tenant` index and *per-tenant* HNSW graphs (`m=0`, `payload_m=16`) that co-locate a tenant's vectors, plus dedicated shards for large tenants and "tiered multitenancy" that promotes tenants as they grow [P7-28]. OWASP's 2025 LLM Top 10 lists **LLM08 Vector and Embedding Weaknesses** and **LLM02 Sensitive Information Disclosure** as first-class risks [P7-19].
+- **Vector search in pooled stores.** Filtering a shared HNSW index by tenant wastes work and makes recall/latency vary by tenant size — small tenants' vectors are scattered among a large tenant's graph [P7-27]. Qdrant's guidance is payload partitioning with an `is_tenant` index and *per-tenant* HNSW graphs (`m=0`, `payload_m=16`) that co-locate a tenant's vectors, plus dedicated shards for large tenants and "tiered multitenancy" that promotes tenants as they grow — Qdrant suggests promoting a tenant to its own shard at roughly **20,000 points** [P7-28]. Filter-after-ANN on a shared graph can waste ~10× work for small tenants [P7-27]. OWASP's 2025 LLM Top 10 lists **LLM08 Vector and Embedding Weaknesses** and **LLM02 Sensitive Information Disclosure** as first-class risks [P7-19].
 - **Embeddings are not anonymised data.** Vec2Text recovered 92% of 32-token inputs exactly from their embeddings and recovered full names from clinical-note embeddings [P7-24]. Embeddings of privileged documents must be treated as the documents themselves (encryption, erasure, tenant isolation).
 - **Shared LLM caches.** An audit of prompt caching found *global cache sharing across users* at seven API providers including OpenAI, creating timing side channels that can reveal other users' prompts [P7-23]. Any cache (provider prompt cache, self-hosted prefix/KV cache, semantic answer cache) must be tenant-scoped.
 
 ### 3.2 Authorization
 - **Zanzibar** (Google) — a relationship-tuple authorization system handling trillions of ACLs and millions of checks/s with p95 < 10 ms and >99.999% availability, giving a uniform model across Drive, Calendar, YouTube etc. [P7-29]. **OpenFGA** implements the Zanzibar model (ReBAC) as open source and became a CNCF incubating project in late 2025 [P7-30].
 - **Cedar** (AWS) — a policy language built by "verification-guided development": formal proofs about an executable model plus differential random testing against production code; proofs found 4 validator bugs and DRT/PBT found 21 more [P7-31]. Strength: analyzable policies (ABAC). Weakness for us: relationship data (who is on which matter, who is walled) must be supplied as entities per request, which is awkward for "list every document this user may retrieve".
-- **Ethical walls inside AI tools.** Harvey's Intapp integration (GA July 2026) mirrors Intapp Walls policies and enforces them across Threads, Vault, Review Tables and Shared Spaces; "when access to a resource cannot be confirmed, Harvey blocks it" [P7-13]. Coverage of the partnership noted that before it, governance "had not extended into AI platforms and agents, leaving compliance dependent on users' self-policing and ad hoc audit logs" [P7-14]. Lesson: walls must be enforced at retrieval and generation time, not only at sharing time, and must fail closed.
+- **Ethical walls inside AI tools.** Harvey's Intapp integration (GA July 2026) mirrors Intapp Walls policies and enforces them across Threads, Vault, Review Tables and Shared Spaces; "when access to a resource cannot be confirmed, Harvey blocks it" [P7-13]. The partnership was first announced in Feb 2026, framed by Harvey's CEO as making the professional-responsibility standards firms built in Intapp "follow them into every tool they use" [P7-14] — i.e., before it, walls did not automatically extend into the AI tool *(review note: an earlier draft attributed a "self-policing and ad hoc audit logs" quote to [P7-14]; that wording is not in the article and has been removed)*. Lesson: walls must be enforced at retrieval and generation time, not only at sharing time, and must fail closed.
 
 ### 3.3 Tamper-evident audit
 - **Managed ledgers are a platform risk:** Amazon QLDB — the canonical "immutable journal" service — reached end of support on 31 July 2025, with AWS steering users to Aurora PostgreSQL plus pgAudit/S3 [P7-32].
@@ -222,18 +250,18 @@ Only `CONFIRMED` facts/issues may be cited by P6 as `RECORD_FACT` claims without
 
 ### 3.5 Prompt injection through uploaded documents
 - OWASP **LLM01:2025** defines *indirect* prompt injection as instructions arriving in external content (websites, files) and recommends least privilege, segregating untrusted content, deterministic output validation, human approval for high-risk actions, and adversarial testing [P7-19].
-- **EchoLeak (CVE-2025-32711, CVSS 9.3)** — a crafted email retrieved into Microsoft 365 Copilot's context caused it to exfiltrate internal data with zero user clicks ("LLM scope violation") [P7-18]. A law firm's case file is full of adversary-authored documents (opposing pleadings, notices, emails): exactly this threat model.
+- **EchoLeak (CVE-2025-32711, CVSS 9.3)** — a crafted email retrieved into Microsoft 365 Copilot's context caused it to exfiltrate internal data with zero user clicks ("LLM scope violation"; reported by Aim Security, patched in Microsoft's June 2025 update, no known in-the-wild exploitation) [P7-18]. A law firm's case file is full of adversary-authored documents (opposing pleadings, notices, emails): exactly this threat model.
 - **Spotlighting** (datamarking/encoding untrusted input) cut attack success from >50% to <2% on GPT-family models [P7-20] — a large reduction but not zero. **CaMeL** separates control flow (derived from the trusted user query) from untrusted data and enforces capability policies, solving 77% of AgentDojo tasks with provable security vs 84% undefended [P7-21]. The 2025 **design-patterns** paper argues for agent architectures with provable resistance (e.g., constraining what untrusted-data-processing LLM calls can do) and analyses utility trade-offs [P7-22].
 
 ### 3.6 Indian legal & regulatory context (coordinate with 21_india_specific_legal_data.md)
-- **DPDP Act 2023 / DPDP Rules 2025.** Rules notified 13 Nov 2025 (G.S.R. 846(E)) [P7-1][P7-2]; Board provisions immediate; consent-manager provisions at 12 months; the substantive fiduciary obligations and data-principal rights (Rules 3, 5–16, 22–23) apply from **13 May 2027** [P7-1][P7-6]. Rule 6 details "reasonable security safeguards" (encryption/masking/tokenisation, access control, logging and monitoring, backups) and requires logs to be kept at least **one year**; Rule 7 requires breach intimation to affected principals and the Board, with a detailed report within **72 hours** [P7-6][P7-1]. Processors must maintain equivalent safeguards [P7-6].
+- **DPDP Act 2023 / DPDP Rules 2025.** Rules notified 13 Nov 2025 (G.S.R. 846(E)) [P7-1][P7-2]; Board provisions (Rules 1, 2, 17–21) immediate; consent-manager provisions (Rule 4) at 12 months; the substantive fiduciary obligations and data-principal rights (Rules 3, 5–16, 22–23) apply on expiry of **18 months — dated 13 May 2027 by S.S. Rana [P7-2] and 12 May 2027 by AZB [P7-1]**; plan for the earlier date. Rule 6 details "reasonable security safeguards" (encryption/masking/tokenisation, access control, logging and monitoring, backups) and requires logs to be kept at least **one year**; Rule 7 requires breach intimation to affected principals and the Board, with a detailed report within **72 hours** [P7-6][P7-1]. Processors must maintain equivalent safeguards [P7-6].
 - **Exemption for legal claims.** s.17(1)(a) disapplies Chapter II (except s.8(1) and s.8(5)), Chapter III and s.16 where processing "is necessary for enforcing any legal right or claim" [P7-3]. So a firm's litigation processing is largely exempt, but accountability (s.8(1)) and **security safeguards (s.8(5)) survive** — which is what P7 must engineer for. Advisory/transactional matters may not fit s.17(1)(a) and then attract full obligations *(legal interpretation — confirm with counsel)*.
-- **Erasure vs retention.** s.8(7) requires erasure once the purpose is no longer served or consent is withdrawn, *unless retention is necessary for compliance with law* [P7-4]. Secondary summaries describe a Rule 8 pre-erasure intimation of 48 hours for specified classes [P7-1] *(verify against gazette text)*.
-- **Cross-border.** s.16 is a negative-list regime: transfers are allowed except to countries the Centre notifies; commentators report no list notified as of mid-2026 [P7-5] (*snippet*). Sectoral rules and client contracts (banks, listed companies) often impose stricter localisation — we default to India-resident processing including LLM inference.
+- **Erasure vs retention.** s.8(7) requires erasure once the purpose is no longer served or consent is withdrawn, *unless retention is necessary for compliance with law* [P7-4]. Secondary summaries describe a Rule 8 pre-erasure intimation of 48 hours for specified classes [P7-1] — from memory these are the Third-Schedule classes (large e-commerce, online-gaming and social-media platforms), which would not include law firms *(unverified — verify against gazette text)*. **Counter-pressure:** Rule 8 also obliges fiduciaries to retain personal data, associated traffic data and processing logs for **at least one year from the date of processing** for the Seventh-Schedule purposes, and to erase thereafter unless other law requires longer [P7-2]. P7's erasure design (5.10) therefore separates *content* (erasable) from *processing logs* (retained ≥ 1 year, content-free).
+- **Cross-border.** s.16 is a negative-list regime: transfers are allowed except to countries the Centre notifies [P7-5]; the commentary page we checked lists no notified country, but we could not confirm the position as of Sep 2026 (*snippet* — re-check before contract drafting). Sectoral rules and client contracts (banks, listed companies) often impose stricter localisation — we default to India-resident processing including LLM inference.
 - **CERT-In Directions (28 Apr 2022, effective 27 Jun 2022).** Report specified incidents within **6 hours**; keep ICT logs for a rolling **180 days within Indian jurisdiction**; sync clocks to NIC/NPL NTP servers; cloud/VPS/data-centre providers retain subscriber records for 5 years [P7-7].
 - **Privilege under the BSA 2023.** s.132 bars an advocate from disclosing client communications, document contents or advice without express consent (exceptions: furtherance of an illegal purpose; crime/fraud observed since engagement), the obligation survives termination, and it **applies to interpreters and the clerks or employees of advocates** [P7-8]. In *In re: Summoning Advocates who give Legal Opinion or Represent Parties during Investigation of Cases*, 2025 INSC 1275 (31 Oct 2025, 3-judge bench incl. CJI Gavai), the Supreme Court held (i) investigators cannot summon advocates for client details save under the s.132 exceptions, with SP-level written approval and stated factual basis; (ii) in-house counsel are not "advocates" for s.132 but get limited s.134 protection for communications with external legal advisers; (iii) advocates' digital devices must be produced before the *court*, opened only in the presence of the party and advocate with experts of their choice, examination confined to the material sought, and "care shall be taken ... not to impair the confidentiality with respect to the other clients of the Advocate" [P7-9]. The architecture should make *matter-scoped* disclosure technically natural (5.9).
 - **Electronic evidence.** BSA s.63(4) requires a certificate in the Schedule form signed by the person in charge of the device/activities **and an expert** [P7-10]. Commentators state the Schedule asks for hash values of the record *(unverified — Schedule text not fetched)*; P7 preserves original bytes and SHA-256 at intake either way.
-- **Indian firms' AI posture.** Shardul Amarchand Mangaldas rolled out Harvey firm-wide across seven offices (3 Jun 2025) after a year-long evaluation, citing "firm-specific data security measures ... and continuous human oversight" [P7-11]. Cyril Amarchand Mangaldas selected Harvey (pilot) and Lucio, plus Copilot and ChatGPT Plus for business operations [P7-12]. Evidence therefore shows top Indian firms **accept vendor-hosted SaaS** with contractual/security controls; we found no public evidence of Indian firms mandating on-prem LLM deployment *(gap — validate with design partner)*. On-prem demand is more plausible from PSUs, banks and government litigants.
+- **Indian firms' AI posture.** Shardul Amarchand Mangaldas rolled out Harvey firm-wide across seven offices (3 Jun 2025) after a year-long evaluation, citing "firm-specific data security measures ... and continuous human oversight" [P7-11]. Cyril Amarchand Mangaldas (Mar 2025) selected Harvey (pilot) and Lucio, plus Copilot and ChatGPT Plus for business operations [P7-12]. Evidence therefore shows top Indian firms **accept vendor-hosted SaaS** with contractual/security controls; we found no public evidence of Indian firms mandating on-prem LLM deployment *(gap — validate with design partner)*. On-prem demand is more plausible from PSUs, banks and government litigants.
 
 ### 3.7 Court-tracking landscape
 - **eCourts services** offers CNR search (16-character alphanumeric), case status by number/party/advocate/FIR/act, court orders, cause lists and caveat search — **behind an image/audio CAPTCHA** [P7-15].
@@ -252,7 +280,7 @@ Only `CONFIRMED` facts/issues may be cited by P6 as `RECORD_FACT` claims without
 | System/paper | What went wrong | Evidence | How we avoid it |
 |---|---|---|---|
 | Microsoft 365 Copilot (EchoLeak) | Untrusted external email entered the same LLM context as privileged enterprise data; model output provided an exfiltration channel; zero-click | CVE-2025-32711, CVSS 9.3 [P7-18] | All uploads `trust=UNTRUSTED_EXTERNAL` unless firm-authored; extraction LLM calls are tool-less, schema-constrained, per-document (5.4.4); UI renders model output with no auto-loaded external URLs/images and strict CSP; outbound network egress from inference sandbox = deny |
-| AI tools before wall integration (e.g., Harvey pre-2026) | Walls enforced in DMS/conflicts systems but not inside the AI platform → self-policing | [P7-13][P7-14] | Walls are a native authorization primitive (5.7), enforced at retrieval, generation, sharing, export, alerting and search suggestions; fail closed when the wall source is unreachable |
+| AI tools before wall integration (e.g., Harvey pre-2026) | Walls enforced in DMS/conflicts systems did not automatically carry into the AI platform (enforcement then rests on users — our inference) | [P7-13][P7-14] | Walls are a native authorization primitive (5.7), enforced at retrieval, generation, sharing, export, alerting and search suggestions; fail closed when the wall source is unreachable |
 | LLM API providers | Global prompt-cache sharing across users → timing side channel | Gu et al. 2025 [P7-23] | Model Gateway only uses routes with per-org cache isolation; self-hosted prefix caches keyed/salted by `tenant_id+matter_id`; semantic answer caches are per-matter |
 | Pooled vector DBs with metadata filters | Forgotten filter leaks; filtered HNSW gives tenant-dependent recall/latency | [P7-27]; OWASP LLM08 [P7-19] | Per-tenant physical partitions (per-tenant HNSW / index) + authz-derived filter + RLS; large tenants promoted to dedicated shards/cells [P7-28] |
 | "Embeddings are safe to keep" | Embeddings invert to text (92% exact on 32-token inputs) | Vec2Text [P7-24] | Embeddings stored under tenant/matter keys; included in erasure lineage; never shared into PLC/P9 |
@@ -410,9 +438,15 @@ flowchart TD
 4. *No exfil channels.* Model outputs rendered in P10 never auto-fetch URLs/images; links in outputs must resolve to PLC anchors or pdoc anchors; inference sandboxes have egress deny (lesson of EchoLeak [P7-18]).
 5. *Injection signal as evidence.* An injection attempt inside an opponent's document is itself a fact for the lawyer (possible misconduct) → `DOCUMENT_RECEIVED` alert carries a "suspicious embedded instructions" flag.
 
-**5.4.5 Language handling.** Keep the original-language text as the authoritative expression (`v1`), store machine translation as derived expression `v1.hi→en` with sentence alignment, so every English statement used by P6 still resolves to an original-language anchor. Hindi/Marathi FIRs and notices are common in district-court matters; OCR quality gates apply per script.
+**5.4.5 Language handling.** Keep the original-language text as the authoritative expression (`v1`), store machine translation as derived expression `v1.mt-en` (2.5 (4)) with sentence alignment, so every English statement used by P6 still resolves to an original-language anchor. Hindi/Marathi FIRs and notices are common in district-court matters; OCR quality gates apply per script.
 
 **5.4.6 Throughput & SLOs.** 50-page native PDF → searchable p50 ≤ 60 s, p95 ≤ 3 min; 50-page scan → p95 ≤ 6 min; 10 GB PST → fully processed ≤ 12 h with incremental availability (first messages searchable within 15 min). Back-pressure per tenant (fair queuing) so one firm's PST cannot starve another's urgent notice.
+
+**5.4.7 Guard rails added in review (build parameters; initial values, calibrate on partner data).**
+- *Container limits (zip/PST bombs, polyglots):* max nesting depth 5; max expansion ratio 100:1 per container and 20 GB absolute per upload; max 2M child items per container; per-item wall-clock 120 s (OCR page 30 s); exceeding any limit → item `QUARANTINED` with reason, never silently dropped. File type = magic-byte sniff; PDF with embedded JavaScript/launch actions/embedded files is rendered to image + text only.
+- *Dedup scope = matter, never tenant-wide.* Exact (sha256) and near-dup (MinHash, 128 permutations, 5-word shingles, LSH 32 bands × 4 rows, Jaccard ≥ 0.90) run **within one matter**. Tenant-wide dedup would reveal to a screened user that a document exists in a walled matter ("duplicate of pdoc in M") and would share one blob across two matter DEKs, breaking per-matter crypto-shredding (5.9). Storage cost of duplicate blobs across matters is accepted.
+- *OCR gates:* region `ocr_conf` < 0.80 (engine-normalised 0–1) → region `needs_review`; any fact/deadline/date whose quote overlaps a region < 0.90 is forced to `PROPOSED`/`MACHINE` and cannot be bulk-confirmed; Devanagari/other Indic scripts get their own thresholds after baseline CER (9.2).
+- *LLM-extraction triage (cost guard for bulk loads).* LLM fact/claim extraction runs by default only on "working-set" documents: `doc_type ∈ {notice, reply, pleading, petition, affidavit, order/judgment, FIR/charge-sheet, contract, show-cause/summons}` or any document a lawyer pins/tags, or emails from custodians and date ranges the lawyer selects. Bulk email/PST items get parsing, lexical+vector indexing and entity/date extraction (non-LLM) only. Before any job whose estimated extraction tokens exceed a per-tenant threshold (default 50M input tokens), the uploader sees a cost/time estimate and a firm-admin must approve. Per-tenant monthly token budgets are enforced by the Model Gateway (hard stop → queue, not silent truncation).
 
 ### 5.5 MatterContext construction
 
@@ -422,8 +456,13 @@ flowchart TD
 on matter.document.ingested.v1 or confirmation or case-sync change:
   facts_c  = extract_fact_candidates(doc)        # tool-less LLM; each with exact quote + anchor
   facts_c  = normalize_dates(facts_c)            # Indian formats: 05.03.2024, 5-3-24, "5th March", Hindi month names,
+                                                  # Devanagari/other Indic digits, Saka-calendar dates in Gazette-style docs,
+                                                  # DD/MM vs MM/DD ambiguity -> keep both + needs_review (never guess),
                                                   # relative ("within 15 days of receipt") -> linked to anchor event
-  merged   = cluster_and_merge(existing_facts, facts_c)   # same event? (date +- tolerance, entity overlap, embedding sim)
+  merged   = cluster_and_merge(existing_facts, facts_c)   # same event? candidate pair if |date diff| <= 3 days (DAY
+                                                  # precision; overlap for MONTH/RANGE) AND entity-Jaccard >= 0.5 AND
+                                                  # statement cosine >= 0.85; pairs in the 0.75-0.85 band -> tool-less LLM
+                                                  # adjudication; never auto-merge across different asserted_by
   for pair in conflicting(merged):               # same event, different date/amount/actor
       mark DISPUTED; add CONTRADICTS private_assertion with both anchors
   claims   = extract_opponent_claims(doc) if doc.provenance == OPPOSING_PARTY
@@ -452,16 +491,28 @@ on matter.document.ingested.v1 or confirmation or case-sync change:
 **Matching algorithm** (runs per tenant, on each broadcast `impact.detected.v1`):
 ```
 for impact in stream(public_impacts):                      # tenant_id = null
-   hits = SELECT matter_id, public_id, kind, weight, source_ref
-          FROM matter_dependency WHERE public_id = ANY(impact.affected_ids)
+   keys = canonicalize(impact.affected_ids)                 # strip expression_key, apply anchor_alias forwards
+   hits = SELECT matter_id, public_id, kind, weight, source_ref, as_of_legal_date
+          FROM matter_dependency WHERE match_key = ANY(keys)
    for matter, deps in group(hits):
-       if matter.status in (CLOSED, ARCHIVED) and not watched: continue
-       sev = max(impact.severity adjusted by kind: OWN_CASE/CITED_IN_OUR_DRAFT -> +1, WATCHED -> 0)
+       if matter.status in (CLOSED, ARCHIVED) and no dep.kind == WATCHED: continue
+       # severity scale: 1 = most severe, 3 = informational (2.5 (2), (6)); smaller number = more urgent
+       sev = impact.severity
+       if any dep.kind in (OWN_CASE, CITED_IN_OUR_DRAFT): sev = max(1, sev - 1)   # escalate
+       for dep in deps where dep.kind == GOVERNING_PROVISION:
+           if impact.effective_from > dep.as_of_legal_date and impact.retrospective is not true:
+               sev = min(3, sev + 1); note "prospective change - check transitional/saving clause"
+       if impact.change_kind == RETRACTED:
+           emit follow-up alert referencing supersedes_impact_id ("earlier alert withdrawn"); un-STALE claims; continue
+       provisional = impact.review_state != VERIFIED        # tier-1 MACHINE treatments shown as "provisional"
        key = hash(impact.impact_id, matter)                  # idempotent consumer
-       emit matter.alert.v1{alert_kind: AUTHORITY_CHANGE, severity: sev, impact_id,
+       emit matter.alert.v1{alert_kind: AUTHORITY_CHANGE, severity: sev, impact_id, provisional,
             explanation: impact.explanation + which of OUR docs/claims depend on it (private anchors)}
        mark dependent StrategyMemo claims STALE -> P6/P8 re-verify on next open
 ```
+*(Review fix: v0 wrote `max(severity +1)`, which with 1 = most severe would have **downgraded** alerts on our own case and our filed pleadings; v0 also matched `provision@date` strings literally, so statute amendments would never have matched. Both corrected above; the canonical `match_key` also fixes misses when P4 reports a Hindi-expression anchor and we stored the English one.)*
+
+**Criminal-code transition (India-specific).** For matters whose cause of action pre-dates 1 July 2024 (commencement of BNS/BNSS/BSA; see 21_india_specific_legal_data.md), `GOVERNING_PROVISION` dependencies are stored against the IPC/CrPC/Evidence Act anchor **and** the BNS/BNSS/BSA counterpart via P3 `CORRESPONDS_TO` edges, so an impact on either side matches; the alert states which code governs as of `as_of_legal_date`.
 Cost: an index lookup per affected ID per tenant; with 10³ affected IDs/day × 10³ tenants = 10⁶ indexed lookups/day — trivial. For on-prem, the same public event stream arrives inside the daily signed PLC delta bundle (5.13).
 
 **Why not register fingerprints with P4?** See 2.5 (1) and 6.3.
@@ -494,26 +545,26 @@ type matter
     define lead: [user]
     define team: [user, group#member]
     define firm_visible: [firm]                # set only if matter is open to all firm members
+    define unrestricted: [user:*]              # written iff the matter has NO inclusionary wall
     define base_view: lead or team or member from firm_visible
     define blocked: screened from screened_by
-    define allowed_by_wall: insider from restricted_by
-    define can_view: (base_view and allowed_by_wall) but not blocked      # restricted matters
-    define can_view_open: base_view but not blocked                         # unrestricted matters
-    define can_edit: (lead or team) but not blocked
-    define can_export: lead but not blocked
+    define wall_ok: unrestricted or insider from restricted_by
+    define can_view: (base_view and wall_ok) but not blocked
+    define can_edit: ((lead or team) and wall_ok) but not blocked
+    define can_export: (lead and wall_ok) but not blocked
 type pdoc
   relations
     define matter: [matter]
-    define partner_only: [user, group#member]  # e.g. fee letters, internal risk memos
-    define can_view: can_view from matter or can_view_open from matter
-    define can_view_restricted: can_view and partner_only
+    define readers: [user, group#member, user:*]   # user:* for normal docs; explicit list for partner-only docs
+    define can_view: can_view from matter and readers
 ```
-*(The two `can_view` paths express restricted vs open matters; the PEP chooses by the matter's `restricted_by` presence. Exact DSL to be finalised against OpenFGA's current syntax.)*
+*(Review fix: v0 defined `pdoc.can_view` as `can_view from matter or can_view_open from matter`, where `can_view_open` ignored the inclusionary wall — so any `Check(user, can_view, pdoc)` (which rule 3 relies on) would have let a non-insider team/firm member through a restricted matter's wall, and `can_edit` ignored the wall entirely. The model above needs no PEP branching: the Workspace API maintains the invariant "a matter has exactly one of {`unrestricted@user:*`, ≥1 `restricted_by` wall}", and a new matter with neither tuple is invisible to everyone except via break-glass — fail closed. Partner-only documents drop the `readers@user:*` tuple. Exact DSL to be validated with OpenFGA's model tests (9.1).)*
 
 **Rules**
 1. **Deny-overrides, fail-closed:** any `blocked` relation wins; if the walls source or OpenFGA is unavailable, TPL reads are denied (INV-3). This matches the behaviour Harvey adopted with Intapp: block when access "cannot be confirmed" [P7-13].
 2. **Wall sources:** (a) native walls created by the risk team; (b) mirrored from an external walls/conflicts system via connector; (c) mirrored DMS ACLs (iManage/NetDocuments — Indian adoption *unverified*; confirm with design partner). Effective access = our relations **∩** DMS ACL for DMS-sourced documents (most restrictive wins). DMS ACL sync by webhook where supported, else ≤15 min poll; beyond a 60-min staleness TTL, DMS-sourced docs fail closed.
-3. **Retrieval enforcement (two-phase):** P5 pre-filters private index queries by `matter_id ∈ ListObjects(user, can_view, matter)` (cached per TEC) and by document restriction lists; before any item enters an `EvidenceBundle`, a batched `Check(user, can_view, pdoc)` post-verifies with the TEC's consistency token (Zanzibar-style protection against the "new enemy" problem when a wall has just been added [P7-29]).
+   *Indian conflict rules:* the Bar Council of India Rules (Part VI, Ch. II) are understood to bar an advocate who advised or acted for a party from acting for the opposite party in the same matter, and to carry the s.126 IEA (now s.132 BSA) confidentiality duty into professional conduct *(unverified — rule numbers from memory, commonly cited as Rules 33 and 17 [P7-38]; confirm with 21)*. Lateral hires and chambers-to-firm moves are therefore modelled as automatic `screened` tuples on matters where the joiner acted for the other side, fed from the conflicts intake form.
+3. **Retrieval enforcement (two-phase):** P5 pre-filters private index queries by `matter_id ∈ ListObjects(user, can_view, matter)` (cached per TEC) and by document restriction lists; **caution:** OpenFGA's ListObjects defaults to at most **1,000 results and a 3 s deadline** [P7-37], so a partner with firm-wide visibility over >1,000 matters would get a *silently truncated* list (fail-closed but recall-destroying). Therefore: (a) matters with `firm_visible` are filtered by an indexed `visibility=FIRM` field plus the user's `blocked` set (small, from ListObjects on `blocked`), and only restricted matters come from ListObjects; (b) the index stores a per-document `acl_version`, refreshed from OpenFGA's change stream (ReadChanges) within 60 s; (c) a truncated or timed-out ListObjects response is detected and surfaced as a "partial results" banner, never hidden; before any item enters an `EvidenceBundle`, a batched `Check(user, can_view, pdoc)` post-verifies with the TEC's consistency token (Zanzibar-style protection against the "new enemy" problem when a wall has just been added [P7-29]).
 4. **Everywhere, not just sharing:** search results, typeahead suggestions, "similar matters", dashboards, alert recipient lists (computed at send time), exports, P9 feedback aggregation, and **LLM context assembly** all call the PEP. A lawyer screened from matter M must not even learn M's title via autocomplete.
 5. **Conditions (ABAC at PEP):** export requires managed device + MFA within 12 h; bulk download > N docs/hour triggers step-up auth and a risk alert; break-glass purpose requires firm-admin approval token.
 6. **Identity lifecycle:** SSO (SAML/OIDC) mandatory for dedicated cells; SCIM deprovisioning revokes TEC issuance immediately and deletes relation tuples; departing-lawyer workflow transfers `lead`.
@@ -536,9 +587,10 @@ CREATE TABLE audit_event (
   PRIMARY KEY (tenant_id, seq));
 -- append-only: app role has INSERT only; UPDATE/DELETE revoked; trigger rejects seq gaps.
 ```
+- **Throughput (review addition):** a single gapless chain per tenant serialises every VIEW/SEARCH event (a 300-lawyer firm can exceed 100 events/s at peak; bulk ingestion adds more). Build: services write audit records to a per-tenant durable queue; **one single-writer appender per chain** assigns `seq` and hashes (no DB sequences — rolled-back transactions would create gaps); large tenants use `K = 16` parallel chains keyed by `hash(matter_id) mod K` (key `(tenant_id, chain_no, seq)`), and the 5-minute Merkle root covers all K chain heads. Events are acknowledged to the caller only after the queue write (at-least-once; the appender dedupes on `aud_id`).
 - **Anchoring:** every 5 minutes a per-tenant Merkle root over new events is written to a WORM bucket in **compliance mode** (cannot be deleted even by root during retention) [P7-33]; optional RFC 3161 timestamp from an external TSA. On-prem: MinIO object lock; air-gapped: roots also printed into the monthly signed compliance report.
 - **Content minimisation:** audit rows carry IDs and hashes, never document text or prompts. Full prompts/outputs (needed for P8 replay and incident review) go to a separate **trace store** encrypted under the matter DEK, default retention 90 days (tenant-configurable), erasable with the matter.
-- **Retention:** ≥180 days in India (CERT-In [P7-7]); ≥1 year (DPDP Rules log requirement, from 13 May 2027 [P7-6]); default 8 years or matter-retention + 1 year, whichever is longer (firm policy).
+- **Retention:** ≥180 days in India (CERT-In [P7-7]); ≥1 year (DPDP Rules 6/8 log requirements, from ~12–13 May 2027 [P7-6][P7-2]); default 8 years or matter-retention + 1 year, whichever is longer (firm policy).
 - **Consumers:** tenant SIEM export (syslog/JSON), firm risk dashboard (P10), our security operations (metadata only), P8 audit replay ("why did we say X last Tuesday" — joins with spine E `as_known_at`).
 - **Verification tool:** recomputes the chain and checks roots against WORM; runs nightly; any mismatch is a Sev-1 incident (CERT-In 6-hour clock if reportable [P7-7]).
 
@@ -559,7 +611,7 @@ Root of trust: cloud KMS HSM (SaaS) | customer KMS/HSM (VPC) | on-prem HSM or so
 
 **5.9.2 Matter-scoped disclosure [NOVEL — unvalidated].** Because every matter has its own DEK, a lawful demand or court-supervised examination can be satisfied by exporting exactly one matter's decrypted package (with audit trail and hash manifest), while every other client's data remains ciphertext that cannot be produced without separate key grants. This operationalises, at the platform level, the Supreme Court's direction in 2025 INSC 1275 that examination be confined to the material sought and not impair the confidentiality of the advocate's other clients [P7-9]. Our contractual commitment: demands addressed to us are forwarded to the firm (unless legally barred) and resisted to the extent lawful; we cannot decrypt BYOK/HYOK tenants' content without their key service.
 
-**5.9.3 Privilege taint and outbound-leak check [NOVEL — unvalidated].** Every artifact derived from privileged anchors inherits the label (INV-5), in the spirit of CaMeL's capability tags [P7-21]. When P6 produces an **outbound** draft (reply to notice, pleading, letter to opposing counsel), P8 runs a leak check: (a) no support anchor in the draft's Claims is privileged unless the lawyer explicitly marks it "disclose"; (b) shingle/embedding similarity of each draft sentence against the matter's privileged anchors (bloom filter in `MatterContext.privilege_flags`) above threshold → flagged for lawyer review. Internal memos are not checked (they are privileged themselves).
+**5.9.3 Privilege taint and outbound-leak check [NOVEL — unvalidated].** Every artifact derived from privileged anchors inherits the label (INV-5), in the spirit of CaMeL's capability tags [P7-21]. When P6 produces an **outbound** draft (reply to notice, pleading, letter to opposing counsel), P8 runs a leak check: (a) no support anchor in the draft's Claims is privileged unless the lawyer explicitly marks it "disclose"; (b) shingle/embedding similarity of each draft sentence against the matter's privileged anchors (bloom filter in `MatterContext.privilege_flags`) above threshold → flagged for lawyer review. Initial thresholds: ≥ 2 matching 8-word shingles (bloom FPR 0.1%, shingles normalised: lowercased, punctuation/digits collapsed) **or** sentence-embedding cosine ≥ 0.90 against any privileged anchor sentence; translated drafts are checked on both the original and the `mt-en` expression. Thresholds are tuned on seeded partner drafts (9.2) to keep recall ≥ 0.95. Internal memos are not checked (they are privileged themselves).
 
 **5.9.4 Privilege log.** For inspection/production, P7 generates a withheld-documents list (date, author, recipients, class, basis) from confirmed privilege classes. Whether and in what form Indian procedure (e.g., CPC Order XI and its Commercial Courts amendments) expects such a list is *unverified* → template configurable per forum.
 
@@ -586,6 +638,8 @@ Root of trust: cloud KMS HSM (SaaS) | customer KMS/HSM (VPC) | on-prem HSM or so
 6. verification sweep: search private indexes for erased text_hash shingles and canary phrases -> must be 0
 7. write ERASE audit event + issue erasure certificate to firm
 ```
+**Content vs processing logs (review addition).** Erasure destroys *content* (text, blobs, vectors, derived summaries, traces with prompts) but does **not** delete `audit_event` rows, which are content-free by design (IDs, hashes, actions) — they are the "processing logs" DPDP Rule 8 requires to be kept ≥ 1 year from the date of processing [P7-2] (and CERT-In's 180-day ICT-log duty [P7-7]). Audit rows carry only opaque ULIDs, so they are never rewritten (a rewrite would break the hash chain); once the matter's content is erased the IDs no longer resolve to anything. Audit segments are expired whole (per chain, per month) after the longer of these periods and firm policy, keeping only their Merkle roots. The erasure certificate states exactly what was retained and why. If a firm's DPO classifies any audit field as personal data of the data principal (e.g., a party's name leaked into a `reason` string), the log scrubber (5.14) is the control and a violation is a Sev-2 bug.
+
 Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty applies (Rule 8, per secondary sources [P7-1]), the firm-facing workflow supports it.
 
 ### 5.11 Court tracking and eCourts sync
@@ -629,7 +683,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 | Keys | per-tenant KMS key (platform) | BYOK; HYOK optional [P7-34] | customer KMS | customer HSM/KMS |
 | LLM | Model Gateway → India-region frontier APIs with ZDR + per-org cache isolation; self-hosted fallback | same, or dedicated GPU pool | customer's cloud LLM endpoints in India region, or self-hosted open-weight | self-hosted open-weight only (e.g., Sarvam-M 24B Apache-2.0 [P7-36] and other models per 13_cross_cutting) |
 | Court sync | P0 feeds | P0 feeds | P0 feeds, or customer-egress fetcher | customer-egress fetcher or none (air-gapped → manual/uploaded cause lists) |
-| Freshness | Bloomberg-standard (P4 SLOs) | same | ≤ 24 h lag | 24 h (connected) / ≤ 7 days (air-gapped) — stated in UI |
+| Freshness | P4 SLOs (06_P4_update_propagation.md) | same | ≤ 24 h lag | 24 h (connected) / ≤ 7 days (air-gapped) — stated in UI |
 | Our operator access | break-glass only | break-glass only | none by default | none |
 | Updates | continuous | continuous, tenant canary | monthly signed releases | quarterly signed releases + eval report |
 
@@ -739,6 +793,30 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 | **Backup restore resurrects erased data** | erasure violated | content encrypted with destroyed DEKs is unreadable in backups; restore procedure replays erasure log before reopening a tenant |
 | **Key service outage (HYOK)** | whole tenant unavailable | documented in SLA carve-out [P7-34]; local DEK caching bounded (≤15 min); read-only degraded mode not offered for HYOK by design |
 | **Deadline computed from wrong trigger date** (served date ≠ document date) | missed limitation | `received_on` captured at upload and confirmed; deadlines always show their trigger date and statutory/order anchor; lawyer confirmation required for `CONFIRMED` |
+| **Cost blow-up** (10M-email PST dump sent through LLM fact extraction: ~10⁷ items × ~800 tokens ≈ 8B input tokens for one tenant) | one tenant's load exhausts budget and GPU pool; bill shock | LLM-extraction triage to a working set + pre-job estimate + admin approval above 50M tokens + per-tenant Model-Gateway budgets (5.4.7); bulk items get non-LLM indexing only |
+| **Cross-matter leak via dedup** (screened lawyer uploads a copy of a document that exists in a walled matter) | "duplicate of …" signal or shared blob reveals walled content/existence; shared blob defeats per-matter crypto-shred | dedup strictly matter-scoped (5.4.7) |
+| **Hindi / regional-language court order** in a tracked case (district-court order in Hindi or Marathi, "आगामी तिथि", Devanagari digits) | deadline/next-date extraction misses or misreads the operative directions | `extract_order_directions` contract has per-language eval gates (9.2); Indic digit/month normalisation (5.5.1); low-confidence or non-English operative part → deadline `PROPOSED` with "original-language review needed" flag and next-date cross-checked against case-status/cause-list feeds |
+| **"Overruled yesterday" that is wrong** (P4 MACHINE-state tier-1 treatment later retracted) | lawyers act on a false severity-1 alert; trust erodes | alerts carry `provisional` when reason assertions are not VERIFIED; `RETRACTED` impacts emit a withdrawal alert and un-STALE claims (5.6, 2.5 (6)) |
+| **Wall bypass through authz model bug** | non-insider reads a restricted matter | model fixed so every relation includes `wall_ok` (5.7); property tests "non-insider ⇒ no `can_view` on any pdoc of a restricted matter" gate release (9.1) |
+| **Silent ListObjects truncation** (partner with >1,000 visible matters) | missing results mistaken for "no authority/fact exists" | visibility field + blocked-set filtering; truncation surfaced (5.7 rule 3) [P7-37] |
+| **Audit chain hot-spot** at 10M+ docs/high query rates | audit writes throttle every request, or gaps appear under concurrency | single-writer appenders, K parallel chains per large tenant (5.8) |
+| **Air-gapped staleness** (D4 receives PLC bundle weekly) | "precedent overruled yesterday" invisible for up to 7 days | UI stamps every authority badge "status as of bundle <date>"; P6 memos in D4 carry a mandatory staleness caveat; urgent-bundle channel (removable media) for tier-1 impacts |
+
+### 8.R Independent review findings
+
+*Changes made by the independent review (Sep 2026):*
+1. **Citation audit** (22 references checked against sources): removed a quote wrongly attributed to Legal IT Insider [P7-14] (not in the article); corrected the DPDP 18-month commencement to "12 May (AZB) / 13 May 2027 (S.S. Rana)"; added DPDP Rule 8's ≥1-year retention of personal data, traffic data and logs [P7-2] and the likely inapplicability of the 48-hour intimation to law firms *(unverified)*; softened the s.16 "no list notified" claim; upgraded confidence on [P7-2], [P7-12], [P7-18], [P7-27], [P7-30], [P7-31], [P7-32] after fetching; added OpenFGA ListObjects defaults [P7-37] and Qdrant's ~20k-point promotion threshold [P7-28].
+2. **Security bug fixed** in the OpenFGA model: v0's `pdoc.can_view` union bypassed inclusionary walls; `can_edit` ignored walls (5.7).
+3. **Logic bug fixed** in impact matching: severity escalation had the wrong sign; `provision@date` keys could never match; expression-specific anchors missed cross-language impacts (5.6). Added retraction handling, provisional labels, prospective-amendment and IPC↔BNS handling.
+4. **Spine conformance**: `private_assertion` now carries spine-F `valid_from/valid_to/impact_tier`; new proposed spine changes (6) `impact.detected.v1` fields and severity scale, (7) private items in `EvidenceBundle`; ASCII-only translation expression keys; concrete `parties`/`issues` shapes; envelope example.
+5. **Build specifics added**: container/zip-bomb limits, matter-scoped dedup parameters, OCR thresholds, fact-merge thresholds, leak-check thresholds, LLM-cost triage and budgets, audit appender design, content-vs-log erasure split (5.4.7, 5.5.1, 5.8, 5.9.3, 5.10).
+
+*Still open (not fixable by desk review):*
+- DPDP Rules gazette text not fetched directly (Rule 6 one-year log period and Rule 7 72-hour report rest on secondary sources [P7-6][P7-2]); Rule 8 Third-Schedule classes unverified.
+- BCI Rules numbering (Rules 17/33) unverified [P7-38]; BSA s.63 Schedule hash fields unverified; vendor staff under s.132(3) unsettled (11.1).
+- DMS adoption in Indian firms and on-prem demand remain design-partner questions (11.5–11.6).
+- All numeric thresholds added in review are initial values to calibrate on partner data; OpenFGA DSL must be validated with model tests.
+- IT Act s.43A / SPDI Rules 2011 interplay until DPDP s.44 omissions take effect not analysed here *(unverified — hand to 21)*.
 
 ---
 
@@ -746,7 +824,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 
 **9.1 Isolation & security (gating — any failure blocks release)**
 - Cross-tenant canary hit rate = 0 (continuous, 7.7); cross-wall canary hit rate = 0.
-- Authorization model tests: property-based tests over generated tenants/walls (e.g., "screened ⇒ no path to any pdoc of M"); 100% pass; policy diff review on every model change.
+- Authorization model tests: property-based tests over generated tenants/walls (e.g., "screened ⇒ no path to any pdoc of M"; "matter has a `restricted_by` wall and user is not an insider ⇒ no `can_view`/`can_edit`/`can_export` on M or any of its pdocs"; "matter with neither `unrestricted` nor `restricted_by` ⇒ invisible"); 100% pass; policy diff review on every model change.
 - INV-1 scanner: automated scan of PLC stores, topics and logs for TPL ID prefixes/canary strings = 0 findings.
 - Prompt-injection red-team suite on uploaded documents (hidden text, instruction-in-exhibit, exfil links): attack success rate target < 1% on extraction, 0 successful exfiltrations.
 - Audit chain verification: 100% nightly; time-to-detect a tampered row ≤ 24 h.
@@ -793,7 +871,7 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 ## 11. Open questions and risks
 
 1. **Vendor staff and s.132(3).** Does "clerks or employees of advocates" [P7-8] extend privilege protection to a SaaS vendor's staff/processors? Unsettled → we minimise operator access; needs Indian counsel opinion (feed 21/23).
-2. **DPDP applicability to advisory matters.** s.17(1)(a) [P7-3] clearly covers enforcing claims; advisory/transactional work may not be exempt → full notice/consent/rights obligations may fall on firms from 13 May 2027 [P7-1]. Confirm with counsel; design supports both.
+2. **DPDP applicability to advisory matters.** s.17(1)(a) [P7-3] clearly covers enforcing claims; advisory/transactional work may not be exempt → full notice/consent/rights obligations may fall on firms from ~12–13 May 2027 [P7-1][P7-2]. Confirm with counsel; design supports both.
 3. **Rule 8 erasure mechanics** (48-hour intimation, classes covered) — verify against gazette text [P7-1].
 4. **BSA s.63 Schedule hash requirements** — verify text; decide whether we offer a hash report template for certificates.
 5. **DMS landscape in Indian firms** (iManage/NetDocuments/SharePoint/none) — unverified; ask design partner; determines connector priority.
@@ -803,13 +881,15 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 9. **Privilege-log practice in Indian procedure** (CPC Order XI / Commercial Courts) — unverified; template configurable.
 10. **Alert fatigue** — thresholds need partner calibration; wrong defaults will train lawyers to ignore severity-1.
 11. **Anchor stability for edited private documents** — firm drafts change daily; `pver` versioning + alias records (spine C) may create heavy churn; consider anchoring drafts only at "filed/sent" checkpoints.
+12. **Pre-2027 regime.** Until the DPDP substantive rules and the Act's s.44 amendments take effect, the IT Act s.43A / SPDI Rules 2011 regime may govern sensitive personal data (financial, health) in case files *(unverified — hand to 21 for confirmation)*; our controls (encryption, access control, audit, ISO 27001 posture) are designed to satisfy either.
+13. **P4 severity scale and impact fields** (2.5 (6)) must be agreed with the P4 owner; until then P7 maps severities via a versioned table and treats missing `effective_from` as "unknown — do not downgrade".
 
 ---
 
 ## References
 
-[P7-1] AZB & Partners. "DPDP Rules 2025 notified" (key dates, phased commencement, breach, logs, erasure). AZB, 14 Nov 2025. https://www.azbpartners.com/?p=87799 — verified
-[P7-2] S.S. Rana & Co. "MeitY Notifies Final Digital Personal Data Protection Rules 2025" (G.S.R. 846(E), 13 Nov 2025). 2025. https://ssrana.in/articles/meity-notifies-final-digital-personal-data-protection-rules-2025/ — snippet
+[P7-1] AZB & Partners. "DPDP Rules 2025 notified" (key dates — dates the 18-month tranche 12 May 2027; phased commencement, breach, erasure incl. 48-hour intimation). AZB, 14 Nov 2025. https://www.azbpartners.com/?p=87799 — verified
+[P7-2] S.S. Rana & Co. "MeitY Notifies Final Digital Personal Data Protection Rules 2025" (G.S.R. 846(E), 13 Nov 2025; 72-hour breach report; Rule 8 one-year minimum retention of personal data, traffic data and logs; 18-month tranche 13 May 2027). 2025. https://ssrana.in/articles/meity-notifies-final-digital-personal-data-protection-rules-2025/ — verified
 [P7-3] Digital Personal Data Protection Act, 2023, s.17 (text reproduction). dpdpa.com. https://dpdpa.com/dpdpa2023/chapter-4/section17.html — verified
 [P7-4] NALSAR Tech Law Forum. "Privacy with a footnote: data retention under the DPDP framework" (s.8(7)). 2025. https://techlawforum.nalsar.ac.in/privacy-with-a-footnote-data-retention-under-the-dpdp-framework/ — snippet
 [P7-5] DPDP Act 2023, s.16 (text reproduction and commentary). dpdpa.com / DPDP Wiki. https://dpdpa.com/dpdpa2023/chapter-4/section16.html — snippet
@@ -819,13 +899,13 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 [P7-9] Supreme Court Observer. "In re: Summoning Advocates who give Legal Opinion or Represent Parties during Investigation of Cases and Related Issues", 2025 INSC 1275 (31 Oct 2025; Gavai CJI, K.V. Chandran, N.V. Anjaria JJ). https://www.scobserver.in/supreme-court-observer-law-reports-scolr/re-summoning-advocates-who-give-legal-opinion-or-represent-parties-during-investigation-of-cases-and-related-issues/ — verified (also Verdictum coverage: https://www.verdictum.in/court-updates/supreme-court/in-re-summoning-advocates-who-give-legal-opinion-2025-insc-1275-in-house-counsel-privilege-1596424 — snippet)
 [P7-10] Vidhi Judicial. "Section 63 of the Bharatiya Sakshya Adhiniyam, 2023" (certificate signed by person in charge and an expert). https://vidhijudicial.com/section-63-of-the-bharatiya-sakshya-adhiniyam,-2023.html — verified
 [P7-11] Shardul Amarchand Mangaldas. "SAM leads Indian legal market with rollout of Harvey AI." 3 Jun 2025. https://www.amsshardul.com/sam-leads-indian-legal-market-with-rollout-of-harvey-ai/ — verified
-[P7-12] Conventus Law. "India: Cyril Amarchand Mangaldas takes a bold leap towards an AI-first future with strategic AI adoption" (Harvey pilot, Lucio, Copilot, ChatGPT Plus). 2025. https://conventuslaw.com/press-releases/india-cyril-amarchand-mangaldas-takes-a-bold-leaptowards-an-ai-first-future-with-strategic-ai-adoption/ — snippet
+[P7-12] Conventus Law. "India: Cyril Amarchand Mangaldas takes a bold leap towards an AI-first future with strategic AI adoption" (Harvey pilot, Lucio, Copilot, ChatGPT Plus). 11 Mar 2025. https://conventuslaw.com/press-releases/india-cyril-amarchand-mangaldas-takes-a-bold-leaptowards-an-ai-first-future-with-strategic-ai-adoption/ — verified
 [P7-13] Harvey. "Harvey and Intapp ethical walls" (GA 23 Jul 2026; enforcement across Threads, Vault, Review Tables, Shared Spaces; block when access cannot be confirmed). https://www.harvey.ai/blog/harvey-intapp-ethical-walls — verified
-[P7-14] Legal IT Insider. "Harvey partners with Intapp for ethical walls enforcement." 23 Feb 2026. https://legaltechnology.com/2026/02/23/harvey-partners-with-intapp-for-ethical-walls-enforcement/ — snippet
+[P7-14] Legal IT Insider. "Harvey partners with Intapp for ethical walls enforcement." 23 Feb 2026 (partnership announcement; CEO quote on standards following users "into every tool"). https://legaltechnology.com/2026/02/23/harvey-partners-with-intapp-for-ethical-walls-enforcement/ — verified
 [P7-15] eCourts Services portal (CNR search, case status, orders, cause list; CAPTCHA). https://services.ecourts.gov.in/ecourtindia_v6/ — verified
 [P7-16] Drishti IAS. "National Judicial Data Grid" (Open API for Central/State governments and institutional litigants). Sep 2023. https://www.drishtiias.com/daily-updates/daily-news-analysis/national-judicial-data-grid-1/print_manually — snippet
 [P7-17] Provakil app listing (automatic case updates from 10,000+ courts; daily cause lists). Apple App Store. https://apps.apple.com/mx/app/provakil/id1111933293 — snippet
-[P7-18] The Hacker News. "Zero-Click AI Vulnerability Exposes Microsoft 365 Copilot Data Without User Interaction" (EchoLeak, CVE-2025-32711). Jun 2025. https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html — snippet
+[P7-18] The Hacker News. "Zero-Click AI Vulnerability Exposes Microsoft 365 Copilot Data Without User Interaction" (EchoLeak, CVE-2025-32711, CVSS 9.3; Aim Security; patched June 2025). Jun 2025. https://thehackernews.com/2025/06/zero-click-ai-vulnerability-exposes.html — verified
 [P7-19] OWASP Gen AI Security Project. "LLM01:2025 Prompt Injection" (and 2025 list incl. LLM02, LLM08). https://genai.owasp.org/llmrisk/llm01-prompt-injection/ — verified
 [P7-20] Hines, K. et al. "Defending Against Indirect Prompt Injection Attacks With Spotlighting." arXiv:2403.14720, 2024. https://arxiv.org/abs/2403.14720 — verified
 [P7-21] Debenedetti, E. et al. "Defeating Prompt Injections by Design" (CaMeL). arXiv:2503.18813, 2025. https://arxiv.org/abs/2503.18813 — verified
@@ -834,13 +914,15 @@ Erasure SLO: complete within 7 days; if a 48-hour pre-erasure intimation duty ap
 [P7-24] Morris, J.X., Kuleshov, V., Shmatikov, V., Rush, A.M. "Text Embeddings Reveal (Almost) As Much As Text." EMNLP 2023. https://arxiv.org/abs/2310.06816 — verified
 [P7-25] AWS. "Silo, Pool, and Bridge Models." AWS Well-Architected SaaS Lens. https://docs.aws.amazon.com/wellarchitected/latest/saas-lens/silo-pool-and-bridge-models.html — snippet
 [P7-26] AWS Prescriptive Guidance. "Row-level security recommendations" (multi-tenant PostgreSQL). https://docs.aws.amazon.com/prescriptive-guidance/latest/saas-multitenant-managed-postgresql/rls.html — verified
-[P7-27] pg_trickle project blog. "Multi-tenant vector search with RLS" (filtered HNSW pitfalls). PGXN. https://pgxn.org/dist/pg_trickle/0.36.0/blog/multi-tenant-vector-search-rls.html — snippet
-[P7-28] Qdrant. "Multitenancy" guide (is_tenant, payload_m, tiered multitenancy). https://qdrant.tech/documentation/guides/multiple-partitions/ — verified
+[P7-27] pg_trickle project blog. "Multi-tenant vector search with RLS" (filtered HNSW pitfalls; ~10× wasted work for small tenants). PGXN. https://pgxn.org/dist/pg_trickle/0.36.0/blog/multi-tenant-vector-search-rls.html — verified
+[P7-28] Qdrant. "Multitenancy" guide (is_tenant, m=0/payload_m=16, tiered multitenancy, ~20,000-point promotion threshold). https://qdrant.tech/documentation/guides/multiple-partitions/ — verified
 [P7-29] Pang, R. et al. "Zanzibar: Google's Consistent, Global Authorization System." USENIX ATC 2019. https://www.usenix.org/conference/atc19/presentation/pang — verified
-[P7-30] CNCF. "OpenFGA becomes a CNCF incubating project." 11 Nov 2025. https://www.cncf.io/blog/2025/11/11/openfga-becomes-a-cncf-incubating-project/ — snippet
-[P7-31] Cedar team, Amazon Web Services. "How We Built Cedar: A Verification-Guided Approach." FSE 2024 (Industry) / arXiv:2407.01688. https://arxiv.org/abs/2407.01688 — snippet
-[P7-32] InfoQ. "AWS to discontinue Amazon QLDB" (end of support 31 Jul 2025; migrate to Aurora PostgreSQL). Jul 2024. https://www.infoq.com/news/2024/07/aws-kill-qldb — snippet
+[P7-30] CNCF. "OpenFGA becomes a CNCF incubating project." 11 Nov 2025. https://www.cncf.io/blog/2025/11/11/openfga-becomes-a-cncf-incubating-project/ — verified
+[P7-31] Cedar team, Amazon Web Services. "How We Built Cedar: A Verification-Guided Approach." FSE 2024 (Industry) / arXiv:2407.01688. https://arxiv.org/abs/2407.01688 — verified
+[P7-32] InfoQ. "AWS to discontinue Amazon QLDB" (end of support 31 Jul 2025; migrate to Aurora PostgreSQL). Jul 2024. https://www.infoq.com/news/2024/07/aws-kill-qldb — verified
 [P7-33] AWS. "Locking objects with Object Lock" (WORM, governance vs compliance mode, legal hold, Cohasset assessment). Amazon S3 User Guide. https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html — verified
 [P7-34] AWS. "External key stores" (HYOK, XKS proxy, double encryption, availability caveats). AWS KMS Developer Guide. https://docs.aws.amazon.com/kms/latest/developerguide/keystore-external.html — verified
 [P7-35] libyal. "libpff" (PST/OST/PAB; LGPL-3.0; pypff; alpha). GitHub. https://github.com/libyal/libpff — verified
 [P7-36] Sarvam AI. "sarvam-m" model card (24B, Mistral-Small-3.1 base, Apache-2.0, Indic languages). Hugging Face, 2025. https://huggingface.co/sarvamai/sarvam-m — verified
+[P7-37] OpenFGA. "Configuring OpenFGA" (listObjectsMaxResults default 1000; listObjectsDeadline default 3s). openfga.dev. https://openfga.dev/docs/getting-started/setup-openfga/configuration — verified
+[P7-38] Bar Council of India. "Rules on Professional Standards" (Bar Council of India Rules, Part VI, Chapter II — duty to client incl. confidentiality and not acting for the opposite party; rule numbers 17/33 from memory). https://www.barcouncilofindia.org/info/rules-on-professional-standards — unverified (page did not render rule text)

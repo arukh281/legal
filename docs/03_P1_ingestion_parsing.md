@@ -202,6 +202,7 @@ Stored as zstd-compressed JSON at `parsed_doc_uri`; immutable per `parse_id`.
   "act": { "raw": "IPC", "act_work_id": "wrk_IPC", "conf": 0.99 },
   "provisions": [ { "raw": "302", "anchor": "sec-302" }, { "raw": "34", "anchor": "sec-34" } ],
   "as_cited_date": "2019-03-04",            // default = decision date of citing document; P3/P5 may override
+  "pit_rule": "AS_CITED|EVENT_DATE_UNDER_SAVINGS|LAST_IN_FORCE_BEFORE_REPEAL|NO_EXPRESSION",   // + §5.8 repealed-Act rule
   "resolved_anchor_ids": ["wrk_IPC#sec-302@2019-03-04", "wrk_IPC#sec-34@2019-03-04"],
   "correspondence_hint": { "other_mention_id": "sm_…", "phrase": "now Section 103 BNS" },  // evidence for P3 CORRESPONDS_TO
   "context": { "rhetorical_role": "FACTS", "speaker": "COURT" },
@@ -597,7 +598,7 @@ The official consolidated text is always emitted as the current expression (`der
   variants: ["SCC", "S.C.C.", "S C C"]
   templates:
     - "\\((?P<year>(19|20)\\d{2})\\)\\s*(?P<vol>\\d{1,2})\\s*{variant}\\s*(?P<page>\\d{1,4})"       # (1978) 1 SCC 248
-    - "\\((?P<year>(19|20)\\d{2})\\)\\s*{variant}\\s*\\((?P<series>Cri|L&S|Tax)\\)\\s*(?P<page>\\d{1,4})"  # (2004) SCC (Cri) 123
+    - "\\(?(?P<year>(19|20)\\d{2})\\)?\\s*(?P<vol>\\d{1,2})?\\s*{variant}\\s*\\((?P<series>Cri|L&S|Tax)\\)\\s*(?P<page>\\d{1,4})"  # 1980 SCC (Cri) 580 ; (2014) 3 SCC (Cri) 449 — older series un-volumed, year unbracketed (practitioner-observed; verify on corpus)
   court_scope: [crt_IN_SC]
   years: [1969, null]
 - scheme: SCC_ONLINE
@@ -607,10 +608,11 @@ The official consolidated text is always emitted as the current expression (`der
 - scheme: SCR
   templates: ["\\[(?P<year>\\d{4})\\]\\s*(?P<vol>\\d{1,2})?\\s*S\\.?C\\.?R\\.?\\s*(?P<page>\\d{1,4})", "(?P<year>\\d{4})\\s*\\((?P<vol>\\d{1,2})\\)\\s*SCR\\s*(?P<page>\\d+)"]
 - scheme: NEUTRAL_INSC
-  templates: ["(?P<year>20\\d{2})\\s*INSC\\s*(?P<num>\\d{1,5})"]            # 2023 INSC 1  [P1-28]
+  templates: ["(?P<year>(19|20)\\d{2})\\s*INSC\\s*(?P<num>\\d{1,5})"]       # 2023 INSC 1; retro-assignment back to 1950 announced [P1-28]
 - scheme: NEUTRAL_HC
-  templates: ["(?P<year>20\\d{2})\\s*:\\s*(?P<code>[A-Z]{2,6}(-[A-Z]{2,4})?)\\s*:\\s*(?P<num>\\d{1,6})(-(?P<bench>DB|FB))?"]  # 2023:DHC:1234 [P1-29]
-  code_table: config/hc_neutral_codes.yaml   # populated per HC notification; only DHC, MHC verified so far
+  templates: ["(?P<year>20\\d{2})\\s*(?P<sep>[:/])\\s*(?P<code>[A-Z]{2,6}(-[A-Z]{1,4})?)\\s*(?P=sep)\\s*(?P<num>\\d{1,6})(-(?P<bench>DB|FB))?"]
+      # 2023:DHC:1234-DB (printed practice) | 2022/DHC/1234 (as announced) [P1-29] | 2023/MHC/1234 [P1-30]; separator must be consistent within one citation
+  code_table: config/hc_neutral_codes.yaml   # populated per HC notification; only DHC, MHC verified so far; code not in table → mention kept, scheme NEUTRAL_HC_UNKNOWN, FLAGGED
 # plus SCALE, JT, Cri LJ, ITR, Taxmann, CTR, ELT, GSTL, CompCas, ILR (per-state series), MANU (identifier only),
 # LLJ, FLR, CLJ, Bom LR, DLT, KLT, MLJ, ALJ, … each with court_scope and year ranges
 ```
@@ -618,12 +620,27 @@ Additional mention kinds:
 - **CASE_NUMBER**: "Civil Appeal No. 1234 of 2019", "W.P.(C) 5678/2021", "Crl.A. 12/2020", "SLP (Crl.) No. …" — via a case-type gazetteer per court (built from eCourts case-type masters via P0).
 - **NAME_ONLY / SUPRA**: "in Maneka Gandhi (supra)", "Kesavananda Bharati's case", "the ratio in K.S. Puttaswamy". Extracted by (a) InLegalNER PRECEDENT spans [P1-23] fine-tuned on our data, (b) a popular-name gazetteer (short names learned from resolved full citations: first party's distinctive token(s) + "v." + second party; plus curated popular names).
 - **IBID / "the said judgment" / "the aforesaid decision"**: antecedent = nearest preceding resolved mention in the same opinion.
+- **Negative-cue escalation** *(added in independent review)*: overrulings are often expressed by name alone ("the view taken in *X* (supra) does not lay down the correct law"). Any NAME_ONLY/SUPRA mention whose sentence carries a NEGATIVE cue span and whose resolution is below RESOLVED creates a `CITATION_RESOLUTION` review task with priority forced to the top of the queue when the citing court is the SC or a HC bench of ≥ 2 — otherwise P3 cannot attach the treatment and P4 never fires.
 - **Pinpoints**: "at para 56", "paras 23–25", "at page 280", "(para 12)", "at p. 612". Para pins map directly to `cited_anchor` (`#p56`) when the cited Work has explicit numbering; *page* pins refer to a reporter's pagination and cannot be mapped without the reporter text (copyright) — stored as page pins and mapped only via quote anchoring (below).
 - **Parallel clusters**: citations joined by ":", ";" or "=" inside one bracket or sentence adjacent to one case name ("(1978) 1 SCC 248 : AIR 1978 SC 597 : [1978] 2 SCR 621") share `cluster_id` — they are the same case (feeds §5.9 alias learning).
 - **Devanagari & mixed script**: citations inside Hindi judgments frequently appear in Latin script; Devanagari forms ("ए.आई.आर. 1978 एस.सी. 597", Devanagari numerals) are normalised to Latin before matching, with offsets preserved.
 - **Temporal sanity**: a cited year later than the citing decision date → `temporal_check=CITED_AFTER_CITING` → drop resolution (or flag OCR error).
 
 **Statute mentions.** Grammar over: `(Section|Sec\.|S\.|u/s|U/S|Sections|Ss\.|धारा) NUM(( |/|,| and |-)NUM)* (\((\d+)\))? (\(([a-z]+)\))? (of the)? ACT_REF` and `Article NUM(\(\d+\))?(\([a-z]\))? (of the Constitution)?`, `Order ROMAN Rule NUM CPC`. `ACT_REF` resolves via an abbreviation gazetteer (IPC, Cr.P.C., CPC, N.I. Act, NDPS, PMLA, IBC, BNS, BNSS, BSA, "the 1996 Act", GST Acts, Income-tax Act…) and **in-document definitions** ("the Negotiable Instruments Act, 1881 (hereinafter referred to as 'the Act')" → a document-local alias for "the Act"). Ambiguous references ("the Act" with no definition, "Section 138" alone) inherit the dominant act of the paragraph/document with lower confidence. Paired mentions such as "Section 302 IPC (now Section 103 BNS)" produce `correspondence_hint` for P3's crosswalk. `as_cited_date` defaults to the citing decision date; resolved anchors are point-in-time (`wrk_IPC#sec-302@2019-03-04`).
+
+**Repealed-Act rule (added in independent review).** The naive default breaks for the new criminal codes: a 2025 judgment convicting "u/s 302 IPC" for an offence committed in 2023 would resolve to `wrk_IPC#sec-302@2025-…`, a date on which the IPC has no in-force expression, because s. 358 BNS repeals the IPC while saving liabilities, penalties and proceedings under it "as if" it had not been repealed [P1-47]. Resolution algorithm:
+```
+resolve_pit(act, provision, as_cited_date, doc):
+  e = expression_valid_at(act, as_cited_date)
+  if e exists: return (anchor@as_cited_date, pit_rule="AS_CITED")
+  if act.repealed_on and as_cited_date >= act.repealed_on:
+      d_evt = earliest date found in the document's FACTS-role spans (offence / cause-of-action cues:
+              "on the night of", "FIR No. … dated", "incident dated") if < act.repealed_on
+      if d_evt: return (anchor@d_evt, pit_rule="EVENT_DATE_UNDER_SAVINGS", conf *= 0.9)
+      return (anchor@(act.repealed_on - 1 day), pit_rule="LAST_IN_FORCE_BEFORE_REPEAL", conf *= 0.8)
+  return (unresolved, pit_rule="NO_EXPRESSION")      # review task if the act is tier-1
+```
+`pit_rule` is stored on the StatuteMention; P3/P5 may override using matter facts (`MatterContext.key_dates.cause_of_action`). The same logic covers CrPC→BNSS and Evidence Act→BSA and any repealed state Act.
 
 **Quote anchoring [NOVEL — unvalidated].** When a paragraph quotes > 25 words from a cited (resolved) Work, locate the quote in the cited Work's parsed text with fuzzy matching (normalised n-gram seed + Smith-Waterman local alignment, score ≥ 0.9); on success set `pin.cited_anchor` to the matched anchor(s). This yields paragraph-level cited anchors even when the pin was a reporter page, and gives P3/P8 an independently verifiable link ("the citing court quoted para 56 of X").
 
@@ -661,7 +678,7 @@ resolve(mention):
 - **Courts** (`crt_`): registry seeded from eCourts establishment codes and HC/bench lists (P0); name variants ("High Court of Judicature at Allahabad", "Allahabad High Court", "Lucknow Bench", "इलाहाबाद उच्च न्यायालय"); neutral-citation codes map to court IDs.
 - **Judges** (`jdg_`): registry with canonical name, variants (initials, honorifics, "Dr.", "CJI", Hindi transliterations), court tenure intervals, and elevation history. Resolution key = (name tokens, court, decision_date within tenure). Same-surname judges on the same court (e.g. father/son across eras) are separated by tenure dates; unresolvable → FLAGGED.
 - **Parties** (`ent_` only for recurring institutional parties): Union of India / UOI / U.O.I.; "State of U.P." / "State of Uttar Pradesh" / "उत्तर प्रदेश राज्य"; statutory bodies, PSUs, regulators. Individuals are **not** assigned global entity IDs (privacy & DPDP minimisation); their names remain as printed text in the document.
-- **Sensitive identities**: if a judgment names a person the law protects from identification (e.g. victims of sexual offences — *statutory basis e.g. s. 72 BNS / s. 228A IPC, unverified in this session*), P1 raises `sensitive_identity_flags` so P2/P10 can suppress that name in derived artefacts; the source text is not altered.
+- **Sensitive identities**: if a judgment names a person the law protects from identification, P1 raises `sensitive_identity_flags` so P2/P10 can suppress that name in derived artefacts; the source text is not altered. Statutory basis: s. 72 BNS penalises printing or publishing any matter that may make known the identity of a victim of offences under ss. 64–71 BNS (sexual offences), subject to narrow exceptions [P1-45] (predecessor: s. 228A IPC *(unverified in this review)*); analogous child/juvenile protections (POCSO s. 23; Juvenile Justice Act s. 74) *(unverified in this review — IN doc to confirm)*. Trigger: a StatuteMention of BNS ss. 64–71 / IPC ss. 376–376E / POCSO, or a JJ Act proceeding, marks PETITIONER/RESPONDENT/WITNESS/OTHER_PERSON names whose context matches victim/child cues ("prosecutrix", "victim", "minor", "child in conflict with law"). Precision is traded for recall here: false flags only hide a name in derived views.
 
 **Work/Case identity service (S9).**
 ```
@@ -733,14 +750,17 @@ Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so t
 - **Reference data**: a read-only, signed snapshot of PLC reference tables (aliases, work registry keys, court/judge registries, statute provision sets; tens of GB) is replicated into the tenant zone daily; citation resolution never sends private text to PLC. In SaaS tenants a PLC resolution API may be used with **only normalised citation keys** and no tenant identifier logged — opt-in, because even a lookup pattern can reveal strategy.
 - **Private document profiles**: PLEADING (numbered averments, grounds, prayer clause, annexure references, verification), NOTICE (sender/recipient, statutory basis, demands, deadlines — e.g. "within 15 days of receipt"), ORDER copies (reuse judgment parser; if the order exists in PLC, link `pdoc` to `wrk_` by identity keys), EMAIL (.eml/.msg: headers, thread reconstruction, attachments recursively parsed), EVIDENCE (images, scanned documents, spreadsheets). Anchors: `pdoc_…#p12`, `pdoc_…#pg3.l14`, `pdoc_…#att2/p4` for attachments *(attachment prefix = proposed extension; P7 to confirm)*.
 - **Nothing to PLC**: tenant parses never write `identifier_alias`, never mint `wrk_`, never emit to the PLC bus; alias *proposals* learned from private docs are dropped (they could leak which cases a firm relies on) unless P9's Privacy Gate explicitly allows de-identified public-object signals.
+- **Private copy vs. public record check** *(added in independent review)*: when a tenant uploads an ORDER/JUDGMENT_COPY that identity keys match to a PLC Work, P1-tenant diffs it (paragraph-aligned via §5.10, against the snapshot's `text_hash` values) with the PLC expression. Outcomes: `IDENTICAL`; `OLDER_REV` (matches a superseded `rev`); `CERTIFIED_COPY_VARIANT` (only furniture/stamps differ); `TEXT_DIVERGES` (substantive paragraphs differ → shown to the lawyer as "your copy differs from the court's published text at ¶¶…", and P6/P8 must quote the PLC anchor, never the private text, for legal propositions). This catches stale, tampered or mis-OCR'd copies circulating in case files — a common reality with photocopied certified copies. Only `text_hash` values of PLC anchors are needed inside the tenant zone, so nothing flows TPL → PLC.
 
 ### 5.13 Multilingual handling
 
 1. **Script/language ID per block**: Unicode-block script detection + a character n-gram language ID model for Indic languages and romanised text; mixed-language paragraphs recorded with spans.
 2. **Native first for structure**: layout, paragraph numbering, header grammar and citation grammar have Devanagari (and progressively other scripts') tokens: "बनाम" (versus), "धारा" (section), "अनुच्छेद" (article), "आदेश" (order), "निर्णय" (judgment), Devanagari numerals.
-3. **Translate-for-analysis**: for RR, NER and LLM metadata fallback on non-English judgments, paragraphs are machine-translated to English with IndicTrans2-class models [P1-37] (self-hosted; CC-BY-4.0) and stored as `aux_text["en-x-mt"]`; labels are projected back to the original anchor (1:1 paragraph mapping, sentence alignment by DP). Anchors, `text` and quotes always stay in the original language (spine change S3).
+3. **Translate-for-analysis**: for RR, NER and LLM metadata fallback on non-English judgments, paragraphs are machine-translated to English with IndicTrans2-class models [P1-37] (self-hosted; MIT-licensed) and stored as `aux_text["en-x-mt"]`; labels are projected back to the original anchor (1:1 paragraph mapping, sentence alignment by DP). Anchors, `text` and quotes always stay in the original language (spine change S3).
 4. **Native models later**: as Hindi gold data accumulates (partner-firm + review queue), fine-tune multilingual encoders directly on Hindi RR/NER and retire translate-for-analysis for Hindi when native macro-F1 exceeds it.
 5. **Names**: judge/party ER across scripts uses transliteration to a common Latin key plus the registry's native-script variants.
+6. **Authority of language versions** *(added in independent review; spine change S14)*: the identity service sets `expression.authority_basis` by rule, never by model: HC judgment in Hindi/regional language with an HC-issued English translation → both `authoritative=true` (`ORIGINAL`, `OLA_S7_HC_TRANSLATION`) [P1-46]; SC vernacular translation → `COURT_PUBLISHED_TRANSLATION`, `authoritative=false` [P1-28]; machine translation → never an Expression (S3). When two authoritative expressions disagree on a critical token (a date or section number differs between the Hindi original and the English translation), a `WORK_CONFLICT`-class review task is opened and both readings are surfaced — P1 does not pick one.
+7. **Indic-specific extraction gotchas**: Devanagari punctuation (`।` danda as sentence end; `॥`), Devanagari digits in paragraph numbers and citations, honorifics (माननीय न्यायमूर्ति = "Hon'ble Justice"), and romanised Hindi in otherwise English orders ("Vs.", "Sri/Shri/Smt.", "urf"/"alias" in party names) are handled by per-script token tables in the header and citation grammars; sentence splitting uses a script-aware splitter (danda-aware) because the RR model's unit is the sentence.
 
 ### 5.14 Runtime components, model contracts and storage
 
@@ -788,6 +808,16 @@ Thresholds are initial values, to be tuned on IC-OCR-Bench and the gold set so t
 | Human review | 2% of docs × ~3 min + all tier-1 statute round-trip failures | ≈ 5,000+ reviewer-hours (dominant cost) |
 
 Daily run-rate: at an assumed 20k–100k new documents/day (dominated by orders; P0 to confirm), P1 compute is ≈ US$20–150/day. The expensive, moat-building spend is human review, which is why it is prioritised by impact (§5.11).
+
+**Parse-depth profiles and cost circuit breakers (added in independent review).** The 5M-document model above understates the long tail: district-court daily/interim orders from eCourts are far more numerous than judgments and mostly one-page procedural entries ("adjourned to…"). Running the full pipeline (RR, quote anchoring, LLM residuals) on them would dominate cost while adding little legal value. Three profiles, selected after S4 by `doc_type`, court level and length:
+
+| Profile | Applies to | Stages run | Cost vs FULL |
+|---|---|---|---|
+| `FULL` | SC/HC/tribunal judgments, final orders, reportable decisions, statutes | all | 1× |
+| `STANDARD` | HC interim orders, district-court final judgments | S0–S5, S7–S12; RR only coarse head; no LLM adjudication; no quote anchoring | ≈ 0.3× *(estimate)* |
+| `LIGHT` | district-court daily orders / proceedings sheets ≤ 3 pages | triage, text/OCR (single reader + critical-token regex check), header grammar, case numbers, dates, statute & citation mentions, anchors | ≈ 0.1× *(estimate)* |
+
+A LIGHT/STANDARD doc is upgraded to FULL on demand (cited by a FULL doc, pulled into a matter, or requested by P4) via a scoped `reprocess.requested.v1`; anchors are stable across the upgrade because §5.10 runs as usual. **Budget guards:** each Model Gateway contract has a per-day and per-document token cap (default: `p1.metadata.v1` ≤ 6k input tokens/doc; `p1.rr_adjudicate.v1` ≤ 10% of a doc's paragraphs and ≤ 20k tokens/doc); on cap exhaustion the stage degrades to its deterministic/small-model output with gate FLAGGED rather than blocking. A spend anomaly (> 2× the 7-day median for a lane) pauses L2/L3 automatically and pages on-call; L0/L1 are never paused for cost.
 
 **Latency targets (SLOs).**
 | Lane | Doc | p50 | p95 |
@@ -879,6 +909,29 @@ For P1 the brief's cost pattern is **inverted at the bulk layer**: published evi
 | 8.10 | **Alias poisoning** (a wrongly printed citation repeated across many judgments, or an OCR-corrupted cluster) | Harvested alias maps to wrong Work | ≥ 3 independent sources from ≥ 2 courts; conflict freeze; temporal checks; alias provenance kept so a bad alias can be retired and dependants re-resolved. |
 | 8.11 | **Very long judgments / many opinions** | Timeouts; opinion boundary errors cascade to all anchors | Streaming parse per page; opinion split reviewed for bench ≥ 5; long-doc activity heartbeats. |
 | 8.12 | **Model swap** (new OCR/RR model) | Different segmentation → mass anchor churn | Anchor protocol + canary gate (anchor churn > 0.5% blocks rollout). |
+| 8.13 | **Forged or altered "judgment"** (fabricated PDF on a mirror/aggregator site, or a tampered certified copy uploaded by a tenant) | A fake holding enters the PLC or a matter file and is quoted as law | PDF signature verification + `security.signature` (§5.2 item 7); non-official-source manifestations cannot back tier-1 assertions until matched to an official manifestation; tenant copy-vs-record diff (§5.12). *Residual:* old, unsigned scans from secondary sources remain unverifiable — surfaced as such. |
+| 8.14 | **Unicode smuggling** (bidi overrides, zero-width joiners, Cyrillic look-alikes inside citations or instructions) | Citation hidden from grammar or forged alias key; invisible injection text | Unicode hygiene on matching views with offset maps (§5.2 item 5); anomaly counts gate tenant docs to review. |
+| 8.15 | **Overruling judgment parked in L1** (P0 cannot see bench size) / **overruled case cited by name only** | "Overruled yesterday" not surfaced for hours; treatment edge cannot attach to an unresolved NAME_ONLY mention | S0.5 header peek promotes to L0 (§5.1); negative-cue escalation of unresolved NAME_ONLY/SUPRA mentions to the top of the review queue (§5.8). |
+| 8.16 | **Repealed codes** (IPC/CrPC/Evidence Act cited in post-1 July 2024 judgments for pre-repeal offences) | Point-in-time resolution finds no in-force expression → broken statute links or silent mapping to BNS | Repealed-Act rule with `pit_rule` (§5.8), grounded in the s. 358 BNS savings clause [P1-47]; P1 never auto-maps IPC→BNS (that is P3's CORRESPONDS_TO). |
+| 8.17 | **Cost blow-up** (Indic strata make the secondary reader disagree on most lines; district-order volume; LLM residual creep) | Third reads and LLM calls scale super-linearly; backfill budget exhausted | Disagreement-rate circuit breaker (§5.3); FULL/STANDARD/LIGHT parse-depth profiles and per-contract token caps (§5.15); spend-anomaly pause of L2/L3 only. |
+| 8.18 | **Conflicting authoritative language versions** (Hindi original vs HC-issued English translation disagree on a date or section) | P5/P6 quote the wrong version as "the court said" | Rule-based `authority_basis` (§5.13 item 6, spine S14); critical-token cross-check between authoritative expressions → review; both readings surfaced. |
+| 8.19 | **SLP renumbered as Civil/Criminal Appeal** | Same proceeding split into two `cas_` IDs; direct history broken | "arising out of" grammar rule attaches SLP number as alias of the same case (§5.5). |
+
+### 8.R Independent review findings
+
+An independent adversarial review (legal-tech architecture + Indian legal research) re-verified 25 high-stakes references against their sources and red-teamed the design. **Changed in this revision:**
+- *Citation corrections.* Sarvam's Indic OCR benchmark is 6,909 samples, not 20,267, and competitor scores were added [P1-9]; PaddleOCR-VL's 96.01 refers to v1.6 on OmniDocBench v1.6 (competitor-reported) [P1-9], and the OmniDocBench leaderboard claim was re-dated and version-qualified [P1-42]; Chitrapathak's metric is a lower-is-better distance (Gemini-2.5-Flash beats it on Hindi), and the "~4× vLLM speed-up" belongs to the Parichay-2 extractor, not the OCR model [P1-8]; Surya's weight-licence threshold (US$5M) made explicit [P1-7]; Mistral OCR row updated to OCR 4 (price, self-hosting, 170-language claim) and its Hindi coverage no longer called "unknown" [P1-13]; IndicTrans2 is MIT-licensed, not CC-BY-4.0 [P1-37]; SC neutral-citation retro-assignment tranches corrected to the source's wording ("till 2014 and then from 1950 to 2014") [P1-28]; Delhi's announced format is slash-separated and the Kerala claim is marked unverified [P1-29]; LegalEval, InLegalNER, IL-TUR, LegalSeg, Prior et al., Magesh et al., eyecite and Nyaykosh figures confirmed (tags upgraded where fetched).
+- *Grammar bugs fixed.* INSC year restricted to 20xx (would miss retro-assigned 1950–2022 citations); HC neutral-citation regex accepted only `:` (would miss every Madras `2023/MHC/…` citation); SCC (Cri)/(L&S)/(Tax) template lacked the volume and the unbracketed-year form.
+- *Contract divergences made explicit* as spine changes S10–S15 (`pdoc.parsed.v1` + `ParseRequest`, node `spans[]`/RR object, extra fragment grammar, alias `PENDING`, Expression authority attributes, `security.signature`); `identifier_alias.status` and `expression` DDL aligned with the text.
+- *Design gaps patched:* S0.5 lane-promotion peek; negative-cue escalation for NAME_ONLY overrulings; repealed-Act point-in-time rule (BNS s. 358); language-version authority rules (OLA 1963 s. 7); SLP→appeal lineage; Indian date/amount/CNR normalisation; Unicode hygiene, active-content stripping, XXE hardening, PDF signature provenance; tenant copy-vs-public-record diff; OCR disagreement circuit breaker; parse-depth profiles and LLM token caps; sensitive-identity trigger rules with a verified s. 72 BNS basis [P1-45].
+
+**Still open (not fixable by editing):**
+1. No Indian-court OCR benchmark exists; every engine choice in §5.3 remains provisional until IC-OCR-Bench is built — the single biggest unvalidated dependency.
+2. HC neutral-citation codes, bench suffixes and separators beyond Delhi/Madras; CNR positional layout; SCC (Cri) historic formats — all need corpus measurement and official notifications.
+3. Google Document AI prices and Indic language list could not be re-fetched (pricing page truncated) — remain `snippet`.
+4. Whether the SC's vernacular translations carry an "English is authentic" disclaimer on every document, and the exact child/juvenile identity-protection provisions (POCSO s. 23, JJ Act s. 74) — IN doc to confirm.
+5. Parse-depth cost ratios, disagreement-rate thresholds and header-peek recall are engineering estimates **[NOVEL — unvalidated]** to be tuned on production telemetry.
+6. Whether district-court volumes make even LIGHT parsing of all daily orders worthwhile, versus parsing on demand — a product decision for P0/P10.
 
 ---
 
@@ -901,6 +954,9 @@ For P1 the brief's cost pattern is **inverted at the bulk layer**: published evi
 | Anchors | Stability: % anchors preserved across re-parse with unchanged text | ≥ 99.5% | canary set |
 | Quality gates | False-PASS rate on critical fields | ≤ 0.5% | audits of PASS docs |
 | Ops | p95 latency per lane; cost/page; FLAG/QUARANTINE rates | §5.15 SLOs; ≤ 5% / ≤ 1% | production telemetry |
+| Ops | S0.5 header-peek recall for L0-worthy docs (≥ 3-judge bench or negative-treatment cue) | ≥ 0.98 | full-parse labels of all SC/HC docs |
+| Statutes | PIT resolution accuracy for mentions of repealed codes (`pit_rule` correct) | ≥ 0.95 | 500 post-July-2024 judgments citing IPC/CrPC/Evidence Act |
+| Security | Signature verification coverage; forged-doc detection on red-team set | 100% of signed PDFs checked; ≥ 0.95 | synthetic tampered-PDF set |
 
 All metrics are reported per court, per script and per era (pre-2000 scans behave differently), because averages hide exactly the strata where errors concentrate. P8 owns the global regression harness; P1 contributes these suites.
 
@@ -930,7 +986,7 @@ All metrics are reported per court, per script and per era (pre-2000 scans behav
 1. **Corpus profile unknown**: born-digital vs scanned share, pages/doc, language mix, per source — P0 must measure; all cost/latency numbers depend on it.
 2. **Indic OCR engine choice**: vendor benchmarks (Sarvam) are strong but self-reported [P1-9]; Chitrapathak availability/licence unclear [P1-8]; PaddleOCR-VL per-script Indic accuracy unreported [P1-4]. Decide only after IC-OCR-Bench.
 3. **Data residency of fallback APIs**: whether Google Document AI / Sarvam can process in India regions with zero retention — to verify with vendors (13_cross_cutting).
-4. **HC neutral citation codes**: only Delhi and Madras formats verified [P1-29][P1-30]; need each HC's notification.
+4. **HC neutral citation codes**: only Delhi and Madras formats verified [P1-29][P1-30], and they already differ in separator (Delhi announced `/`, printed practice `:`; Madras `/`); need each HC's notification.
 5. **Alias seeds & licensing**: legality of using third-party (e.g. commercial reporter or aggregator) citation tables — IN doc to rule; the SC Equivalent Citation Table could not be fetched in this session [P1-31].
 6. **Ratio/obiter validity**: can partner-firm lawyers agree on ratio at κ ≥ 0.6? If not, P3 must model propositions without a ratio/obiter binary.
 7. **Opinion-numbering prevalence** (spine change S1) and legacy-font prevalence — to measure.
@@ -950,41 +1006,44 @@ All metrics are reported per court, per script and per era (pre-2000 scans behav
 - [P1-4] PaddlePaddle team (Baidu). "PaddleOCR-VL: Boosting Multilingual Document Parsing via a 0.9B Ultra-Compact Vision-Language Model." arXiv:2510.14528, 2025. https://arxiv.org/abs/2510.14528 — verified (abstract)
 - [P1-5] OpenDataLab. "MinerU2.5: A Decoupled Vision-Language Model for Efficient High-Resolution Document Parsing." arXiv:2509.22186, 2025. https://arxiv.org/abs/2509.22186 — snippet
 - [P1-6] "dots.ocr: Multilingual Document Layout Parsing in a Single Vision-Language Model." arXiv:2512.02498, 2025. https://arxiv.org/abs/2512.02498 — snippet
-- [P1-7] Datalab. "Surya" GitHub repository (650M; 91 languages; olmOCR-Bench 83.3; modified OpenRAIL-M weights licence). https://github.com/datalab-to/surya — verified
+- [P1-7] Datalab. "Surya" GitHub repository (650M; 91 languages, 87.2% internal multilingual benchmark; olmOCR-Bench 83.3; ~5 pages/s RTX 5090; code Apache-2.0, weights modified AI Pubs OpenRAIL-M — free for research/personal/startups < US$5M funding or revenue). https://github.com/datalab-to/surya — verified
 - [P1-8] Faraz, A., Kolla, R., Kulkarni, A., Agarwal, S. "Designing Production-Scale OCR for India: Multilingual and Domain-Specific Systems." arXiv:2602.16430, 2026. https://arxiv.org/abs/2602.16430 — verified
-- [P1-9] Sarvam AI. "Sarvam Vision 2.1: Pushing the Pareto frontier of document intelligence." Blog, Sept 2026. https://www.sarvam.ai/blogs/sarvam-vision-2-1 — verified
-- [P1-10] Sarvam AI. "Sarvam Vision." Blog, Feb 2026. https://www.sarvam.ai/blogs/sarvam-vision — snippet
+- [P1-9] Sarvam AI. "Sarvam Vision 2.1: Pushing the Pareto frontier of document intelligence." Blog, 24 Sept 2026 (olmOCR-Bench 87.3; Indic OCR benchmark 6,909 samples / 22 languages, 87.39% vs Bodhan 84.94%, Gemini 3.6 Flash 79.35%, Google Cloud Vision 71.76%; OmniDocBench v1.6: PaddleOCR-VL 1.6 96.01, Sarvam 94.97, GLM-OCR 94.71). https://www.sarvam.ai/blogs/sarvam-vision-2-1 — verified
+- [P1-10] Sarvam AI. "Sarvam Vision." Blog, Feb 2026. https://www.sarvam.ai/blogs/sarvam-vision — snippet (no longer cited in text after review; the 20,267-sample figure previously attributed here could not be confirmed)
 - [P1-11] Google Cloud. "Document AI pricing" and "Enterprise Document OCR supported languages." https://cloud.google.com/document-ai/pricing ; https://docs.cloud.google.com/document-ai/docs/process-forms — snippet
 - [P1-12] Amazon Web Services. "Amazon Textract: Best Practices" (supported languages). https://docs.aws.amazon.com/textract/latest/dg/textract-best-practices.html — verified
-- [P1-13] Mistral AI / AI Weekly. "Mistral OCR" pricing and "Mistral Launches OCR 4 With Structured Output and Self-Hosting." https://mistral.ai/news/mistral-ocr ; https://aiweekly.co/alerts/mistral-launches-ocr-4-with-structured-output-and-self-hosting — snippet
+- [P1-13] Mistral AI. "Mistral OCR" (2025; ~1,000 pages/US$, ~2× with batch; selective self-hosting; Hindi in vendor benchmark), https://mistral.ai/news/mistral-ocr — verified; AI Weekly. "Mistral Launches OCR 4 With Structured Output and Self-Hosting" (23 Jun 2026; US$4/1k pages, US$2 batch; single-container self-host; 170 languages; olmOCR-Bench 85.20, OmniDocBench 93.07 vendor-reported), https://aiweekly.co/alerts/mistral-launches-ocr-4-with-structured-output-and-self-hosting — verified (secondary)
 - [P1-14] Gardella, M., Mariño, C., Belzarena, D., Ramírez, I., Randall, G., Morel, J.-M. "When Low CER is Not Enough: An Analysis of Hallucinations in Vision-Language OCR Systems on Historical Uruguayan Documents." arXiv:2607.24077, 2026. https://arxiv.org/abs/2607.24077 — verified
 - [P1-15] "Seeing is Believing? Mitigating OCR Hallucinations in Multimodal Large Language Models." NeurIPS 2025. https://arxiv.org/abs/2506.20168 — snippet
-- [P1-16] "Zero-shot OCR Accuracy of Low-Resourced Languages: A Comparative Analysis on Sinhala and Tamil." RANLP 2025. https://aclanthology.org/2025.ranlp-1.56 — snippet
+- [P1-16] Jayatilleke, N., de Silva, N. "Zero-shot OCR Accuracy of Low-Resourced Languages: A Comparative Analysis on Sinhala and Tamil." RANLP 2025 (Document AI best on Tamil, CER 0.78%; Surya best on Sinhala). https://aclanthology.org/2025.ranlp-1.56 — verified
 - [P1-17] Kalamkar, P., Tiwari, A., Agarwal, A., Karn, S., Gupta, S., Raghavan, V., Modi, A. "Corpus for Automatic Structuring of Legal Documents." LREC 2022. https://arxiv.org/abs/2201.13125 — verified
-- [P1-18] Modi, A. et al. "SemEval-2023 Task 6: LegalEval — Understanding Legal Texts." SemEval 2023. https://arxiv.org/abs/2304.09548 — verified
+- [P1-18] Modi, A. et al. "SemEval-2023 Task 6: LegalEval — Understanding Legal Texts." SemEval 2023 (RR: 265 docs, 26,304 sentences; best ≈86 vs 79 baseline). https://arxiv.org/abs/2304.09548 — verified
 - [P1-19] Nigam, S.K., Dubey, T., Sharma, G., Shallum, N., Ghosh, K., Bhattacharya, A. "LegalSeg: Unlocking the Structure of Indian Legal Judgments Through Rhetorical Role Classification." Findings of NAACL 2025. https://arxiv.org/abs/2502.05836 — verified
 - [P1-20] Malik, V., Sanjay, R., Guha, S.K., Hazarika, A., Nigam, S., Bhattacharya, A., Modi, A. "Semantic Segmentation of Legal Documents via Rhetorical Roles." NLLP @ EMNLP 2022. https://arxiv.org/abs/2112.01836 — verified
 - [P1-21] Bhattacharya, P. et al. "Identification of Rhetorical Roles of Sentences in Indian Legal Judgments." JURIX 2019. https://arxiv.org/abs/1911.05405 — unverified
 - [P1-22] Joshi, A., Paul, S., Sharma, A., Goyal, P., Ghosh, S., Modi, A. "IL-TUR: Benchmark for Indian Legal Text Understanding and Reasoning." ACL 2024. https://arxiv.org/abs/2407.05399 — verified
-- [P1-23] Kalamkar, P., Agarwal, A., Tiwari, A., Gupta, S., Karn, S., Raghavan, V. "Named Entity Recognition in Indian Court Judgments." NLLP 2022. https://arxiv.org/abs/2211.03442 — snippet
+- [P1-23] Kalamkar, P., Agarwal, A., Tiwari, A., Gupta, S., Karn, S., Raghavan, V. "Named Entity Recognition in Indian Court Judgments." NLLP 2022 (46,545 entities, 14 types; RoBERTa-base + transition parser F1 91.1). https://arxiv.org/abs/2211.03442 — verified
 - [P1-24] Paul, S., Mandal, A., Goyal, P., Ghosh, S. "Pre-trained Language Models for the Legal Domain: A Case Study on Indian Law." ICAIL 2023. https://arxiv.org/abs/2209.06049 — verified
 - [P1-25] OpenNyAI. "Opennyai" library (NER, rhetorical roles, extractive summariser; MIT). https://github.com/OpenNyAI/Opennyai — verified
 - [P1-26] Cushman, J., Dahl, M., Lissner, M. "eyecite: A Tool for Parsing Legal Citations." Journal of Open Source Software, 2021. https://joss.theoj.org/papers/10.21105/joss.03617 — verified (metadata)
-- [P1-27] Free Law Project. "eyecite" GitHub repository (tokenizers, reporters_db, resolve/annotate). https://github.com/freelawproject/eyecite — verified
-- [P1-28] Verdictum / Bar & Bench. "All Supreme Court Judgments to Have Neutral Citations" (format YYYY INSC N; from 1 Jan 2023; retro tranches). https://www.verdictum.in/court-updates/supreme-court/neutral-citations-judgments-chief-justice-dy-chandrachud-1463966 ; https://www.barandbench.com/news/supreme-court-launches-neutral-citation-judgments — snippet
-- [P1-29] Mondaq. "Delhi High Court First To Introduce Neutral Citation System For Its Judgements" (YEAR:DHC:number, w.e.f. 17 Oct 2022; Kerala HC also). https://www.mondaq.com/india/performance/1241608/delhi-high-court-first-to-introduce-neutral-citation-system-for-its-judgements — snippet
-- [P1-30] LiveLaw. "Madras High Court To Have Neutral Citation System From Jan 1" (Year/MHC/number). https://livelaw.in/news-updates/madras-high-court-citation-system-from-1st-january-217771 — snippet
+- [P1-27] Free Law Project. "eyecite" GitHub repository (reporters_db from >55M citations; Aho-Corasick default / Hyperscan tokenizer; resolve/annotate; BSD-2-Clause). https://github.com/freelawproject/eyecite — verified
+- [P1-28] Verdictum. "All Supreme Court Judgments to Have Neutral Citations" (Feb 2023; from 1 Jan 2023, then back "till 2014 and then from 1950 to 2014"; AI-assisted vernacular translation vetted by retired District Judges), https://www.verdictum.in/court-updates/supreme-court/neutral-citations-judgments-chief-justice-dy-chandrachud-1463966 — verified; Bar & Bench coverage https://www.barandbench.com/news/supreme-court-launches-neutral-citation-judgments — snippet
+- [P1-29] Mondaq. "Delhi High Court First To Introduce Neutral Citation System For Its Judgements" (announced format "YEAR/DHC/AUTO GENERATED NUMBER", w.e.f. 17 Oct 2022; no Kerala information). https://www.mondaq.com/india/performance/1241608/delhi-high-court-first-to-introduce-neutral-citation-system-for-its-judgements — verified
+- [P1-30] LiveLaw. "Madras High Court To Have Neutral Citation System From Jan 1" ("Year/MHC/auto generated number", w.e.f. 1 Jan 2023). https://livelaw.in/news-updates/madras-high-court-citation-system-from-1st-january-217771 — verified
 - [P1-31] Supreme Court of India. "Equivalent Citation Table — how to find" (SCR ↔ SCC, AIR(SC), JT, SCALE). https://main.sci.gov.in/pdf/ECT/how2find.pdf — snippet (fetch failed: DNS)
 - [P1-32] Etcheverry, M., Real, T., Chavallard, P. "Algorithm for Automatic Legislative Text Consolidation." NLLP 2024. https://aclanthology.org/2024.nllp-1.13 — verified
-- [P1-33] Prior, M., Hof, A., Wais, N., Grabmair, M. "Risks and Limits of Automatic Consolidation of Statutes." NLLP 2025. https://aclanthology.org/2025.nllp-1.29 — snippet
-- [P1-34] National e-Governance Division (MeitY). "Nyaykosh: Law as Code." https://negd.gov.in/our_projects/nyaykosh-law-as-code/ — verified
+- [P1-33] Prior, M., Hof, A., Wais, N., Grabmair, M. "Risks and Limits of Automatic Consolidation of Statutes." NLLP 2025 (German federal law; 908 amendment-law pairs; 93–99% similarity; 50.3% / 20.51% exact match). https://aclanthology.org/2025.nllp-1.29 — verified
+- [P1-34] National e-Governance Division (MeitY). "Nyaykosh: Law as Code" (LegalDocML/Akoma Ntoso XML, PDF, versioned REST APIs, no registration; "217+ provisions mapped"). https://negd.gov.in/our_projects/nyaykosh-law-as-code/ — verified
 - [P1-35] Open Knowledge Foundation blog. "Opening up India's laws – the journey of Nyaaya.in" (Akoma Ntoso via Indigo). https://blogarchive.okfn.org/?p=23075 — snippet
 - [P1-36] OASIS. "Akoma Ntoso Version 1.0 (LegalDocML)." https://docs.oasis-open.org/legaldocml/akn-core/v1.0/ — unverified
-- [P1-37] Gala, J. et al. "IndicTrans2: Towards High-Quality and Accessible Machine Translation Models for all 22 Scheduled Indian Languages." TMLR 2023. https://arxiv.org/abs/2305.16307 — verified
+- [P1-37] Gala, J. et al. "IndicTrans2: Towards High-Quality and Accessible Machine Translation Models for all 22 Scheduled Indian Languages." TMLR 2023 (code and models MIT; BPCC ≈230M pairs). https://arxiv.org/abs/2305.16307 ; https://github.com/AI4Bharat/IndicTrans2 — verified
 - [P1-38] Magesh, V., Surani, F., Dahl, M., Suzgun, M., Manning, C.D., Ho, D.E. "Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools." 2024. https://arxiv.org/abs/2405.20362 — verified
 - [P1-39] W3C. "Web Annotation Data Model" (TextQuoteSelector). W3C Recommendation, 2017. https://www.w3.org/TR/annotation-model/ — unverified
 - [P1-40] DEV Community. "olmOCR review: AllenAI's VLM beats Mistral, Marker on PDFs" (secondary report of olmOCR-Bench numbers). https://dev.to/andrew-ooo/olmocr-review-allenais-vlm-beats-mistral-marker-on-pdfs-4cci — snippet
 - [P1-41] "Youtu-Parsing: Perception, Structuring and Recognition via High-Parallelism Decoding." arXiv:2601.20430, 2026 (reports olmOCR-Bench for PaddleOCR-VL, dots.ocr, MinerU2.5). https://arxiv.org/abs/2601.20430 — snippet
-- [P1-42] Codesota. "OmniDocBench leaderboard" (GLM-OCR 94.62, updated 2026-04-20). https://www.codesota.com/ocr/benchmark/omnidocbench — snippet
+- [P1-42] Codesota. "OmniDocBench leaderboard" (v1.5; GLM-OCR 94.62, PaddleOCR-VL-1.5 94.50; updated 2026-05-21). https://www.codesota.com/ocr/benchmark/omnidocbench — verified
 - [P1-43] Bommarito, M., Katz, D.M., Detterman, E. "LexNLP: Natural language processing and information extraction for legal and regulatory texts." 2018. https://arxiv.org/abs/1806.03688 — unverified (not cited in text; background)
 - [P1-44] India Science & Technology portal. "Predictive Coding for Identification of Ratio Decidendi in Indian Judicial Decisions" (NIT Tiruchirappalli, 2024–2027). https://indiascienceandtechnology.gov.in/research/predictive-coding-identification-ratio-decidendi-indian-judicial-decisions — snippet
+- [P1-45] "BNS Section 72 — Disclosure of identity of the victim of certain offences, etc." Bharatiya Nyaya Sanhita, 2023 (secondary text via devgan.in). https://devgan.in/bns/section/72/ — verified (secondary)
+- [P1-46] Department of Official Language, GoI. "The Official Languages Act, 1963", s. 7 (optional use of Hindi/State language in HC judgments; English translation issued under HC authority). https://rajbhasha.gov.in/en/official-languages-act-1963 — verified
+- [P1-47] "BNS Section 358 — Repeal and savings." Bharatiya Nyaya Sanhita, 2023 (secondary text via devgan.in). https://devgan.in/bns/section/358/ — verified (secondary)
