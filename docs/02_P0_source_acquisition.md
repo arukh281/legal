@@ -160,11 +160,11 @@ reviewer: counsel_id, reviewed_at: 2026-09-01, review_due: 2027-03-01
   - `BAD_LAW_FLAG` is handled as a `COVERAGE_GAP` targeted acquisition, and `UNOFFICIAL_ONLY_COPY` as `LOW_QUALITY_COPY`.
   - `public_url` is untrusted. It is fetched only if its host is on a registered source's allowlist.
 
-**(c3) `redaction.applied.v1` (every consumer of `doc.redacted.v1` → P0 ledger; spine v1.0 D19.3)**: `{overlay_id, consumer P1|P2|P3|P4|P5|P7|P8|P9|P10|REPLICA:<id>, applied_at, generations_purged[]}`.
+**(c3) `redaction.applied.v1` (every consumer of `doc.redacted.v1` → P0 ledger; spine v1.0 D19.3)**: `{overlay_id, consumer P1|P2|P3|P4|P5|P8|P9|P10|CELL:<cell_id>|REPLICA:<id>, applied_at, generations_purged[]}` (D19.3, D22.4).
 - P0 records each ack in `redaction_ledger` (§2.4) against the overlay's expected consumer set (D21.3: P1, P2, P3, P4, P5 caches, P7, P8, P9, P10 and every registered replica).
 - The ledger check runs every 5 min. Missing acks at `effective_at + purge_sla.serving_h` (serving surfaces: P1 anchor API, P2, P5 caches, P10) or at `+ purge_sla.derived_h` (derived stores: P3, P4, P8, P9) open a SEV-2 incident and page legal-ops. A replica that has not acked by the next signed bundle plus 24 h is reported to the tenant's admin and to legal-ops.
 - Acks are idempotent on `(overlay_id, consumer)`. A second ack updates `applied_at` and unions `generations_purged[]`.
-- Tenant cells ack for their cell-local stores as `P7` (and `REPLICA:<cell_id>` for a D3/D4/D4h replica). Every cell must apply every overlay, because overlays are broadcast, so an ack reveals no tenant interest in the Work (D3). Acks carry `tenantid=null`.
+- Tenant cells ack once per overlay for all their cell-local stores as `CELL:<cell_id>` (and `REPLICA:<id>` for a D3/D4/D4h replica); the expected set is the control-plane cell registry (D22.4, superseding the earlier per-cell `P7` code). Every cell must apply every overlay, because overlays are broadcast, so an ack reveals no tenant interest in the Work (D3). Acks carry `tenantid=null`.
 
 **(d) Operator directives**: `BackfillRequest{source_id, date_range, access_mode, budget}`, `SuppressionOrder{target, authority_ref(order anchor/URL), scope, effective_at}`, `PauseSource{source_id, reason}`. *(v1.0: an applied `SuppressionOrder` produces a `raw.captured.v1` with `change_kind=SUPPRESSED` and a `doc.redacted.v1` RedactionOverlay; `authority_ref` → `RedactionOverlay.legal_basis`/`ordered_by`, `effective_at` → `effective_at`; see §2.2A and §5.10.)*
 
@@ -524,7 +524,7 @@ CREATE INDEX ON capture (source_id, fetched_at);          -- capture is range-pa
   - Indian law does not expressly regulate scraping, and s.43 has not been definitively applied to public-page scraping [P0-22].
   - **Operational consequence:** treat CAPTCHAs, logins and robots disallows as *access-control signals* and never circumvent them.
 - **DPDP Act 2023 s.3(c)(ii)** excludes personal data made publicly available by the Data Principal, or by any other person under a legal obligation to publish it [P0-23]. Whether courts' publication of judgments qualifies is **arguable**. We assume judgments contain regulated personal data and honour masking and takedown orders (§5.10).
-  - **Timing.** The Act commences in phases: initial provisions from 13 Nov 2025, s.6(9) from 13 Nov 2026, and the remaining provisions from 13 May 2027 [P0-44]. The DPDP Rules, 2025 accompany this schedule *(exact notification date not confirmed in this review)*. We assume the remaining provisions include most Data Fiduciary obligations *(unverified)*. P0's erasure and suppression flows must be production-ready before May 2027.
+  - **Timing.** The Act commences in phases: initial provisions from 13 Nov 2025, s.6(9) from 13 Nov 2026, and the remaining provisions from 13 May 2027 [P0-44]. The DPDP Rules, 2025 accompany this schedule: they were notified as G.S.R. 846(E) dated 13 Nov 2025, with Rules 1, 2 and 17–21 in force at once, Rule 4 after one year and Rules 3, 5–16, 22 and 23 after eighteen months (r.1(2)–(4); verified against the MeitY gazette PDF in the final quality check, doc 25; see also 09_P7 [P7-2]). The eighteen-month tranche carries most Data Fiduciary obligations (notice, security safeguards, breach intimation, erasure and retention). P0's erasure and suppression flows must be production-ready before May 2027.
 - **Open licences**
   - The Dattam datasets are CC-BY-4.0 [P0-1].
   - GODL-India (data.gov.in) permits commercial use with attribution [P0-24]. The official GODL page returned 403 to our egress.

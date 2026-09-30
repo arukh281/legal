@@ -1,6 +1,6 @@
 # Bibliography
 
-This is the consolidated, deduplicated bibliography for the architecture blueprint. It was built mechanically from the reference fragments of the 14 research documents: the eleven phase documents (P0–P10), the cross-cutting document (XC), the competitive teardown (CT) and the India-specific legal data document (IN). Two further fragments were merged after the first build: the master architecture (MA, `01_master_architecture.md`) and the build roadmap (RM, `22_build_roadmap.md`). The 16 fragments hold **755 reference entries**, which collapse to **586 unique sources**. 123 of these sources are cited by two or more documents. The MA/RM merge (Appendix A.4) added two new sources, both from RM, and attached all 32 MA tags to sources already listed. No source was removed, re-fetched or re-verified in either pass. Every verification tag was recorded by the document that cites the source. Where documents disagree, the strongest tag wins, and the weaker per-document tags are listed in Appendix B so their owners can update them. Section 9 lists every source still tagged `snippet` or `unverified`, as a follow-up verification queue. A consistency check found that all 721 fragment entries of the first build match their documents' reference lists in tag and primary URL, and that no inline reference tag in any document is missing from its fragment. The same check passes for the 34 MA and RM entries against `01_master_architecture.md` and `22_build_roadmap.md`.
+This is the consolidated, deduplicated bibliography for the architecture blueprint. It was built mechanically from the reference fragments of the 14 research documents: the eleven phase documents (P0–P10), the cross-cutting document (XC), the competitive teardown (CT) and the India-specific legal data document (IN). Two further fragments were merged after the first build: the master architecture (MA, `01_master_architecture.md`) and the build roadmap (RM, `22_build_roadmap.md`). The 16 fragments hold **757 reference entries**, which collapse to **588 unique sources**. 123 of these sources are cited by two or more documents. The MA/RM merge (Appendix A.4) added two new sources, both from RM, and attached all 32 MA tags to sources already listed. No source was removed, re-fetched or re-verified in either pass. Every verification tag was recorded by the document that cites the source. Where documents disagree, the strongest tag wins, and the weaker per-document tags are listed in Appendix B so their owners can update them. Section 9 lists every source still tagged `snippet` or `unverified`, as a follow-up verification queue. A consistency check found that all 721 fragment entries of the first build match their documents' reference lists in tag and primary URL, and that no inline reference tag in any document is missing from its fragment. The same check passes for the 34 MA and RM entries against `01_master_architecture.md` and `22_build_roadmap.md`.
 
 **Documents with no reference list of their own.**
 - `01a_spine_decision_record.md` (decisions D1–D21) has **no external references**. It records the principal architect's rulings and cites only the other blueprint documents.
@@ -38,10 +38,10 @@ This is the consolidated, deduplicated bibliography for the architecture bluepri
 | P10 | `12_P10_product_surface.md` | 37 |
 | XC | `13_cross_cutting.md` | 44 |
 | CT | `20_competitive_teardown.md` | 56 |
-| IN | `21_india_specific_legal_data.md` | 79 |
+| IN | `21_india_specific_legal_data.md` | 81 |
 | MA | `01_master_architecture.md` (merged after the first build) | 32 |
 | RM | `22_build_roadmap.md` (merged after the first build) | 2 |
-| **Total** | | **755** |
+| **Total** | | **757** |
 
 **Deduplication.** Sources were merged when any of the following held:
 
@@ -61,20 +61,20 @@ Secondary URLs inside an entry do **not** cause merges. When one reference line 
 |---:|---|---:|---:|---:|---:|
 | 1 | [Academic papers — legal NLP, IR, KG, RAG, evaluation, LLM](#1-academic-papers--legal-nlp-ir-kg-rag-evaluation-llm) | 169 | 147 | 19 | 3 |
 | 2 | [Indian legal NLP datasets & benchmarks](#2-indian-legal-nlp-datasets--benchmarks) | 32 | 29 | 2 | 1 |
-| 3 | [Indian primary legal sources (statutes, judgments, official portals)](#3-indian-primary-legal-sources-statutes-judgments-official-portals) | 95 | 84 | 10 | 1 |
+| 3 | [Indian primary legal sources (statutes, judgments, official portals)](#3-indian-primary-legal-sources-statutes-judgments-official-portals) | 97 | 86 | 10 | 1 |
 | 4 | [Government, regulatory & compliance](#4-government-regulatory--compliance) | 17 | 6 | 9 | 2 |
 | 5 | [Products, vendors & pricing](#5-products-vendors--pricing) | 86 | 70 | 15 | 1 |
 | 6 | [Engineering (databases, infrastructure, standards/RFCs, OSS)](#6-engineering-databases-infrastructure-standardsrfcs-oss) | 107 | 96 | 7 | 4 |
 | 7 | [News, commentary & surveys](#7-news-commentary--surveys) | 55 | 39 | 16 | 0 |
 | 8 | [Other](#8-other) | 25 | 20 | 5 | 0 |
-| | **Total** | **586** | **491** | **83** | **12** |
+| | **Total** | **588** | **493** | **83** | **12** |
 
 | Tag | Unique sources (strongest tag) | Share | Raw fragment entries |
 |---|---:|---:|---:|
-| `verified` | 491 | 83.8% | 639 |
-| `snippet` | 83 | 14.2% | 103 |
+| `verified` | 493 | 83.8% | 641 |
+| `snippet` | 83 | 14.1% | 103 |
 | `unverified` | 12 | 2.0% | 13 |
-| **Total** | **586** | 100% | **755** |
+| **Total** | **588** | 100% | **757** |
 
 The tag counts differ between raw entries and unique sources for two reasons. Duplicates collapse into one source, and 16 sources were upgraded because another document verified them (Appendix B).
 
@@ -404,6 +404,8 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 93. Department of Official Language, GoI. "The Official Languages Act, 1963", s. 7 (optional use of Hindi/State language in HC judgments; English translation issued under HC authority). https://rajbhasha.gov.in/en/official-languages-act-1963 — `verified` · Doc refs: P1-46, P5-41, P10-36, IN-11 · Also at: https://indiankanoon.org/doc/1500927/ ; https://en.wikisource.org/wiki/Official_Languages_Act,_1963 ; https://indiankanoon.org/doc/958327/
 94. Supreme Court of India. Trimurthi Fragrances (P) Ltd v. Govt of NCT of Delhi (19 Sep 2022). https://indiankanoon.org/doc/85806537/ — `verified` · Doc refs: IN-13
 95. Union Territory of Ladakh v. Jammu and Kashmir National Conference (SC, 2 judges: Vikram Nath, Ahsanuddin Amanullah JJ., 6 Sep 2023), ¶¶32–33 — pendency of a reference to a larger Bench does not stay other proceedings; courts decide on existing law. https://indiankanoon.org/doc/175104903/ — `verified` · Doc refs: P3-53, IN-15
+96. Wikipedia. "Ninety-ninth Amendment of the Constitution of India" (Arts. 124A–124C inserted; in force 13 Apr 2015 per S.O. 999(E); struck down 16 Oct 2015 in *Supreme Court Advocates-on-Record Assn. v. Union of India*, W.P.(C) No. 13 of 2015 (commonly reported as (2016) 5 SCC 1 *(reporter citation unverified)*)). https://en.wikipedia.org/wiki/Ninety-ninth_Amendment_of_the_Constitution_of_India — `verified` (secondary; added in final QC) · Doc refs: IN-80
+97. Supreme Court Observer. "Challenge to the Abrogation of Article 370" (In Re: Article 370 of the Constitution, 2023 INSC 1058, 11 Dec 2023; C.O. 272 and C.O. 273 upheld). https://www.scobserver.in/court-case/article-370 — `verified` (secondary; added in final QC) · Doc refs: IN-81
 
 ## 4. Government, regulatory & compliance
 
@@ -461,7 +463,7 @@ The tag counts differ between raw entries and unique sources for two reasons. Du
 28. Google. "Gemini Developer API pricing." retrieved 2026-09-30. https://ai.google.dev/gemini-api/docs/pricing — `verified` · Doc refs: XC-4
 29. Harvey. "Harvey and Intapp ethical walls" (GA 23 Jul 2026; enforcement across Threads, Vault, Review Tables, Shared Spaces; block when access cannot be confirmed). https://www.harvey.ai/blog/harvey-intapp-ethical-walls — `verified` · Doc refs: P7-13
 30. Harvey. "Harvey raises growth round at $11 billion valuation co-led by GIC and Sequoia." 25 Mar 2026. https://www.harvey.ai/fr-FR/blog/harvey-raises-growth-round-at-dollar11-billion-valuation-co-led-by-gic-and-sequoia — `verified` · Doc refs: CT-29
-31. Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office — `snippet` · Doc refs: CT-28
+31. Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office — `verified` · Doc refs: CT-28
 32. Harvey. "Introducing BigLaw Bench." 2024. https://www.harvey.ai/blog/introducing-biglaw-bench — `verified` · Doc refs: P6-25, P8-11
 33. Harvey. "Introducing Workflow Builder" (Agent Builder). 24 Jun 2025. https://www.harvey.ai/en-US/blog/introducing-workflow-builder — `verified` · Doc refs: P6-26
 34. Harvey. "Memory is here: Harvey, personalized." Harvey blog, Aug 2026. https://www.harvey.ai/blog/memory-is-here-harvey-personalized — `verified` · Doc refs: P9-16
@@ -786,7 +788,7 @@ Every source whose strongest tag is `unverified` (12) or `snippet` (83) is liste
 43. **§5** Google Cloud. "Data residency — Generative AI on Vertex AI" (Claude APAC regional endpoints Singapore/Taiwan). https://cloud.google.com/vertex-ai/generative-ai/docs/learn/data-residency · Doc refs: XC-9
 44. **§5** Google Cloud. "Document AI pricing" and "Enterprise Document OCR supported languages." https://cloud.google.com/document-ai/pricing ; https://docs.cloud.google.com/document-ai/docs/process-forms · Doc refs: P1-11
 45. **§5** Google Cloud. "Generative AI on Vertex AI locations" (asia-south1 Gemini 2.5 models; regional ML processing). https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations · Doc refs: XC-10
-46. **§5** Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office · Doc refs: CT-28
+46. **§5** Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office · Doc refs: CT-28 · **Now verified (final QC, doc 25); drop from this list at next regeneration.**
 47. **§5** Legal Technology Hub. "CaseMine" vendor profile (CaseIQ, Parallel Search). https://www.legaltechnologyhub.com/vendors/casemine/ · Doc refs: CT-11
 48. **§5** Legal Technology Hub. "jhana" vendor profile (Searcher, Paralegal). https://www.legaltechnologyhub.com/vendors/jhana/ · Doc refs: CT-15
 49. **§5** Provakil app listing (automatic case updates from 10,000+ courts; daily cause lists). Apple App Store. https://apps.apple.com/mx/app/provakil/id1111933293 · Doc refs: P7-17, P10-31 · Notes — P7-17: (no note) | P10-31: (via P7-17)

@@ -148,8 +148,9 @@ interface RedactionOverlay {
 // P0 keeps the redaction ledger, joins acks to overlays on overlay_id, and alerts on purge_sla breach.
 interface RedactionApplied {
   overlay_id: string;                                     // "ovl_…"
-  consumer: "P1" | "P2" | "P3" | "P4" | "P5" | "P7" | "P8" | "P9" | "P10" | `REPLICA:${string}`;
-                                                          // D19.3 enum, extended to the D21.3 consumer list (P1, P8, P9)
+  consumer: "P1" | "P2" | "P3" | "P4" | "P5" | "P8" | "P9" | "P10" | `CELL:${string}` | `REPLICA:${string}`;
+                                                          // D19.3 enum, extended to the D21.3 consumer list (P1, P8, P9); a tenant
+                                                          // cell acks once as CELL:<cell_id> for all its stores (D22.4, replaces "P7")
   applied_at: string; generations_purged: string[];       // e.g. index_generation / cache generations purged
 }
 ```

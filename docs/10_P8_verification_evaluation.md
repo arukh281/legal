@@ -278,7 +278,7 @@ All O4 events use the CloudEvents 1.0 envelope with the D2 extension attributes 
 ```json
 { "id":"01J…","type":"verification.completed.v1","specversion":"1.0","source":"p8/verifier@1.3.0",
   "time":"2026-09-30T06:10:04Z","subject":"vr_01J…","tenantid":"ten_…","traceparent":"00-…",
-  "causationid":"<VerifyRequest.request_id>","idempotencykey":"vr_01J…","schemaversion":"1",
+  "causationid":"<VerifyRequest.request_id>","idempotencykey":"vr_01J…","schemaversion":"1.0",
   "dataclass":"TENANT_CONFIDENTIAL",
   "data":{ "report_id":"vr_01J…","subject":{"kind":"MEMO_SECTION","id":"mem_…","section":"adverse_authorities"},
            "gate":"PARTIAL","verifier_version":"p8.verifier@1.3.0|…",

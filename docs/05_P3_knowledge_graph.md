@@ -131,7 +131,7 @@ This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 disposi
 | I8 | Court registry (courts, benches, territorial jurisdiction, hierarchy) | P3-owned reference data, editor-maintained | doctrine engine |
 | I9 | `judgment.expected.v1` `{expected_id (jex_), court_id, case_ref{scheme, value, parties?}, bench{strength, judge_ids[]}, pronounced_on, evidence_raw_id, source_kind CAUSE_LIST\|DAILY_ORDER\|OFFICIAL_NOTICE, expected_by?, state PENDING\|MATCHED\|OVERDUE\|CANCELLED, matched_work_id?, referenced_authorities[]?}` (01_master §6.4; D21.18) | P0 (D16) | have P1 mint an **EXPECTED stub Work** (D20.4) and annotate it; mark `referenced_authorities[]` (§5.8 item 10) |
 | I10 | `doc.redacted.v1` (`data` = `RedactionOverlay`, 01_master §7.13; `ovl_` ids) | P0/P1/ops/legal (D4/D16/D20.3) | masking overlay: masked spans are never returned in evidence quotes or snippets; `name_search_suppressed[]` names are excluded from name lookups (§5.12). `kind = SUPPRESS_ALL` also sets `Work.integrity_flags += SUPPRESSED`. P3 de-duplicates on `overlay_id` and acks with `redaction.applied.v1` (D19.3) |
-| I14 | `raw.captured.v1`, **metadata-only filtered subscription**: `change_kind ∈ {DELETED, REAPPEARED, SUPPRESSED}` or `flags.suspected_replacement = true`. The event is joined to the Work through P1's manifestation lookup (`prior_raw_id` → `manifestation_id` → `work_id`) | P0 | `Work.integrity_flags[]` (D19.5 "derived from P0 signals"; §5.2.1a). P3 adds itself as a filtered consumer of this event; 01_master §6.2 lists only P1 and P4 |
+| I14 | `raw.captured.v1`, **metadata-only filtered subscription**: `change_kind ∈ {DELETED, REAPPEARED, SUPPRESSED}` or `flags.suspected_replacement = true`. The event is joined to the Work through P1's manifestation lookup (`prior_raw_id` → `manifestation_id` → `work_id`) | P0 | `Work.integrity_flags[]` (D19.5 "derived from P0 signals"; §5.2.1a). P3 is a filtered consumer of this event (listed in 01_master §6.2 and the §8.1 matrix since the final quality check) |
 | I11 | `commit_status_batch` (sync, internal) | P4 | status rows P4 computed with `authority-core` on recompute or a scheduled event. P3 validates and writes them as the single status writer (§2.2 O5) |
 | I12 | Freshness API (`known_gaps`, `source_health`, `capture_frontier`) | P4 (D9) | the `COVERAGE_GAP` reason code (§5.5.2) |
 | I13 | DoctrineRule registry `rul_IN_PREC_*` | 21_india (D16) | canonical doctrine source for `authority-core` (§5.5) |
@@ -988,7 +988,7 @@ Cascades touching more than 10k targets move to the P4 batch lane with a single 
 
 **Priority.** `priority = severity(label) × exposure × urgency × uncertainty`, where:
 - severity comes from the predicate's `negative_severity`, following the Average Severity Error idea [P3-13];
-- exposure = log(1 + citing count) + the P9 exposure signal (D21.19 [NOVEL — unvalidated]: public citation in-degree/recency, the Privacy-Gate `n_tenants_bucket` carried on `kg.proposal.v1`, and optional S2 aggregates at k ≥ 5 tenants). These are bucketed counts only, with no tenant IDs. P4 holds no tenant data (D3, D19.4), so no exposure term ever comes from P4 (01_master §14 R-13);
+- exposure = log(1 + citing count) + the P9 exposure signal, which arrives on `kg.proposal.v1` as `KgProposal.exposure_bucket` `0|1-2|3-10|11+` (D21.19 [NOVEL — unvalidated]: public citation in-degree/recency, the Privacy-Gate distinct-tenant count also carried as `support.n_tenants_bucket`, and optional S2 aggregates at k ≥ 5 tenants; 01_master §7.21). These are bucketed counts only, with no tenant IDs. P4 holds no tenant data (D3, D19.4), so no exposure term ever comes from P4 (01_master §14 R-13);
 - urgency = court level × recency;
 - uncertainty = 1 − |2·conf − 1|.
 
@@ -1344,7 +1344,7 @@ The PUCL post-2015 s.66A orders still could not be located, and the claim remain
 9. **Public perception of "CAUTION".** Too many cautions cause alert fatigue, and too few create false comfort. The reason-code thresholds (e.g., NOT_FOLLOWED count) need A/B tests with P10 and P9.
 10. **Prospective and conditional effects (01_master §14.2 Q1).** It is unmeasured whether L3 can extract `effect`/`effective_from`, `date_basis` and scope predicates (CORE and MADA-type rulings) reliably enough for P4's `temporal_scope`. Until the partner gold set shows ≥ 0.9 precision on these qualifiers, P3 writes them only as `review_state=PENDING_REVIEW`, and `impact-match-core` returns `UNCERTAIN` and asks the lawyer for the governing date.
 11. **`authority:batch` at P5's size (R-18).** This is open until the MVP load test (§5.12 note). The fallback is two parallel 300-id calls.
-12. **Integrity-flag inputs.** `AI_GENERATION_ALLEGED` depends on editor capacity, and `WITHDRAWN_FROM_SOURCE` depends on P0's DELETED discipline (3 absent sweeps). P3's filtered `raw.captured.v1` subscription (I14) must be added to the 01_master §6.2 consumer list.
+12. **Integrity-flag inputs.** `AI_GENERATION_ALLEGED` depends on editor capacity, and `WITHDRAWN_FROM_SOURCE` depends on P0's DELETED discipline (3 absent sweeps). P3's filtered `raw.captured.v1` subscription (I14) is now listed in the 01_master §6.2 consumer list (added in the final quality check).
 
 ---
 

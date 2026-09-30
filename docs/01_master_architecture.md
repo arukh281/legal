@@ -726,7 +726,7 @@ Consumer lists follow D4 as amended by D20 and D21.3. `<t>` = the tenant's `ten_
 
 | Event | Producer → consumers | Topic (lane) | Partition key | dataclass | Purpose |
 |---|---|---|---|---|---|
-| `raw.captured.v1` | P0 → P1, P4 | `plc.raw.captured.v1.{rt,bulk}` | `source_id\|source_record_key` | PUBLIC | New or changed bytes at a source, with provenance |
+| `raw.captured.v1` | P0 → P1, P4; P3 (metadata-only filtered subscription: `change_kind ∈ {DELETED, REAPPEARED, SUPPRESSED}` or `flags.suspected_replacement`, for `Work.integrity_flags[]`, D19.5; 05_P3 §2.1 I14) | `plc.raw.captured.v1.{rt,bulk}` | `source_id\|source_record_key` | PUBLIC | New or changed bytes at a source, with provenance |
 | `source.health.v1` | P0 → P4, P8, P10 | `plc.source.health.v1` | `source_id` | PUBLIC | Per-source status, lag and coverage; drives the `COVERAGE_GAP` reason code (D20.12) and "data current as of" |
 | `judgment.expected.v1` | P0 → P3, P4, P10 | `plc.judgment.expected.v1` | `court_id\|case_ref` | PUBLIC | "Pronounced, text awaited" (D16), with optional `referenced_authorities[]` (D21.18). Larger- and constitution-bench records always take the real-time lane (D19.4) |
 | `acquire.requested.v1` | P1 (UNRESOLVED_CITATION, CORRIGENDUM_SUSPECTED, LOW_QUALITY_COPY), P3 and P4 (COVERAGE_GAP, LINEAGE_WATCH), P9 Privacy Gate (MATTER_WATCH, unattributed), ops (OPS) → P0 (D20.2) | `plc.acquire.requested.v1` | `target.scheme\|target.value` | PUBLIC | Targeted acquisition by identifier; `tenantid` always null |
@@ -734,7 +734,7 @@ Consumer lists follow D4 as amended by D20 and D21.3. `<t>` = the tenant's `ten_
 | `doc.parsed.v1` | P1 → P2, P3, P4, P7 (tracked-case orders), P9-tenant (filtered), P10 | `plc.doc.parsed.v1.{rt,bulk}` | `work_id` | PUBLIC | Parsed, identified, anchored document; carries `rights_class` and `provenance_tier` (D20.14) |
 | `identity.merged.v1` / `identity.split.v1` | P1 → P2, P3, P4, P5, P7, P8, P10 (D21.3) | `plc.identity.merged.v1` / `plc.identity.split.v1` | `from_id` | PUBLIC | Reversible re-keying of Work, Case or Alias |
 | `doc.redacted.v1` | P0 (source suppression, captured court orders), P1 (statutory identity masking detected in parsing), ops/legal (manual) → P1 (Anchor Read API), P2, P3, P4, P5 caches, P7, P8, P9, P10, every replica (D20.3, D21.3) | `plc.doc.redacted.v1` | `work_id` | PUBLIC | `RedactionOverlay` masking or takedown. Consumers de-duplicate on `overlay_id` and ack with `redaction.applied.v1` |
-| `redaction.applied.v1` | every `doc.redacted.v1` consumer (P1, P2, P3, P4, P5, P7, P8, P9, P10, `REPLICA:<id>`) → P0 redaction ledger | `plc.redaction.applied.v1` | `overlay_id` | PUBLIC | Purge acknowledgement; P0 alerts on a `purge_sla` breach (D19.3). An ack from a tenant cell is an operational receipt carrying only the public `overlay_id` and the consumer code, with `tenantid=null` (E5); it is not a data path under R2 |
+| `redaction.applied.v1` | every `doc.redacted.v1` consumer (PLC-side P1, P2, P3, P4, P5, P8, P9-global, P10-public; each tenant cell once as `CELL:<cell_id>`; each replica as `REPLICA:<id>`; D22.4) → P0 redaction ledger | `plc.redaction.applied.v1` | `overlay_id` | PUBLIC | Purge acknowledgement; P0 alerts on a `purge_sla` breach (D19.3). An ack from a tenant cell is an operational receipt carrying only the public `overlay_id` and the consumer code, with `tenantid=null` (E5); it is not a data path under R2 |
 | `doc.indexed.v1` | P2 → P4, P5, P10 | `plc.doc.indexed.v1` | `work_id` | PUBLIC | Expression searchable (BASE) or enriched (FULL) |
 | `index.generation.promoted.v1` | P2 → P4, P5, P8, P10 (D21.3) | `plc.index.generation.promoted.v1` | `index_family` | PUBLIC | Alias swap to a new generation; rollback deadline |
 | `graph.delta.v1` | P3 → P2, P4, P5 caches, P7 (badges), P8, P9-global, P10 | `plc.graph.delta.v1.{rt,bulk}` | `subject` | PUBLIC | Assertions added, retracted or superseded; status changes; watermark. P2 refreshes `binding_scope_tags` from it (D21.2) |
@@ -835,6 +835,7 @@ interface GraphDelta {
 interface ImpactDetected {
   impact_id: string /* imp_ */; impact_version: number; lifecycle: "PROVISIONAL"|"CONFIRMED"|"UPDATED"|"RETRACTED";
   supersedes_impact_id: string|null; change_kind: string /* 06_P4 §5.5.1 enum, e.g. AUTHORITY_STATUS_CHANGED */;
+  text_awaited: boolean;                                // D16: true for PROVISIONAL impacts seeded by judgment.expected.v1 (P10 "text awaited" chip)
   cause_kind: "LAW_CHANGE"|"KNOWLEDGE_CORRECTION"|"RECLASSIFICATION"|"SCHEDULED";
   trigger_delta_id: string; trigger_delta_ids: string[];
   root: { target_id: string; target_kind: "WORK"|"PROPOSITION"|"PROVISION"|"CASE"|"ANCHOR";
@@ -851,8 +852,8 @@ interface ImpactDetected {
                     scope_predicates: { fact: string; op: string; value: unknown }[]; date_check: "MATCHED"|"MISMATCH"|"NO_SOURCE" };
   severity: 1|2|3;                                      // 1 = most severe. Machine-detected sev-1 needs: explicit cue, competent bench, conf ≥ 0.9, official source (D5)
   significance: number;                                // public citation footprint (in-degree / PPR centrality) only, never tenant interest (D19.4)
-  verification: { state: "MACHINE"|"PENDING_REVIEW"|"VERIFIED"; definitive: boolean; status_confidence: number;
-                  review_task_id?: string; review_sla_due?: string };
+  verification: { review_state: "MACHINE"|"PENDING_REVIEW"|"VERIFIED" /* D5 name */; state?: "MACHINE"|"PENDING_REVIEW"|"VERIFIED" /* v1.x read alias of review_state, dropped at v2 (06_P4 §2.0) */;
+                  definitive: boolean; status_confidence: number; review_task_id?: string; review_sla_due?: string };
   explanation: { template_id: string; text: string; anchors: string[]; quote_hashes: string[] };   // deterministic template, no LLM
   coalesce_key: string; graph_watermark: number; doctrine_version: string; p4_logic_version: string;
   storm: { active: boolean; storm_id: string|null };
@@ -897,7 +898,7 @@ interface ReprocessRequested {
 - **`source.recheck.requested.v1`** — `{request_id, court_ids[], target{work_id?, citation_text?, public_url?}, reason BAD_LAW_FLAG|UNOFFICIAL_ONLY_COPY|OPS, priority, dedupe_window_h: 6}`. Schema owner P9; this field list is canonical until P9 confirms (D20.9). `public_url` must be on the allowlist and is treated as untrusted (11_P9 §5.5.3).
 - **`identity.merged.v1` / `identity.split.v1`** — `{kind WORK|CASE|ALIAS, from_id, to_id, reason, confidence, reversible_until?}` (D16; `reversible_until` optional and non-normative, D20.6).
 - **`doc.redacted.v1`** — `data = RedactionOverlay` (§7.13 is the canonical field list, D20.3). Consumers de-duplicate on `overlay_id`.
-- **`redaction.applied.v1`** — `{overlay_id (ovl_), consumer P1|P2|P3|P4|P5|P7|P8|P9|P10|REPLICA:<id>, applied_at, generations_purged[]}` (D19.3). Idempotent on `(overlay_id, consumer)`. P0 keeps the redaction ledger against the expected consumer set (D21.3) and alerts on any `purge_sla` breach (02_P0 §2.2).
+- **`redaction.applied.v1`** — `{overlay_id (ovl_), consumer P1|P2|P3|P4|P5|P8|P9|P10|CELL:<cell_id>|REPLICA:<id>, applied_at, generations_purged[]}` (D19.3, D22.4). Idempotent on `(overlay_id, consumer)`. P0 keeps the redaction ledger against the expected consumer set: the PLC-side consumers of D21.3 plus the control-plane cell registry, where each active D1/D2 cell acks once as `CELL:<cell_id>` for all its cell-local stores and each D3/D4/D4h replica as `REPLICA:<id>` (D22.4). It alerts on any `purge_sla` breach (02_P0 §2.2).
 - **`index.generation.promoted.v1`** — `{index_family, from_generation, to_generation, eval_report_uri, promoted_at, rollback_deadline}`.
 - **`kg.proposal.v1`** — `data = KgProposal` (§7.21).
 - **`kg.proposal.resolved.v1`** — `{proposal_id, decision ACCEPTED|REJECTED|MERGED|DEFERRED, resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code (closed vocabulary)}` (D21.11). It is the single resolution event (D4; the earlier P9 name `kg.proposal.status.v1` is retired). P9's former `NEEDS_EVIDENCE` outcome is `DEFERRED` with a `public_note_code`; the delta is found from `resulting_assertion_ids[]` via the `graph.delta.v1` with `cause.kind=PROPOSAL`.
@@ -911,9 +912,9 @@ interface ReprocessRequested {
 - **`matter.document.ingested.v1`** — `{tenant_id, matter_id, pdoc_id, pver, doc_type, provenance, trust_label, privilege_class, received_on, parsed_doc_uri, quality}`.
 - **`strategy.memo.published.v1`** — `{tenant_id, matter_id, memo_id, job_id, status, gate, dependency_ids[], deadlines[{deadline_id, computed_date, label}]}`.
 - **`strategy.memo.stale.v1`** — `{memo_id, cause_impact_id, impact_version, affected_claim_ids[]}`.
-- **`verification.completed.v1`** — `{report_id, subject, gate, verifier_version, claims[{claim_id, status, band, reason_codes[]}], degradation_kinds[]}`. It never carries text or quotes.
+- **`verification.completed.v1`** — `{report_id, subject, gate, section_gates?, verifier_version, claims[{claim_id, status, band, reason_codes[]}], degradation_kinds[]}` (10_P8 §2.3 O4). It never carries text or quotes.
 - **`retrieval.served.v1`** — schema = 07_P5 §2.4 (D21.9; P9 aligns): `{impression_id, query_id, trace_id, matter_id?, surface, requester{kind, agent_role?}, intent, mode, as_of_legal_date, as_known_at, forum, stance_target?, ranker_version, experiment?{exp_id, arm, interleave?}, items[{item_id, anchor_ids[], work_id|null, position, slot BINDING_PINNED|ADVERSE_PINNED|RANKED, propensity, randomized, features_ref, role, stance?, binding_on_forum?, status?, definitive?}], legs_contrib, latency_ms_by_stage, pipeline_version, index_generation, graph_watermark, rendered_at?}`. The tenant is carried in the `tenantid` envelope attribute, not the payload; `idempotencykey = impression_id`.
-- **`feedback.resolved.v1`** — `{feedback_ids[], proposal_id?, outcome ACCEPTED|REJECTED|MERGED|DEFERRED|LOCAL_ONLY, delta_id?, note_key}`. `note_key` carries the P3 `public_note_code` (D21.11); a "needs evidence" result is `DEFERRED` with that code.
+- **`feedback.resolved.v1`** — `{feedback_ids[], proposal_id?, outcome ACCEPTED|REJECTED|MERGED|DEFERRED|LOCAL_ONLY, delta_id?, graph_watermark?, note_key}` (schema owner P9, 11_P9 §2.4; `graph_watermark` lets the tenant plane wait for its badge cache before saying "fixed"). `note_key` carries the P3 `public_note_code` (D21.11); a "needs evidence" result is `DEFERRED` with that code.
 - **`interaction.logged.v1`** — `{impression_id, item_id, anchor_id?, action OPEN_SOURCE|DWELL|COPY|PIN_TO_MATTER|EXPORT|EXPAND_REASON|HOVER_PREVIEW, dwell_ms?, position, surface, at}`.
 - **`alert.state.v1`** — `{alert_id, notification_id, recipient, channel, state SENT|DELIVERED|SEEN|ACKED|SNOOZED|ESCALATED|EXPIRED|RETRACTED, at, escalation_step}`.
 - **`erasure.requested.v1`** (producer P7) — `{erasure_id, scope TENANT|MATTER|CLIENT|ACTOR, scope_ref, legal_basis DPDP_S12|CONTRACT_END|CONSENT_WITHDRAWN|COURT_ORDER|RTBF_MASKING, requested_at, deadline}`.
@@ -954,7 +955,7 @@ interface ParsedDocument {
               unicode_anomalies: Record<string, number>; active_content_stripped: string[] };
 }
 interface ParsedNode { anchor_id: string; node_type: string; number_as_printed?: string; numbering: "EXPLICIT"|"SYNTHETIC";
-  rhetorical_role?: { label: string /* e.g. RATIO_CANDIDATE */; fine: string; dist: Record<string, number>; conf: number; method: string; source?: string };
+  rhetorical_role?: { label: string /* e.g. RATIO_CANDIDATE */; fine: string; dist: Record<string, number>; confidence: number; source: string /* model@version; D16 names — was conf/method */ };
   speaker?: "COURT"|"COUNSEL_PETITIONER"|"COUNSEL_RESPONDENT"|"LOWER_COURT"|"UNKNOWN"; opinion_ref?: string;
   sentences: { idx: number; char_range: [number, number]; rr?: string }[]; quotes: { char_range: [number, number]; quoted_source_mention_id?: string }[];
   lang: string; aux_text: Record<string, string|null> /* "en-x-mt": never citable */; text: string; text_hash: string;
@@ -1201,7 +1202,8 @@ interface RedactionOverlay { overlay_id: string /* ovl_ */; work_id: string; exp
 ### 7.14 Freshness — owner P4 (06_P4 §2.2 O4; D9)
 ```ts
 interface Freshness { court_id: string; law_current_to: string|null /* null if completeness_basis = UNKNOWN */; capture_frontier: string;
-  propagation_frontier: string; stage_lag_p95_min: Record<"parse"|"index"|"graph"|"impact", number>;
+  propagation_frontier: string; stage_lag: { p95_min: Record<"parse"|"index"|"graph"|"impact", number> } /* D9 name; flat stage_lag_p95_min served as a v1 alias (06_P4 §2.0) */;
+  expected_pending: number /* judgment.expected.v1 rows PENDING/OVERDUE */;
   known_gaps: { doc_key: string; reason: string; excused_by?: string }[]; source_health: "OK"|"DEGRADED"|"DOWN"|"BLOCKED";
   completeness_basis: "ENUMERATED"|"SERIAL_GAP_CHECK"|"HEURISTIC"|"UNKNOWN"; p4_logic_version: string }
 ```
@@ -1224,7 +1226,8 @@ interface Claim { claim_id: string /* clm_ */; text: string; claim_type: "LEGAL_
 
 ### 7.16 Deadline — owner P6 (08_P6 §2.3; D9)
 ```ts
-interface Deadline { deadline_id: string /* ddl_ */; rule_id: string /* prs_ */; rule_version: string; label: string;
+interface Deadline { deadline_id: string /* ddl_ */; rule_id: string /* prs_ */; rule_code: string /* e.g. NIA.138.PAYMENT_WINDOW */; rule_version: string; label: string;
+  calendar_ref?: { forum: string; calendar_version: string } /* P0 CourtCalendar (cal_) version used for rollover; 08_P6 §2.3 */;
   trigger_event: { event_type: string; date: string; source_anchor: string; confirmed_by?: string };
   computed_date: string; window_kind: "LAST_DATE"|"EARLIEST_DATE"|"WINDOW"; hard_limit?: string;
   extendable: "NO"|"CONDONABLE"|"COURT_DISCRETION"; extension_rule_id?: string; statutory_anchors: string[];
@@ -1236,12 +1239,14 @@ interface Deadline { deadline_id: string /* ddl_ */; rule_id: string /* prs_ */;
 ### 7.17 StrategyMemo — owner P6 (08_P6 §2.3)
 ```ts
 interface StrategyMemo { memo_id: string /* mem_ */; tenant_id: string; matter_id: string; job_id: string /* job_ */; trigger_pdoc_id: string;
-  context_version: number; as_of_legal_date: { default: string; per_issue: Record<string, string> }; as_known_at: string; law_current_to: string; generated_at: string;
+  context_version: number; as_of_legal_date: { default: string; per_issue: Record<string, string> }; as_known_at: string; law_current_to: string;
+  graph_watermark: number; generated_at: string;
   sections: Record<"opponent_claims"|"issues"|"favourable_authorities"|"adverse_authorities"|"likely_opposing_arguments"|"counter_arguments"
                    |"evidence_checklist"|"deadlines"|"draft_strategy"|"uncertainties", Claim[]>;
   deadlines: Deadline[]; issue_table: object[];
   adverse_accountability: { item_id: string; anchor_id: string; disposition: "USED_BY_OPPONENT"|"DISTINGUISHED"|"INAPPLICABLE"; claim_id: string }[];
-  verification: { report_id: string; gate: "PASS"|"PARTIAL"|"BLOCK"; withheld_sections: string[] };
+  verification: { report_id: string; gate: "PASS"|"PARTIAL"|"BLOCK"; section_gates: Record<string, "PASS"|"PARTIAL"|"BLOCK">; withheld_sections: string[];
+                  degradations?: VerificationReport["degradations"] /* D19.2: copied from P8 + P6's own (08_P6 §2.3); P10 discloses */ };
   status: "DRAFT"|"VERIFIED"|"PARTIAL"|"STALE"; dependency_ids: string[] /* anchors, wrk_, prp_, prs_ */;
   pipeline_version: { workflow: string; steps: { step: string; model_id: string; prompt_hash: string }[] }; trace_id: string }
 ```
@@ -1250,7 +1255,7 @@ interface StrategyMemo { memo_id: string /* mem_ */; tenant_id: string; matter_i
 ```ts
 interface DraftArtifact { draft_id: string /* drf_ */; memo_id: string; template_id: string; lang: string;
   blocks: { block_id: string; text: string; claim_ids: string[]; kind: "GROUNDED"|"BOILERPLATE"|"LAWYER_TODO" }[];
-  status: "DRAFT"|"VERIFIED"|"APPROVED_FOR_EXPORT"; verification_report_id?: string }
+  status: "DRAFT"|"VERIFIED"|"APPROVED_FOR_EXPORT"|"STALE" /* STALE: a cited claim was re-verified after an impact (08_P6 §2.3) */; verification_report_id?: string }
 // Export requires lawyer approval (P6 human gate 3) and passes P7's outbound-leak check (privilege bloom).
 ```
 
@@ -1260,7 +1265,7 @@ interface VerificationReport { report_id: string /* vr_ */; request_id: string; 
   subject: { kind: "MEMO_SECTION"|"ANSWER"|"DRAFT"|"EXPORT"|"REVERIFY"; id: string; section?: string };
   as_of_legal_date: string; as_known_at: string; graph_watermark: number; anchor_generation: string; verifier_version: string;
   claims: ClaimVerification[]; gate: "PASS"|"PARTIAL"|"BLOCK"; section_gates?: Record<string, "PASS"|"PARTIAL"|"BLOCK">;
-  gate_reasons: string[]; withheld_claim_ids: string[];
+  gate_reasons: string[]; withheld_claim_ids: string[]; withheld_sections?: string[] /* the withheld list of a PARTIAL memo (D9; 10_P8 §2.3) */;
   coverage: { checked: number; verifiable_share: number; unverifiable_by_reason: Record<string, number> };
   degradations: { kind: "BUDGET"|"SOURCE_STALE"|"MODEL_FALLBACK"|"RESIDENCY_FALLBACK"|"INDEX_LAG"|"COVERAGE_GAP"; detail: string;
                    affected_claim_ids: string[] }[] /* D19.2; mirrored in EvidenceBundle.warnings[]; P10 must disclose any degradation next to the answer */;
@@ -1272,7 +1277,7 @@ interface ClaimVerification { claim_id: string; claim_hash: string;
                   "PASS"|"WARN"|"FAIL"|"UNKNOWN"|"NA">;
   checks: { check_id: string; version: string; verdict: string; score?: number; latency_ms: number }[];
   reason_codes: string[]; narrowed_text?: string; suggested_anchor_ids?: string[];
-  authority_snapshot?: { subject_id: string; status: Status; definitive: boolean; binding_on_forum?: string; status_confidence: number }[];
+  authority_snapshot?: { subject_id: string; status: Status; definitive: boolean; reason_codes: string[]; binding_on_forum?: string; status_confidence: number }[];
   human_review?: { required: boolean; queue: "TIER1_CLAIM"|"CROSS_LINGUAL"|"LOW_OCR" } }
 ```
 **Memo aggregation (D9, D21.6; overriding 10_P8 S8-6).**
@@ -1388,7 +1393,7 @@ interface ConsentRecord { consent_snapshot_id: string /* cns_; a new immutable s
 
 | Producer ↓ / Consumer → | P0 | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **P0** | — | RC RD | RD | JE RD | RC SH JE RD | RD | CF | CF RD | SH RD | RD | SH JE CF RD |
+| **P0** | — | RC RD | RD | RC(filtered) JE RD | RC SH JE RD | RD | CF | CF RD | SH RD | RD | SH JE CF RD |
 | **P1** | AQ RA | — | DP ID RD PP _AN_ | DP ID RD _AN_ | DP ID RD | ID RD _AN_ | _AN_ | DP PP ID RD _AN_ | DP ID RD _AN_ | DP RD | DP ID RD _AN_ |
 | **P2** | RA | | — | | DI GP | DI GP _IAL_ | | EA | GP | | DI GP |
 | **P3** | AQ SR RA | RP | GD | — | GD _AV_ | GD _AV_ | _AV_ | GD KR | GD _AV_ | GD KR | GD _AV_ |
@@ -1412,13 +1417,13 @@ Cells list what the consumer receives from the producer; D21.3 consumer lists ar
 | C1 | P1 ← `raw.captured.v1` | P0 | `raw_id`, `change_kind`, `prior_raw_id`, `source_metadata`, `terms_ref`, `provenance_tier`, `rights_class` | ✔ D16, D20.3 | `SUPPRESSED` is an explicit kind; P0 emits `doc.redacted.v1` for a source suppression; P1 tombstones anchors, purges derived text and acks with `redaction.applied.v1` (R-14 RESOLVED) |
 | C2 | P2, P3, P4 ← `doc.parsed.v1` | P1 | `quality.gate`, `work_id_status`, `case_ids`, `supersedes_parse_id`, `anchor_changes`, `CitationMention.context`, `AmendmentInstruction[]`, `rights_class`, `provenance_tier` | ✔ D16, D20.14 | `rights_class` and `provenance_tier` copied from the manifestation (D20.14) |
 | C3 | P3 ← `metadata.authoritative_expression_key` | P1 | P3 input rule 5 | ✱ | Added to 03_P1 §2.3, derived from `expression.authoritative` (R-15 RESOLVED) |
-| C4 | P2 ← `ParsedNode.rhetorical_role` flat + `role_confidence` | P1 | 04_P2 §2.1 flat shape | ✱ | P1 emits the object `{label, fine, dist, conf}` (D16) and publishes `rr-labels@1.0`; P2 maps `*_CANDIDATE → *` for chunk boundaries only (R-16 RESOLVED) |
+| C4 | P2 ← `ParsedNode.rhetorical_role` flat + `role_confidence` | P1 | 04_P2 §2.1 flat shape | ✱ | P1 emits the object `{label, fine, dist, confidence, source}` (D16 names; `fine`/`dist` additive) and publishes `rr-labels@1.0`; P2 maps `*_CANDIDATE → *` for chunk boundaries only (R-16 RESOLVED) |
 | C5 | P5 ← `Chunk` filter fields | P2 | `court_id`, `doc_type`, `decision_date`, `recorded_at`, `lang`, `opinion_role`, `binding_scope_tags[]`, `ocr_conf` | ✔ D21.2, D21.4 | `binding_scope_tags[]`: P2 owns the field, P3 supplies values, refreshed on `graph.delta.v1`, IAL filter (R-12 RESOLVED). `opinion_type` is retired for `opinion_role` |
 | C6 | P4, P5, P7, P8, P10 ← `graph.delta.v1` | P3 | `graph_watermark` (int64), `cause.kind`, `status_changes[].{definitive, reason_codes, valid_from}` | ✱ | D4 `cause.kind` enum + `IDENTITY`, with P3's mapping (05_P3 §2.0; R-17 RESOLVED). `status_changes[].subject_id` (R-05 RESOLVED) |
 | C7 | P5 ← `alias_changes[]` on `graph.delta.v1` | P3 | C1 cache invalidation | ✔ D21.3 | Rejected as a delta field. Alias changes arrive as `identity.merged/split.v1 kind=ALIAS` from P1; P5 is a listed consumer (D21.3) |
 | C8 | P5, P6, P8, P10 ← `AuthorityView` | P3 | `status`, `definitive`, `reason_codes`, `binding_on_forum`, `binding_basis`, `graph_watermark` | ✱ | `subject_id` everywhere, `target_id` read-alias for one minor (05_P3, 12_P10 adopted; R-05 RESOLVED). COVERAGE_GAP semantics per D20.12 |
 | C9 | P5 ← `authority:batch` of ~600 ids at p95 ≤120 ms | P3 | 05_P3 SLO: 200 ids at 60 ms | ✘ | Open performance question (R-18) |
-| C10 | P7 Impact Matcher ← `impact.detected.v1` | P4 | `lifecycle`, `temporal_scope.legal_effect_from`, `temporal_scope.effect/retrospective_flag`, `verification.state` | ✱ | 09_P7 §5.6 now reads the D5 fields and calls `impact-match-core.applicability()` (R-19 RESOLVED); `tenant_severity()` per D21.14 |
+| C10 | P7 Impact Matcher ← `impact.detected.v1` | P4 | `lifecycle`, `temporal_scope.legal_effect_from`, `temporal_scope.effect/retrospective_flag`, `verification.{review_state, definitive}` (D5) | ✱ | 09_P7 §5.6 now reads the D5 fields and calls `impact-match-core.applicability()` (R-19 RESOLVED); `tenant_severity()` per D21.14 |
 | C11 | P10 ← `matter.alert.v1` | P7 | `subject_ids`, `definitive`, `revision`, `supersedes_alert_id`, `requires_ack` | ✔ | D5 merged. Envelope attribute is `schemaversion` (D2) |
 | C12 | P6, P8 ← `EvidenceBundle` TPL items | P5 | `source_layer`, `trust_label`, `private{pdoc_id, pver, privilege_class, provenance, authz_consistency}` | ✔ D9, D21.12, D21.13 | `trust_label` only (R-20 RESOLVED; `TENANT_COURT_RECORD` added by D21.12); `privilege_class` + `provenance` on TPL items (R-34 RESOLVED) |
 | C13 | P8 ← `VerifyRequest.claims[]` | P6 | Claim + C2 extensions, `ledger_ref`; `computed_ref` → `ddl_` or `mck_` | ✔ D21.5 | |
@@ -1439,7 +1444,7 @@ Cells list what the consumer receives from the producer; D21.3 consumer lists ar
 | C28 | P10 ← delta chunk embeddings for tenant TOPIC watches | P2 | 12_P10 reviewer note | ✱ | P2 ships a daily delta-embedding pack in the PLC→TPL bundle (04_P2 §5.13; 12_P10 adopted; R-25 RESOLVED) |
 | C29 | P0 ← `acquire.requested.v1` | P1, P3, P4, P9 gate, ops | reason enum | ✔ D20.2 | No `PRONOUNCEMENT_EXPECTED`; `COVERAGE_GAP` + `sub_reason` (R-26 RESOLVED) |
 | C30 | P7 `matter_dependency` ← `StrategyMemo.dependency_ids` | P6 | anchors and IDs, never chunk ids | ✔ | R7; tenant-internal only (D3) |
-| C31 | P0 redaction ledger ← `redaction.applied.v1` | every RD consumer | `overlay_id`, `consumer`, `applied_at`, `generations_purged[]` | ✔ D19.3 | |
+| C31 | P0 redaction ledger ← `redaction.applied.v1` | every RD consumer | `overlay_id`, `consumer`, `applied_at`, `generations_purged[]` | ✔ D19.3, D22.4 | Tenant cells ack once per overlay as `CELL:<cell_id>`, replicas as `REPLICA:<id>`; expected set = PLC-side consumers + control-plane cell registry (R-38) |
 | C32 | P7 erasure workflow ← `erasure.applied.v1` | P2, P5, P6, P8, P9 | `erasure_id`, `consumer`, `applied_at`, `scope` | ✔ D20.15, D21.3 | P7 alone emits `erasure.completed.v1` |
 | C33 | P8 offline gate ← `model.endpoint.candidate.v1` | XC Gateway | `endpoint_id`, `task_ids[]`, `model_snapshot`, `prompt_hash` | ✔ D21.3 | Replaces P8's registry polling (R-31 RESOLVED) |
 | C34 | P8 ← `CitationMention.pin.{method, confidence}` | P1 | pinpoint method | ✔ D19.6 | `PAGE_SPAN_ALIGN` alone never yields VERIFIED |
@@ -1828,7 +1833,7 @@ Each row compares the alternatives on accuracy, cost, latency, maintainability a
 | R-16 | Rhetorical-role vocabularies differed: P1 `*_CANDIDATE` + fine labels; P2's 13-label list | P1 | P1 publishes `rr-labels@1.0`; P2 and P5 map to it; P2 uses labels only for chunk boundaries | **RESOLVED (✱, adopted)** in 03_P1 §5.6 and 04_P2 |
 | R-17 | `graph.delta.v1.cause.kind`: P3 `DOC\|REVIEW\|PROPOSAL\|REPROCESS\|RULE_CHANGE\|IDENTITY` vs D4 `EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL` | P3 | D4 set + `IDENTITY`, with P3's mapping table | **RESOLVED (✱, adopted)** in 05_P3 §2.0 |
 | R-18 | P5 wants `authority:batch` for ~600 ids at p95 ≤120 ms; P3 commits 200 ids at 60 ms | P3, P5 | Fallback: two parallel 300-id calls | **OPEN (P3 + P5):** joint load test in the MVP (M1) on the D2 cell; if p95 >120 ms, adopt the fallback or raise P3's per-call SLO |
-| R-19 | 09_P7 §5.6 matcher read non-existent impact fields | P7 | Use `lifecycle`, `temporal_scope.*`, `verification.state`; call `impact-match-core.applicability()` and `tenant_severity()` (D21.14) | **RESOLVED (✱, adopted)** in 09_P7 §5.6 |
+| R-19 | 09_P7 §5.6 matcher read non-existent impact fields | P7 | Use `lifecycle`, `temporal_scope.*`, `verification.{review_state, definitive}` (D5; `state` is a v1.x read alias); call `impact-match-core.applicability()` and `tenant_severity()` (D21.14) | **RESOLVED (✱, adopted)** in 09_P7 §5.6 |
 | R-20 | Trust labelling: P5 `trust_level`, P7 `trust` + `provenance`, 13_cross_cutting S5 (no TENANT_WORK_PRODUCT) | P5, P7 | D9 `trust_label` only. P7 mapping: CLIENT→TENANT_CLIENT_DOC; OPPOSING_PARTY→TENANT_OPPOSING_DOC; FIRM_AUTHORED→TENANT_WORK_PRODUCT; COURT (certified copies)→**TENANT_COURT_RECORD**; THIRD_PARTY, UNKNOWN→TENANT_CORRESPONDENCE (data-only) | **RESOLVED (D9, D21.12)** |
 | R-21 | P8 S8-6 memo aggregation ("any BLOCK ⇒ memo BLOCK") contradicted D9 | P8 | Tier-1 section BLOCK ⇒ memo PARTIAL; memo BLOCK only if nothing is displayable or on a memo-level integrity failure (§7.19) | **RESOLVED (D9, D21.6)** |
 | R-22 | 09_P7 §2.5 MatterContext lacked `procedural_events[]`, `temporal_context`, `residency_policy`, `facts{}`; `deadlines[].status` clashed with `Deadline.status` | P7 | Added (D9, D16); P7's field renamed `lifecycle`; `event_type` vocabulary owned by P6 (D21.7) | **RESOLVED (✱, adopted; D21.7)** in 09_P7 §2.5 |

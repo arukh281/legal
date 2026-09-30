@@ -46,13 +46,13 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | 7. `Assertion.qualifiers.proposal_ids[]` | **ACCEPTED as D7** | — |
 | 8. `ResearchQuery.experiment{exp_id, arm}` + `personalization_profile_ref` | **ACCEPTED as D9** | — |
 | 9. Envelope rule for gate-crossing events; add `kg.proposal.status.v1` and `erasure.completed.v1` | **ACCEPTED-MODIFIED as D2 + D4 (+ D21.11 schema)** | The rule becomes the spine's **Privacy-Gate envelope rule**. *Any* PLC-side event caused by tenant activity (gate releases, `kg.proposal.v1`, `source.recheck.requested.v1`, `reprocess.requested.v1`, `eval.case.proposed.v1` GLOBAL, `training.dataset.published.v1` GLOBAL) carries `tenantid`=null, a fresh trace root and no tenant causation chain. Attribute names are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass`. **`kg.proposal.status.v1` is REJECTED as a P9 event. It is replaced by `kg.proposal.resolved.v1`, produced by P3 (P3 → P9)** with data `{proposal_id, decision ACCEPTED\|REJECTED\|MERGED\|DEFERRED, resulting_assertion_ids[], graph_watermark, reviewer_role, decided_at, public_note_code}` (**final schema D21.11**; 05_P3 §2). The event carries no tenant IDs, is signed (`datasig`, 01_master §6.1 E6) and is broadcast to every tenant plane, which matches locally. |
-| Proposal outcome enum (R-33: P3 `DEFERRED` vs P9 `NEEDS_EVIDENCE`) | **RULED D21.11** | The public `decision` enum is exactly ACCEPTED\|REJECTED\|MERGED\|DEFERRED. "Needs more evidence" travels as `decision=DEFERRED` + `public_note_code=NEEDS_EVIDENCE` (closed vocabulary owned by P3). P9's tenant-facing `feedback.resolved.v1.outcome` may still show NEEDS_EVIDENCE, **derived** from that pair (§2.4). 01_master §6.4's union enum is superseded. |
+| Proposal outcome enum (R-33: P3 `DEFERRED` vs P9 `NEEDS_EVIDENCE`) | **RULED D21.11** | The public `decision` enum is exactly ACCEPTED\|REJECTED\|MERGED\|DEFERRED. "Needs more evidence" travels as `decision=DEFERRED` + `public_note_code=NEEDS_EVIDENCE` (closed vocabulary owned by P3). P9's tenant-facing `feedback.resolved.v1` carries it the same way: `outcome=DEFERRED` + `note_key` derived from `public_note_code=NEEDS_EVIDENCE` (§2.4; 01_master §6.4 outcome enum). |
 | Proposal-priority exposure (R-13) | **RULED D21.19** ([NOVEL — unvalidated]) | Exposure = public citation in-degree/recency (P3 Graph Query API) + distinct `tenant_bucket_key` count among gate releases + optional S2 aggregate. It is sent to P3 only as `KgProposal.exposure_bucket` `0\|1-2\|3-10\|11+` (01_master §7.21). Nothing comes from P4 (D3) (§5.6). |
 | `REVIEW_TASK` target, `MICRO_REVIEW_ANSWER` action | **ACCEPTED D21.10** | Now part of the core `FeedbackEvent` (01_master §7.10). |
 | Reason-code registries | **RULED D21.8** | Verification reason codes (incl. `MT_ANCHOR`, `LOCATOR_ONLY_ANCHOR`, `DERIVED_TEXT_TIER1`, `MASKED_SPAN_QUOTED`, `SUMMARY_AS_SUPPORT`, `UNCONFIRMED_FACT`, `RESIDENCY_NO_QUALIFIED_ENDPOINT`) are owned by P8; authority reason codes (`NEGATIVE_SIGNAL_UNDER_REVIEW`, `COVERAGE_GAP`, …) by P3. P9 consumes both read-only. The feedback `ReasonCode` vocabulary (§5.2) stays P9-owned, with a mapping to both registries (§5.2). |
 | `source.recheck.requested.v1` schema ownership | **RULED D20.9** (owner P9) | P9 confirms the 01_master §6.4 field list as canonical; the schema is in §2.4. |
 | `acquire.requested.v1` with reason `MATTER_WATCH` | **RULED D20.2** (producer: the P9 Privacy Gate, unattributed) | P7 hands unresolved court identifiers to the gate; `p9-global` emits the request with `tenantid`=null (§5.5.4). |
-| Redaction acknowledgements | **RULED D19.3 + D21.3** | P9 is a consumer of `doc.redacted.v1`. After re-masking (§5.12), `p9-global` and each tenant cell's `p9-tenant` emit `redaction.applied.v1 {overlay_id, consumer: "P9", applied_at, generations_purged[]}` with `tenantid`=null, for every overlay. |
+| Redaction acknowledgements | **RULED D19.3 + D21.3** | P9 is a consumer of `doc.redacted.v1`. After re-masking (§5.12), `p9-global` emits `redaction.applied.v1 {overlay_id, consumer: "P9", applied_at, generations_purged[]}` with `tenantid`=null for every overlay; each cell's `p9-tenant` is covered by that cell's single `CELL:<cell_id>` ack (D22.4). |
 | `LLMCallRecord` consumers | **RULED D19.9** | P9 consumes Gateway `LLMCallRecord`s (tenant plane) for lineage and erasure. Every P9 model call (preference extraction, uptake alignment, LLM-judge) is linked to its `LLMCallRecord` in `lineage_edge` (§5.12). |
 | `ConsentRecord` ownership | **RULED D21.16** | `ConsentRecord` (`cns_`) is a **P7-owned** core object (normative schema 09_P7 §2.3.8) consumed by P9 and P8. §2.4 mirrors it. |
 | `training.dataset.published.v1` consumers | **RULED D21.3** | Consumers are P3 and P5. |
@@ -89,7 +89,7 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | `erasure.completed.v1` (D21.3) | P7 | tenant topic | closes the erasure in P9's `erasure_ledger` once P7 has every consumer's ack |
 | `LLMCallRecord` (D19.9) | Model Gateway (13_cross_cutting §4.2; 01_master §7.24) | tenant-plane trace store | links each P9 model call to its lineage for erasure and audit (§5.12) |
 | Court identifiers to watch (`MATTER_WATCH` candidates) | P7 Court Sync (09_P7 §5.11) | tenant-plane gate queue | unresolved CNR / SC diary / case numbers of *public* proceedings; released unattributed (§5.5.4) |
-| `VerificationReport` / `verification.completed.v1` (D4) | P8 | sync / tenant topic `tpl.<tenant>.verification.v1` | P8 verdicts (IDs, statuses, bands, reason codes from the P8 registry, D21.8; never text) are *machine* labels used to cross-check human feedback (§5.2 mapping, §5.3 step 4) |
+| `VerificationReport` / `verification.completed.v1` (D4) | P8 | sync / tenant topic `tpl.<tenant>.verification.completed.v1` | P8 verdicts (IDs, statuses, bands, reason codes from the P8 registry, D21.8; never text) are *machine* labels used to cross-check human feedback (§5.2 mapping, §5.3 step 4) |
 | `eval.case.adjudicated.v1` (D4) | P8 | same plane as the candidate | `{candidate_id, decision ACCEPTED\|REJECTED\|MERGED, eval_case_id?}`; closes the pipeline (c) loop and updates `actor_reliability` (§5.8) |
 
 ### 2.2 Outputs
@@ -105,7 +105,7 @@ Spine v1.0 (the principal architect's decision record, D1–D21, in 01a_spine_de
 | `feedback.resolved.v1` (**new**) | P10 | tenant | tells the lawyer what happened to their flag ("accepted by editor, graph updated") — trust and engagement |
 | ~~`kg.proposal.status.v1`~~ | — | — | *Superseded (D4):* the public proposal outcome is **`kg.proposal.resolved.v1`, produced by P3** and consumed here (§2.1) |
 | `erasure.applied.v1` (D20.15) | P7 erasure workflow | tenant | `{erasure_id, consumer: "P9", applied_at, scope}` (+ optional `rows_deleted`, `artifacts_rebuilt[]` for the certificate). P7 aggregates all acks and is the **only** producer of `erasure.completed.v1` (D21.3) (§5.12) |
-| `redaction.applied.v1` (D19.3) | P0 redaction ledger | global (`plc.redaction.applied.v1`, `tenantid`=null) | `{overlay_id, consumer: "P9", applied_at, generations_purged[]}`, sent for every overlay by `p9-global` and by each cell's `p9-tenant` (§5.12) |
+| `redaction.applied.v1` (D19.3) | P0 redaction ledger | global (`plc.redaction.applied.v1`, `tenantid`=null) | `{overlay_id, consumer: "P9", applied_at, generations_purged[]}`, sent for every overlay by `p9-global`; `p9-tenant` re-masking is reported through its cell's `CELL:<cell_id>` ack (D22.4; §5.12) |
 | `acquire.requested.v1` reason `MATTER_WATCH` (D16, D20.2) | P0 | global | produced only by `p9-global` from gate releases; `tenantid`=null; `target{scheme CNR\|SC_DIARY_NO\|CASE_NO, value, court_hint}` (§5.5.4) |
 
 ### 2.3 Hand-offs (who does what next)
@@ -149,7 +149,9 @@ type FeedbackEvent = {
 ```ts
 type RetrievalServed = {            // envelope: tenantid = ten_…, dataclass = TENANT_CONFIDENTIAL; topic tpl.<tenant>.retrieval.served.v1
   impression_id: string; query_id: string /* qry_ */; trace_id: string; matter_id?: string;
-  surface: string; intent: string; mode: "QUICK"|"STANDARD"|"DEEP"; as_of_legal_date: string; forum?: string;
+  surface: string; requester: { kind: "USER"|"AGENT"; agent_role?: string };
+  intent: string; mode: "QUICK"|"STANDARD"|"DEEP"; as_of_legal_date: string; as_known_at: string; forum: string;
+  stance_target?: "SUPPORTING"|"ADVERSE"|"BOTH";
   ranker_version: string;                                                   // P9: intervention harvesting
   experiment?: { exp_id: string; arm: string; interleave?: { method: "TEAM_DRAFT"; team_of: Record<string,"A"|"B"> } };  // P9
   items: Array<{ item_id: string; anchor_ids: string[]; work_id: string|null; position: number;
@@ -157,10 +159,11 @@ type RetrievalServed = {            // envelope: tenantid = ten_…, dataclass =
                  propensity: number;        // P9: P(shown at this position | ranking policy); 1.0 if deterministic
                  randomized: boolean;       // P9: part of RandPair/top-k swap intervention
                  features_ref: string;      // P9: pointer to feature vector snapshot (P5 writes, tenant-scoped Parquet)
-                 stance?: "SUPPORTS"|"ADVERSE"|"NEUTRAL"|"MIXED"; binding_on_forum?: string }>;
+                 role: string /* EvidenceItem.role */; stance?: "SUPPORTS"|"ADVERSE"|"NEUTRAL"|"MIXED"; binding_on_forum?: string;
+                 status?: string; definitive?: boolean }>;
   legs_contrib: Record<string, number>; latency_ms_by_stage: Record<string, number>;
   pipeline_version: string; index_generation: string; graph_watermark: number /* int64 */;
-  rendered_at: string;
+  rendered_at?: string;
 };
 ```
 
@@ -267,9 +270,9 @@ type ConsentRecord = {
 ```ts
 // feedback.resolved.v1 — tenant plane (tpl.<tenant>.feedback.resolved.v1) → P10
 type FeedbackResolved = { feedback_ids: string[] /* fb_ */; proposal_id?: string /* kgp_ */;
-  outcome: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED"|"NEEDS_EVIDENCE"|"LOCAL_ONLY";
-  //   ACCEPTED/REJECTED/MERGED/DEFERRED copy kg.proposal.resolved.v1.decision; NEEDS_EVIDENCE is derived from
-  //   decision=DEFERRED ∧ public_note_code=NEEDS_EVIDENCE (D21.11); LOCAL_ONLY = the flag never crossed the gate
+  outcome: "ACCEPTED"|"REJECTED"|"MERGED"|"DEFERRED"|"LOCAL_ONLY";   // closed enum = 01_master §6.4
+  //   ACCEPTED/REJECTED/MERGED/DEFERRED copy kg.proposal.resolved.v1.decision; "needs evidence" is outcome=DEFERRED with
+  //   note_key from public_note_code=NEEDS_EVIDENCE (D21.11), never a separate outcome; LOCAL_ONLY = the flag never crossed the gate
   delta_id?: string; graph_watermark?: number; note_key: string /* P10 i18n key, from public_note_code or a local gate-deny reason */ };
 
 // source.recheck.requested.v1 — global plane (plc.source.recheck.requested.v1) → P0. Schema owner P9 (D20.9); Privacy-Gate envelope.

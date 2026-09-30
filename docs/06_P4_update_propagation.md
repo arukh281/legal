@@ -61,7 +61,7 @@ This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 disposi
 
 | # | P4 proposal (§2.4) | Disposition |
 |---|---|---|
-| SP4-1 | `impact.detected.v1` as a public broadcast (`tenantid`=null) + O1 fields; drop "P7 registers dependency fingerprints with P4" | **ACCEPTED as D3 + D5** (merged with P7 §2.5-2 and P10 S10-3). <br/>• The topic is **`plc.impact.public.v1`**. <br/>• Each tenant cell's Impact Matcher (P4-owned `impact-match-core`, run by P7, also on-prem) matches it against the private `matter_dependency` index. Tenants download whole manifests and never do per-ID lookups. P4 stores no tenant dependency sets. <br/>• Modified: `verification` is `{definitive, review_state}` per D5 (was `state`). 01_master §6.3 and §14 R-19 still write `verification.state`, so for every `schemaversion` 1.x P4 also emits `state` as a read alias with the same value. P7 matchers written to either name keep working, and the alias is dropped at v2. `affected[]` is `{id, ring, via, weight}`; `via_assertion_id` stays as a P4 extra. <br/>• The signature carrier is the CloudEvents extension **`datasig`** (Ed25519 JWS over `data`; 01_master §6.1 E6, §14 R-32). |
+| SP4-1 | `impact.detected.v1` as a public broadcast (`tenantid`=null) + O1 fields; drop "P7 registers dependency fingerprints with P4" | **ACCEPTED as D3 + D5** (merged with P7 §2.5-2 and P10 S10-3). <br/>• The topic is **`plc.impact.public.v1`**. <br/>• Each tenant cell's Impact Matcher (P4-owned `impact-match-core`, run by P7, also on-prem) matches it against the private `matter_dependency` index. Tenants download whole manifests and never do per-ID lookups. P4 stores no tenant dependency sets. <br/>• Modified: `verification` is `{definitive, review_state}` per D5 (was `state`). Earlier drafts of 01_master §6.3 and §14 R-19 wrote `verification.state` (now corrected to `review_state`), so for every `schemaversion` 1.x P4 also emits `state` as a read alias with the same value. P7 matchers written to either name keep working, and the alias is dropped at v2. `affected[]` is `{id, ring, via, weight}`; `via_assertion_id` stays as a P4 extra. <br/>• The signature carrier is the CloudEvents extension **`datasig`** (Ed25519 JWS over `data`; 01_master §6.1 E6, §14 R-32). |
 | SP4-2 | Concrete `reprocess.requested.v1` schema | **ACCEPTED; schema owner P4 (D21.15)**, with the reason enum of O2 (incl. `FEEDBACK`). Modified: the campaign prefix is **`camp_`** (D12; was `cmp_`). **`FRESH_CITER` is not a reason:** P5's fresh-citer reprocess was REJECTED (D21.1), and 01_master §6.3's listing of it is superseded. Producers beyond P4 campaigns are P3 (one `work_id`, lane RT, ≤ 1 per work per hour, `reason=QUALITY_ALERT`; 01_master §14 R-27), P9-global and ops. The P4 ledger observes every request. |
 | SP4-3 | `graph.delta.v1` `cause.kind ∈ {RECOMPUTE, SCHEDULED}`; P3 `commit_status_batch` | **ACCEPTED as D4; signature ratified D20.17.** The full enum is `EXTRACTION\|HUMAN_REVIEW\|RECOMPUTE\|SCHEDULED\|RETRACTION\|PROPOSAL\|IDENTITY` (D4 set + `IDENTITY`, 01_master §6.3, §14 R-17). P3 emits a delta, possibly empty, for every `doc.parsed.v1`. |
 | SP4-4 | New sync object `Freshness` | **ACCEPTED as D9** (P4-owned): `law_current_to`, `capture_frontier`, `propagation_frontier`, `stage_lag`, `known_gaps`, `source_health` (O4). |
@@ -74,7 +74,7 @@ This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 disposi
 **Renames and semantics this doc now follows:**
 - Envelope extension attributes (D2) are `tenantid`, `causationid`, `idempotencykey`, `schemaversion` and `dataclass` (`PUBLIC` on every PLC topic). Payload fields keep snake_case.
 - `cmp_` → `camp_`.
-- `verification.state` → `verification.review_state` (D5). A `state` read alias is emitted through v1.x because 01_master §6.3 still uses that name.
+- `verification.state` → `verification.review_state` (D5). A `state` read alias is emitted through v1.x for readers written against earlier drafts (01_master §6.3 now lists both).
 - `judgment.expected.v1` fields per 01_master §6.4 (`pronounced_on`, `bench{strength, judge_ids[]}`, `evidence_raw_id`, `source_kind`; was `expected_on`, `bench_strength`, `evidence{kind}`).
 - Court IDs use the canonical `crt_IN_…` form (01_master §14 R-09), e.g. `crt_IN_SC`, `crt_IN_HC_DEL` (was `crt_sc`, `crt_dhc`).
 - The redaction input is the single event **`doc.redacted.v1`** (`data` = `RedactionOverlay`). This replaces "redaction / suppression records".
@@ -115,7 +115,7 @@ This doc follows the spine v1.0 decision record (D1–D21; the D19–D21 disposi
 
 **Cross-phase points raised by earlier drafts:**
 - *Ruled D20.16:* topic names follow `{plane}.{domain}.{event}.v{n}`, and all producers, including P0, adopt them.
-- `stage_lag` keeps P4's `p95_min` breakdown as a sub-object (`stage_lag.p95_min.{parse, index, graph, impact}`). 01_master §7.14 names it `stage_lag_p95_min`, and P4 serves that flat name as an alias in v1.
+- `stage_lag` keeps P4's `p95_min` breakdown as a sub-object (`stage_lag.p95_min.{parse, index, graph, impact}`). 01_master §7.14 now uses the same D9 shape; P4 also serves the earlier flat name `stage_lag_p95_min` as an alias in v1.
 
 ### 2.1 Inputs
 

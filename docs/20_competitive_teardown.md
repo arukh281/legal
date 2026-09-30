@@ -416,7 +416,15 @@ A dimension scorecard follows in §3.23.
 ### 3.10 NyaySaathi, India
 - **Facts:** Noida-based. Daily judgment updates with AI Q&A; research across acts, sections, judgments and notifications; AI draft analysis for compliance and issue spotting; document generation; a mobile app with a free trial [CT-21, VC].
 - **Assessment (inference):** a small-practice tool. No evidence of a treatment graph, temporal statutes or firm-grade deployment.
-- **Threat:** low for B2B multi-seat firms.
+- **Does well:** it bundles the daily-update habit (new judgments) with a draft-review tool ("AI Draft Analysis Tool" for "instant compliance checks, issue spotting, and recommendations", with document upload). That targets the same "notice arrives → what now" moment as our P6, at solo-practice scale [CT-21, VC; homepage re-checked in final QC, 30 Sep 2026].
+- **Fails / gaps (structural, from the homepage; no user reviews or independent evaluation found, see §1.3):**
+  - The homepage says nothing about how answers are sourced, cited or verified.
+  - It makes no accuracy or hallucination claim or disclaimer.
+  - It shows no citator or overruled flags.
+  - It has no multi-seat, firm-collaboration, security or data-handling statements [CT-21].
+  - For a B2B firm buyer these are disqualifying omissions, whatever the underlying quality.
+- **Probable architectural cause (inference):** the product appears to be generic LLM Q&A and draft review over a judgment and statute corpus. It shows no anchored-citation or verification layer and no typed treatment data. Missing firm features suggest a single-user consumer-SaaS design. These match §4 patterns F4 (misgrounding unchecked), F5 (no typed Indian citator) and F9 (opaque evaluation). The missing firm layer matches F8 (matter context disconnected from the law).
+- **Threat / borrow:** low for B2B multi-seat firms. Borrow the framing that draft review sits next to the daily feed; P10 S1 "Today" already puts memos and the digest on one screen.
 
 ### 3.11 CLAW (clawlaw.in), India
 - **Facts:** "All-in-one legal case management & litigation software for India" [CT-22, VC]:
@@ -428,6 +436,7 @@ A dimension scorecard follows in §3.23.
 - **Gaps (inference):**
   - "30 crore+ cases" is overwhelmingly docket metadata and orders, not a curated judgment corpus.
   - No documented reasoning, treatment or verification.
+- **Probable architectural cause (inference; QC addition):** a practice-management system built on docket metadata, with search added on top. The unit of storage is the case record and its orders, not a parsed judgment with anchored paragraphs. Treatment and verification layers would require a second data model (§4 F5, F8).
 - **Threat:** medium as a channel owner in solo and small firms.
 - **Borrow:** the WhatsApp alert channel (P10). Indian litigators live there.
 
@@ -444,6 +453,9 @@ A dimension scorecard follows in §3.23.
   - Verification against a third-party corpus [CT-23] is an existence check that inherits IK's lack of typed treatment (inference).
   - Its trust ceiling is set by someone else's data.
   - By its own number, about 1 citation in 20 is wrong, and no method is published (inference from the 95% claim [CT-23]).
+- **Probable architectural cause (inference; QC addition):**
+  - Verification is delegated to an existence check against a third-party corpus, not an entailment check against an anchored paragraph. That is §4 F4: misgrounding survives an existence check.
+  - Credit-metered LLM calls pass variable cost to the user (§4 F13).
 - **Threat:** low–medium (solo segment).
 
 ### 3.13 Court-side systems: Adalat AI, SUPACE, SUVAS
@@ -546,6 +558,11 @@ A dimension scorecard follows in §3.23.
 - Naive retrieval and inapplicable authority dominate its measured hallucinations [CT-38].
 - Blending open-web content into legal answers [CT-35] increases the provenance risk surface (inference).
 
+**Probable architectural cause** (inference; QC addition)
+- The citator is applied mainly *after* generation, as the Shepard's Citation Agent that verifies emitted citations [CT-35]. It does not act as a ranking and filtering input *before* generation. Inapplicable (overruled or wrong-jurisdiction) authority can therefore still reach the model's context, which matches the 38% inapplicable-authority share measured by Stanford [CT-38] (§4 F2).
+- Semantic retrieval over whole-document or chunk similarity explains the naive-retrieval share (§4 F1, F14).
+- Our design moves authority status into P5 ranking (07_P5 §5.9) *and* keeps post-hoc verification (P8).
+
 **Borrow**
 - The citation-agent pattern: already P8.
 - The model router: already the spine's Model Gateway.
@@ -564,6 +581,12 @@ A dimension scorecard follows in §3.23.
 
 **Gap for India**
 - No evident Indian depth [CT-42].
+
+**Fails / gaps (beyond India)** (QC addition)
+- No Vincent-specific failure evidence was found in this pass. The one independent evaluation that included Vincent (VLAIR, Feb 2025) tested document tasks, not research or strategy. Per-vendor scores are image-embedded and could not be read [CT-40, snippet]. We therefore make no claim about Vincent's error rates.
+
+**Probable architectural cause of the India gap** (inference)
+- A breadth-first global corpus (100+ countries, 1B+ documents claimed [CT-41][CT-42]) with shared workflows. Jurisdiction-specific authority models are costly to build per country, so smaller markets get search without a typed treatment or forum model (§4 F10 multi-jurisdiction degradation).
 
 **Borrow**
 - Workflow templates such as the jurisdiction comparison. The Indian analogue is a cross-High-Court comparison ("how do the Bombay vs Delhi HCs treat X"), which is P5/P6 work.
@@ -1061,7 +1084,7 @@ Consequences:
 - [CT-25] Moneylife. "Kerala Becomes 1st State To Make AI-based Witness Recording Mandatory in All Courts." 7 Oct 2025. https://www.moneylife.in/article/kerala-becomes-1st-state-to-make-aibased-witness-recording-mandatory-in-all-courts/78510.html — verified
 - [CT-26] Bar & Bench. "Shardul Amarchand Mangaldas announces partnership with Harvey AI." 4 Jun 2025. https://www.barandbench.com/news/corporate/shardul-amarchand-mangaldas-announces-partnership-with-harvey-ai — verified
 - [CT-27] Bar & Bench. "AZB & Partners announces adoption of Harvey AI." 10 Sep 2025. https://www.barandbench.com/news/corporate/azb-partners-announces-adoption-of-harvey-ai — verified
-- [CT-28] Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office — snippet
+- [CT-28] Harvey. "Harvey to Expand Team with New Bengaluru Office." 10 Jul 2025. https://www.harvey.ai/blog/harvey-to-expand-team-with-new-bengaluru-office — verified (engineering, sales and operations; re-checked in final QC, doc 25)
 - [CT-29] Harvey. "Harvey raises growth round at $11 billion valuation co-led by GIC and Sequoia." 25 Mar 2026. https://www.harvey.ai/fr-FR/blog/harvey-raises-growth-round-at-dollar11-billion-valuation-co-led-by-gic-and-sequoia — verified
 - [CT-30] Unite.ai. "Harvey secures $550M in fresh funding; valuation climbs to $15.5B." 9 Sep 2026. https://www.unite.ai/harvey-secures-550m-in-fresh-funding-valuation-climbs-to-15-5b/ — verified (secondary; Tenet and LAB details)
 - [CT-31] Sacra. "Harvey" company profile (ARR estimates). https://sacra.com/c/harvey/ — snippet

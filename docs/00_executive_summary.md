@@ -12,7 +12,7 @@ We are building a **paragraph-anchored, time-aware, provenance-first model of In
 
 That graph is joined to a **tenant-isolated matter workspace**. When a notice arrives, the system produces a verified strategy memo, in which every sentence traces to a specific paragraph. When the law changes overnight, the affected paragraph in a firm's live memo or draft is flagged the next morning.
 
-The model is not the moat, because general models are near parity on legal research ([20 §6.1](20_competitive_teardown.md)). The moat is the verified treatment ledger, the matter-level propagation of changes, and a consented evaluation and feedback flywheel with our partner firm.
+The model is not the moat, because general models are near parity on legal research ([20 §6.1](20_competitive_teardown.md)). Nor is capital: the whole one-time corpus build is ≈$90K at 5M documents ([13 §3.3](13_cross_cutting.md)). The moat is the *combination* of a verified treatment ledger, matter-level propagation of changes, and a consented evaluation and feedback flywheel with partner firms. Each rests on elapsed time, calibrated review and a public track record, which money cannot buy quickly.
 
 ## Why now, and why existing tools fall short
 
@@ -75,7 +75,7 @@ Eleven atomic phases (P0–P10) communicate only through versioned events (Cloud
 | 6 | **The "senior partner" is a deterministic workflow, not a free-form agent swarm.** It uses a closed-world citation ledger, constrained decoding, and a rules-based **Procedural Clock** for limitation periods and deadlines. One opposing-counsel pass and a bench assessor run on a different model family. | Multi-round debate; LLM-computed deadlines; judge profiling | Stanford's audit and TR's Deep Research experience show why stopping criteria and grounding must be hard-coded. Deadlines are computed from law, not predicted. No named-judge win-rates. | [08](08_P6_strategic_reasoning.md) |
 | 7 | **Verify, then show.** Deterministic warrant checks come first: the cited paragraph exists, the quote matches, the pinpoint supports the claim, the speaker role is right, the status is good law, it binds this forum, and it was the law on the date. Then an NLI model, then a judge from a different model family. Confidence is shown as 4 calibrated bands with audited error rates. | Citation-existence checks only; a single LLM judge | Existence checks do not catch misgrounding, which the market's "zero hallucination" claims ignore. | [10](10_P8_verification_evaluation.md) |
 | 8 | **Broadcast-and-match impact propagation.** Public `impact.detected` events carry no tenant ID; each firm's Impact Matcher runs inside its own boundary. Alerts have a lifecycle: provisional, confirmed, then retracted if wrong. | Registering each firm's dependency fingerprints centrally | A firm's reliance set is privileged strategy. The same design serves on-prem installs. | [06](06_P4_update_propagation.md), [09](09_P7_firm_matter_workspace.md) |
-| 9 | **Isolation and residency by construction.** Tenancy uses a "bridge" model: each firm gets its own schema, indexes, keys and caches, and large firms are promoted to dedicated cells. OpenFGA enforces ethical walls. Every model call routes to a region that fails closed. Deployments D1 (pooled SaaS) to D4 (on-prem). | Pooled indexes behind filters; a single-provider LLM | As of September 2026 there is no in-India processing for Claude. Firms that require it are served by in-India OpenAI-on-Bedrock or Azure South India endpoints, or self-hosted open-weight models. | [09](09_P7_firm_matter_workspace.md), [13](13_cross_cutting.md) |
+| 9 | **Isolation and residency by construction.** Tenancy uses a "bridge" model: each firm gets its own schema, indexes, keys and caches, and large firms are promoted to dedicated cells. OpenFGA enforces ethical walls. Every model call routes to a region that fails closed. Deployments D1 (pooled SaaS) to D4 (on-prem). | Pooled indexes behind filters; a single-provider LLM | As of September 2026 there is no in-India processing for Claude. Firms that require it are served by in-India OpenAI-on-Bedrock (GPT-5.6, India geographic profile) or Azure South India endpoints (regional deployments list only older models; the newest full-size in-region model, gpt-5.1, needs provisioned capacity), or self-hosted open-weight models. | [09](09_P7_firm_matter_workspace.md), [13](13_cross_cutting.md) |
 | 10 | **Two-plane learning with a Privacy Gate, plus eval-gated releases.** Only closed-vocabulary codes about *public* objects cross from firms to the shared layer; relevance signals cross only in aggregates of at least 5 firms. Releases must pass paired-bootstrap non-inferiority tests and zero-tolerance sentinel suites. | Training on customer data; ">1 point regression" rules of thumb | Protects privilege and DPDP obligations while still compounding quality. | [11](11_P9_feedback_learning.md), [10](10_P8_verification_evaluation.md) |
 
 ## India-specific capabilities (the differentiators)
@@ -88,7 +88,7 @@ Eleven atomic phases (P0–P10) communicate only through versioned events (Cloud
 - **Point-in-time statutes** rebuilt from amending Acts and commencement notifications, with round-trip verification and territorial variants for state amendments ([03](03_P1_ingestion_parsing.md), [21 §7](21_india_specific_legal_data.md)).
 - **Indian citator vocabulary and doctrine.**
   - Bench strength, per incuriam and sub silentio, pending references, SLP dismissals (not affirmances), and interim stays.
-  - Encoded as 22 cited doctrine rules. Contested points return both views ([21 §4–5](21_india_specific_legal_data.md)).
+  - Encoded as 24 cited doctrine rules (`rul_IN_PREC_01..24`, D20.8). Contested points return both views ([21 §4–5](21_india_specific_legal_data.md)).
 - **Multilingual by default.**
   - Anchors and quotes stay in the original language.
   - Machine translation is used only for search and reading, never as citable text ([04](04_P2_enrichment_indexing.md)).
@@ -97,14 +97,20 @@ Eleven atomic phases (P0–P10) communicate only through versioned events (Cloud
 
 **Not moats**, because each is copyable within about 6 months: the model, the number of agents, raw corpus size, "citations retrieved, not generated", on-prem packaging, crosswalk *tables*, chat, digests and WhatsApp alerts.
 
-**The durable moat is the combination of M2 × M4 × M5:**
-- **M2:** a *verified*, proposition-level treatment ledger that grows only with reviewer-hours and time.
-- **M4:** matter-linked propagation of changes, which creates compounding switching costs once firms load their matters.
-- **M5:** a consented partner-firm gold set and feedback flywheel.
+**The durable moat is the combination of M2 × M4 × M5.** No element is durable on its own:
+- **M2:** a *verified*, proposition-level treatment ledger. It grows only with *calibrated* reviewer-hours, elapsed time and an audited error record. Reviewer-hours themselves are cheap in India (tier-1 review at 5M documents is budgeted at ≈$13.5K), so a funded rival can buy the hours but not the calibration history.
+- **M4:** matter-linked propagation of changes. Switching costs rise as firms load matters and act on alerts. Matter files are portable, however, so the stickiness comes from alert precision (which depends on M2), the alert and audit history, and workflow integration.
+- **M5:** a consented partner-firm gold set and feedback flywheel. Cross-firm signals need aggregates over at least 5 firms, so the flywheel compounds across firms only once five are live.
 
-A public, reproducible Indian legal-AI benchmark (M6) turns trust into a go-to-market asset.
+A public, reproducible Indian legal-AI benchmark (M6) turns trust into a go-to-market asset. It is also the only way buyers can *see* the M2/M4 quality gap over an incumbent's case-level "overruled" flags.
 
-**Estimated lead:** 18–30 months if we execute. It falls to about 12 months if an incumbent such as SCC Online or Manupatra forms a content alliance with Harvey, mirroring the LexisNexis–Harvey deal. Our response is to lead with M4 and M5 and to offer our public corpus through an API/MCP to those assistants.
+**Estimated lead** is the time a competitor needs, *after it sees our product*, to match the combination at our quality bar. It is not a head start, because our own GA is at month 18. The estimate is 18–30 months against a funded startup. It falls to about 12 months if an incumbent such as SCC Online or Manupatra forms a content alliance with Harvey, mirroring the LexisNexis–Harvey deal. [20 §6.4](20_competitive_teardown.md) rates that alliance medium–high likelihood within 12–24 months, so ~12 months is the planning case. Our response is to lead with M4 and M5 and to offer our public corpus through an API/MCP to those assistants.
+
+**What must be true for the moat to hold** ([25 §C.1](25_final_quality_check.md)):
+- a measured, calibrated tier-1 review queue, including Hindi-reading reviewers;
+- partner lawyer-hours and data rights (retention of gold labels, time-limited exclusivity) in a signed agreement before the gold build;
+- five or more firms live for cross-firm learning;
+- published per-court treatment recall, precision and alert-precision figures.
 
 ## Scale, cost and latency (planning estimates; [13](13_cross_cutting.md))
 

@@ -121,7 +121,7 @@ ResearchQuery {
   stance_target?: "SUPPORTING"|"ADVERSE"|"BOTH",       // D9; default BOTH for CLIENT_SIDE; an opposing-counsel agent asks ADVERSE
   temporal_context?: TemporalContext,  // D16, optional; derived from MatterContext.procedural_events[] (§5.2)
   requester?: { kind: "USER"|"AGENT", agent_role?: "RESEARCH"|"OPPOSING_COUNSEL"|"BENCH"|"VERIFIER" },
-  residency_policy: "IN_ONLY"|"ANY",   // D9/D15; copied from the TEC, fail-closed: every Gateway task P5 runs honours it
+  residency_policy: "IN_ONLY"|"IN_PREFERRED"|"ANY",   // D9/D15 (01_master §7.8, §7.12 TEC enum); copied from the TEC, fail-closed: every Gateway task P5 runs honours it
   experiment?: { exp_id, arm },        // D9; echoed into retrieval.served.v1
   personalization_profile_ref?: string // D9; tenant-side profile (P9), read only inside the tenant boundary
 }
@@ -204,7 +204,7 @@ The example below is illustrative. IDs, counts, dates and the court holdings it 
                      "+definitive": true, "+reason_codes": [], "+status_confidence": 0.97,
                      "+binding_basis": {"rule_ids": ["rul_IN_PREC_…"], "authority_anchor_ids": [], "contested": false},
                      "+court_id": "crt_IN_SC", "+decision_date": "2007-xx-xx", "+reason_assertion_ids": [],
-                     "+treatment_summary": {"followed": 41, "explained": 6, "distinguished": 5, "negative": 0},
+                     "+treatment_summary": {"FOLLOWS": 41, "EXPLAINS": 6, "DISTINGUISHES": 5},   // keyed by P3 Predicate (05_P3 §2.2); no negative predicate present
                      "+graph_watermark": 88123041,
                      "+via_crosswalk": null },           // authority = AuthorityView subset + via_crosswalk + statute_version (D9)
       "stance": { "toward_client": "SUPPORTS", "confidence": 0.86, "+rationale_anchor": "wrk_01H…/en#p18" },
@@ -903,6 +903,13 @@ The figures are targets on the reference deployment: GPU rerankers on H100/L40S-
 | **Total** | **≈ 0.4 s / 0.9 s** | **≈ 2.5 s / 5 s** (7 s with corrective) | **≈ 12 s / 30 s per issue**; the matter (≤15 issues, parallel) completes in ≈ 25 s / 60 s, streamed |
 
 The reranker figures come from compute arithmetic, with hardware throughput assumptions *unverified*. R1 on 200 × 320 tokens is about 64k tokens. A 0.6B model costs ≈ 2 × 0.6e9 FLOPs per token, so the batch needs ≈ 7.7e13 FLOPs. At an effective ~300 TFLOPS (H100-class at ~30–35% utilisation) that is ≈ 0.25 s. R2 at 4B on 40 × 450 tokens needs ≈ 1.4e14 FLOPs, ≈ 0.5 s. On L4-class GPUs the same work is about 5–7× slower, so on-prem deployments with small GPUs should run QUICK/STANDARD with R1 only (`04_P2`/`13` sizing).
+
+**Reconciliation with the platform SLO (added in the final quality check, doc 25).** The system of record is 13_cross_cutting §6.1 and 01_master §11: an `EvidenceBundle` for a 1–3-issue query has p95 ≤ 2.5 s, split as decomposition 400 ms, retrieval 350, graph + status 250, rerank 450, stance 500, assembly 150 and slack 400. The STANDARD column above sums to ≈5 s p95 (7 s with a corrective round), so as written it would breach that SLO. The two decomposition and stance rows are the gap: 1,500 ms vs 400 ms, and 1,800 ms vs 500 ms. Until the owners rule, build STANDARD to the 2.5 s split:
+- decomposition and contra by a small, schema-constrained model (the LLM intent fallback shares the 400 ms);
+- stance by a batched small classifier with LLM stance only in DEEP;
+- the corrective round excluded from the SLO and reported as a `degradations[]` entry when it runs.
+
+If load tests show 2.5 s is not reachable at acceptable quality, the SLO in 13 §6.1 and 01_master §11 must be revised, and this table must not be relaxed silently. **[NOVEL — unvalidated]**
 
 ### 5.14 Caching
 
