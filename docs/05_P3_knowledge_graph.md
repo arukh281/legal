@@ -543,6 +543,29 @@ hard_neg_trigger = any NEGATIVE/REFERENCE cue ∨ p(hard_negative) ≥ 0.02 ∨ 
 
 Hindi and regional cue lists will be built with the partner firm's bilingual reviewers. We do not invent them here. Until they exist, all non-English contexts route to L3 and then to review (§8).
 
+**Cascade configuration (defaults; added in independent review).** Every symbol used above has a versioned default in `kg-cascade.yaml`. A change creates a new `method_version` and runs in SHADOW first. The values are starting points to be tuned on gold, not measurements.
+```yaml
+tau_res: 0.95              # min resolution_confidence for automatic assertions (else rule 7 in §2.1)
+tau_res_hardneg_task: 0.60 # below this, a hard-negative mention only increments a "dangling negative" counter for P1
+l1_auto_precision: 0.97    # L1 rule may emit alone only if measured precision on gold ≥ this
+hardneg_p_trigger: 0.02    # L2 p(hard_negative) that forces L3
+H_max: 0.9                 # L2 entropy (nats, over ~12 labels) above which L3 is called
+ocr_conf_min: 0.90
+tau_prop_match: 0.82       # cosine similarity for mapping a mention to a proposition when there is no pin cite
+tau_show_machine: 0.70     # tier-2 MACHINE assertion counts toward status only above this calibrated confidence
+signal_under_review: 0.50  # unverified tier-1 negative becomes a CAUTION signal at or above this
+l3_daily_budget_usd: "2 × trailing-28-day median"   # hard cap per Model Gateway contract (see below)
+```
+
+**Processing ledger and re-derivation diff (added in independent review).**
+- *Ledger.* `processed_event(idempotency_key PK, parse_id, graph_watermark, outcome)`. The consumer inserts the ledger row in the same transaction as the commit, so an at-least-once redelivery is a no-op.
+- *Re-parse.* When `doc.parsed.v1` carries `supersedes_parse_id`, the cascade runs again, and the set of new assertions is keyed by `logical_key`. Each current EXTRACTED assertion from the old parse is handled as follows:
+  - same `logical_key` and same content: untouched;
+  - same key, changed label, confidence or evidence: new version;
+  - key absent from the new set: retracted with `SOURCE_RETRACTED`. The exception is a `VERIFIED` assertion, which is **never** auto-retracted. It gets a `QUARANTINE` review task and stays in force until a human decides, because a parser regression must not silently undo editorial work.
+- *L3 result cache.* L3 results are keyed by `sha256(context_text ‖ cited_work_id ‖ allowed_labels ‖ model_id ‖ prompt_hash)`. A re-parse that leaves the context text unchanged does not pay for L3 again. The cache is invalidated only when the model or prompt changes.
+- *Budget guard.* Each Model Gateway contract (`kg.treatment.adjudicate.v1`, …) has a daily spend cap. At 80% of the cap, new L3 calls from `REPROCESS` causes pause; `DOC` causes continue. At 100% of the cap, tier-1 candidates skip L3 and go straight to the review queue as `NEGATIVE_SIGNAL_UNDER_REVIEW` (safe, but it costs reviewer time), and tier-2/3 candidates keep L2's label with `confidence` capped at 0.6. Such a breach is logged as an incident.
+
 **Training data.**
 - Gold: ~3,000 citing contexts double-annotated by partner-firm lawyers, stratified by court, era, language and label, with negatives over-sampled.
 - Silver: ~50,000 L3 labels on a stratified sample.

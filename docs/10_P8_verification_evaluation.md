@@ -82,7 +82,7 @@ type AuditRequest = { request_id: string; tenant_id: string; matter_id?: string;
 | Event | Producer | P8 use |
 |---|---|---|
 | `graph.delta.v1` (with `graph_watermark`, `status_changes[].definitive/reason_codes`, per P3 S3-3) | P3 | invalidate the verification cache; mark gold items stale (§5.10.6); generate temporal-trap sentinels from new definitive NEGATIVE statuses (§7) |
-| `eval.case.proposed.v1` (`EvalCaseCandidate`) | P9 | adjudication queue → gold/regression suites |
+| `eval.case.proposed.v1` (`EvalCaseCandidate`) *(P9-proposed spine addition, not yet in spine §G)* | P9 | adjudication queue → gold/regression suites |
 | `model.endpoint.candidate.v1` / registry change *(XC-owned name; if absent, P8 polls the registry)* | Model Gateway | trigger offline gate runs |
 | `release.candidate.v1` (CI) | build system | trigger L1/L2 suites (§5.11) |
 | `doc.parsed.v1` with a changed `pipeline_version` | P1 | anchor-stability canary checks on gold works |
@@ -186,7 +186,18 @@ type GateDecision = { gate_id; run_id; decision: "PROMOTE"|"REJECT"|"WAIVED"; ru
 |---|---|---|
 | `verification.completed.v1` | P8 → P9 (tenant plane), P10 telemetry | report_id, subject, per-claim {claim_id, status, band, reason_codes}, verifier_version, tenant_id |
 | `eval.run.completed.v1` | P8 → Model Gateway registry, P4 (backfill decisions), CI | run_id, candidate, gate decision, summary metrics |
-| `eval.case.adjudicated.v1` | P8 → P9 | candidate_id, decision ACCEPTED/REJECTED/MERGED, case_id? (closes P9's loop) |
+| `eval.case.adjudicated.v1` | P8 → P9 | candidate_id, decision ACCEPTED/REJECTED/MERGED, eval_case_id? (closes P9's loop) |
+
+All O4 events use the spine §G CloudEvents envelope unchanged. `tenant_id` is set for `verification.completed.v1` and for eval runs over `TENANT_PRIVATE` suites, and is `null` for GLOBAL eval events. `idempotency_key` = `report_id` / `run_id` / `candidate_id`. Example:
+```json
+{ "id":"01J…","type":"verification.completed.v1","specversion":"1.0","source":"p8/verifier@1.3.0",
+  "time":"2026-09-30T06:10:04Z","subject":"vrp_01J…","tenant_id":"ten_…","traceparent":"00-…",
+  "causation_id":"<VerifyRequest.request_id>","idempotency_key":"vrp_01J…","schema_version":"1",
+  "data":{ "report_id":"vrp_01J…","subject":{"kind":"MEMO_SECTION","id":"mem_…","section":"adverse_authorities"},
+           "gate":"PARTIAL","verifier_version":"p8.verifier@1.3.0|…",
+           "claims":[{"claim_id":"clm_…","status":"PARTIAL","band":"VERIFIED_WITH_CAVEAT","reason_codes":["OBITER_AS_HOLDING"]}] } }
+```
+`data` carries IDs, statuses and reason codes only — never claim text or quotes (§5.9).
 
 ### 2.4 Handoffs
 - **P6** calls `/verify` for each section. It uses `status`, `reason_codes`, `narrowed_text` and `suggested_anchor_ids` in its repair loop (P6 §5.7), and streams only sections whose gate allows it.
