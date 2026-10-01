@@ -156,3 +156,42 @@ def test_connection_reuse_leakage_prevention(rls_setup: dict[str, str]) -> None:
             assert cursor.fetchone()[0] == 0
         finally:
             cursor.execute("RESET ROLE;")
+
+
+def test_worker_job_tenant_isolation_on_connection_reuse(rls_setup: dict[str, str]) -> None:
+    """Directive #3: A worker job for Tenant A followed by a job for Tenant B on the same connection.
+
+    Verifies that worker jobs correctly set and reset tenant context and Tenant B's job cannot see Tenant A's rows.
+    """
+    t1_id = rls_setup["t1_id"]
+    t2_id = rls_setup["t2_id"]
+    u1_id = rls_setup["u1_id"]
+    u2_id = rls_setup["u2_id"]
+
+    with connection.cursor() as cursor:
+        cursor.execute("SET ROLE app_rw;")
+        try:
+            # 1. Job 1 runs for Tenant A on this worker connection
+            with tenant_db_context(tenant_id=t1_id, user_id=u1_id, purpose="JOB_RUNNER"):
+                cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
+                rows_a = cursor.fetchall()
+                assert len(rows_a) == 1
+                assert rows_a[0][0] == t1_id
+
+            # 2. Job 2 runs for Tenant B reusing the SAME connection
+            with tenant_db_context(tenant_id=t2_id, user_id=u2_id, purpose="JOB_RUNNER"):
+                cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
+                rows_b = cursor.fetchall()
+                # Must only see Tenant B's matters (or 0 if none created for B), never Tenant A's!
+                assert all(r[0] == t2_id for r in rows_b)
+                assert not any(r[0] == t1_id for r in rows_b)
+
+                # Explicit query for Tenant A rows inside Job B must return 0 rows
+                cursor.execute("SELECT * FROM tpl.matter WHERE tenant_id = %s;", [t1_id])
+                assert len(cursor.fetchall()) == 0
+
+            # 3. Post-job state on connection has context completely cleared
+            cursor.execute("SELECT count(*) FROM tpl.matter;")
+            assert cursor.fetchone()[0] == 0
+        finally:
+            cursor.execute("RESET ROLE;")

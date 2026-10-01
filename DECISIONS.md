@@ -154,10 +154,31 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ---
 
-### 2026-10-01 — Transactional Advisory Locking for Append-Only Audit Log Chains
-- **Decision:** Serialized audit event insertions per tenant using `SELECT pg_advisory_xact_lock(hashtext('audit_' || tenant_id))` and dynamically resolved chain heads via `row_hash NOT IN (SELECT prev_hash ...)`.
-- **Reason:** Under high concurrency, two parallel requests in the same tenant could query the chain head simultaneously and create duplicate branches/forks in the SHA-256 hash chain. The transactional advisory lock serializes inserts per tenant with zero cross-tenant contention.
-- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.8; `docs/09_P7_firm_matter_workspace.md` line 723; Session S03 Directive #6.
+### 2026-10-01 — O(1) Audit Chain Head Table and Monotonic Sequence
+- **Decision:** Upgraded audit event appending from a `row_hash NOT IN (SELECT prev_hash ...)` subquery to a dedicated `tpl.audit_chain_head` table and monotonic `seq bigint` column on `tpl.audit_event`, updated atomically under `pg_advisory_xact_lock(hashtext('audit_' || tenant_id))`. Added `verify_chain(tenant_id)` function.
+- **Reason:** Scanning the audit log table to find unreferenced `prev_hash` values degrades from O(1) to O(N) as the log grows and risks ambiguity if two rows ever share a hash. A dedicated per-tenant chain head table provides instantaneous O(1) head lookups. The monotonic `seq` column guarantees strict deterministic sequencing, and `verify_chain()` allows complete end-to-end cryptographic verification of hash continuity and payload integrity.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.8; `docs/09_P7_firm_matter_workspace.md` line 723; Session S03 follow-up Directive #5.
+
+---
+
+### 2026-10-01 — Dedicated `admin_rw` Role for Django Admin Operations
+- **Decision:** Created role `admin_rw NOINHERIT BYPASSRLS` for Django Admin / internal platform operations, completely separate from `app_rw` (which has `NOBYPASSRLS` and enforces RLS) and `worker` (which requires `app.purpose` logging).
+- **Reason:** Under PostgreSQL `FORCE ROW LEVEL SECURITY` on `tpl` domain tables (`tenant`, `app_user`, `matter`), connecting as `app_rw` without an active `app.tenant_id` session setting produces 0 rows on `SELECT` and blocks `INSERT`. The Django Admin operates across all tenants to provision new tenants, assign global firm users, and inspect matters. Using a dedicated `admin_rw` connection ensures internal admin operations are explicit, audited, and strictly segregated from the public API server (`app_rw`).
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §1 item 1; Session S03 follow-up Directive #2.
+
+---
+
+### 2026-10-01 — Psycopg 3 JSON Adapter and Django JSONField Deserialization Patch
+- **Decision:** Connected `django.db.backends.signals.connection_created` in `ops.apps` to register psycopg3 default adapters (`register_default_adapters`), and patched `models.JSONField.from_db_value` to gracefully pass through already-deserialized `dict` and `list` objects.
+- **Reason:** Procrastinate's PostgreSQL driver directly queries raw psycopg3 connections and expects `args` and job payloads to be returned as native Python dictionaries. When psycopg3 default adapters are registered, psycopg3 deserializes `jsonb` columns into native Python dictionaries on retrieval. However, Django's default `models.JSONField.from_db_value` expects a string from the driver and calls `json.loads(value)`, raising a `TypeError` when passed a dictionary. The narrowly scoped pass-through in `_safe_from_db_value` preserves standard Django `JSONField` behavior (natively round-tripping `dict`/`list` objects without returning strings) while maintaining 100% compatibility with Procrastinate.
+- **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §2.1; Session S03 follow-up Directive #6.
+
+---
+
+### 2026-10-01 — Mypy Strict Overrides for `allauth.*` and `core.adapters`
+- **Decision:** Added `[[tool.mypy.overrides]]` in `backend/pyproject.toml` for `allauth.*` (`ignore_missing_imports = true`) and `core.adapters` (`disallow_subclassing_any = false`), while preserving repo-wide `strict = true` across all 100 backend source files.
+- **Reason:** `django-allauth` does not ship `py.typed` markers or stub packages. Custom adapters `LawyerBrainAccountAdapter` and `LawyerBrainSocialAccountAdapter` must subclass allauth's `DefaultAccountAdapter` and `DefaultSocialAccountAdapter`. Mypy strict mode disallows subclassing untyped `Any` bases unless explicitly permitted for those adapter modules. Repo-wide type checking (`uv run mypy .`) continues to enforce strict typing across all domain and infrastructure apps without exclusions.
+- **Doc Reference:** AGENTS.md §2; Session S03 follow-up Directive #7.
 
 ---
 

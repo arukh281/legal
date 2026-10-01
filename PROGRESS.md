@@ -135,14 +135,14 @@
 ```bash
 cd backend
 
-# Type check (strict across core, workspace, gateway, anchor_lib)
-uv run mypy core workspace gateway anchor_lib
+# Type check (strict repo-wide across all 102 source files)
+uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 106 backend tests against PostgreSQL 18
+# Run all 113 backend tests against PostgreSQL 18
 uv run pytest
 
 # Test migration reversibility

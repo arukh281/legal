@@ -221,7 +221,22 @@ def run_step_logic(job_id: str, step: str, attempt: int) -> dict[str, Any]:
         if not step_fn:
             raise ValueError(f"No handler registered for ({kind}, {step})")
 
-        # Execute step function
+        # Execute step function under tenant DB context (Directive #3)
+        tenant_id = None
+        user_id = None
+        purpose = "JOB_RUNNER"
+        if isinstance(request_data, dict):
+            tenant_id = request_data.get("tenant_id")
+            user_id = request_data.get("user_id")
+            purpose = request_data.get("purpose", "JOB_RUNNER")
+            exec_ctx = request_data.get("execution_context")
+            if isinstance(exec_ctx, dict):
+                tenant_id = tenant_id or exec_ctx.get("tenant_id")
+                user_id = user_id or exec_ctx.get("user_id")
+                purpose = str(exec_ctx.get("purpose") or purpose)
+
+        from workspace.db import tenant_db_context
+
         context = {
             "job_id": job_id,
             "step": step,
@@ -230,7 +245,8 @@ def run_step_logic(job_id: str, step: str, attempt: int) -> dict[str, Any]:
             "pipeline_version": pipeline_version,
             "prior_outputs": prior_outputs,
         }
-        step_output = step_fn(context)
+        with tenant_db_context(tenant_id=tenant_id, user_id=user_id, purpose=purpose):
+            step_output = step_fn(context)
 
     # 2. In ONE transaction: commit current step output and defer next step
     steps = CHAIN_DEFINITIONS.get(kind, [])

@@ -221,7 +221,22 @@ class AuditEvent(DomainModel):
     detail = models.JSONField(null=True, blank=True)
     prev_hash = models.BinaryField(null=True, blank=True)
     row_hash = models.BinaryField()
+    seq = models.BigIntegerField(default=1)
 
     class Meta:
         managed = False
         db_table = 'tpl"."audit_event'
+
+
+class AuditChainHead(DomainModel):
+    """Current chain head for tenant audit log, enabling O(1) appends under advisory lock."""
+
+    tenant_id = models.CharField(max_length=64, primary_key=True)
+    latest_audit_id = models.CharField(max_length=64)
+    latest_hash = models.BinaryField()
+    seq = models.BigIntegerField()
+    updated_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."audit_chain_head'

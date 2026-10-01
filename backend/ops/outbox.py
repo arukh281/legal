@@ -203,7 +203,7 @@ def process_event_delivery(consumer: str, source: str, event_id: str) -> dict[st
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT id, type, source, idempotencykey, data, topic, partition_key
+            SELECT id, type, source, idempotencykey, data, topic, partition_key, tenantid
             FROM ops.event_outbox
             WHERE source = %s AND id = %s;
             """,
@@ -214,7 +214,7 @@ def process_event_delivery(consumer: str, source: str, event_id: str) -> dict[st
             logger.error("outbox_event_not_found", source=source, event_id=event_id)
             return {"status": "ERROR", "reason": "EVENT_NOT_FOUND"}
 
-        ev_id, ev_type, ev_source, idem_key, data, topic, part_key = row
+        ev_id, ev_type, ev_source, idem_key, data, topic, part_key, ev_tenant_id = row
 
     payload_hash = hashlib.sha256(canonical_json_bytes(data)).digest()
 
@@ -261,20 +261,27 @@ def process_event_delivery(consumer: str, source: str, event_id: str) -> dict[st
                     return {"status": "PARKED", "reason": "IDEMPOTENCY_KEY_REUSE"}
 
             # First time seeing this idempotency key for this consumer
-            # 1. Execute consumer handler side-effect
+            # 1. Execute consumer handler side-effect under tenant context (Directive #3)
+            from workspace.db import tenant_db_context
+
             handler_fn = HANDLER_REGISTRY.get((consumer, ev_type))
             if handler_fn:
-                handler_fn(
-                    {
-                        "id": ev_id,
-                        "type": ev_type,
-                        "source": ev_source,
-                        "idempotencykey": idem_key,
-                        "data": data,
-                        "topic": topic,
-                        "partition_key": part_key,
-                    }
-                )
+                with tenant_db_context(
+                    tenant_id=ev_tenant_id,
+                    user_id="outbox_consumer",
+                    purpose="OUTBOX_CONSUMER",
+                ):
+                    handler_fn(
+                        {
+                            "id": ev_id,
+                            "type": ev_type,
+                            "source": ev_source,
+                            "idempotencykey": idem_key,
+                            "data": data,
+                            "topic": topic,
+                            "partition_key": part_key,
+                        }
+                    )
 
             # 2. Record in ops.event_inbox in the SAME transaction
             cursor.execute(

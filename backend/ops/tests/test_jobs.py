@@ -229,3 +229,50 @@ def test_job_chain_crash_recovery_killing_real_worker_process() -> None:
         assert "crash_step_a" in step_names
         assert "crash_step_b" in step_names
         assert "crash_step_c" in step_names
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_chain_step_sets_and_resets_tenant_db_context() -> None:
+    """Directive #3: Job step executions set and reset tenant context from request data."""
+    kind = "TEST_TENANT_CONTEXT_CHAIN"
+    observed_tenants: list[str | None] = []
+
+    @register_step(kind, "tenant_step_1")
+    def tenant_step_1(context: dict[str, Any]) -> dict[str, Any]:
+        with connection.cursor() as cur:
+            cur.execute("SELECT current_setting('app.tenant_id', true);")
+            val = cur.fetchone()[0]
+            observed_tenants.append(val)
+        return {"observed": val}
+
+    # Job for Tenant Alpha
+    job_a = start_job_chain(
+        kind=kind,
+        idempotency_key="tenant-ctx-job-a",
+        request={"tenant_id": "ten_alpha", "user_id": "usr_alpha"},
+        pipeline_version="comp@1.0|m|s|r|p",
+    )
+    res_a = run_step_logic(job_id=job_a, step="tenant_step_1", attempt=1)
+    assert res_a["status"] == "DONE"
+    assert observed_tenants[-1] == "ten_alpha"
+
+    # Context must be reset immediately after job A finishes
+    with connection.cursor() as cur:
+        cur.execute("SELECT current_setting('app.tenant_id', true);")
+        assert cur.fetchone()[0] in (None, "")
+
+    # Job for Tenant Beta on the exact same connection
+    job_b = start_job_chain(
+        kind=kind,
+        idempotency_key="tenant-ctx-job-b",
+        request={"tenant_id": "ten_beta", "user_id": "usr_beta"},
+        pipeline_version="comp@1.0|m|s|r|p",
+    )
+    res_b = run_step_logic(job_id=job_b, step="tenant_step_1", attempt=1)
+    assert res_b["status"] == "DONE"
+    assert observed_tenants[-1] == "ten_beta"
+
+    # Context must be reset immediately after job B finishes
+    with connection.cursor() as cur:
+        cur.execute("SELECT current_setting('app.tenant_id', true);")
+        assert cur.fetchone()[0] in (None, "")

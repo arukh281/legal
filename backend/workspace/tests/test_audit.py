@@ -15,7 +15,7 @@ import pytest
 from django.db import connection, transaction
 
 from anchor_lib.ids import mint_id
-from workspace.audit import record_audit_event
+from workspace.audit import record_audit_event, verify_chain
 from workspace.models import AuditEvent, Tenant
 
 
@@ -54,10 +54,10 @@ def test_audit_event_hash_chain_integrity(audit_tenant: Tenant) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT audit_id, at, actor, action, object_ref, matter_id, decision, detail, prev_hash, row_hash
+            SELECT audit_id, at, actor, action, object_ref, matter_id, decision, detail, prev_hash, row_hash, seq
             FROM tpl.audit_event
             WHERE tenant_id = %s
-            ORDER BY at ASC, audit_id ASC
+            ORDER BY seq ASC
             """,
             [t_id],
         )
@@ -78,6 +78,7 @@ def test_audit_event_hash_chain_integrity(audit_tenant: Tenant) -> None:
             detail_json,
             prev_hash,
             row_hash,
+            seq,
         ) = r
         prev_hash_bytes = bytes(prev_hash)
         row_hash_bytes = bytes(row_hash)
@@ -96,6 +97,7 @@ def test_audit_event_hash_chain_integrity(audit_tenant: Tenant) -> None:
             "detail": detail,
             "matter_id": matter_id,
             "object_ref": object_ref,
+            "seq": seq,
             "tenant_id": t_id,
         }
         canonical_bytes = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -231,3 +233,73 @@ def test_audit_concurrent_inserts_serialize_without_forks(audit_tenant: Tenant) 
     assert visited_count == total_events, (
         f"Chain traversal reached {visited_count} events instead of {total_events}"
     )
+
+
+def test_verify_chain_on_valid_log(audit_tenant: Tenant) -> None:
+    """verify_chain returns (True, None) on a clean, valid hash-chained audit log."""
+    t_id = audit_tenant.tenant_id
+    for i in range(5):
+        record_audit_event(
+            tenant_id=t_id,
+            actor="usr_actor",
+            action=f"ACTION_{i}",
+            detail={"count": i},
+        )
+
+    is_valid, err = verify_chain(t_id)
+    assert is_valid is True
+    assert err is None
+
+
+def test_verify_chain_detects_payload_tampering(audit_tenant: Tenant) -> None:
+    """verify_chain detects payload alteration (hash mismatch)."""
+    t_id = audit_tenant.tenant_id
+    for i in range(3):
+        record_audit_event(
+            tenant_id=t_id,
+            actor="usr_actor",
+            action=f"ACTION_{i}",
+        )
+
+    # Disable trigger temporarily to simulate malicious raw DB tamper
+    with connection.cursor() as cursor:
+        cursor.execute("ALTER TABLE tpl.audit_event DISABLE TRIGGER audit_event_append_only;")
+        try:
+            cursor.execute(
+                "UPDATE tpl.audit_event SET action = 'TAMPERED_ACTION' WHERE tenant_id = %s AND seq = 2;",
+                [t_id],
+            )
+        finally:
+            cursor.execute("ALTER TABLE tpl.audit_event ENABLE TRIGGER audit_event_append_only;")
+
+    is_valid, err = verify_chain(t_id)
+    assert is_valid is False
+    assert err is not None
+    assert "Hash mismatch" in err
+
+
+def test_verify_chain_detects_broken_hash_link(audit_tenant: Tenant) -> None:
+    """verify_chain detects broken prev_hash links between successive records."""
+    t_id = audit_tenant.tenant_id
+    for i in range(3):
+        record_audit_event(
+            tenant_id=t_id,
+            actor="usr_actor",
+            action=f"ACTION_{i}",
+        )
+
+    # Disable trigger temporarily to tamper with prev_hash
+    with connection.cursor() as cursor:
+        cursor.execute("ALTER TABLE tpl.audit_event DISABLE TRIGGER audit_event_append_only;")
+        try:
+            cursor.execute(
+                "UPDATE tpl.audit_event SET prev_hash = %s WHERE tenant_id = %s AND seq = 2;",
+                [b"\xff" * 32, t_id],
+            )
+        finally:
+            cursor.execute("ALTER TABLE tpl.audit_event ENABLE TRIGGER audit_event_append_only;")
+
+    is_valid, err = verify_chain(t_id)
+    assert is_valid is False
+    assert err is not None
+    assert "Broken hash chain" in err
