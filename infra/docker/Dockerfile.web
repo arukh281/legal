@@ -1,0 +1,27 @@
+# Python 3.13 Web Service (ASGI under Uvicorn)
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Copy dependency specifications
+COPY backend/pyproject.toml backend/uv.lock backend/
+WORKDIR /app/backend
+RUN uv sync --frozen || uv sync
+
+# Copy backend application
+COPY backend/ /app/backend/
+
+EXPOSE 8000
+
+# Run under uvicorn (ASGI) per requirement #7
+CMD ["uv", "run", "uvicorn", "core.asgi:application", "--host", "0.0.0.0", "--port", "8000"]

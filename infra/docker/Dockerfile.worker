@@ -1,0 +1,25 @@
+# Python 3.13 Worker Service (Procrastinate)
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Copy dependency specifications
+COPY backend/pyproject.toml backend/uv.lock backend/
+WORKDIR /app/backend
+RUN uv sync --frozen || uv sync
+
+# Copy backend application
+COPY backend/ /app/backend/
+
+# Run Procrastinate worker on rt, bulk, dispatch queues (no-listen-notify for Django connector)
+CMD ["uv", "run", "python", "manage.py", "procrastinate", "worker", "--no-listen-notify", "--queues", "rt,bulk,dispatch"]
