@@ -65,9 +65,32 @@ jobs:
         working-directory: backend
         run: uv run mypy .
 
+      - name: Bootstrap DB roles for CI
+        run: |
+          psql -h localhost -U postgres -d lawyer_brain -c "
+            DO \$\$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'app_rw') THEN
+                CREATE ROLE app_rw LOGIN PASSWORD 'app_rw' NOINHERIT NOBYPASSRLS;
+              END IF;
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'worker') THEN
+                CREATE ROLE worker LOGIN PASSWORD 'worker' NOINHERIT BYPASSRLS;
+              END IF;
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'admin_rw') THEN
+                CREATE ROLE admin_rw LOGIN PASSWORD 'admin_rw' NOINHERIT BYPASSRLS;
+              END IF;
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'plc_writer') THEN
+                CREATE ROLE plc_writer LOGIN PASSWORD 'plc_writer' NOINHERIT NOBYPASSRLS;
+              END IF;
+            END
+            \$\$;
+          "
+        env:
+          PGPASSWORD: postgres
+
       - name: Apply Migrations on PostgreSQL 18
         working-directory: backend
-        run: uv run python manage.py migrate
+        run: uv run python manage.py migrate --database owner
 
       - name: Pytest on real PostgreSQL 18 + pgvector
         working-directory: backend
