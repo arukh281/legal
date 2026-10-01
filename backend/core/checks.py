@@ -100,3 +100,33 @@ def check_runtime_db_role(
         )
 
     return errors
+
+
+@register(Tags.security)
+def check_crawler_ua_in_prod(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
+    """Ensure crawler User-Agent and contact email are explicitly configured in production (Directive #3)."""
+    errors: list[CheckMessage] = []
+    is_prod = not settings.DEBUG or getattr(settings, "ENVIRONMENT", "") == "production"
+
+    if is_prod:
+        ua = getattr(settings, "CRAWLER_USER_AGENT", "")
+        email = getattr(settings, "CRAWLER_CONTACT_EMAIL", "")
+
+        if not ua or "example.org" in ua:
+            errors.append(
+                Error(
+                    "CRAWLER_USER_AGENT must be explicitly configured with an authentic identity in production.",
+                    hint="Set CRAWLER_USER_AGENT environment variable to a valid bot name and URL.",
+                    id="core.E005",
+                )
+            )
+        if not email or "example.org" in email:
+            errors.append(
+                Error(
+                    "CRAWLER_CONTACT_EMAIL must be explicitly configured in production.",
+                    hint="Set CRAWLER_CONTACT_EMAIL environment variable to a valid contact email.",
+                    id="core.E006",
+                )
+            )
+
+    return errors

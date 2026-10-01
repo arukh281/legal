@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S03 Complete (SSO, Tenancy, `authz.can()` + RLS, Model Gateway v0)
+## Current State: Session S04 Complete (Source capture + legal gate: IBBI orders first)
 
 ### 1. What Was Built
 
@@ -128,6 +128,41 @@
 - Architectural SDK Guard Test (`test_no_direct_sdk_imports_outside_gateway`):
   - AST scanner inspects all Python files across `backend/` and asserts that `anthropic`, `openai`, and `google` SDKs are never imported outside `backend/gateway`.
 
+#### J. Source Capture & Legal Gate (`backend/ingest/` — Session S04)
+- **Repo-Wide HTTP Guard (`backend/core/http_client.py`):**
+  - Private `RawHttpClient` encapsulates `httpx.Client`. Only obtainable via `GatedHttpClient`.
+  - Architectural AST guard test (`test_no_direct_http_imports_outside_core_http_client`): scans all Python files in `backend/` and guarantees no direct imports of `httpx`, `requests`, `urllib.request`, or `aiohttp` outside `core/http_client.py` (with exemptions for gateway LLM SDK adapters and storage `boto3`).
+  - Settings `CRAWLER_USER_AGENT` and `CRAWLER_CONTACT_EMAIL` with Django startup system checks `core.E005` and `core.E006` refusing default/example values in production.
+- **Legal Gate & Cross-Process Rate Limiter (`backend/ingest/gate.py`):**
+  - `check_legal_gate`: verifies profile status (`PROVISIONAL`/`APPROVED`), kill switch, expiry, permitted access modes, allowed hours IST, and backfill night window (23:00–07:00 IST with midnight wrap).
+  - `enforce_host_rate_limit`: cross-process per-host rate limiting via PostgreSQL advisory locks (`pg_advisory_xact_lock`) and `plc.host_rate_limit`. Tested across concurrent worker processes.
+- **Content-Addressed Storage (`backend/ingest/storage.py`):**
+  - S3 / MinIO CAS storage at `raw/sha256/{h[:2]}/{h[2:4]}/{h}.pdf` and `RawBlob` table.
+  - Automatically provisions `plc-raw` bucket in MinIO during local development.
+- **IBBI Order Mirror Adapter (`backend/ingest/adapters/ibbi.py`):**
+  - Extracts listing items across `/orders/nclt`, `/orders/nclat`, `/orders/supreme-court`, `/orders/high-courts`.
+  - Stable `source_record_key = f"{section}:{file_stem}"` avoiding date/number churn.
+  - CAPTCHA breaker (`detect_captcha` halts on signature tokens, marks source `BLOCKED`).
+  - Layout drift breaker (`detect_layout_drift` halts on table/header mismatch or 0 items parsed, marks source `DEGRADED`).
+- **Resumable Source Crawler & Safety Breakers (`backend/ingest/crawler.py`):**
+  - Checkpoints page completion in `plc.crawl_checkpoint`; resumes crashed runs without duplicating work.
+  - Mass-change breaker halts and marks source `DEGRADED` if >10% of items change (after ≥20 items).
+  - Delta deduplication: skips re-downloading PDFs when URL and metadata are unchanged (`change_kind = "UNCHANGED"`, `pdf_fetched = false`); stops delta sweep after 20 consecutive unchanged records.
+  - CloudEvents outbox emission: emits `plc.raw.captured.v1` atomically with `Capture`, and `plc.source.health.v1` on run completion/failure (lane populated in `lane` column; `warc`, `norm_fingerprint`, `near_dup_hint` set to `None`).
+- **Live Archived ToU/Robots Snapshots (`backend/ingest/management/commands/seed_ibbi_profile.py`):**
+  - Fetched live from `https://ibbi.gov.in/home/website-policy` (HTTP 200, 104,889 bytes) and `https://ibbi.gov.in/robots.txt` (HTTP 404, 736 bytes), archived in CAS, and seeded into `PROVISIONAL` LegalProfile.
+- **Crawl CLI Command (`backend/ingest/management/commands/crawl_ibbi.py`):**
+  - Runs manual delta/backfill sweeps with `--section`, `--pages`, `--mode`, and `--offline` fixture replay support.
+- **Contract & Resiliency Test Suites (`backend/ingest/tests/`):**
+  - `test_http_guard.py`: repo-wide AST import verification.
+  - `test_legal_gate.py`: 8 comprehensive checks covering status, kill switch, expiry, access mode, and midnight-wrapping IST hours.
+  - `test_rate_limit.py`: concurrent multi-threaded cross-process rate limiter verification.
+  - `test_ibbi_adapter.py`: real HTML listing fixtures, CAPTCHA detection, layout drift detection.
+  - `test_crawl_idempotency.py`: first crawl yields NEW, second delta yields UNCHANGED with zero PDF re-downloads; modified PDF yields CHANGED.
+  - `test_crash_and_resume.py`: interrupted crawl resumes at page 2 from checkpoint without duplicating page 1.
+  - `test_safety_breakers.py`: CAPTCHA, layout drift, and mass-change breakers tested against fixtures.
+  - `test_outbox_events.py`: field-for-field contract verification of `raw.captured.v1` and `source.health.v1` against master architecture §6.3/§6.4.
+
 ---
 
 ### 2. How to Run It
@@ -135,48 +170,53 @@
 ```bash
 cd backend
 
-# Type check (strict repo-wide across all 102 source files)
+# Type check (strict repo-wide across all 132 source files)
 uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 113 backend tests against PostgreSQL 18
+# Run all 137 backend tests against PostgreSQL 18
 uv run pytest
 
+# Seed IBBI legal profile with live archived ToU / policy snapshots
+uv run python manage.py seed_ibbi_profile
+
+# Run IBBI crawl (e.g. NCLT 2 pages delta)
+uv run python manage.py crawl_ibbi --section nclt --pages 2 --mode delta
+
 # Test migration reversibility
-uv run python manage.py migrate gateway zero
-uv run python manage.py migrate workspace zero
-uv run python manage.py migrate
+uv run python manage.py migrate ingest zero --database=owner
+uv run python manage.py migrate ingest --database=owner
 ```
 
 ---
 
 ### 3. Stubs & Notes
-- **Downstream Domain Phases (S04–S18):**
-  - Source Capture & Ingest (P0 / `ingest`) to be built in S04.
-  - Parsing (`parse`) to be built in S05.
-  - Indexing & Retrieval (`index`, `retrieve`) to be built in S06–S07.
-  - Citator (`citator`) to be built in S09.
+- **Downstream Domain Phases (S05–S18):**
+  - Parsing (`parse` / P1): S05 will consume `raw.captured.v1` outbox events, extract text layer/OCR, parse judgments/statutes, assign anchors, and emit `doc.parsed.v1`.
+  - Indexing & Retrieval (`index`, `retrieve` / P2, P5): S06–S07.
+  - Citator (`citator` / P3): S09.
 - **Model Gateway Real-API Smoke Test:**
   - `test_real_llm_smoke` is marked `@pytest.mark.skipif` unless real API keys (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`) are present in the environment.
 
 ---
 
 ### 4. Known Issues
-1. **Docker configuration modification:** During initial Docker authentication troubleshooting on this host, `~/.docker/config.json` had its `credsStore` entry removed. Per user instruction, this is noted here, and all future actions outside the repository boundary strictly require prior approval.
-2. **Host port 5432 conflict:** Host machine runs a local PostgreSQL 16 on port 5432. Docker Compose maps PostgreSQL container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`). Inside the Docker Compose network, services talk on standard port 5432.
-3. **Host port 8000 conflict:** Host machine runs a Python HTTP server on port 8000. Docker Compose supports `WEB_HOST_PORT` (defaults to 8000, can be set to 8001). Vite proxy config reads `VITE_API_URL` (defaults to `http://127.0.0.1:8000`).
-4. **Procrastinate Django connector listen/notify:** Psycopg3 connection under Django connector does not support synchronous `listen_notify`. Procrastinate worker runs with `--no-listen-notify`.
-5. **Database teardown session warning during pytest:** Pytest database teardown outputs a warning if Docker Compose worker processes maintain an idle connection to the database cluster. Does not affect test runs or assertion correctness.
+1. **Docker configuration modification:** Recorded previously: `~/.docker/config.json` had its `credsStore` entry removed.
+2. **Host port 5432 conflict:** Docker Compose maps PostgreSQL container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`).
+3. **Host port 8000 conflict:** Python HTTP server on host port 8000; web port defaults to 8000 (configurable via `WEB_HOST_PORT`).
+4. **Procrastinate Django connector listen/notify:** Psycopg3 connection under Django connector runs with `--no-listen-notify`.
+5. **Database migrations require `--database=owner`:** Due to multi-role architecture, migration runner routes DDL through the `owner` connection alias.
 
 ---
 
-### 5. What the Next Session (S04) Needs
-- **Session S04: Source capture + legal gate (IBBI orders first):**
-  - Source capture pipeline (P0 / `ingest`).
-  - Legal gate implementation: adapter requires `legal_profile` (PROVISIONAL or APPROVED).
-  - Obey robots.txt and profile rate limit (default ≤ 1 request per 3 s; backfills at night IST).
-  - Zero CAPTCHA bypass or solving.
-  - Capture IBBI orders, store raw payloads in S3/MinIO with SHA-256 content address, record metadata in `plc.source_record`.
+### 5. What the Next Session (S05) Needs
+- **Session S05: Parsing (text layer + OCR, judgment and statute parsers, anchors, citation extraction):**
+  - Consumes `raw.captured.v1` events from `ops.event_outbox`.
+  - PDF text layer extraction (PDF.js / pypdf / Amazon Textract OCR fallback).
+  - Indian legal document structure parsing (coram, bench, date, party names, headnotes, paragraph numbering).
+  - Anchor generator for judgment paragraphs (`wrk_...#p45`) and statute sections (`wrk_...#sec-138`).
+  - Citation extractor and preliminary resolution.
+  - Emits `doc.parsed.v1` and generates `ParsedDocument` JSON.

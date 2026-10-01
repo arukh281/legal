@@ -215,3 +215,45 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Django's test runner treats DB aliases with identical connection params as aliases of one physical DB. `MIRROR` silently routes queries through the mirrored alias (losing role separation). `DEPENDENCIES` triggers circular-dependency detection. The custom fixture preserves real role separation: `default` connects as `app_rw` (exercising RLS), `admin` as `admin_rw` (BYPASSRLS), and `worker` as `worker`.
 - **Doc Reference:** Session S03 follow-up Directive #3.
 
+---
+
+### 2026-10-02 — Repo-Wide HTTP Guard and Gated Transport
+- **Decision:** Restricted raw HTTP libraries (`httpx`, `requests`, `urllib.request`, `aiohttp`) repo-wide to `backend/core/http_client.py` (with explicit AST exemptions for gateway LLM SDK adapters and storage boto3). The raw transport is private and only obtainable through `GatedHttpClient`. An AST test (`test_no_direct_http_imports_outside_core_http_client`) enforces this across all of `backend/`.
+- **Reason:** Non-negotiable #5 and Directive #1. Any direct HTTP call skips legal profile checks, rate limits, robots enforcement, and audit logs.
+- **Doc Reference:** Session S04 Directive #1; `docs/02_P0_source_acquisition.md` §5.2.
+
+---
+
+### 2026-10-02 — Cross-Process Per-Host Rate Limiting via PostgreSQL Advisory Locks
+- **Decision:** Implemented cross-process per-host rate limiting using PostgreSQL advisory transaction locks (`pg_advisory_xact_lock(hashtext('host_rate_limit_' || host))`) and `plc.host_rate_limit` tracking `last_request_at` and `min_delay_seconds`.
+- **Reason:** Directive #2. Multiple Procrastinate workers can crawl at once; an in-process token bucket would hit source servers N times faster. Cross-process database locking guarantees the per-host minimum delay (≥ 3.0s) holds across all worker processes.
+- **Doc Reference:** Session S04 Directive #2; `docs/mvp/01_corporate_corpus_and_sources.md` §6.2.
+
+---
+
+### 2026-10-02 — Immutable Legal Profiles and Single Active Profile via Partial Index
+- **Decision:** `plc.legal_profile` records are immutable: updates insert a new row and set `status = 'SUSPENDED'` on the previous active profile. A partial unique index (`WHERE status <> 'SUSPENDED'`) ensures at most one active profile per source. Every capture stamps `profile_id` into `fetch_context`.
+- **Reason:** Directive #4. Enables evidentiary audit trails proving exactly which legal profile governed every historical fetch.
+- **Doc Reference:** Session S04 Directive #4; `docs/mvp/03_data_model_and_contracts.md` §3.2.
+
+---
+
+### 2026-10-02 — Stable Source Record Key Formulation for IBBI Orders
+- **Decision:** `source_record_key` formatted as `{section}:{file_stem}` (e.g. `nclt:2026-09-29-115640-houbm-a240fa27925a635b08dc28c9e4f9216d`). Case numbers and order dates are stored in `source_metadata` rather than the record key.
+- **Reason:** Directive #6. If IBBI corrects a typo in an order date or case number, the record key remains unchanged, preventing duplicate or ghost records.
+- **Doc Reference:** Session S04 Directive #6; `docs/02_P0_source_acquisition.md` §5.6.
+
+---
+
+### 2026-10-02 — Delta Crawl Deduplication without PDF Re-download
+- **Decision:** In delta crawl sweeps, if an existing capture exists with identical PDF URL and listing metadata, the crawler records `change_kind = "UNCHANGED"` and sets `fetch_context.pdf_fetched = false` without fetching the PDF. Delta terminates upon seeing 20 consecutive unchanged records.
+- **Reason:** Directive #7. Conserves bandwidth and source portal load while updating observation timestamps.
+- **Doc Reference:** Session S04 Directive #7; `docs/02_P0_source_acquisition.md` §5.6.
+
+---
+
+### 2026-10-02 — CloudEvents Outbox Topic and Schema Compliance
+- **Decision:** Captures emit to `plc.raw.captured.v1` and health updates emit to `plc.source.health.v1`. The `lane` (`rt` or `bulk`) is populated in the outbox `lane` column, not in the topic name. Unproduced fields (`warc`, `norm_fingerprint`, `near_dup_hint`) are present and set to `None`.
+- **Reason:** Directive #8; `docs/01_master_architecture.md` §6.3, §6.4.
+
+

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Access Verification</title></head>
+<body>
+  <h1>Security Check</h1>
+  <form action="/verify" method="POST">
+    <p>Please enter the characters shown below testing whether or not you are a human visitor:</p>
+    <img src="/securimage/securimage_show.php" alt="CAPTCHA Image">
+    <input type="text" name="captcha_code" id="captchaInput" size="10" maxlength="6">
+    <input type="submit" value="Submit">
+  </form>
+</body>
+</html>

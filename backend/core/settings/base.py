@@ -193,6 +193,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Procrastinate task queue
 PROCRASTINATE_APP = "procrastinate.contrib.django.app"
 
+# Crawler & Source Ingestion settings (Session S04 Directive #3)
+CRAWLER_USER_AGENT = os.environ.get(
+    "CRAWLER_USER_AGENT",
+    "LegalIntelligenceBot/1.0 (+https://example.org/bot; contact@example.org)",
+)
+CRAWLER_CONTACT_EMAIL = os.environ.get("CRAWLER_CONTACT_EMAIL", "contact@example.org")
+
+# Object Storage S3 / MinIO (docs/mvp/04_stack_and_infra.md §2.9)
+S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL", "http://localhost:9000")
+S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin")
+S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")
+S3_REGION = os.environ.get("AWS_REGION", "ap-south-1")
+S3_RAW_BUCKET = os.environ.get("S3_RAW_BUCKET", "plc-raw")
+
 # Configure structured JSON logging
 setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
 

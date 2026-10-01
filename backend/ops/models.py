@@ -20,7 +20,7 @@ class PipelineVersion(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.pipeline_version"
+        db_table = 'ops"."pipeline_version'
 
 
 class EventOutbox(models.Model):
@@ -48,7 +48,7 @@ class EventOutbox(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.event_outbox"
+        db_table = 'ops"."event_outbox'
         unique_together = (("source", "id"),)
 
 
@@ -61,7 +61,7 @@ class EventSubscription(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.event_subscription"
+        db_table = 'ops"."event_subscription'
         unique_together = (("consumer", "type"),)
 
 
@@ -74,7 +74,7 @@ class EventInbox(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.event_inbox"
+        db_table = 'ops"."event_inbox'
         unique_together = (("consumer", "idempotencykey"),)
 
 
@@ -86,7 +86,7 @@ class EventParked(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.event_parked"
+        db_table = 'ops"."event_parked'
         unique_together = (("consumer", "event_id"),)
 
 
@@ -108,7 +108,7 @@ class JobChain(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.job_chain"
+        db_table = 'ops"."job_chain'
 
 
 class JobStep(models.Model):
@@ -129,7 +129,7 @@ class JobStep(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.job_step"
+        db_table = 'ops"."job_step'
         unique_together = (("job_id", "step", "attempt"),)
 
 
@@ -142,5 +142,5 @@ class JobSignal(models.Model):
 
     class Meta:
         managed = False
-        db_table = "ops.job_signal"
+        db_table = 'ops"."job_signal'
         unique_together = (("job_id", "signal", "received_at"),)
