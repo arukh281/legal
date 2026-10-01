@@ -484,7 +484,7 @@ Display rules preserved:
 - **Simplified:**
   - There is no partition-by-family and no in-memory CSR graph projection or PPR. Citator traversals are recursive CTEs, depth ≤ 2.
   - `confidence`/`status_confidence` are **uncalibrated** in MVP. They are stored, but the UI shows them as "uncalibrated preview" and they never gate anything on their own.
-  - Tier-1 assertions (negative treatment, validity, commencement) stay `PENDING_REVIEW` and `definitive=false` until a human verifies them. Review volume is a staffing line in 04 §4.
+  - Tier-1 assertions (negative treatment, validity, commencement) stay `PENDING_REVIEW` and `definitive=false` until a human verifies them. Review volume is a staffing line in 04 §4.4.
   - The predicate set is the corporate-law subset; there is no criminal-code crosswalk (`CORRESPONDS_TO` rows are not created).
 - **Upgrade:** partition `assertion` by `family` (05_P3 §5.3); add the CSR projection behind the Graph Query API (01 §9.1); add calibration once the gold set supports it (ECE ≤ 0.05 gate, 13 §4.6).
 
@@ -1127,6 +1127,6 @@ The migration is a one-off export of `matter_member`/`wall_exclusion`.
    A code bug can still join across schemas, which an "air gap" cannot. A CI query-lint rejects `plc` writes that reference `tpl` relations.
 3. **Per-matter envelope encryption and the signed TEC.** Both are dropped in favour of KMS-at-rest + RLS. This is a real reduction in defence-in-depth for privileged text, accepted for one firm and flagged for the partner's security review.
 4. **Calibrated confidence (D9, D11).** It cannot be honest without a large gold set. The shapes stay; values are labelled "uncalibrated preview" and never drive gates.
-5. **Tier-1 HITL (D6, D23.1).** "Definitive only after human review" is kept. The consequence is that many negative treatments will display as `CAUTION`, non-definitive, until reviewed. The reviewer hours are a staffing cost (04 §4.3).
+5. **Tier-1 HITL (D6, D23.1).** "Definitive only after human review" is kept. The consequence is that many negative treatments will display as `CAUTION`, non-definitive, until reviewed. The reviewer hours are a staffing cost (04 §4.4).
 6. **Signed broadcasts and cross-cell acks (E6, D22.4).** These have no meaning in one deployment. The columns are kept null so they can be turned on later.
 7. **Per-key ordering at Kafka semantics.** This is emulated with Procrastinate locks (`consumer:partition_key`). It is correct at this volume, but it serialises hot keys. Hot keys are rare, except `graph.delta.v1` on popular subjects, where coalescing is acceptable.
