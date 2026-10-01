@@ -81,13 +81,13 @@
 - Verbatim PostgreSQL DDL migration (`workspace/migrations/0002_db_roles_and_rls.py`):
   - Defined roles: `app_rw`, `worker`, `plc_writer`.
   - Enforced `ALTER TABLE tpl.<table_name> ENABLE ROW LEVEL SECURITY;` and `FORCE ROW LEVEL SECURITY;`.
-  - Created `tpl.tenant_isolation_policy` across all `tpl` domain tables: `tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')`.
+  - Created `tpl.tenant_isolation_policy` across all `tpl` domain tables: `tenant_id = NULLIF(current_setting('app.tenant_id', true), '')`.
   - Implemented `tpl.can_read_matter(matter_id, user_id, user_role)` marked `STABLE SET search_path = pg_catalog, tpl` enforcing ethical wall exclusions and matter memberships.
   - Implemented `tpl.matter_access_policy` combining tenant matching and `tpl.can_read_matter()`.
   - Granted strict least-privilege permissions: `plc_writer` has zero access to `tpl`. `app_rw` and `worker` have `SELECT, INSERT, UPDATE` on `tpl` tables (except `tpl.audit_event`).
   - Truly append-only audit event security: `REVOKE UPDATE, DELETE ON tpl.audit_event FROM app_rw, worker;` and created PostgreSQL trigger `trg_audit_event_immutable` raising `RESTRICTED_ACCESS`.
 - Session context management (`backend/workspace/db.py`):
-  - `set_db_tenant_context(tenant_id, user_id, purpose)` configures PostgreSQL session variables `app.current_tenant_id`, `app.current_user_id`, and `app.current_purpose`.
+  - `set_db_tenant_context(tenant_id, user_id, purpose)` configures PostgreSQL session variables `app.tenant_id`, `app.user_id`, and `app.purpose`.
   - `reset_db_tenant_context()` unconditionally clears all session settings.
   - `TenantContextMiddleware`: guarantees context is set on authenticated requests and completely reset in a `finally:` block upon release, preventing cross-request connection reuse leakage.
 
