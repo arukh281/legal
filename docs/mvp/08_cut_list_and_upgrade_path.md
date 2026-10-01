@@ -120,12 +120,24 @@ Upgrades are cheap because of blueprint principle 9, "reversible by construction
 ## 9. Re-entry order (after the pilot)
 
 The order follows partner value and the blueprint's roadmap (22 §3.4–§3.6):
-1. HC own-site deltas for the 3 HCs + an NCLT daily feed via allowed paths.
-2. Word add-in.
-3. Calibrated confidence bands.
-4. Automatic REVERIFY + depth-2 propagation.
-5. Hindi.
-6. Kafka/Temporal/OpenSearch, when a second firm or the scale triggers above are hit.
-7. Privacy Gate + learning loops (needs ≥ 2 firms).
-8. Remaining tribunals and HCs.
-9. On-prem only on demand.
+1. Offence module (remedy selection, outbound notices, hearing packs, cross-exam prep; §10).
+2. HC own-site deltas for the 3 HCs + an NCLT daily feed via allowed paths.
+3. Word add-in.
+4. Calibrated confidence bands.
+5. Automatic REVERIFY + depth-2 propagation.
+6. Hindi.
+7. Kafka/Temporal/OpenSearch, when a second firm or the scale triggers above are hit.
+8. Privacy Gate + learning loops (needs ≥ 2 firms).
+9. Remaining tribunals and HCs.
+10. On-prem only on demand.
+
+## 10. Offence module (first build after the pilot)
+
+Defence (incoming notices, maintainability objections, reply drafting) is the MVP. Offence comes next, reusing the same corpus, citator, Procedural Clock and memo chain:
+1. Remedy selection: for a client claim, compare routes (IBC s.8/s.9, arbitration invocation, commercial suit, s.138 NI Act, SEBI/ROC complaint) on speed, cost, leverage, limitation risk and the other side's likely defences, using the existing MAINTAINABILITY_CHECK rules run in reverse (make sure OUR notice has no defect).
+2. Outbound notice drafting: draft the chosen notice, with the same anchors and verification as reply drafting.
+3. Hearing pack: short opening, our three strongest points, likely bench questions with answers and pinpoint cites, their best arguments with one-line responses, and the authorities to hand up, flagged for binding force on this bench.
+4. Cross-examination prep (arbitration and commercial suits): contradictions between witness statements and documents, admissions to extract, question sequences. Built from the matter's evidence file.
+
+Hard line for all four: find every legitimate weakness in the other side's case; never fabricate evidence, coach false testimony, or mislead the court.
+

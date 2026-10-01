@@ -184,8 +184,9 @@ Every capability is in the MVP. "Thin" says exactly how thin; "Grows" says how i
   - Same model family for advocate and opponent.
   - No bench assessor.
   - No DEEP mode.
-  - Manual "re-verify" button instead of automatic re-verification of living memos.
-- **Out:** judge analytics; win probabilities (never).
+- **Out:**
+  - judge analytics; win probabilities (never).
+  - Offence tools (remedy selection, outbound notices, hearing packs, cross-exam prep): first post-pilot build, see 08 §10.
 - **Grows:**
   - A 4th trigger in week 19 (rules already drafted).
   - A bench assessor behind an A/B test.
