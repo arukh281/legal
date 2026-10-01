@@ -126,9 +126,51 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ---
 
-### 2026-10-01 — Strict Scope of `canonical_key()` Restricted to Public Anchors (A6)
-- **Decision:** Restricted `canonical_key()` strictly to public legal anchors (`PublicAnchor`, `ProvisionRef`, `PITRef`), raising `SemanticConstraintError` if invoked on a `PrivateAnchor`.
-- **Reason:** In `docs/01_master_architecture.md §5.3` (A6), `canonical_key(anchor) = work_id "#" fragment` is formulated exclusively for language-agnostic joins and `tpl.matter_dependency.match_key` on public authorities. Private client document anchors (`pdoc_.../v<pver>#...`) carry tenant document versions where paragraph numbering and text shift between versions (v1 vs v2). Stripping the version would conflate distinct texts across client document revisions into identical keys.
-- **Doc Reference:** `docs/01_master_architecture.md` §5.3 line 637; `docs/mvp/03_data_model_and_contracts.md` §4.6 (`tpl.matter_dependency`).
+### 2026-10-01 — Ethical Wall ID Prefix (`ewl`) as MVP Addition
+- **Decision:** Added `ewl` to `MVP_PREFIX_ADDITIONS` in `backend/anchor_lib/ids.py` for `tpl.ethical_wall.wall_id`. The normative table in `docs/01_master_architecture.md §5.2` is preserved unchanged, and registry tests assert `PREFIX_REGISTRY == DOC_PREFIX_REGISTRY | MVP_PREFIX_ADDITIONS`.
+- **Reason:** `docs/mvp/03_data_model_and_contracts.md §3.8` defines `tpl.ethical_wall` with `wall_id text NOT NULL` but leaves the prefix unspecified. User consultation and directive #1 approved `ewl_` as the designated prefix for ethical walls.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.8; `docs/01_master_architecture.md` §5.2; Session S03 Directive #1.
+
+---
+
+### 2026-10-01 — Unprefixed Crockford ULID for Model Gateway `call_id`
+- **Decision:** Used unprefixed 26-character Crockford ULIDs for `ops.llm_call_record.call_id` minted via `mint_ulid()`.
+- **Reason:** `docs/mvp/03_data_model_and_contracts.md §3.15` and `docs/01_master_architecture.md §7.24` define `call_id` without a prefix. User consultation and directive #1 confirmed that `call_id` is an unprefixed Crockford ULID rather than inventing a custom prefix.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.15; `docs/01_master_architecture.md` §7.24; Session S03 Directive #1.
+
+---
+
+### 2026-10-01 — Django 5.2 `CompositePrimaryKey` on Multi-Tenant Domain Models
+- **Decision:** Used `django.db.models.fields.composite.CompositePrimaryKey` on all composite-keyed domain models (`AppUser`, `Matter`, `MatterMember`, `EthicalWall`, `WallExclusion`, `ActorPseudonym`, `ConsentRecord`, `AuditEvent`, `LLMCallRecord`).
+- **Reason:** Matches verbatim PostgreSQL DDL from 03 §3.8, §3.9, and §3.15 (`PRIMARY KEY (tenant_id, ...)`) without artificially reducing the primary key to a single field on the Django model.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.8, §3.9, §3.15; Session S03 Directive #2.
+
+---
+
+### 2026-10-01 — Multi-Schema Table Quoting in Django ORM (`schema"."table`)
+- **Decision:** Specified `db_table = 'tpl"."table_name'` for `tpl` models and `'ops"."table_name'` for `ops` models.
+- **Reason:** Django's SQL compiler wraps `db_table` as `"{db_table}"`. Specifying `"tpl.table"` produces `"tpl.table"` (treated as a table name containing a period in the default search path). Quoting as `'tpl"."table'` compiles to `"tpl"."table"`, which correctly resolves schema-qualified tables across `tpl`, `plc`, and `ops`.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §1 item 1.
+
+---
+
+### 2026-10-01 — Transactional Advisory Locking for Append-Only Audit Log Chains
+- **Decision:** Serialized audit event insertions per tenant using `SELECT pg_advisory_xact_lock(hashtext('audit_' || tenant_id))` and dynamically resolved chain heads via `row_hash NOT IN (SELECT prev_hash ...)`.
+- **Reason:** Under high concurrency, two parallel requests in the same tenant could query the chain head simultaneously and create duplicate branches/forks in the SHA-256 hash chain. The transactional advisory lock serializes inserts per tenant with zero cross-tenant contention.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.8; `docs/09_P7_firm_matter_workspace.md` line 723; Session S03 Directive #6.
+
+---
+
+### 2026-10-01 — Strict Startup Role and RLS Bypass Check
+- **Decision:** Added Django system check `core.E004` that verifies at startup that the runtime database role is not a superuser and does not have `BYPASSRLS`.
+- **Reason:** Superusers and roles with `BYPASSRLS` bypass PostgreSQL Row-Level Security even when `FORCE ROW LEVEL SECURITY` is enabled. The web API and workers must connect strictly as `app_rw` or `worker`.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §1 item 1; Session S03 Directive #3.
+
+---
+
+### 2026-10-01 — Model Gateway Routing with Residency and Data Class Ceilings
+- **Decision:** Enforced `endpoint.data_class_max >= call.dataclass` and strict residency fail-closed check (`endpoint.residency_country == "IN"` when tenant policy is `IN_ONLY`) in `gateway.runner.pick_endpoint`.
+- **Reason:** Guarantees that privileged or tenant-confidential requests never route to public or foreign-hosted models unless explicitly permitted by tenant policy.
+- **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §2.8, §2.13; `docs/01a_spine_decision_record.md` D14, D15; Session S03 Directive #8.
 
 

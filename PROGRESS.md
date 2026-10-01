@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S02 Complete (`anchor_lib` + ID Minting)
+## Current State: Session S03 Complete (SSO, Tenancy, `authz.can()` + RLS, Model Gateway v0)
 
 ### 1. What Was Built
 
@@ -63,6 +63,71 @@
 - Migration is verified reversible (`migrate anchor_lib zero` followed by `migrate anchor_lib`).
 - Live PostgreSQL tests verify that valid anchors insert cleanly and invalid/mutated anchors violate check constraints.
 
+#### F. Tenancy & Workspace Domain Models (`backend/workspace/models.py`)
+- Implemented all 9 `tpl` domain models using Django 5.2's `CompositePrimaryKey` verbatim matching the PostgreSQL DDL in `docs/mvp/03_data_model_and_contracts.md §3.8, §3.9`:
+  - `Tenant`: `tenant_id` (`ten_`), `name`, `deployment_mode`, `residency_policy` (`IN_ONLY`, `ANY`, `HYBRID`), `audit_retention_days`, `soft_delete_retention_days`, `created_at`.
+  - `AppUser`: `(tenant_id, user_id)` PK (`usr_`), `email`, `display_name`, `idp_subject`, `firm_role` (`ADMIN`, `PARTNER`, `SENIOR_ASSOCIATE`, `ASSOCIATE`, `PARALEGAL`, `KM_LAWYER`, `EDITOR`), `active`.
+  - `Matter`: `(tenant_id, matter_id)` PK (`mat_`), `client_matter_no`, `title`, `client_role` (`PETITIONER`, `RESPONDENT`, etc.), `status`, `walled` (boolean), `created_at`.
+  - `MatterMember`: `(tenant_id, matter_id, user_id)` PK, `matter_role` (`LEAD_PARTNER`, `PARTNER`, `ASSOCIATE`, `PARALEGAL`, `VIEWER`), `assigned_by`, `assigned_at`.
+  - `EthicalWall`: `(tenant_id, wall_id)` PK (`ewl_`), `matter_id`, `reason`, `active`, `created_by`, `created_at`.
+  - `WallExclusion`: `(tenant_id, wall_id, user_id)` PK, `reason`, `excluded_at`.
+  - `ActorPseudonym`: `(tenant_id, matter_id, real_id)` PK, `pseudonym`, `created_at`.
+  - `ConsentRecord`: `(tenant_id, consent_id)` PK (`cns_`), `purpose`, `granted_by`, `granted_at`, `expires_at`, `revoked_at`.
+  - `AuditEvent`: `(tenant_id, audit_id)` PK (`adt_`), `actor`, `action`, `target_type`, `target_id`, `matter_id`, `at`, `prev_hash` (bytea), `row_hash` (bytea), `detail` (jsonb).
+- Multi-schema quoting: models use `db_table = 'tpl"."<table_name>'` to compile to schema-qualified table identifiers under PostgreSQL without namespace collisions.
+- Django Admin integration (`backend/workspace/admin.py`): clean admin interfaces for Tenant, AppUser, and Matter with search, filtering, and readonly timestamp protections.
+
+#### G. Database Roles, Row-Level Security, and Context Isolation (`backend/workspace/`)
+- Verbatim PostgreSQL DDL migration (`workspace/migrations/0002_db_roles_and_rls.py`):
+  - Defined roles: `app_rw`, `worker`, `plc_writer`.
+  - Enforced `ALTER TABLE tpl.<table_name> ENABLE ROW LEVEL SECURITY;` and `FORCE ROW LEVEL SECURITY;`.
+  - Created `tpl.tenant_isolation_policy` across all `tpl` domain tables: `tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')`.
+  - Implemented `tpl.can_read_matter(matter_id, user_id, user_role)` marked `STABLE SET search_path = pg_catalog, tpl` enforcing ethical wall exclusions and matter memberships.
+  - Implemented `tpl.matter_access_policy` combining tenant matching and `tpl.can_read_matter()`.
+  - Granted strict least-privilege permissions: `plc_writer` has zero access to `tpl`. `app_rw` and `worker` have `SELECT, INSERT, UPDATE` on `tpl` tables (except `tpl.audit_event`).
+  - Truly append-only audit event security: `REVOKE UPDATE, DELETE ON tpl.audit_event FROM app_rw, worker;` and created PostgreSQL trigger `trg_audit_event_immutable` raising `RESTRICTED_ACCESS`.
+- Session context management (`backend/workspace/db.py`):
+  - `set_db_tenant_context(tenant_id, user_id, purpose)` configures PostgreSQL session variables `app.current_tenant_id`, `app.current_user_id`, and `app.current_purpose`.
+  - `reset_db_tenant_context()` unconditionally clears all session settings.
+  - `TenantContextMiddleware`: guarantees context is set on authenticated requests and completely reset in a `finally:` block upon release, preventing cross-request connection reuse leakage.
+
+#### H. Authentication & Authorization Choke Point (`backend/core/` & `backend/workspace/authz.py`)
+- SSO & Dev Authentication:
+  - `allauth` integrated for enterprise SSO (Google/Microsoft OAuth).
+  - Custom adapters `LawyerBrainAccountAdapter` and `LawyerBrainSocialAccountAdapter` prevent open self-signup / uninvited user onboarding.
+  - `DevAuthenticationBackend` (`backend/core/auth.py`): dev-only token/user authentication strictly disabled if `DEBUG=False` or `DEV_AUTH_ENABLED=False`.
+  - Django system check `core.E001` refuses to boot if dev-auth backend is enabled when `DEBUG=False`.
+  - Django system check `core.E004` refuses to boot if runtime DB role is a superuser or has `BYPASSRLS`.
+- `authz.can(ctx, action, obj)` (`backend/workspace/authz.py`):
+  - Single choke point authorization adhering to `docs/mvp/03_data_model_and_contracts.md §6` and `docs/01a_spine_decision_record.md: D9`.
+  - Enforces firm roles (`ADMIN`, `PARTNER`, `ASSOCIATE`, `PARALEGAL`, `KM_LAWYER`, `EDITOR`).
+  - Enforces active status and ethical wall exclusions (logging `WALL_VIOLATION_ATTEMPT` with `DENY` decision).
+  - Enforces matter membership and walled matter isolation.
+- Append-Only Audit Chain (`backend/workspace/audit.py`):
+  - `record_audit_event()` serializes audit insertions per tenant using `pg_advisory_xact_lock(hashtext('audit_' || tenant_id))` inside transactions.
+  - Monotonically timestamps each event and computes cryptographic SHA-256 hash chains `SHA-256(prev_hash || canonical_json)`. Tested under concurrent multi-threaded execution.
+- Ninja API Security Choke Point (`backend/core/authz_dependency.py`):
+  - `authz_required` dependency validates credentials, hydrates `ExecutionContext`, sets DB session variables, and attaches context to requests.
+  - Architectural test (`test_all_ninja_routes_enforce_authz_unless_allowlisted`) inspects all registered Ninja routes to ensure no route can skip authz unless explicitly placed on the public allowlist (`/health`, `/auth/dev-login`).
+
+#### I. Model Gateway v0 (`backend/gateway/`)
+- Normative tables implemented in `ops` schema (`backend/gateway/models.py`):
+  - `ModelTaskContract`: `(task_code, version)` PK, `description`, `allowed_trust_labels` (`text[]`), `tools_allowed` (`text[]`), `per_call_budget_usd`, `timeout_seconds`, `output_schema` (jsonb).
+  - `ModelEndpoint`: `endpoint_id` PK, `provider` (`ANTHROPIC`, `OPENAI`, `GOOGLE`), `model_id`, `model_snapshot`, `residency_country`, `data_class_max` (`PUBLIC`, `INTERNAL`, `TENANT_CONFIDENTIAL`, `PRIVILEGED`), `input_cost_per_token_usd`, `output_cost_per_token_usd`, `active`.
+  - `LLMCallRecord`: `(call_id, created_at)` PK using unprefixed 26-character Crockford ULID (`mint_ulid()`), recording full task context, tokens, costs, duration, residency validation, and schema validity.
+- Gateway Runner (`backend/gateway/runner.py`):
+  - `gateway.run(ctx, task_code, prompt, ...)` enforces routing with strict residency fail-closed check (D14/D15: India residency enforced if tenant policy is `IN_ONLY`), data class ceiling (`endpoint.data_class_max >= call.dataclass`), and budget limits.
+  - Validates model output against JSON schema; performs exactly one repair attempt on validation failure; fails loudly on repeated schema violation.
+  - Metering and cost calculation based on token usage.
+  - Privacy guard: suppresses prompt and response bodies from call records and logs if dataclass is `TENANT_CONFIDENTIAL` or `PRIVILEGED` (recording hash and byte length only per `docs/mvp/04_stack_and_infra.md §2.13`).
+- Adapters:
+  - Anthropic SDK adapter (`gateway/adapters/anthropic_adapter.py`).
+  - OpenAI SDK adapter (`gateway/adapters/openai_adapter.py`).
+  - Google GenAI SDK adapter (`gateway/adapters/google_adapter.py`).
+  - Fake adapter (`gateway/adapters/fake_adapter.py`) for deterministic test execution.
+- Architectural SDK Guard Test (`test_no_direct_sdk_imports_outside_gateway`):
+  - AST scanner inspects all Python files across `backend/` and asserts that `anthropic`, `openai`, and `google` SDKs are never imported outside `backend/gateway`.
+
 ---
 
 ### 2. How to Run It
@@ -70,43 +135,48 @@
 ```bash
 cd backend
 
-# Type check (strict)
-uv run mypy .
+# Type check (strict across core, workspace, gateway, anchor_lib)
+uv run mypy core workspace gateway anchor_lib
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 74 unit, contract, property, and integration tests against PostgreSQL 18
+# Run all 106 backend tests against PostgreSQL 18
 uv run pytest
 
 # Test migration reversibility
-uv run python manage.py migrate anchor_lib zero
-uv run python manage.py migrate anchor_lib
+uv run python manage.py migrate gateway zero
+uv run python manage.py migrate workspace zero
+uv run python manage.py migrate
 ```
 
 ---
 
 ### 3. Stubs & Notes
-- **Semantic constraints A3, A4, A5, A8:** Implemented as pure functions in `anchor_lib.anchors`: **library ready, not wired** (to be wired to live DB records and pipeline stages in S05, S13, S14).
-- Model Gateway (`gateway`) is stubbed until S03.
-- Allauth & Tenancy (`authz.can()`, RLS) are stubbed until S03.
+- **Downstream Domain Phases (S04–S18):**
+  - Source Capture & Ingest (P0 / `ingest`) to be built in S04.
+  - Parsing (`parse`) to be built in S05.
+  - Indexing & Retrieval (`index`, `retrieve`) to be built in S06–S07.
+  - Citator (`citator`) to be built in S09.
+- **Model Gateway Real-API Smoke Test:**
+  - `test_real_llm_smoke` is marked `@pytest.mark.skipif` unless real API keys (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`) are present in the environment.
 
 ---
 
 ### 4. Known Issues
 1. **Docker configuration modification:** During initial Docker authentication troubleshooting on this host, `~/.docker/config.json` had its `credsStore` entry removed. Per user instruction, this is noted here, and all future actions outside the repository boundary strictly require prior approval.
 2. **Host port 5432 conflict:** Host machine runs a local PostgreSQL 16 on port 5432. Docker Compose maps PostgreSQL container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`). Inside the Docker Compose network, services talk on standard port 5432.
-3. **Host port 8000 conflict:** Host machine runs a Python HTTP server on port 8000 (PID 3905 serving BBRE project). Docker Compose supports `WEB_HOST_PORT` (defaults to 8000, can be set to 8001). Vite proxy config reads `VITE_API_URL` (defaults to `http://127.0.0.1:8000`).
+3. **Host port 8000 conflict:** Host machine runs a Python HTTP server on port 8000. Docker Compose supports `WEB_HOST_PORT` (defaults to 8000, can be set to 8001). Vite proxy config reads `VITE_API_URL` (defaults to `http://127.0.0.1:8000`).
 4. **Procrastinate Django connector listen/notify:** Psycopg3 connection under Django connector does not support synchronous `listen_notify`. Procrastinate worker runs with `--no-listen-notify`.
 5. **Database teardown session warning during pytest:** Pytest database teardown outputs a warning if Docker Compose worker processes maintain an idle connection to the database cluster. Does not affect test runs or assertion correctness.
 
 ---
 
-### 5. What the Next Session (S03) Needs
-- **Session S03: SSO, tenancy, `authz.can()` + RLS, Model Gateway v0:**
-  - Setup SSO login (django-allauth with Google / Microsoft).
-  - Apply `tenant`, `user`, `matter_member` domain tables in `tpl` using `PrefixedULIDField`.
-  - Implement `authz.can()` authorization choke point (03 §6).
-  - Configure PostgreSQL `FORCE ROW LEVEL SECURITY` on `tpl` tables.
-  - Implement Model Gateway v0 with `model_task_contract`, 2 provider adapters, `llm_call_record`, per-task budget, and per-tenant `residency_policy` (03 §3.15).
+### 5. What the Next Session (S04) Needs
+- **Session S04: Source capture + legal gate (IBBI orders first):**
+  - Source capture pipeline (P0 / `ingest`).
+  - Legal gate implementation: adapter requires `legal_profile` (PROVISIONAL or APPROVED).
+  - Obey robots.txt and profile rate limit (default ≤ 1 request per 3 s; backfills at night IST).
+  - Zero CAPTCHA bypass or solving.
+  - Capture IBBI orders, store raw payloads in S3/MinIO with SHA-256 content address, record metadata in `plc.source_record`.
