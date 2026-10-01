@@ -17,7 +17,9 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 
 from anchor_lib.ids import (
+    DOC_PREFIX_REGISTRY,
     MNEMONIC_PREFIXES,
+    MVP_PREFIX_ADDITIONS,
     PREFIX_REGISTRY,
     is_valid_id,
     is_valid_sha256,
@@ -30,9 +32,10 @@ from anchor_lib.models import IDMinter, PrefixedULIDField
 def test_prefix_registry_matches_docs_exactly() -> None:
     """Read docs/01_master_architecture.md §5.2 table and assert registry matches exactly.
 
-    User instruction 1: Don't hand-type 64 prefixes from memory. Read the table in
-    docs/01_master_architecture.md §5.2 (plus D-rulings) and assert the registry
-    matches it exactly, with nothing missing and nothing extra.
+    User directive 1: The blueprint is normative. Keep the doc registry as is, add an
+    "MVP additions" list in ids.py (each citing its DECISIONS.md record), and make the
+    parity test check doc registry matches the blueprint, and active registry equals
+    doc registry ∪ recorded additions.
     """
     doc_path = (
         Path(__file__).resolve().parent.parent.parent.parent / "docs" / "01_master_architecture.md"
@@ -69,16 +72,21 @@ def test_prefix_registry_matches_docs_exactly() -> None:
         if "dgi_" in notes_col:
             doc_prefixes.add("dgi")
 
-    # Assert exact match between doc prefixes and python registry
-    missing_in_registry = doc_prefixes - PREFIX_REGISTRY
-    extra_in_registry = PREFIX_REGISTRY - doc_prefixes
-    assert not missing_in_registry, (
-        f"Prefixes present in 01 §5.2 but missing in PREFIX_REGISTRY: {missing_in_registry}"
+    # Assert exact match between doc prefixes and DOC_PREFIX_REGISTRY
+    missing_in_doc_registry = doc_prefixes - DOC_PREFIX_REGISTRY
+    extra_in_doc_registry = DOC_PREFIX_REGISTRY - doc_prefixes
+    assert not missing_in_doc_registry, (
+        f"Prefixes present in 01 §5.2 but missing in DOC_PREFIX_REGISTRY: {missing_in_doc_registry}"
     )
-    assert not extra_in_registry, (
-        f"Prefixes in PREFIX_REGISTRY but missing in 01 §5.2: {extra_in_registry}"
+    assert not extra_in_doc_registry, (
+        f"Prefixes in DOC_PREFIX_REGISTRY but missing in 01 §5.2: {extra_in_doc_registry}"
     )
-    assert PREFIX_REGISTRY == doc_prefixes
+
+    # Assert PREFIX_REGISTRY matches doc_prefixes ∪ MVP_PREFIX_ADDITIONS exactly
+    expected_full_registry = doc_prefixes | set(MVP_PREFIX_ADDITIONS.keys())
+    assert PREFIX_REGISTRY == expected_full_registry, (
+        "PREFIX_REGISTRY drift from DOC_PREFIX_REGISTRY | MVP_PREFIX_ADDITIONS"
+    )
 
 
 def test_mnemonic_prefixes_matches_doc_citation() -> None:

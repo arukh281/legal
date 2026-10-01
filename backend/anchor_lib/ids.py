@@ -31,9 +31,9 @@ CROCKFORD_DECODE_MAP = {char: idx for idx, char in enumerate(CROCKFORD_ALPHABET)
 #  These are crt_, ent_, rul_ and ter_, e.g. crt_IN_HC_ALL_LKO, ent_GOV_IN_UP, rul_IN_PREC_07."
 MNEMONIC_PREFIXES: frozenset[str] = frozenset({"crt", "ent", "rul", "ter"})
 
-# Complete prefix registry as specified in docs/01_master_architecture.md §5.2
+# Prefix registry as specified in docs/01_master_architecture.md §5.2
 # and updated by decisions D12, D16, D19.3, D20.5, D21.5, D21.16, D22.1.
-PREFIX_REGISTRY: frozenset[str] = frozenset(
+DOC_PREFIX_REGISTRY: frozenset[str] = frozenset(
     {
         # Public Legal Corpus (PLC)
         "wrk",  # Work (P1)
@@ -119,6 +119,15 @@ PREFIX_REGISTRY: frozenset[str] = frozenset(
     }
 )
 
+# MVP additions to the ID prefix registry, each citing its DECISIONS.md record.
+MVP_PREFIX_ADDITIONS: dict[str, str] = {
+    "ewl": "DECISIONS.md 2026-10-01: Ethical wall identifier prefix (Session S03)",
+}
+
+# The active prefix registry is the union of normative blueprint prefixes and MVP additions.
+PREFIX_REGISTRY: frozenset[str] = DOC_PREFIX_REGISTRY | frozenset(MVP_PREFIX_ADDITIONS.keys())
+
+
 ULID_REGEX = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
 MNEMONIC_REGEX = re.compile(r"^[A-Z0-9_]+$")
 SHA256_REGEX = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -176,6 +185,15 @@ class _MonotonicULIDGenerator:
 
 
 _GENERATOR: _MonotonicULIDGenerator = _MonotonicULIDGenerator()
+
+
+def mint_ulid() -> str:
+    """Mint a raw, unprefixed 26-character Crockford ULID.
+
+    Used where contracts specify raw Crockford ULIDs without prefix
+    (e.g., ops.llm_call_record.call_id per 03 §3.15).
+    """
+    return _GENERATOR.generate()
 
 
 def mint_id(prefix: str) -> str:

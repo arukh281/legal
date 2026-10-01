@@ -24,6 +24,11 @@ INSTALLED_APPS = [
     # Third-party
     "procrastinate.contrib.django",
     "ninja",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.microsoft",
     # Platform operations & schema owner
     "ops.apps.OpsConfig",
     # Blueprint Phase App Stubs
@@ -49,9 +54,28 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+    "core.middleware.TenantContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# 12-hour sessions per docs/mvp/04_stack_and_infra.md §2.10
+SESSION_COOKIE_AGE = 43200
+
+# django-allauth SSO configuration
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*"]
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+SOCIALACCOUNT_AUTO_SIGNUP = False
+ACCOUNT_ADAPTER = "core.adapters.LawyerBrainAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "core.adapters.LawyerBrainSocialAccountAdapter"
+
 
 ROOT_URLCONF = "core.urls"
 
@@ -118,3 +142,6 @@ PROCRASTINATE_APP = "procrastinate.contrib.django.app"
 
 # Configure structured JSON logging
 setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
+
+# Register system checks
+import core.checks  # noqa: E402, F401

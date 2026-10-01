@@ -15,3 +15,14 @@ CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+# Dev authentication is strictly disabled in production
+DEV_AUTH_ENABLED = False
+AUTHENTICATION_BACKENDS = [
+    b
+    for b in AUTHENTICATION_BACKENDS  # noqa: F405
+    if b != "core.auth.DevAuthenticationBackend"
+]
+
+# Enforce that runtime role is app_rw and not superuser/BYPASSRLS (Directive #3)
+ENFORCE_RUNTIME_DB_ROLE_CHECK = True
