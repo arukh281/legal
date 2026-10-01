@@ -124,4 +124,11 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Ensures durable records (claims, memos, citations) can be re-aligned if underlying anchor IDs change during document re-parsing.
 - **Doc Reference:** `docs/01_master_architecture.md` §5.5, §7.1; `docs/mvp/03_data_model_and_contracts.md` §1 item 6, §3.4.
 
+---
+
+### 2026-10-01 — Strict Scope of `canonical_key()` Restricted to Public Anchors (A6)
+- **Decision:** Restricted `canonical_key()` strictly to public legal anchors (`PublicAnchor`, `ProvisionRef`, `PITRef`), raising `SemanticConstraintError` if invoked on a `PrivateAnchor`.
+- **Reason:** In `docs/01_master_architecture.md §5.3` (A6), `canonical_key(anchor) = work_id "#" fragment` is formulated exclusively for language-agnostic joins and `tpl.matter_dependency.match_key` on public authorities. Private client document anchors (`pdoc_.../v<pver>#...`) carry tenant document versions where paragraph numbering and text shift between versions (v1 vs v2). Stripping the version would conflate distinct texts across client document revisions into identical keys.
+- **Doc Reference:** `docs/01_master_architecture.md` §5.3 line 637; `docs/mvp/03_data_model_and_contracts.md` §4.6 (`tpl.matter_dependency`).
+
 

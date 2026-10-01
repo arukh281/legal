@@ -288,19 +288,18 @@ def test_constraint_a6_canonical_match_key() -> None:
         == "wrk_01J9Z0123456789ABCDEFGHJKM#sec-3"
     )
 
-    # Private anchor drops version and rendition, strips o1.
-    assert (
+    # 01 §5.3 line 637 (A6): canonical_key is defined strictly for public anchors
+    # (canonical_key = work_id "#" fragment).
+    # Private anchors carry tenant document versions (v1, v2) where semantics and paragraphs
+    # can shift across versions; calling canonical_key() on a private anchor must raise SemanticConstraintError.
+    with pytest.raises(SemanticConstraintError, match="defined only for public legal anchors"):
         canonical_key("pdoc_01J9Z0123456789ABCDEFGHJKM/v1#p12")
-        == "pdoc_01J9Z0123456789ABCDEFGHJKM#p12"
-    )
-    assert (
+
+    with pytest.raises(SemanticConstraintError, match="defined only for public legal anchors"):
         canonical_key("pdoc_01J9Z0123456789ABCDEFGHJKM/v2.mt-en#o1.p12")
-        == "pdoc_01J9Z0123456789ABCDEFGHJKM#p12"
-    )
-    assert (
+
+    with pytest.raises(SemanticConstraintError, match="defined only for public legal anchors"):
         canonical_key("pdoc_01J9Z0123456789ABCDEFGHJKM/v1#att2/p4")
-        == "pdoc_01J9Z0123456789ABCDEFGHJKM#att2/p4"
-    )
 
     # 01 §5.3 line 637: canonical_key ONLY strips expression key and default o1. prefix.
     # It must NEVER sort or reorder segments or path components.
@@ -311,7 +310,8 @@ def test_constraint_a6_canonical_match_key() -> None:
     assert canonical_key(deep_para) == "wrk_01J9Z0123456789ABCDEFGHJKM#p45.2.a.u1.x1"
 
     sheet_table = "pdoc_01J9Z0123456789ABCDEFGHJKM/v1#sheet2.r15.c4"
-    assert canonical_key(sheet_table) == "pdoc_01J9Z0123456789ABCDEFGHJKM#sheet2.r15.c4"
+    with pytest.raises(SemanticConstraintError, match="defined only for public legal anchors"):
+        canonical_key(sheet_table)
 
 
 def test_constraint_a7_ial_rewriting_and_failing_example() -> None:

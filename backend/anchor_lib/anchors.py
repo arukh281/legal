@@ -383,13 +383,12 @@ class PrivateAnchor(AnchorRef):
         return f"{self.pdoc_id}/v{self.version}{rend}#{att}{self.fragment}"
 
     def canonical_key(self) -> str:
-        # Strips pver and rendition, strips o1. prefix if judgment fragment
-        att = f"att{self.attachment}/" if self.attachment else ""
-        frag_str = str(self.fragment)
-        if isinstance(self.fragment, JudgmentFragment) and self.fragment.opinion == 1:
-            if frag_str.startswith("o1."):
-                frag_str = frag_str[3:]
-        return f"{self.pdoc_id}#{att}{frag_str}"
+        raise SemanticConstraintError(
+            f"Constraint A6: canonical_key is defined only for public legal anchors "
+            f"(canonical_key = work_id '#' fragment per 01 §5.3 A6). "
+            f"Private document anchor '{self.format()}' carries tenant versioning "
+            f"and cannot be canonicalized to a public match key."
+        )
 
 
 # ==============================================================================
@@ -778,11 +777,12 @@ def format(anchor: AnchorRef) -> str:
 
 
 def canonical_key(anchor: AnchorRef | str) -> str:
-    """Compute the canonical match key for an anchor (01 §5.3 constraint A6).
+    """Compute the canonical match key for a public legal anchor (01 §5.3 constraint A6).
 
     Stripping the expression key and the default 'o1.' prefix gives:
-      canonical_key(anchor) = work_id "#" fragment (or pdoc_id "#" fragment)
+      canonical_key(anchor) = work_id "#" fragment
     Used in matter_dependency.match_key and all language-agnostic joins.
+    Raises SemanticConstraintError on private document anchors.
     """
     if isinstance(anchor, str):
         anchor = parse(anchor)
