@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.microsoft",
     # Platform operations & schema owner
+    "core.apps.CoreConfig",
     "ops.apps.OpsConfig",
     # Blueprint Phase App Stubs
     "anchor_lib.apps.AnchorLibConfig",
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "core.admin_security.AdminSecurityMiddleware",
     "core.middleware.TenantContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -100,25 +102,74 @@ ASGI_APPLICATION = "core.asgi.application"
 
 # Database: PostgreSQL 18 with schemas plc, tpl, ops
 DB_NAME = os.environ.get("POSTGRES_DB", "lawyer_brain")
-DB_USER = os.environ.get("POSTGRES_USER", "postgres")
-DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "postgres")
 DB_HOST = os.environ.get("POSTGRES_HOST", "localhost")
 DB_PORT = os.environ.get("POSTGRES_PORT", "5432")
+
+# app_rw connects application code subject to RLS (NOBYPASSRLS)
+APP_DB_USER = os.environ.get("POSTGRES_APP_USER", "app_rw")
+APP_DB_PASSWORD = os.environ.get("POSTGRES_APP_PASSWORD", "app_rw")
+
+# postgres owner connection for schema migrations and DDL
+OWNER_DB_USER = os.environ.get("POSTGRES_OWNER_USER", os.environ.get("POSTGRES_USER", "postgres"))
+OWNER_DB_PASSWORD = os.environ.get("POSTGRES_OWNER_PASSWORD", os.environ.get("POSTGRES_PASSWORD", "postgres"))
+
+# admin_rw connects Django admin for cross-tenant operations (BYPASSRLS)
+ADMIN_DB_USER = os.environ.get("POSTGRES_ADMIN_USER", "admin_rw")
+ADMIN_DB_PASSWORD = os.environ.get("POSTGRES_ADMIN_PASSWORD", "admin_rw")
+
+# worker connects background jobs and asynchronous tasks (BYPASSRLS with scoped elevation)
+WORKER_DB_USER = os.environ.get("POSTGRES_WORKER_USER", "worker")
+WORKER_DB_PASSWORD = os.environ.get("POSTGRES_WORKER_PASSWORD", "worker")
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": DB_NAME,
-        "USER": DB_USER,
-        "PASSWORD": DB_PASSWORD,
+        "USER": APP_DB_USER,
+        "PASSWORD": APP_DB_PASSWORD,
         "HOST": DB_HOST,
         "PORT": DB_PORT,
         "OPTIONS": {
             # Search path includes all three core schemas and public
             "options": "-c search_path=ops,plc,tpl,public",
         },
-    }
+    },
+    "owner": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": DB_NAME,
+        "USER": OWNER_DB_USER,
+        "PASSWORD": OWNER_DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {
+            "options": "-c search_path=ops,plc,tpl,public",
+        },
+    },
+    "admin": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": DB_NAME,
+        "USER": ADMIN_DB_USER,
+        "PASSWORD": ADMIN_DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {
+            "options": "-c search_path=ops,plc,tpl,public",
+        },
+    },
+    "worker": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": DB_NAME,
+        "USER": WORKER_DB_USER,
+        "PASSWORD": WORKER_DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+        "OPTIONS": {
+            "options": "-c search_path=ops,plc,tpl,public",
+        },
+    },
 }
+
+DATABASE_ROUTERS = ["core.db_router.DatabaseRouter"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

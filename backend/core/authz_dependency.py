@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from ninja.security import HttpBearer
 
+from core.db_router import admin_db_context
 from workspace.authz import ExecutionContext
 from workspace.db import set_db_tenant_context
 from workspace.models import AppUser, Tenant
@@ -31,19 +32,22 @@ class AuthzDependency(HttpBearer):
         if hasattr(request, "user") and request.user.is_authenticated:
             app_user = getattr(request.user, "app_user", None)
             if app_user is None:
-                app_user = AppUser.objects.filter(
-                    user_id=request.user.username, active=True
-                ).first()
+                with admin_db_context():
+                    app_user = AppUser.objects.filter(
+                        user_id=request.user.username, active=True
+                    ).first()
 
         # 2. If token is provided, check dev token or user_id in dev/test mode
         if not app_user and getattr(settings, "DEV_AUTH_ENABLED", False):
             # Token can be usr_... or email in dev/test
-            app_user = AppUser.objects.filter(active=True).filter(models_user_match(token)).first()
+            with admin_db_context():
+                app_user = AppUser.objects.filter(active=True).filter(models_user_match(token)).first()
 
         if not app_user or not app_user.active:
             return None
 
-        tenant = Tenant.objects.filter(tenant_id=app_user.tenant_id).first()
+        with admin_db_context():
+            tenant = Tenant.objects.filter(tenant_id=app_user.tenant_id).first()
         residency_policy = tenant.residency_policy if tenant else "ANY"
         llm_policy = tenant.llm_policy if tenant else {}
 

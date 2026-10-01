@@ -15,8 +15,39 @@ PASSWORD_HASHERS = [
 ]
 
 # Ensure tests run against PostgreSQL with search_path=ops,plc,tpl,public
-DATABASES["default"]["TEST"] = {  # noqa: F405
-    "NAME": os.environ.get("POSTGRES_TEST_DB", "test_lawyer_brain"),
+# Owner is configured first so Django test runner creates/migrates test DB as postgres.
+# default connects as app_rw (exercising RLS on every query); admin connects as admin_rw.
+TEST_DB_NAME = os.environ.get("POSTGRES_TEST_DB", "test_lawyer_brain")
+
+DATABASES = {
+    "owner": {
+        **DATABASES["owner"],  # noqa: F405
+        "TEST": {
+            "NAME": TEST_DB_NAME,
+            "MIGRATE": True,
+        },
+    },
+    "default": {
+        **DATABASES["default"],  # noqa: F405
+        "TEST": {
+            "NAME": TEST_DB_NAME,
+            "MIGRATE": False,
+        },
+    },
+    "admin": {
+        **DATABASES["admin"],  # noqa: F405
+        "TEST": {
+            "NAME": TEST_DB_NAME,
+            "MIGRATE": False,
+        },
+    },
+    "worker": {
+        **DATABASES["worker"],  # noqa: F405
+        "TEST": {
+            "NAME": TEST_DB_NAME,
+            "MIGRATE": False,
+        },
+    },
 }
 
 # Dev-only authentication backend enabled for testing

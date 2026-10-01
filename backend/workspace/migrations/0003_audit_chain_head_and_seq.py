@@ -8,25 +8,11 @@ Normative sources:
 from django.db import migrations
 
 SQL_FORWARD = """
--- 1. Ensure admin_rw role exists with BYPASSRLS for administrative operations
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'admin_rw') THEN
-    CREATE ROLE admin_rw NOINHERIT BYPASSRLS;
-  END IF;
-END $$;
-
-GRANT USAGE ON SCHEMA tpl, plc, ops TO admin_rw;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA tpl, plc, ops TO admin_rw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA tpl GRANT ALL PRIVILEGES ON TABLES TO admin_rw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA plc GRANT ALL PRIVILEGES ON TABLES TO admin_rw;
-ALTER DEFAULT PRIVILEGES IN SCHEMA ops GRANT ALL PRIVILEGES ON TABLES TO admin_rw;
-
--- 2. Add monotonic seq column on tpl.audit_event
+-- 1. Add monotonic seq column on tpl.audit_event
 ALTER TABLE tpl.audit_event ADD COLUMN IF NOT EXISTS seq bigint NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_audit_event_tenant_seq ON tpl.audit_event (tenant_id, seq DESC);
 
--- 3. Dedicated per-tenant chain-head table for O(1) audit log appends under advisory lock
+-- 2. Dedicated per-tenant chain-head table for O(1) audit log appends under advisory lock
 CREATE TABLE IF NOT EXISTS tpl.audit_chain_head (
   tenant_id text PRIMARY KEY,
   latest_audit_id text NOT NULL,

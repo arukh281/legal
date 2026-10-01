@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from django.http import HttpRequest, HttpResponse
 
+from core.db_router import admin_db_context
 from workspace.db import reset_db_tenant_context, set_db_tenant_context
 from workspace.models import AppUser
 
@@ -28,9 +29,10 @@ class TenantContextMiddleware:
         if hasattr(request, "user") and request.user.is_authenticated:
             app_user = getattr(request.user, "app_user", None)
             if app_user is None:
-                app_user = AppUser.objects.filter(
-                    user_id=request.user.username, active=True
-                ).first()
+                with admin_db_context():
+                    app_user = AppUser.objects.filter(
+                        user_id=request.user.username, active=True
+                    ).first()
                 if app_user:
                     cast(Any, request.user).app_user = app_user
 

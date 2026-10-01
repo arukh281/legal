@@ -14,7 +14,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Any
 
-from django.db import connection, transaction
+from django.db import connections, router, transaction
 from django.utils import timezone
 
 from anchor_lib.ids import mint_id
@@ -30,14 +30,21 @@ def record_audit_event(
     decision: str | None = None,
     detail: dict[str, Any] | None = None,
     at: datetime | None = None,
+    using: str | None = None,
 ) -> AuditEvent:
     """Record an append-only audit event with strict SHA-256 hash chaining.
 
     Serializes writes per tenant via PostgreSQL advisory transaction locks
     (pg_advisory_xact_lock) and reads the chain head in O(1) from tpl.audit_chain_head.
     """
-    with transaction.atomic():
-        with connection.cursor() as cursor:
+    if using is None:
+        using = router.db_for_write(AuditEvent) or "default"
+
+    with transaction.atomic(using=using):
+        with connections[using].cursor() as cursor:
+            # Enforce tenant isolation under RLS for this transaction
+            cursor.execute("SET LOCAL app.tenant_id = %s;", [tenant_id])
+
             # 1. Acquire transaction-scoped advisory lock for this tenant's audit chain
             lock_key = f"audit_{tenant_id}"
             cursor.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [lock_key])
@@ -151,7 +158,7 @@ def record_audit_event(
     )
 
 
-def verify_chain(tenant_id: str) -> tuple[bool, str | None]:
+def verify_chain(tenant_id: str, using: str | None = None) -> tuple[bool, str | None]:
     """Cryptographically verify the entire audit event hash chain for a tenant.
 
     Walks all events for the tenant in ascending sequence order and asserts:
@@ -165,18 +172,23 @@ def verify_chain(tenant_id: str) -> tuple[bool, str | None]:
         (True, None) if the chain is fully verified and uncorrupted.
         (False, error_reason) if any tampering or broken link is detected.
     """
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT audit_id, at, actor, action, object_ref, matter_id,
-                   decision, detail, prev_hash, row_hash, seq
-            FROM tpl.audit_event
-            WHERE tenant_id = %s
-            ORDER BY seq ASC;
-            """,
-            [tenant_id],
-        )
-        rows = cursor.fetchall()
+    if using is None:
+        using = router.db_for_read(AuditEvent) or "default"
+
+    with transaction.atomic(using=using):
+        with connections[using].cursor() as cursor:
+            cursor.execute("SET LOCAL app.tenant_id = %s;", [tenant_id])
+            cursor.execute(
+                """
+                SELECT audit_id, at, actor, action, object_ref, matter_id,
+                       decision, detail, prev_hash, row_hash, seq
+                FROM tpl.audit_event
+                WHERE tenant_id = %s
+                ORDER BY seq ASC;
+                """,
+                [tenant_id],
+            )
+            rows = cursor.fetchall()
 
     if not rows:
         return True, None

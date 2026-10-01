@@ -18,7 +18,10 @@ from anchor_lib.ids import mint_id
 from core.adapters import LawyerBrainAccountAdapter, LawyerBrainSocialAccountAdapter
 from core.auth import DevAuthenticationBackend
 from core.checks import check_dev_auth_not_in_prod
+from core.db_router import admin_db_context
 from workspace.models import AppUser, Tenant
+
+pytestmark = pytest.mark.django_db(databases="__all__", transaction=True)
 
 
 @pytest.fixture(autouse=True)
@@ -28,37 +31,39 @@ def enable_dev_auth_in_tests(settings: Any) -> None:
 
 
 @pytest.fixture
-def auth_setup(db: None) -> dict[str, Any]:
-    t_id = mint_id("ten")
-    tenant = Tenant.objects.create(
-        tenant_id=t_id,
-        name="Cyril Amarchand Mangaldas",
-        idp={"kind": "GOOGLE", "domain": "cyrilshroff.com"},
-    )
+def auth_setup() -> dict[str, Any]:
+    with admin_db_context():
+        t_id = mint_id("ten")
+        domain = f"{t_id}.cyrilshroff.com"
+        tenant = Tenant.objects.create(
+            tenant_id=t_id,
+            name="Cyril Amarchand Mangaldas",
+            idp={"kind": "GOOGLE", "domain": domain},
+        )
 
-    u_active = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="lawyer@cyrilshroff.com",
-        idp_subject="sub_google_12345",
-        firm_role="PARTNER",
-        active=True,
-    )
+        u_active = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"lawyer_{t_id}@cyrilshroff.com",
+            idp_subject=f"sub_google_{t_id}",
+            firm_role="PARTNER",
+            active=True,
+        )
 
-    u_inactive = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="former@cyrilshroff.com",
-        idp_subject="sub_google_former",
-        firm_role="ASSOCIATE",
-        active=False,
-    )
+        u_inactive = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"former_{t_id}@cyrilshroff.com",
+            idp_subject=f"sub_google_former_{t_id}",
+            firm_role="ASSOCIATE",
+            active=False,
+        )
 
-    return {
-        "tenant": tenant,
-        "user_active": u_active,
-        "user_inactive": u_inactive,
-    }
+        return {
+            "tenant": tenant,
+            "user_active": u_active,
+            "user_inactive": u_inactive,
+        }
 
 
 def test_dev_authentication_backend(auth_setup: dict[str, Any]) -> None:
@@ -137,10 +142,13 @@ def test_social_account_adapter_google_hd_validation(auth_setup: dict[str, Any])
     adapter = LawyerBrainSocialAccountAdapter()
     u_active = auth_setup["user_active"]
 
+    tenant = auth_setup["tenant"]
+    domain = tenant.idp["domain"]
+
     # Mock sociallogin with valid Google claims
     sociallogin = MagicMock()
     sociallogin.account.provider = "google"
-    sociallogin.account.extra_data = {"email": u_active.email, "hd": "cyrilshroff.com"}
+    sociallogin.account.extra_data = {"email": u_active.email, "hd": domain}
     sociallogin.user.email = u_active.email
 
     adapter.pre_social_login(MagicMock(), sociallogin)

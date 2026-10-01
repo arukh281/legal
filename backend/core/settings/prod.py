@@ -26,3 +26,10 @@ AUTHENTICATION_BACKENDS = [
 
 # Enforce that runtime role is app_rw and not superuser/BYPASSRLS (Directive #3)
 ENFORCE_RUNTIME_DB_ROLE_CHECK = True
+
+ENVIRONMENT = "production"
+ADMIN_IP_ALLOWLIST = [
+    ip.strip()
+    for ip in os.environ.get("DJANGO_ADMIN_IP_ALLOWLIST", "127.0.0.1").split(",")
+    if ip.strip()
+]

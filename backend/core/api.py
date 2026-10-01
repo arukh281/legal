@@ -83,15 +83,18 @@ def dev_login(request: HttpRequest, payload: DevLoginRequest) -> dict[str, Any]:
     if not getattr(settings, "DEV_AUTH_ENABLED", False) or not settings.DEBUG:
         raise HttpError(403, "Dev login is disabled in this environment.")
 
-    query = AppUser.objects.filter(active=True)
-    if payload.email:
-        query = query.filter(email=payload.email)
-    elif payload.user_id:
-        query = query.filter(user_id=payload.user_id)
-    else:
-        raise HttpError(400, "Provide either email or user_id.")
+    from core.db_router import admin_db_context
 
-    app_user = query.first()
+    with admin_db_context():
+        query = AppUser.objects.filter(active=True)
+        if payload.email:
+            query = query.filter(email=payload.email)
+        elif payload.user_id:
+            query = query.filter(user_id=payload.user_id)
+        else:
+            raise HttpError(400, "Provide either email or user_id.")
+
+        app_user = query.first()
     if not app_user:
         raise HttpError(403, "User not found or inactive.")
 

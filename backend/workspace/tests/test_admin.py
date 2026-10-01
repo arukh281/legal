@@ -11,21 +11,25 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 
 from anchor_lib.ids import mint_id
+from core.db_router import admin_db_context
 from workspace.models import AppUser, Matter, Tenant
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db(databases="__all__", transaction=True)
+
 
 @pytest.fixture
-def admin_client_logged_in(db: None) -> Client:
+def admin_client_logged_in() -> Client:
     """Superuser admin client."""
     client = Client()
-    admin_user = User.objects.create_superuser(
-        username="admin_user",
-        email="admin@platform.internal",
-        password="test_password_1234",
-    )
-    client.force_login(admin_user)
+    with admin_db_context():
+        admin_user = User.objects.create_superuser(
+            username="admin_user",
+            email="admin@platform.internal",
+            password="test_password_1234",
+        )
+        client.force_login(admin_user)
     return client
 
 
@@ -50,20 +54,30 @@ def test_admin_tenant_list_and_create(admin_client_logged_in: Client) -> None:
     # Redirects to changelist on successful creation
     assert resp_create.status_code == 302
 
-    tenant = Tenant.objects.filter(name="Khaitan & Co").first()
-    assert tenant is not None
-    assert tenant.residency_policy == "IN_ONLY"
-    assert tenant.tenant_id.startswith("ten_")
+    with admin_db_context():
+        tenant = Tenant.objects.filter(name="Khaitan & Co").first()
+        assert tenant is not None
+        assert tenant.residency_policy == "IN_ONLY"
+        assert tenant.tenant_id.startswith("ten_")
+
+        # 3. Verify admin write is audited in tpl.audit_event
+        from workspace.models import AuditEvent
+
+        audit_entry = AuditEvent.objects.filter(tenant_id=tenant.tenant_id, action="ADMIN_CREATE").first()
+        assert audit_entry is not None
+        assert audit_entry.actor == "admin_user"
+        assert audit_entry.detail.get("admin_user") == "admin_user"
 
 
 def test_admin_app_user_list_and_create(admin_client_logged_in: Client) -> None:
     client = admin_client_logged_in
     t_id = mint_id("ten")
-    Tenant.objects.create(
-        tenant_id=t_id,
-        name="AZB & Partners",
-        idp={"kind": "GOOGLE", "domain": "azbpartners.com"},
-    )
+    with admin_db_context():
+        Tenant.objects.create(
+            tenant_id=t_id,
+            name="AZB & Partners",
+            idp={"kind": "GOOGLE", "domain": "azbpartners.com"},
+        )
 
     # 1. User changelist loads
     resp = client.get("/admin/workspace/adminappuser/")
@@ -83,21 +97,23 @@ def test_admin_app_user_list_and_create(admin_client_logged_in: Client) -> None:
     )
     assert resp_create.status_code == 302
 
-    user = AppUser.objects.filter(email="partner@azbpartners.com").first()
-    assert user is not None
-    assert user.firm_role == "PARTNER"
-    assert user.tenant_id == t_id
-    assert user.user_id.startswith("usr_")
+    with admin_db_context():
+        user = AppUser.objects.filter(email="partner@azbpartners.com").first()
+        assert user is not None
+        assert user.firm_role == "PARTNER"
+        assert user.tenant_id == t_id
+        assert user.user_id.startswith("usr_")
 
 
 def test_admin_matter_list_and_create(admin_client_logged_in: Client) -> None:
     client = admin_client_logged_in
     t_id = mint_id("ten")
-    Tenant.objects.create(
-        tenant_id=t_id,
-        name="Trilegal",
-        idp={"kind": "GOOGLE", "domain": "trilegal.com"},
-    )
+    with admin_db_context():
+        Tenant.objects.create(
+            tenant_id=t_id,
+            name="Trilegal",
+            idp={"kind": "GOOGLE", "domain": "trilegal.com"},
+        )
 
     # 1. Matter changelist loads
     resp = client.get("/admin/workspace/adminmatter/")
@@ -118,7 +134,8 @@ def test_admin_matter_list_and_create(admin_client_logged_in: Client) -> None:
     )
     assert resp_create.status_code == 302
 
-    matter = Matter.objects.filter(title="Cross-Border M&A").first()
-    assert matter is not None
-    assert matter.tenant_id == t_id
-    assert matter.matter_id.startswith("mat_")
+    with admin_db_context():
+        matter = Matter.objects.filter(title="Cross-Border M&A").first()
+        assert matter is not None
+        assert matter.tenant_id == t_id
+        assert matter.matter_id.startswith("mat_")

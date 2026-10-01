@@ -10,6 +10,7 @@ import pytest
 
 from anchor_lib.ids import mint_id
 from workspace.audit import record_audit_event
+from workspace.db import tenant_db_context
 from workspace.models import AuditEvent, Tenant
 
 
@@ -24,20 +25,21 @@ def test_json_field_roundtrips_dict_natively() -> None:
         "enabled": True,
     }
 
-    Tenant.objects.create(
-        tenant_id=t_id,
-        name="JSON Test Firm",
-        idp=payload,
-    )
+    with tenant_db_context(tenant_id=t_id):
+        Tenant.objects.create(
+            tenant_id=t_id,
+            name="JSON Test Firm",
+            idp=payload,
+        )
 
-    # Re-fetch from DB
-    loaded = Tenant.objects.get(tenant_id=t_id)
-    assert isinstance(loaded.idp, dict), f"Expected dict, got {type(loaded.idp)}"
-    assert not isinstance(loaded.idp, str), "JSONField must never return a str"
-    assert loaded.idp == payload
-    assert isinstance(loaded.idp["nested"], dict)
-    assert loaded.idp["nested"]["count"] == 42
-    assert isinstance(loaded.idp["tags"], list)
+        # Re-fetch from DB
+        loaded = Tenant.objects.get(tenant_id=t_id)
+        assert isinstance(loaded.idp, dict), f"Expected dict, got {type(loaded.idp)}"
+        assert not isinstance(loaded.idp, str), "JSONField must never return a str"
+        assert loaded.idp == payload
+        assert isinstance(loaded.idp["nested"], dict)
+        assert loaded.idp["nested"]["count"] == 42
+        assert isinstance(loaded.idp["tags"], list)
 
 
 @pytest.mark.django_db
@@ -50,15 +52,16 @@ def test_audit_event_detail_json_field_roundtrips() -> None:
         "flags": [True, False],
     }
 
-    ev = record_audit_event(
-        tenant_id=t_id,
-        actor="usr_json_test",
-        action="TEST_JSON_ROUNDTRIP",
-        detail=detail_data,
-    )
+    with tenant_db_context(tenant_id=t_id):
+        ev = record_audit_event(
+            tenant_id=t_id,
+            actor="usr_json_test",
+            action="TEST_JSON_ROUNDTRIP",
+            detail=detail_data,
+        )
 
-    loaded = AuditEvent.objects.get(tenant_id=t_id, audit_id=ev.audit_id)
-    assert isinstance(loaded.detail, dict)
-    assert not isinstance(loaded.detail, str)
-    assert loaded.detail == detail_data
-    assert loaded.detail["nested_meta"]["attempts"] == 3
+        loaded = AuditEvent.objects.get(tenant_id=t_id, audit_id=ev.audit_id)
+        assert isinstance(loaded.detail, dict)
+        assert not isinstance(loaded.detail, str)
+        assert loaded.detail == detail_data
+        assert loaded.detail["nested_meta"]["attempts"] == 3

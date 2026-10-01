@@ -9,19 +9,19 @@ Normative sources:
 from __future__ import annotations
 
 import pytest
-from django.db import connection
+from django.db import connection, connections, transaction
 
 from anchor_lib.ids import mint_id
 from workspace.db import tenant_db_context
 
+pytestmark = pytest.mark.django_db(
+    databases=["default", "owner", "admin", "worker"], transaction=True
+)
+
 
 @pytest.fixture
-def rls_setup(db: None) -> dict[str, str]:
+def rls_setup() -> dict[str, str]:
     """Create test tenants, users, and matters for RLS testing."""
-    # Ensure roles exist and permissions are granted
-    with connection.cursor() as cursor:
-        cursor.execute("RESET ROLE;")
-
     t1_id = mint_id("ten")
     t2_id = mint_id("ten")
 
@@ -31,41 +31,51 @@ def rls_setup(db: None) -> dict[str, str]:
     m1_id = mint_id("mat")
     m2_id = mint_id("mat")
 
-    with connection.cursor() as cursor:
-        # Insert raw data without RLS as superuser/owner
-        cursor.execute(
-            """
-            INSERT INTO tpl.tenant (tenant_id, name, deployment_mode, residency_policy, llm_policy, idp, created_at)
-            VALUES (%s, %s, 'D2', 'ANY', '{}', '{"kind":"GOOGLE"}', now()),
-                   (%s, %s, 'D2', 'ANY', '{}', '{"kind":"GOOGLE"}', now());
-            """,
-            [t1_id, "Tenant Alpha", t2_id, "Tenant Beta"],
-        )
-        cursor.execute(
-            """
-            INSERT INTO tpl.app_user (tenant_id, user_id, email, display_name, idp_subject, firm_role, active)
-            VALUES (%s, %s, 'alice@alpha.in', 'Alice', 'sub-alice', 'PARTNER', true),
-                   (%s, %s, 'bob@beta.in', 'Bob', 'sub-bob', 'PARTNER', true);
-            """,
-            [t1_id, u1_id, t2_id, u2_id],
-        )
-        cursor.execute(
-            """
-            INSERT INTO tpl.matter (tenant_id, matter_id, title, client_role, status, walled, created_at)
-            VALUES (%s, %s, 'Alpha Matter 1', 'PETITIONER', 'ACTIVE', false, now()),
-                   (%s, %s, 'Beta Matter 1', 'RESPONDENT', 'ACTIVE', false, now());
-            """,
-            [t1_id, m1_id, t2_id, m2_id],
-        )
-        # Grant membership
-        cursor.execute(
-            """
-            INSERT INTO tpl.matter_member (tenant_id, matter_id, user_id, role, granted_by, granted_at)
-            VALUES (%s, %s, %s, 'LEAD', 'system', now()),
-                   (%s, %s, %s, 'LEAD', 'system', now());
-            """,
-            [t1_id, m1_id, u1_id, t2_id, m2_id, u2_id],
-        )
+    # Use owner connection (superuser postgres) to insert raw fixture data bypassing RLS
+    with transaction.atomic(using="owner"):
+        with connections["owner"].cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO tpl.tenant (tenant_id, name, deployment_mode, residency_policy, llm_policy, idp, created_at)
+                VALUES (%s, %s, 'D2', 'ANY', '{}', '{"kind":"GOOGLE"}', now()),
+                       (%s, %s, 'D2', 'ANY', '{}', '{"kind":"GOOGLE"}', now());
+                """,
+                [t1_id, "Tenant Alpha", t2_id, "Tenant Beta"],
+            )
+            cursor.execute(
+                """
+                INSERT INTO tpl.app_user (tenant_id, user_id, email, display_name, idp_subject, firm_role, active)
+                VALUES (%s, %s, %s, 'Alice', %s, 'PARTNER', true),
+                       (%s, %s, %s, 'Bob', %s, 'PARTNER', true);
+                """,
+                [
+                    t1_id,
+                    u1_id,
+                    f"alice_{t1_id}@alpha.in",
+                    f"sub-alice-{t1_id}",
+                    t2_id,
+                    u2_id,
+                    f"bob_{t2_id}@beta.in",
+                    f"sub-bob-{t2_id}",
+                ],
+            )
+            cursor.execute(
+                """
+                INSERT INTO tpl.matter (tenant_id, matter_id, title, client_role, status, walled, created_at)
+                VALUES (%s, %s, 'Alpha Matter 1', 'PETITIONER', 'ACTIVE', false, now()),
+                       (%s, %s, 'Beta Matter 1', 'RESPONDENT', 'ACTIVE', false, now());
+                """,
+                [t1_id, m1_id, t2_id, m2_id],
+            )
+            # Grant membership
+            cursor.execute(
+                """
+                INSERT INTO tpl.matter_member (tenant_id, matter_id, user_id, role, granted_by, granted_at)
+                VALUES (%s, %s, %s, 'LEAD', 'system', now()),
+                       (%s, %s, %s, 'LEAD', 'system', now());
+                """,
+                [t1_id, m1_id, u1_id, t2_id, m2_id, u2_id],
+            )
 
     return {
         "t1_id": t1_id,
@@ -159,39 +169,54 @@ def test_connection_reuse_leakage_prevention(rls_setup: dict[str, str]) -> None:
 
 
 def test_worker_job_tenant_isolation_on_connection_reuse(rls_setup: dict[str, str]) -> None:
-    """Directive #3: A worker job for Tenant A followed by a job for Tenant B on the same connection.
+    """Directive #2: A worker job for Tenant A followed by a job for Tenant B on the same connection.
 
-    Verifies that worker jobs correctly set and reset tenant context and Tenant B's job cannot see Tenant A's rows.
+    Verifies that a worker connected as the real 'worker' role (which has BYPASSRLS)
+    transitions to non-bypass role 'app_rw' under tenant_db_context(), preventing Tenant B
+    from seeing Tenant A's rows on connection reuse.
     """
     t1_id = rls_setup["t1_id"]
     t2_id = rls_setup["t2_id"]
     u1_id = rls_setup["u1_id"]
     u2_id = rls_setup["u2_id"]
 
-    with connection.cursor() as cursor:
-        cursor.execute("SET ROLE app_rw;")
-        try:
-            # 1. Job 1 runs for Tenant A on this worker connection
-            with tenant_db_context(tenant_id=t1_id, user_id=u1_id, purpose="JOB_RUNNER"):
-                cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
-                rows_a = cursor.fetchall()
-                assert len(rows_a) == 1
-                assert rows_a[0][0] == t1_id
+    with connections["worker"].cursor() as cursor:
+        # Confirm that the baseline worker role has BYPASSRLS
+        cursor.execute("SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+        assert cursor.fetchone()[0] is True, "worker role must possess BYPASSRLS for cross-tenant tasks"
 
-            # 2. Job 2 runs for Tenant B reusing the SAME connection
-            with tenant_db_context(tenant_id=t2_id, user_id=u2_id, purpose="JOB_RUNNER"):
-                cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
-                rows_b = cursor.fetchall()
-                # Must only see Tenant B's matters (or 0 if none created for B), never Tenant A's!
-                assert all(r[0] == t2_id for r in rows_b)
-                assert not any(r[0] == t1_id for r in rows_b)
+        # 1. Job 1 runs for Tenant A on this worker connection
+        with tenant_db_context(tenant_id=t1_id, user_id=u1_id, purpose="JOB_RUNNER", using="worker"):
+            # Inside tenant context, role is transitioned to app_rw (NOBYPASSRLS)
+            cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+            cur_user, bypass = cursor.fetchone()
+            assert cur_user == "app_rw"
+            assert bypass is False, "Tenant-scoped job must run under NOBYPASSRLS"
 
-                # Explicit query for Tenant A rows inside Job B must return 0 rows
-                cursor.execute("SELECT * FROM tpl.matter WHERE tenant_id = %s;", [t1_id])
-                assert len(cursor.fetchall()) == 0
+            cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
+            rows_a = cursor.fetchall()
+            assert len(rows_a) == 1
+            assert rows_a[0][0] == t1_id
 
-            # 3. Post-job state on connection has context completely cleared
-            cursor.execute("SELECT count(*) FROM tpl.matter;")
-            assert cursor.fetchone()[0] == 0
-        finally:
-            cursor.execute("RESET ROLE;")
+        # 2. Job 2 runs for Tenant B reusing the SAME worker connection
+        with tenant_db_context(tenant_id=t2_id, user_id=u2_id, purpose="JOB_RUNNER", using="worker"):
+            cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+            cur_user, bypass = cursor.fetchone()
+            assert cur_user == "app_rw"
+            assert bypass is False
+
+            cursor.execute("SELECT tenant_id, matter_id FROM tpl.matter;")
+            rows_b = cursor.fetchall()
+            # Must only see Tenant B's matters, never Tenant A's!
+            assert all(r[0] == t2_id for r in rows_b)
+            assert not any(r[0] == t1_id for r in rows_b)
+
+            # Explicit query for Tenant A rows inside Job B must return 0 rows under RLS
+            cursor.execute("SELECT * FROM tpl.matter WHERE tenant_id = %s;", [t1_id])
+            assert len(cursor.fetchall()) == 0
+
+        # 3. Post-job state on connection restores role back to worker
+        cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+        cur_user, bypass = cursor.fetchone()
+        assert cur_user == "worker"
+        assert bypass is True, "Worker connection must restore worker role after job completion"

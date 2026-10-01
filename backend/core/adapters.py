@@ -12,6 +12,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialLogin
 from django.http import HttpRequest, HttpResponseForbidden
 
+from core.db_router import admin_db_context
 from workspace.models import AppUser, Tenant
 
 
@@ -32,6 +33,10 @@ class LawyerBrainSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request: HttpRequest, sociallogin: SocialLogin) -> None:
         """Validate IdP claims (hd/tid) against Tenant.idp and verify user is pre-provisioned."""
+        with admin_db_context():
+            self._do_pre_social_login(request, sociallogin)
+
+    def _do_pre_social_login(self, request: HttpRequest, sociallogin: SocialLogin) -> None:
         provider = sociallogin.account.provider
         extra_data = sociallogin.account.extra_data
         email = sociallogin.user.email or extra_data.get("email")

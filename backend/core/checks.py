@@ -12,7 +12,7 @@ from typing import Any
 
 from django.conf import settings
 from django.core.checks import CheckMessage, Error, Tags, Warning, register
-from django.db import connection
+from django.db import connection, connections
 
 
 @register(Tags.security)
@@ -44,7 +44,9 @@ def check_dev_auth_not_in_prod(app_configs: Any = None, **kwargs: Any) -> list[C
 
 
 @register(Tags.security)
-def check_runtime_db_role(app_configs: Any = None, **kwargs: Any) -> list[CheckMessage]:
+def check_runtime_db_role(
+    app_configs: Any = None, using: str = "default", **kwargs: Any
+) -> list[CheckMessage]:
     """Ensure the web runtime role is not a superuser and does not possess BYPASSRLS (Directive #3)."""
     errors: list[CheckMessage] = []
 
@@ -58,7 +60,8 @@ def check_runtime_db_role(app_configs: Any = None, **kwargs: Any) -> list[CheckM
         return []
 
     try:
-        with connection.cursor() as cursor:
+        conn = connections[using] if using in connections else connection
+        with conn.cursor() as cursor:
             cursor.execute(
                 """
                 SELECT rolname, rolsuper, rolbypassrls

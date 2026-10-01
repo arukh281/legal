@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.http import HttpRequest
 
+from core.db_router import admin_db_context
 from workspace.models import AppUser
 
 User = get_user_model()
@@ -40,24 +41,25 @@ class DevAuthenticationBackend(BaseBackend):
         if not email and not user_id:
             return None
 
-        # Look up pre-provisioned AppUser
-        query = AppUser.objects.filter(active=True)
-        if email:
-            query = query.filter(email=email)
-        if user_id:
-            query = query.filter(user_id=user_id)
+        with admin_db_context():
+            # Look up pre-provisioned AppUser across tenants
+            query = AppUser.objects.filter(active=True)
+            if email:
+                query = query.filter(email=email)
+            if user_id:
+                query = query.filter(user_id=user_id)
 
-        app_user = query.first()
-        if not app_user:
-            return None
+            app_user = query.first()
+            if not app_user:
+                return None
 
-        # Link/get or create standard Django user for session management
-        django_user, _ = User.objects.get_or_create(
-            username=app_user.user_id,
-            defaults={"email": app_user.email, "is_active": True},
-        )
-        cast(Any, django_user).app_user = app_user
-        return django_user
+            # Link/get or create standard Django user for session management
+            django_user, _ = User.objects.get_or_create(
+                username=app_user.user_id,
+                defaults={"email": app_user.email, "is_active": True},
+            )
+            cast(Any, django_user).app_user = app_user
+            return django_user
 
     def get_user(self, user_id: Any) -> Any | None:
         try:

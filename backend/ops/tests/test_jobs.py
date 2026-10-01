@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 from typing import Any
 
 import pytest
@@ -28,7 +29,7 @@ from ops.jobs import (
 @pytest.mark.django_db(transaction=True)
 def test_job_chain_step_key_replay() -> None:
     """A replay with the same step_key reuses the output without re-executing logic."""
-    kind = "TEST_REPLAY_CHAIN"
+    kind = f"TEST_REPLAY_CHAIN_{uuid.uuid4().hex[:8]}"
     step1_calls = 0
 
     @register_step(kind, "replay_step_1")
@@ -43,7 +44,7 @@ def test_job_chain_step_key_replay() -> None:
 
     job_id = start_job_chain(
         kind=kind,
-        idempotency_key="replay-idem-key-1",
+        idempotency_key=f"replay-idem-key-{uuid.uuid4().hex}",
         request={"input": 123},
         pipeline_version="comp@1.0|m|s|r|p",
     )
@@ -67,7 +68,7 @@ def test_demo_chain_full_execution() -> None:
 
     job_id = start_job_chain(
         kind=DEMO_CHAIN_KIND,
-        idempotency_key="demo-chain-e2e-1",
+        idempotency_key=f"demo-chain-e2e-{uuid.uuid4().hex}",
         request={"text": "hello legal world", "items": ["ibc", "nclt"]},
         pipeline_version="ops/demo@0.1.0",
     )
@@ -132,7 +133,7 @@ def test_job_chain_crash_recovery_killing_real_worker_process() -> None:
 
     job_id = start_job_chain(
         kind=CRASH_CHAIN_KIND,
-        idempotency_key="crash-test-key-sigkill",
+        idempotency_key=f"crash-test-key-{uuid.uuid4().hex}",
         request={"test": True},
         pipeline_version="test@1.0",
     )
@@ -234,7 +235,7 @@ def test_job_chain_crash_recovery_killing_real_worker_process() -> None:
 @pytest.mark.django_db(transaction=True)
 def test_job_chain_step_sets_and_resets_tenant_db_context() -> None:
     """Directive #3: Job step executions set and reset tenant context from request data."""
-    kind = "TEST_TENANT_CONTEXT_CHAIN"
+    kind = f"TEST_TENANT_CONTEXT_CHAIN_{uuid.uuid4().hex[:8]}"
     observed_tenants: list[str | None] = []
 
     @register_step(kind, "tenant_step_1")
@@ -248,7 +249,7 @@ def test_job_chain_step_sets_and_resets_tenant_db_context() -> None:
     # Job for Tenant Alpha
     job_a = start_job_chain(
         kind=kind,
-        idempotency_key="tenant-ctx-job-a",
+        idempotency_key=f"tenant-ctx-job-a-{uuid.uuid4().hex}",
         request={"tenant_id": "ten_alpha", "user_id": "usr_alpha"},
         pipeline_version="comp@1.0|m|s|r|p",
     )
@@ -264,7 +265,7 @@ def test_job_chain_step_sets_and_resets_tenant_db_context() -> None:
     # Job for Tenant Beta on the exact same connection
     job_b = start_job_chain(
         kind=kind,
-        idempotency_key="tenant-ctx-job-b",
+        idempotency_key=f"tenant-ctx-job-b-{uuid.uuid4().hex}",
         request={"tenant_id": "ten_beta", "user_id": "usr_beta"},
         pipeline_version="comp@1.0|m|s|r|p",
     )

@@ -194,4 +194,24 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Guarantees that privileged or tenant-confidential requests never route to public or foreign-hosted models unless explicitly permitted by tenant policy.
 - **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §2.8, §2.13; `docs/01a_spine_decision_record.md` D14, D15; Session S03 Directive #8.
 
+---
+
+### 2026-10-02 — Worker Tenant-Scoped Jobs Elevate to `app_rw` via `SET ROLE`
+- **Decision:** The `worker` role retains `BYPASSRLS` for cross-tenant system tasks (outbox dispatcher, PLC ingestion). All tenant-scoped work transitions to `app_rw` via `SET ROLE app_rw;` inside `tenant_db_context()`, ensuring RLS enforcement on tenant jobs. `GRANT app_rw TO worker;` enables this role switch.
+- **Reason:** 03 §1 specifies `worker` with `BYPASSRLS`. However, tenant-scoped work (memos, matter parsing, alerts for one firm) must be RLS-protected. Rather than removing `BYPASSRLS` from `worker` (breaking outbox dispatch and PLC ingestion), scoped elevation to `app_rw` inside `tenant_db_context()` precisely constrains tenant-scoped jobs while preserving system-level access.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §1 item 1; Session S03 follow-up Directive #2.
+
+---
+
+### 2026-10-02 — Admin Connection Routing via `DatabaseRouter` and `admin_db_context()`
+- **Decision:** Pre-authentication user/tenant lookups in `AuthzDependency`, `TenantContextMiddleware`, and `core.auth` use `admin_db_context()` (connecting as `admin_rw` with `BYPASSRLS`). The `DatabaseRouter` routes reads/writes to `admin` alias when the admin context is active.
+- **Reason:** Before a user is authenticated, `app.tenant_id` is unknown and RLS blocks all queries on `tpl` tables. Admin lookups must bypass RLS to resolve the user's identity and tenant.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §1 item 1, §6; Session S03 follow-up Directive #1.
+
+---
+
+### 2026-10-02 — Custom `conftest.py` for Multi-Role Test Database Setup
+- **Decision:** Overrode pytest-django's `django_db_setup` fixture in `backend/conftest.py` to: (1) create and migrate the test DB using only the `owner` alias (postgres), then (2) point `default` (app_rw), `admin` (admin_rw), and `worker` connections to the same test DB by name. This avoids Django's `MIRROR`/`DEPENDENCIES` mechanisms which cause circular dependency errors when all aliases share the same physical DB signature.
+- **Reason:** Django's test runner treats DB aliases with identical connection params as aliases of one physical DB. `MIRROR` silently routes queries through the mirrored alias (losing role separation). `DEPENDENCIES` triggers circular-dependency detection. The custom fixture preserves real role separation: `default` connects as `app_rw` (exercising RLS), `admin` as `admin_rw` (BYPASSRLS), and `worker` as `worker`.
+- **Doc Reference:** Session S03 follow-up Directive #3.
 

@@ -14,6 +14,7 @@ from typing import Any
 from django.db import connection
 
 from workspace.audit import record_audit_event
+from workspace.db import tenant_db_context
 from workspace.models import AppUser, Matter
 
 
@@ -73,95 +74,91 @@ def can(
 
     # 2 & 3. Matter-scoped object checks
     if matter_id:
-        # Check ethical wall exclusion (deny-first)
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT 1
-                FROM tpl.wall_exclusion we
-                JOIN tpl.ethical_wall ew ON ew.tenant_id = we.tenant_id AND ew.wall_id = we.wall_id
-                WHERE ew.tenant_id = %s AND ew.matter_id = %s AND we.user_id = %s
-                LIMIT 1
-                """,
-                [user.tenant_id, matter_id, user.user_id],
-            )
-            is_excluded = cursor.fetchone() is not None
-
-        if is_excluded:
-            # Emit WALL_VIOLATION_ATTEMPT audit log
-            record_audit_event(
-                tenant_id=user.tenant_id,
-                actor=user.user_id,
-                action="WALL_VIOLATION_ATTEMPT",
-                object_ref=matter_id,
-                matter_id=matter_id,
-                decision="DENY",
-                detail={"action": action, "denial_reason": "WALL_EXCLUSION"},
-            )
-            return False
-
-        # Check active matter membership
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT role
-                FROM tpl.matter_member
-                WHERE tenant_id = %s AND matter_id = %s AND user_id = %s AND revoked_at IS NULL
-                ORDER BY granted_at DESC
-                LIMIT 1
-                """,
-                [user.tenant_id, matter_id, user.user_id],
-            )
-            member_row = cursor.fetchone()
-
-        if member_row:
-            member_role = member_row[0]
-            if member_role == "VIEWER":
-                return action in ("read", "view", "get", "list")
-            if member_role == "MEMBER":
-                return action in (
-                    "read",
-                    "view",
-                    "get",
-                    "list",
-                    "write",
-                    "edit",
-                    "create",
-                    "update",
-                )
-            if member_role == "LEAD":
-                return True
-            return False
-
-        # Non-member check: Firm ADMIN
-        if user.firm_role == "ADMIN":
-            # Check if matter is walled
+        with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+            # Check ethical wall exclusion (deny-first)
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
-                    SELECT walled
-                    FROM tpl.matter
-                    WHERE tenant_id = %s AND matter_id = %s
+                    SELECT 1
+                    FROM tpl.wall_exclusion we
+                    JOIN tpl.ethical_wall ew ON ew.tenant_id = we.tenant_id AND ew.wall_id = we.wall_id
+                    WHERE ew.tenant_id = %s AND ew.matter_id = %s AND we.user_id = %s
                     LIMIT 1
                     """,
-                    [user.tenant_id, matter_id],
+                    [user.tenant_id, matter_id, user.user_id],
                 )
-                matter_row = cursor.fetchone()
+                is_excluded = cursor.fetchone() is not None
 
-            is_walled = matter_row[0] if matter_row else False
-            if is_walled:
-                # Firm ADMIN can manage membership but CANNOT read walled content without membership
-                return action in (
-                    "manage_members",
-                    "manage_membership",
-                    "assign_member",
-                    "revoke_member",
+            if is_excluded:
+                # Emit WALL_VIOLATION_ATTEMPT audit log
+                record_audit_event(
+                    tenant_id=user.tenant_id,
+                    actor=user.user_id,
+                    action="WALL_VIOLATION_ATTEMPT",
+                    object_ref=matter_id,
+                    matter_id=matter_id,
+                    decision="DENY",
+                    detail={"action": action, "denial_reason": "WALL_EXCLUSION"},
                 )
-            # Non-walled matter: firm ADMIN has access
-            return True
+                return False
 
-        # Non-member non-admin -> DENY
-        return False
+            # Check active matter membership
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT role
+                    FROM tpl.matter_member
+                    WHERE tenant_id = %s AND matter_id = %s AND user_id = %s AND revoked_at IS NULL
+                    ORDER BY granted_at DESC
+                    LIMIT 1
+                    """,
+                    [user.tenant_id, matter_id, user.user_id],
+                )
+                member_row = cursor.fetchone()
+
+            if member_row:
+                member_role = member_row[0]
+                if member_role == "VIEWER":
+                    return action in ("read", "view", "get", "list")
+                if member_role == "MEMBER":
+                    return action in (
+                        "read",
+                        "view",
+                        "get",
+                        "list",
+                        "write",
+                        "edit",
+                        "create",
+                        "update",
+                    )
+                if member_role == "LEAD":
+                    return True
+                return False
+
+            # Non-member check: Firm ADMIN
+            if user.firm_role == "ADMIN":
+                # Check if matter is walled via security-definer helper
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT tpl.is_matter_walled(%s)",
+                        [matter_id],
+                    )
+                    row = cursor.fetchone()
+                    is_walled = bool(row[0]) if row else False
+
+                if is_walled:
+                    # Firm ADMIN can manage membership but CANNOT read walled content without membership
+                    return action in (
+                        "manage_members",
+                        "manage_membership",
+                        "assign_member",
+                        "revoke_member",
+                    )
+                # Non-walled matter: firm ADMIN has access
+                return True
+
+            # Non-member non-admin -> DENY
+            return False
 
     # 4. Tenant-scoped objects (e.g., owner check)
     if hasattr(obj, "owner_id"):

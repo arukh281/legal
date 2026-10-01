@@ -16,7 +16,9 @@ from django.test import Client
 from anchor_lib.ids import mint_id
 from core.api import api
 from core.authz_dependency import authz_required
+from core.db_router import admin_db_context
 from workspace.authz import can
+from workspace.db import tenant_db_context
 from workspace.models import (
     AppUser,
     AuditEvent,
@@ -27,134 +29,137 @@ from workspace.models import (
     WallExclusion,
 )
 
+pytestmark = pytest.mark.django_db(databases="__all__", transaction=True)
+
 
 @pytest.fixture
-def authz_fixture(db: None) -> dict[str, Any]:
+def authz_fixture() -> dict[str, Any]:
     """Create tenant, users, and matters with varying memberships and walls."""
     t_id = mint_id("ten")
-    tenant = Tenant.objects.create(
-        tenant_id=t_id,
-        name="Shardul Amarchand Mangaldas",
-        idp={"kind": "GOOGLE", "tenant_or_domain": "sam.com"},
-    )
+    with admin_db_context():
+        tenant = Tenant.objects.create(
+            tenant_id=t_id,
+            name="Shardul Amarchand Mangaldas",
+            idp={"kind": "GOOGLE", "tenant_or_domain": f"sam_{t_id}.com"},
+        )
 
-    u_admin = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="admin@sam.com",
-        idp_subject="sub_admin",
-        firm_role="ADMIN",
-        active=True,
-    )
+        u_admin = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"admin_{t_id}@sam.com",
+            idp_subject=f"sub_admin_{t_id}",
+            firm_role="ADMIN",
+            active=True,
+        )
 
-    u_lead = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="lead@sam.com",
-        idp_subject="sub_lead",
-        firm_role="PARTNER",
-        active=True,
-    )
+        u_lead = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"lead_{t_id}@sam.com",
+            idp_subject=f"sub_lead_{t_id}",
+            firm_role="PARTNER",
+            active=True,
+        )
 
-    u_member = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="member@sam.com",
-        idp_subject="sub_member",
-        firm_role="ASSOCIATE",
-        active=True,
-    )
+        u_member = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"member_{t_id}@sam.com",
+            idp_subject=f"sub_member_{t_id}",
+            firm_role="ASSOCIATE",
+            active=True,
+        )
 
-    u_viewer = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="viewer@sam.com",
-        idp_subject="sub_viewer",
-        firm_role="PARALEGAL",
-        active=True,
-    )
+        u_viewer = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"viewer_{t_id}@sam.com",
+            idp_subject=f"sub_viewer_{t_id}",
+            firm_role="PARALEGAL",
+            active=True,
+        )
 
-    u_excluded = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="excluded@sam.com",
-        idp_subject="sub_excluded",
-        firm_role="PARTNER",
-        active=True,
-    )
+        u_excluded = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"excluded_{t_id}@sam.com",
+            idp_subject=f"sub_excluded_{t_id}",
+            firm_role="PARTNER",
+            active=True,
+        )
 
-    u_inactive = AppUser.objects.create(
-        tenant_id=t_id,
-        user_id=mint_id("usr"),
-        email="inactive@sam.com",
-        idp_subject="sub_inactive",
-        firm_role="ASSOCIATE",
-        active=False,
-    )
+        u_inactive = AppUser.objects.create(
+            tenant_id=t_id,
+            user_id=mint_id("usr"),
+            email=f"inactive_{t_id}@sam.com",
+            idp_subject=f"sub_inactive_{t_id}",
+            firm_role="ASSOCIATE",
+            active=False,
+        )
 
-    # Matter 1: standard matter
-    m1 = Matter.objects.create(
-        tenant_id=t_id,
-        matter_id=mint_id("mat"),
-        title="Tata Sons Restructuring",
-        client_role="PETITIONER",
-        walled=False,
-    )
+        # Matter 1: standard matter
+        m1 = Matter.objects.create(
+            tenant_id=t_id,
+            matter_id=mint_id("mat"),
+            title="Tata Sons Restructuring",
+            client_role="PETITIONER",
+            walled=False,
+        )
 
-    # Matter 2: walled matter
-    m2 = Matter.objects.create(
-        tenant_id=t_id,
-        matter_id=mint_id("mat"),
-        title="Hostile Takeover Defense",
-        client_role="RESPONDENT",
-        walled=True,
-    )
+        # Matter 2: walled matter
+        m2 = Matter.objects.create(
+            tenant_id=t_id,
+            matter_id=mint_id("mat"),
+            title="Hostile Takeover Defense",
+            client_role="RESPONDENT",
+            walled=True,
+        )
 
-    # Memberships on m1
-    MatterMember.objects.create(
-        tenant_id=t_id,
-        matter_id=m1.matter_id,
-        user_id=u_lead.user_id,
-        role="LEAD",
-        granted_by=u_admin.user_id,
-    )
-    MatterMember.objects.create(
-        tenant_id=t_id,
-        matter_id=m1.matter_id,
-        user_id=u_member.user_id,
-        role="MEMBER",
-        granted_by=u_admin.user_id,
-    )
-    MatterMember.objects.create(
-        tenant_id=t_id,
-        matter_id=m1.matter_id,
-        user_id=u_viewer.user_id,
-        role="VIEWER",
-        granted_by=u_admin.user_id,
-    )
+        # Memberships on m1
+        MatterMember.objects.create(
+            tenant_id=t_id,
+            matter_id=m1.matter_id,
+            user_id=u_lead.user_id,
+            role="LEAD",
+            granted_by=u_admin.user_id,
+        )
+        MatterMember.objects.create(
+            tenant_id=t_id,
+            matter_id=m1.matter_id,
+            user_id=u_member.user_id,
+            role="MEMBER",
+            granted_by=u_admin.user_id,
+        )
+        MatterMember.objects.create(
+            tenant_id=t_id,
+            matter_id=m1.matter_id,
+            user_id=u_viewer.user_id,
+            role="VIEWER",
+            granted_by=u_admin.user_id,
+        )
 
-    # Memberships on m2 (lead only)
-    MatterMember.objects.create(
-        tenant_id=t_id,
-        matter_id=m2.matter_id,
-        user_id=u_lead.user_id,
-        role="LEAD",
-        granted_by=u_admin.user_id,
-    )
+        # Memberships on m2 (lead only)
+        MatterMember.objects.create(
+            tenant_id=t_id,
+            matter_id=m2.matter_id,
+            user_id=u_lead.user_id,
+            role="LEAD",
+            granted_by=u_admin.user_id,
+        )
 
-    # Ethical wall on m2 excluding u_excluded
-    wall = EthicalWall.objects.create(
-        tenant_id=t_id,
-        wall_id=mint_id("ewl"),
-        matter_id=m2.matter_id,
-        basis="Prior representation of bidder",
-        created_by=u_admin.user_id,
-    )
-    WallExclusion.objects.create(
-        tenant_id=t_id,
-        wall_id=wall.wall_id,
-        user_id=u_excluded.user_id,
-    )
+        # Ethical wall on m2 excluding u_excluded
+        wall = EthicalWall.objects.create(
+            tenant_id=t_id,
+            wall_id=mint_id("ewl"),
+            matter_id=m2.matter_id,
+            basis="Prior representation of bidder",
+            created_by=u_admin.user_id,
+        )
+        WallExclusion.objects.create(
+            tenant_id=t_id,
+            wall_id=wall.wall_id,
+            user_id=u_excluded.user_id,
+        )
 
     return {
         "tenant": tenant,
@@ -222,13 +227,14 @@ def test_ethical_wall_exclusion_deny_first_and_audits(authz_fixture: dict[str, A
     assert not can(excluded, "read", m_walled)
 
     # Check that WALL_VIOLATION_ATTEMPT audit row was recorded
-    audit_events = list(
-        AuditEvent.objects.filter(
-            tenant_id=excluded.tenant_id,
-            action="WALL_VIOLATION_ATTEMPT",
-            matter_id=m_walled.matter_id,
+    with tenant_db_context(tenant_id=excluded.tenant_id):
+        audit_events = list(
+            AuditEvent.objects.filter(
+                tenant_id=excluded.tenant_id,
+                action="WALL_VIOLATION_ATTEMPT",
+                matter_id=m_walled.matter_id,
+            )
         )
-    )
     assert len(audit_events) == 1
     event = audit_events[0]
     assert event.actor == excluded.user_id

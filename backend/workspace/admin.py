@@ -14,6 +14,8 @@ from django.db import models
 from django.utils import timezone
 
 from anchor_lib.models import PrefixedULIDField
+from core.db_router import admin_db_context
+from workspace.audit import record_audit_event
 from workspace.models import Tenant
 
 if TYPE_CHECKING:
@@ -22,8 +24,54 @@ else:
     _ModelAdmin = admin.ModelAdmin
 
 
+class AuditedModelAdmin(_ModelAdmin):
+    """ModelAdmin that audits every admin write (create, update, delete) to the audit log."""
+
+    def get_queryset(self, request: Any) -> Any:
+        with admin_db_context():
+            return super().get_queryset(request).using("admin")
+
+    def save_model(self, request: Any, obj: Any, form: Any, change: bool) -> None:
+        with admin_db_context():
+            super().save_model(request, obj, form, change)
+            tenant_id = getattr(obj, "tenant_id", None)
+            if tenant_id:
+                action = "ADMIN_UPDATE" if change else "ADMIN_CREATE"
+                actor = getattr(request.user, "username", "admin_user") or "admin_user"
+                record_audit_event(
+                    tenant_id=tenant_id,
+                    actor=actor,
+                    action=action,
+                    object_ref=f"{obj._meta.db_table}:{obj.pk}",
+                    detail={
+                        "admin_user": actor,
+                        "remote_ip": request.META.get("REMOTE_ADDR"),
+                        "changed_fields": list(form.changed_data) if form and hasattr(form, "changed_data") else [],
+                    },
+                    using="admin",
+                )
+
+    def delete_model(self, request: Any, obj: Any) -> None:
+        with admin_db_context():
+            tenant_id = getattr(obj, "tenant_id", None)
+            if tenant_id:
+                actor = getattr(request.user, "username", "admin_user") or "admin_user"
+                record_audit_event(
+                    tenant_id=tenant_id,
+                    actor=actor,
+                    action="ADMIN_DELETE",
+                    object_ref=f"{obj._meta.db_table}:{obj.pk}",
+                    detail={
+                        "admin_user": actor,
+                        "remote_ip": request.META.get("REMOTE_ADDR"),
+                    },
+                    using="admin",
+                )
+            super().delete_model(request, obj)
+
+
 @admin.register(Tenant)
-class TenantAdmin(_ModelAdmin):
+class TenantAdmin(AuditedModelAdmin):
     list_display = ("tenant_id", "name", "deployment_mode", "residency_policy", "created_at")
     search_fields = ("name", "tenant_id")
     readonly_fields = ("created_at",)
@@ -63,7 +111,7 @@ class AdminAppUser(models.Model):
 
 
 @admin.register(AdminAppUser)
-class AdminAppUserAdmin(_ModelAdmin):
+class AdminAppUserAdmin(AuditedModelAdmin):
     list_display = ("user_id", "email", "display_name", "firm_role", "tenant_id", "active")
     search_fields = ("email", "user_id", "display_name")
     list_filter = ("firm_role", "active")
@@ -113,7 +161,7 @@ class AdminMatter(models.Model):
 
 
 @admin.register(AdminMatter)
-class AdminMatterAdmin(_ModelAdmin):
+class AdminMatterAdmin(AuditedModelAdmin):
     list_display = (
         "matter_id",
         "title",
