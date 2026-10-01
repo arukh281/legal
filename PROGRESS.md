@@ -1,63 +1,72 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S01 Complete (Foundation)
+## Current State: Session S02 Complete (`anchor_lib` + ID Minting)
 
 ### 1. What Was Built
-- **Monorepo Structure (AGENTS.md §3):**
-  - Django project `core` at `backend/` with settings split (`base`, `local`, `prod`, `test`).
-  - 15 Django apps created with `apps.py` and `README.md` defining blueprint phase ownership and contract boundaries:
-    `ops` (owns `ops` schema, outbox, job chains), `anchor_lib`, `ingest` (P0), `parse` (P1), `index` (P2), `kg` (P3), `propagate` (P4), `retrieve` (P5), `reason` (P6), `rules` (Procedural Clock), `workspace` (P7), `verify` (P8), `feedback` (P9), `surface` (P10), `gateway` (Model Gateway).
-  - React 19 + TypeScript + Vite 6 SPA at `frontend/` with nav for Today, Research, Matters, Authority, Alerts, Login placeholder, and TanStack Query.
-  - Infra directory at `infra/` with `compose.yaml`, `Dockerfile.web` (Uvicorn ASGI), `Dockerfile.worker` (Procrastinate).
-- **Database & Schemas:**
-  - PostgreSQL 18 with `pgvector/pgvector:pg18` running in Docker Compose.
-  - Three database schemas: `plc` (public legal corpus), `tpl` (tenant plane), `ops` (operational, outbox, jobs, gateway).
-  - PostgreSQL extensions: `vector`, `btree_gist`, `pg_trgm`, `unaccent`.
-  - Verbatim DDL from `docs/mvp/03_data_model_and_contracts.md` §3.1 & §3.16 applied via migrations:
-    - `ops.pipeline_version`
-    - `ops.event_outbox`
-    - `ops.event_subscription`
-    - `ops.event_inbox`
-    - `ops.event_parked`
-    - `ops.job_chain`
-    - `ops.job_step`
-    - `ops.job_signal`
-    - Strict CHECK constraints (`chk_outbox_dataclass_tenant`, `chk_outbox_topic_prefix`, `chk_outbox_traceparent`, `chk_parked_reason`, `chk_step_key`, etc.) and indices.
-  - Procrastinate database schema (migrations 1 to 41).
-- **Outbox & Inbox (03 §4):**
-  - Outbox publisher (`ops.outbox.publish_event`): atomic transactional insert into `ops.event_outbox` + `pg_notify('outbox', topic)`.
-  - Outbox dispatcher (`ops.outbox.dispatch_pending_events`): `SELECT ... FOR UPDATE SKIP LOCKED` batching with per-partition-key serial locks (`lock = f"{consumer}:{partition_key}"`).
-  - Inbox delivery (`ops.outbox.process_event_delivery`): consumer handler execution and `ops.event_inbox` insertion occur in **ONE atomic transaction** (03 §4 step 3).
-  - Idempotency guarantees: duplicate delivery with identical payload is a no-op (`NO_OP`); duplicate delivery with modified payload is parked in `ops.event_parked` with `IDEMPOTENCY_KEY_REUSE`.
-- **Resumable Job Chains (03 §5):**
-  - Job chain runner (`ops.jobs.start_job_chain`, `ops.jobs.run_step_logic`): deterministic step-level retry, output caching by `(chain_id, step_key)`, heartbeat monitoring (`heartbeat_step`), stalled step reaping (`reap_stalled_steps`), and atomic step transition + next step deferral in ONE transaction.
-  - 3-step test demo chain (`ops.demo_chain`) executing `demo_step_one` → `demo_step_two` → `demo_step_three` emitting test-only event `ops.demo.completed.v1` on `plc.ops.demo.completed.v1` (never emitting production contract events).
-  - Crash recovery test (`ops.tests.test_jobs.test_job_chain_crash_recovery_killing_real_worker_process`) spawns a real OS worker subprocess, kills it with `SIGKILL` mid-step, and verifies a new worker resumes from the unfinished step without re-executing completed steps.
-- **API & Frontend Generation:**
-  - Django Ninja API at `/api/health` returning `{ status: "ok", database: "connected", schemas: ["ops", "plc", "tpl"] }`.
-  - Management command `export_openapi` to generate `openapi.json`.
-  - Frontend type generation via `openapi-typescript` emitting `frontend/src/api/schema.d.ts`.
-- **Tooling & CI:**
-  - Structured JSON logging (`core.logging`) with W3C traceparent logging and SHA-256 masking of sensitive payloads (`TENANT_CONFIDENTIAL`, `PRIVILEGED`).
-  - GitHub Actions CI workflow (`.github/workflows/ci.yml`) running against PostgreSQL 18 + pgvector service container: uv sync, ruff lint, ruff format check, mypy strict, pytest, pnpm lint, vitest, and tsc build.
-  - Pre-commit configuration (`.pre-commit-config.yaml`).
+
+#### A. Identifier Minting & Prefix Registry (`backend/anchor_lib/ids.py`)
+- **Monotonic Crockford ULID Generator:**
+  - 128-bit layout: 48-bit UNIX millisecond timestamp + 80-bit random entropy.
+  - Thread-safe generator (`threading.Lock`) that monotonically increments the 80-bit entropy for calls within the same millisecond and guards against backward clock drift.
+  - Generates 26-character uppercase Crockford Base32 strings (excluding `I`, `L`, `O`, `U`).
+  - Tested at 100,000 mints: guarantees 100% uniqueness and strict ascending creation-order sortability.
+- **Complete Prefix Registry (64 prefixes):**
+  - All prefixes from `docs/01_master_architecture.md §5.2` and decisions (D12, D16, D19.3, D20.5, D21.5, D21.16, D22.1):
+    - *PLC:* `wrk`, `cas`, `man`, `par`, `cap`, `crun`, `acq`, `lp`, `cal`, `jex`, `cm`, `sm`, `em`, `ai`, `cc`, `asr`, `prp`, `lga`, `crt`, `bnc`, `jdg`, `ent`, `itp`, `rvw`, `rul`, `prs`, `ter`, `xrn`, `xwg`, `xtr`, `gdl`, `imp`, `camp`, `rpq`, `kgp`, `dig`, `dgi`, `ovl`
+    - *TPL:* `ten`, `usr`, `grp`, `mat`, `pdoc`, `fct`, `iss`, `opc`, `hrg`, `hold`, `pasr`, `adt`, `tec`, `alr`, `qry`, `evb`, `job`, `clm`, `mem`, `drf`, `ddl`, `mck`, `fb`, `act`, `cns`, `uim`, `wl`, `wr`, `wh`, `ntf`, `chb`, `udg`, `cck`
+    - *Shared:* `sum`, `chk`, `gld`, `evc`, `evr`, `aud`, `vr`
+  - Automated test reads `docs/01_master_architecture.md §5.2` table directly and verifies 100% parity with zero drift.
+  - Unknown prefixes are strictly rejected with `ValueError`.
+- **Curated Reference Registry Mnemonics:**
+  - Allowed exclusively for: `crt`, `ent`, `rul`, `ter` per 01 §5.2 line 482 (e.g. `crt_IN_SC`, `rul_IN_PREC_07`, `ent_GOV_IN_UP`, `ter_IN_DL`).
+  - Works are strictly forbidden from having mnemonics (`wrk_ACT_NI` is rejected with `ValueError` per 01 §5.2 line 483).
+- **Content Addresses:**
+  - Validates `sha256:<64-char-lowercase-hex>` via `is_valid_sha256()` and `parse_id()`.
+
+#### B. Django Model Field & Domain Convention (`backend/anchor_lib/models.py`)
+- `PrefixedULIDField(models.CharField)`:
+  - Takes `prefix: str` (e.g. `prefix="wrk"`), sets `max_length=64`, `editable=False`.
+  - Uses `@deconstructible class IDMinter` as the default callable (safely serializable in Django migrations without unsupported lambda expressions).
+  - Validates prefix matching and Crockford format on save and clean.
+- `DomainModel`: abstract base model for all domain models across `plc` and `tpl`.
+- Architectural test (`test_no_domain_model_has_autofield_or_uuid_pk`): iterates across all registered models and asserts that no model in `plc` or `tpl` schemas (or domain apps) has an auto-increment integer or UUID primary key.
+
+#### C. Anchor Grammar v1.1 Parser & Canonicalizer (`backend/anchor_lib/anchors.py`)
+- Full formal EBNF implementation of Anchor Grammar v1.1 (01 §5.3 and D22.2):
+  - `PublicAnchor`: `wrk_<ulid>/<expression_key>#<fragment>`
+  - `ProvisionRef`: `wrk_<ulid>#<statute_frag>` (expression-independent; D7)
+  - `PITRef`: `wrk_<ulid>#<statute_frag>@<date>[~<territory>]` (point-in-time)
+  - `PrivateAnchor`: `pdoc_<ulid>/v<pver>[.<rendition>]#[att<att_no>/]<private_frag>`
+  - Schedule anchors with Orders and Rules per D22.2: `sch-1.ord-8.rule-1`, `sch-1.ord-39.rule-2A`, `sch-1.item-5`.
+- `parse()`, `format()`, `validate()`, `canonical_key()`, `is_public()`, `is_private()`, `is_fallback_locator()`.
+- Exact round-trip guarantee: `format(parse(x)) == x` across all 36 normative examples from 01 §5.3 and D22.2.
+- Semantic constraints A1–A8 implemented as pure functions (no DB access):
+  - **A1 Paragraph source:** Court-printed numbers (`p{n}`) and synthetic (`u{n}`) only; rejects `p0` and `u0`.
+  - **A2 Fallback locators:** `pg{n}` and `pg{n}.l{m}` are permitted only for `quality.gate=QUARANTINED` documents.
+  - **A3 Point-in-time resolution (`resolve_pit`):** Resolves by date and territory precedence (`~T` over national); raises `NoExpressionError("NO_EXPRESSION")` on gap (never nearest).
+  - **A4 Reconstructed text (`check_reconstructed_text`):** Reconstructed expressions (`derived=True`) require `ROUNDTRIP_OK` for tier-1 claims.
+  - **A5 Translations (`check_translation_support`):** Machine translation is forbidden as an expression (`-x-mt` forbidden in lang tag per 01 §5.3 line 563); private `mt-` renditions can never support claims (`MT_ANCHOR`); private `ht-` renditions can support `RECORD_FACT` claims only.
+  - **A6 Canonical match key (`canonical_key`):** Strips expression key and default `o1.` prefix (`wrk_...#<frag>`), preserves non-default opinion prefixes (`o2.`), drops PIT date/territory, and drops private versions/renditions.
+  - **A7 IAL rewriting (`rewrite_statute_expression`):** Rewrites statute anchors to target expression keys valid on query `valid_at`.
+  - **A8 Clause level (`get_clause_hierarchy`):** Positional tree depth segment hierarchy.
+
+#### D. Quote Selector (`backend/anchor_lib/selectors.py`)
+- `QuoteSelector(exact, prefix, suffix)`: W3C TextQuoteSelector-style representation adhering strictly to 01 §5.5 item 7, 01 §7.1 line 963, and 03 §3.4 (`quote_prefix`, `quote_suffix`).
+- Context window of up to 32 characters before and after exact text.
+- `find_in()` locates and disambiguates phrases even when repeated across documents or shifted during re-parsing.
+
+#### E. PostgreSQL Database Domains (`backend/anchor_lib/migrations/0001_anchor_domains.py`)
+- Migration applying verbatim DDL from 03 §1 item 3:
+  - `public_anchor_ref` domain with CHECK regex.
+  - `private_anchor_ref` domain with CHECK regex.
+  - `any_anchor_ref` domain with CHECK regex.
+- Migration is verified reversible (`migrate anchor_lib zero` followed by `migrate anchor_lib`).
+- Live PostgreSQL tests verify that valid anchors insert cleanly and invalid/mutated anchors violate check constraints.
+
+---
 
 ### 2. How to Run It
 
-#### A. Local Development with Docker Compose
-```bash
-# Bring up PostgreSQL 18, MinIO, Web (Uvicorn ASGI), and Worker (Procrastinate)
-docker compose -f infra/compose.yaml up -d
-
-# Verify health endpoint (default port 8000, or 8001 if WEB_HOST_PORT=8001)
-curl http://127.0.0.1:8000/api/health
-# Response: {"status":"ok","database":"connected","schemas":["ops","plc","tpl"],...}
-
-# Run migrations
-docker compose -f infra/compose.yaml exec web uv run python manage.py migrate
-```
-
-#### B. Running Backend Tests & Quality Checks
 ```bash
 cd backend
 
@@ -68,44 +77,36 @@ uv run mypy .
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 10 unit, contract, and crash-recovery tests against real PostgreSQL 18
+# Run all 74 unit, contract, property, and integration tests against PostgreSQL 18
 uv run pytest
+
+# Test migration reversibility
+uv run python manage.py migrate anchor_lib zero
+uv run python manage.py migrate anchor_lib
 ```
 
-#### C. Running Frontend
-```bash
-cd frontend
+---
 
-# Install dependencies
-pnpm install
-
-# Lint & unit tests
-pnpm run lint
-pnpm run test
-
-# Production build
-pnpm run build
-
-# Dev server
-pnpm run dev
-```
-
-### 3. Stubs
-- Downstream domain apps (`anchor_lib`, `ingest`, `parse`, `index`, `kg`, `propagate`, `retrieve`, `reason`, `rules`, `workspace`, `verify`, `feedback`, `surface`, `gateway`) contain `apps.py` and `README.md` defining their phase boundaries. Their models and internal logic will be built in their respective sessions (S02–S18).
+### 3. Stubs & Notes
+- **Semantic constraints A3, A4, A5, A8:** Implemented as pure functions in `anchor_lib.anchors`: **library ready, not wired** (to be wired to live DB records and pipeline stages in S05, S13, S14).
 - Model Gateway (`gateway`) is stubbed until S03.
 - Allauth & Tenancy (`authz.can()`, RLS) are stubbed until S03.
-- Event handlers are registered dynamically via `HANDLER_REGISTRY` stub until real phase subscribers are wired.
+
+---
 
 ### 4. Known Issues
 1. **Docker configuration modification:** During initial Docker authentication troubleshooting on this host, `~/.docker/config.json` had its `credsStore` entry removed. Per user instruction, this is noted here, and all future actions outside the repository boundary strictly require prior approval.
 2. **Host port 5432 conflict:** Host machine runs a local PostgreSQL 16 on port 5432. Docker Compose maps PostgreSQL container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`). Inside the Docker Compose network, services talk on standard port 5432.
 3. **Host port 8000 conflict:** Host machine runs a Python HTTP server on port 8000 (PID 3905 serving BBRE project). Docker Compose supports `WEB_HOST_PORT` (defaults to 8000, can be set to 8001). Vite proxy config reads `VITE_API_URL` (defaults to `http://127.0.0.1:8000`).
 4. **Procrastinate Django connector listen/notify:** Psycopg3 connection under Django connector does not support synchronous `listen_notify`. Procrastinate worker runs with `--no-listen-notify`.
-5. **App `default_auto_field = BigAutoField`:** Django app skeletons currently declare `default_auto_field = "django.db.models.BigAutoField"`. Domain objects in `plc` and `tpl` must use prefixed Crockford ULIDs (AGENTS.md §5: `prefix_` + 26-char Crockford ULID minted in app code, never serial ints or standard UUIDs). Session S02 (`anchor_lib` + ID minting) must replace this with the domain ULID ID field across domain models.
+5. **Database teardown session warning during pytest:** Pytest database teardown outputs a warning if Docker Compose worker processes maintain an idle connection to the database cluster. Does not affect test runs or assertion correctness.
 
-### 5. What the Next Session (S02) Needs
-- **`anchor_lib` + ID Minting:**
-  - Build the Anchor grammar v1.1 parser + validator library per `docs/01_master_architecture.md` §5.3.
-  - Implement unit tests from `01_master §5.3` (including `pdoc_…/v1#…` and `sch-1.ord-8.rule-1`).
-  - Implement Crockford ULID minting utility (`prefix_` + 26-char Crockford ULID) per `03_data_model_and_contracts.md` §1 and `01 §5.2`.
-  - Apply `work`, `expression`, `manifestation`, `identifier_alias`, `parsed_document`, `anchor`, and `anchor_alias` tables in `plc` schema.
+---
+
+### 5. What the Next Session (S03) Needs
+- **Session S03: SSO, tenancy, `authz.can()` + RLS, Model Gateway v0:**
+  - Setup SSO login (django-allauth with Google / Microsoft).
+  - Apply `tenant`, `user`, `matter_member` domain tables in `tpl` using `PrefixedULIDField`.
+  - Implement `authz.can()` authorization choke point (03 §6).
+  - Configure PostgreSQL `FORCE ROW LEVEL SECURITY` on `tpl` tables.
+  - Implement Model Gateway v0 with `model_task_contract`, 2 provider adapters, `llm_call_record`, per-task budget, and per-tenant `residency_policy` (03 §3.15).

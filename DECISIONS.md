@@ -89,3 +89,39 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Implements the required 2-second periodic sweep in 03 §4 step 2 without relying on listen/notify. Using `queueing_lock="outbox_dispatcher"` prevents duplicate runs from accumulating in the queue while guaranteeing that pending outbox rows (`SELECT ... FOR UPDATE SKIP LOCKED`) are processed within 2 seconds of insertion.
 - **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §4 step 2.
 
+---
+
+### 2026-10-01 — Monotonic Crockford ULID Generator with 80-Bit Entropy Counter
+- **Decision:** Built a pure-Python, thread-safe monotonic Crockford ULID generator in `anchor_lib.ids` encoding 48-bit UNIX millisecond timestamps and 80-bit randomness with monotonic intra-millisecond entropy incrementing.
+- **Reason:** AGENTS.md §5 and 01 §5.2 require domain IDs to be `prefix_` + 26-char Crockford ULID, strictly monotonic within a millisecond and strictly matching creation order.
+- **Doc Reference:** AGENTS.md §5; `docs/01_master_architecture.md` §5.2; `docs/mvp/03_data_model_and_contracts.md` §1 item 2.
+
+---
+
+### 2026-10-01 — Deconstructible `IDMinter` for `PrefixedULIDField`
+- **Decision:** Implemented `@deconstructible class IDMinter` instead of a lambda function as the default callable on `PrefixedULIDField`.
+- **Reason:** Django migrations fail to serialize lambda expressions into migration files. A deconstructible callable serializes cleanly into migration definitions.
+- **Doc Reference:** Django migration framework; User Directive #2.
+
+---
+
+### 2026-10-01 — Dynamic Documentation Parity Test for Prefix Registry and Mnemonics
+- **Decision:** Added automated tests reading the markdown table and text of `docs/01_master_architecture.md` §5.2 directly to verify that `PREFIX_REGISTRY` (all 64 entity prefixes) and `MNEMONIC_PREFIXES` (`crt`, `ent`, `rul`, `ter`) match documentation with zero drift.
+- **Reason:** Prevents specification drift and verifies that no unapproved prefixes or non-canonical mnemonics can enter the codebase.
+- **Doc Reference:** `docs/01_master_architecture.md` §5.2; User Directive #1.
+
+---
+
+### 2026-10-01 — Pure-Function Design for Semantic Constraints A3, A4, A5, and A8
+- **Decision:** Implemented semantic constraints A3 (`resolve_pit`), A4 (`check_reconstructed_text`), A5 (`check_translation_support`), and A8 (`get_clause_hierarchy`) as pure functions accepting plain data structures and flags with zero database queries.
+- **Reason:** Keeps `anchor_lib` stateless and portable across worker processes, API servers, and future client add-ins without database coupling. Downstream phase callers (S05, S13, S14) will wire these to live records.
+- **Doc Reference:** `docs/01_master_architecture.md` §5.3; User Directive #7.
+
+---
+
+### 2026-10-01 — W3C TextQuoteSelector Conformance for Re-alignment
+- **Decision:** Implemented `QuoteSelector(exact, prefix, suffix)` with up to 32 context characters and fuzzy disambiguation matching `docs/01_master_architecture.md §5.5` item 7 and `docs/mvp/03_data_model_and_contracts.md §3.4` (`quote_prefix`, `quote_suffix`).
+- **Reason:** Ensures durable records (claims, memos, citations) can be re-aligned if underlying anchor IDs change during document re-parsing.
+- **Doc Reference:** `docs/01_master_architecture.md` §5.5, §7.1; `docs/mvp/03_data_model_and_contracts.md` §1 item 6, §3.4.
+
+
