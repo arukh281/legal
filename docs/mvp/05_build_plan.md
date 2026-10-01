@@ -89,7 +89,7 @@ F = founder, E = engineer. "Demo" = shown to the partner.
 | **16** | Alerts: matter dependency index, impact rows (new judgments, amendments, notifications), matching, lifecycle, in-app + email; time-travel drill harness | Eval run #2 | — | **Eval run #2**; G-Alert drill |
 | **17** | Digest (06:30 IST email) + watchlists (STATUTE, PROVISION, TOPIC, PARTY, COURT); regulator feeds (MCA/SEBI/IBBI/RBI); Bill watch (Corporate Laws (Amendment) Bill 2026) | — | — | First digest sent |
 | **18** | Hearings (manual entry, reminders, ICS); trigger-3 templates + rules; SEBI/SAT/CCI corpus (if legal profiles approved) | — | — | **All 11 capabilities live** |
-| **19** | Fix list from pilot feedback; 4th trigger (stretch); docs and runbooks | — | — | — |
+| **19** | Fix list from pilot feedback; stretch items if buffer remains: NCLT/NCLAT cause-list parsing (≈ 0.3 ew), then the 4th trigger; docs and runbooks | — | — | — |
 | **20** | Hardening; **eval run #3**; go/no-go scorecard | Scorecard, decision memo | Go/no-go meeting (1 h) | Decision recorded |
 
 ## 5. Sensitivity: other team shapes

@@ -90,7 +90,7 @@ The founder annotates against the answer key, about 1.5–2 hours per matter (�
 - **Gate (zero tolerance):** fabricated anchors displayed = 0. Any claim shown with an anchor that does not exist or does not contain the quoted text is a release blocker.
 
 ### 5.6 G-Temporal — point-in-time and "enacted but not in force" (capabilities 1, 2, 8)
-**Synthetic.** Built from the IBC (Amendment) Act 2026 table in [02](02_workflows_and_rules.md) §IBC (test questions with expected answers), plus:
+**Synthetic.** Built from the IBC (Amendment) Act 2026 table in [02](02_workflows_and_rules.md) Part A §8.3 (test questions with expected answers), plus:
 - (a) as-of questions either side of 26 May 2026;
 - (b) questions on provisions enacted but not notified, where the system must answer "enacted, not in force as of <date>";
 - (c) Corporate Laws (Amendment) Bill 2026 questions, where the system must say it is a bill under JPC examination and never present it as law;
