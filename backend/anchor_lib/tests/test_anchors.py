@@ -302,6 +302,17 @@ def test_constraint_a6_canonical_match_key() -> None:
         == "pdoc_01J9Z0123456789ABCDEFGHJKM#att2/p4"
     )
 
+    # 01 §5.3 line 637: canonical_key ONLY strips expression key and default o1. prefix.
+    # It must NEVER sort or reorder segments or path components.
+    complex_statute = "wrk_01J9Z0123456789ABCDEFGHJKM/en@2024-07-01#sch-1.ord-39.rule-2A"
+    assert canonical_key(complex_statute) == "wrk_01J9Z0123456789ABCDEFGHJKM#sch-1.ord-39.rule-2A"
+
+    deep_para = "wrk_01J9Z0123456789ABCDEFGHJKM/en#p45.2.a.u1.x1"
+    assert canonical_key(deep_para) == "wrk_01J9Z0123456789ABCDEFGHJKM#p45.2.a.u1.x1"
+
+    sheet_table = "pdoc_01J9Z0123456789ABCDEFGHJKM/v1#sheet2.r15.c4"
+    assert canonical_key(sheet_table) == "pdoc_01J9Z0123456789ABCDEFGHJKM#sheet2.r15.c4"
+
 
 def test_constraint_a7_ial_rewriting_and_failing_example() -> None:
     """A7: IAL rewrites statute anchor to target expression valid on query valid_at."""
