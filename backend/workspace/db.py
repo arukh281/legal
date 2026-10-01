@@ -88,4 +88,3 @@ def tenant_db_context(
                 cursor.execute("RESET app.tenant_id")
                 cursor.execute("RESET app.user_id")
                 cursor.execute("RESET app.purpose")
-

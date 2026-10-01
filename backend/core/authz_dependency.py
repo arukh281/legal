@@ -41,7 +41,9 @@ class AuthzDependency(HttpBearer):
         if not app_user and getattr(settings, "DEV_AUTH_ENABLED", False):
             # Token can be usr_... or email in dev/test
             with admin_db_context():
-                app_user = AppUser.objects.filter(active=True).filter(models_user_match(token)).first()
+                app_user = (
+                    AppUser.objects.filter(active=True).filter(models_user_match(token)).first()
+                )
 
         if not app_user or not app_user.active:
             return None

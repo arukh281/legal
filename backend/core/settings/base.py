@@ -111,7 +111,9 @@ APP_DB_PASSWORD = os.environ.get("POSTGRES_APP_PASSWORD", "app_rw")
 
 # postgres owner connection for schema migrations and DDL
 OWNER_DB_USER = os.environ.get("POSTGRES_OWNER_USER", os.environ.get("POSTGRES_USER", "postgres"))
-OWNER_DB_PASSWORD = os.environ.get("POSTGRES_OWNER_PASSWORD", os.environ.get("POSTGRES_PASSWORD", "postgres"))
+OWNER_DB_PASSWORD = os.environ.get(
+    "POSTGRES_OWNER_PASSWORD", os.environ.get("POSTGRES_PASSWORD", "postgres")
+)
 
 # admin_rw connects Django admin for cross-tenant operations (BYPASSRLS)
 ADMIN_DB_USER = os.environ.get("POSTGRES_ADMIN_USER", "admin_rw")

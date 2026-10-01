@@ -46,7 +46,9 @@ class AuditedModelAdmin(_ModelAdmin):
                     detail={
                         "admin_user": actor,
                         "remote_ip": request.META.get("REMOTE_ADDR"),
-                        "changed_fields": list(form.changed_data) if form and hasattr(form, "changed_data") else [],
+                        "changed_fields": list(form.changed_data)
+                        if form and hasattr(form, "changed_data")
+                        else [],
                     },
                     using="admin",
                 )

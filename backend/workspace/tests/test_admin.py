@@ -63,7 +63,9 @@ def test_admin_tenant_list_and_create(admin_client_logged_in: Client) -> None:
         # 3. Verify admin write is audited in tpl.audit_event
         from workspace.models import AuditEvent
 
-        audit_entry = AuditEvent.objects.filter(tenant_id=tenant.tenant_id, action="ADMIN_CREATE").first()
+        audit_entry = AuditEvent.objects.filter(
+            tenant_id=tenant.tenant_id, action="ADMIN_CREATE"
+        ).first()
         assert audit_entry is not None
         assert audit_entry.actor == "admin_user"
         assert audit_entry.detail.get("admin_user") == "admin_user"

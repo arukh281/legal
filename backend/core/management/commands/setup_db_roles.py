@@ -16,7 +16,9 @@ from django.db import connections
 
 
 class Command(BaseCommand):
-    help = "Configure login credentials for PostgreSQL roles (app_rw, worker, admin_rw) out of band."
+    help = (
+        "Configure login credentials for PostgreSQL roles (app_rw, worker, admin_rw) out of band."
+    )
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
@@ -72,5 +74,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Configured LOGIN for role '{role_name}'."))
 
         self.stdout.write(
-            self.style.SUCCESS("All runtime database roles successfully configured with credentials.")
+            self.style.SUCCESS(
+                "All runtime database roles successfully configured with credentials."
+            )
         )

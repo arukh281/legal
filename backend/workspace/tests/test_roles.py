@@ -30,9 +30,7 @@ def test_plc_writer_cannot_select_from_tpl(db: None) -> None:
             cursor.execute("RESET ROLE;")
 
 
-def test_runtime_role_startup_check_flags_superuser_or_bypassrls(
-    db: None, settings: Any
-) -> None:
+def test_runtime_role_startup_check_flags_superuser_or_bypassrls(db: None, settings: Any) -> None:
     """Directive #3: Startup check refuses to boot web if runtime role is superuser or has BYPASSRLS."""
     settings.ENFORCE_RUNTIME_DB_ROLE_CHECK = True
 

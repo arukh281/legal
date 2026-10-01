@@ -183,12 +183,18 @@ def test_worker_job_tenant_isolation_on_connection_reuse(rls_setup: dict[str, st
     with connections["worker"].cursor() as cursor:
         # Confirm that the baseline worker role has BYPASSRLS
         cursor.execute("SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user;")
-        assert cursor.fetchone()[0] is True, "worker role must possess BYPASSRLS for cross-tenant tasks"
+        assert cursor.fetchone()[0] is True, (
+            "worker role must possess BYPASSRLS for cross-tenant tasks"
+        )
 
         # 1. Job 1 runs for Tenant A on this worker connection
-        with tenant_db_context(tenant_id=t1_id, user_id=u1_id, purpose="JOB_RUNNER", using="worker"):
+        with tenant_db_context(
+            tenant_id=t1_id, user_id=u1_id, purpose="JOB_RUNNER", using="worker"
+        ):
             # Inside tenant context, role is transitioned to app_rw (NOBYPASSRLS)
-            cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+            cursor.execute(
+                "SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;"
+            )
             cur_user, bypass = cursor.fetchone()
             assert cur_user == "app_rw"
             assert bypass is False, "Tenant-scoped job must run under NOBYPASSRLS"
@@ -199,8 +205,12 @@ def test_worker_job_tenant_isolation_on_connection_reuse(rls_setup: dict[str, st
             assert rows_a[0][0] == t1_id
 
         # 2. Job 2 runs for Tenant B reusing the SAME worker connection
-        with tenant_db_context(tenant_id=t2_id, user_id=u2_id, purpose="JOB_RUNNER", using="worker"):
-            cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+        with tenant_db_context(
+            tenant_id=t2_id, user_id=u2_id, purpose="JOB_RUNNER", using="worker"
+        ):
+            cursor.execute(
+                "SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;"
+            )
             cur_user, bypass = cursor.fetchone()
             assert cur_user == "app_rw"
             assert bypass is False
@@ -216,7 +226,9 @@ def test_worker_job_tenant_isolation_on_connection_reuse(rls_setup: dict[str, st
             assert len(cursor.fetchall()) == 0
 
         # 3. Post-job state on connection restores role back to worker
-        cursor.execute("SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;")
+        cursor.execute(
+            "SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;"
+        )
         cur_user, bypass = cursor.fetchone()
         assert cur_user == "worker"
         assert bypass is True, "Worker connection must restore worker role after job completion"
