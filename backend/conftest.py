@@ -34,7 +34,7 @@ def django_db_setup(
         db_cfg = setup_databases(
             verbosity=request.config.option.verbose,
             interactive=False,
-            aliases=["owner"],
+            aliases={"owner"},  # type: ignore[arg-type]
             **setup_databases_args,
         )
 

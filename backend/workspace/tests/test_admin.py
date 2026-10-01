@@ -68,6 +68,7 @@ def test_admin_tenant_list_and_create(admin_client_logged_in: Client) -> None:
         ).first()
         assert audit_entry is not None
         assert audit_entry.actor == "admin_user"
+        assert audit_entry.detail is not None
         assert audit_entry.detail.get("admin_user") == "admin_user"
 
 
