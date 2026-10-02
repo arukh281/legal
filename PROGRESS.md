@@ -1,10 +1,58 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S05a Complete (Parsing: text layer, OCR, judgment structure, anchors)
+## Current State: Session S05b Complete (Citations: extraction, resolution, deduplication and merge ledger)
 
 ### 1. What Was Built
 
-#### A. Identifier Minting & Prefix Registry (`backend/anchor_lib/ids.py`)
+#### A. Citation Extraction Engine (`backend/parse/citations/extractor.py`)
+- Regex-based grammar parser extracting reporter citations and case numbers across ParsedDocument text:
+  - Reporter schemes: SCC (`(2019) 4 SCC 17`), SCC OnLine (`2023 SCC OnLine NCLAT 839`), AIR (`AIR 1968 SC 1432`), SCR (`[1968] 3 SCR 724`), INSC Neutral (`2026 INSC 1046`), High Court Neutral (`2023:DHC:1234`).
+  - Case numbers: NCLT CP (IB) (`Company Petition (IB) No. 149 of 2023`), NCLAT Company Appeal (`Company Appeal (AT) (Insolvency) No. 123 of 2021`), explicit court prefix cases, bare case numbers without court.
+  - Pinpoints: extracted adjacent paragraphs (`para 14` -> `#p14`) and page numbers.
+  - `QuoteSelector`: W3C prefix (up to 32 chars), exact, suffix disambiguation selector.
+  - Temporal sanity: validates citation year vs citing decision date; flags `CITED_AFTER_CITING` if a document cites a future publication.
+  - Quality degradation flags: anchors with `ocr_conf < 0.80` or hidden text are flagged as degraded and not counted as trusted resolved evidence.
+
+#### B. Statute & Provision Mention Extractor (`backend/parse/citations/statutes.py`)
+- Grammar parser for sections, subsections, and Constitution articles (`Section 7`, `Section 9(5)(i)`, `Article 141`).
+- In-document definition resolution (`extract_in_document_definitions`): captures definitions from early paragraphs (e.g. `(hereinafter referred to as the 'Code')`) mapping short names to canonical statutes.
+- Point-in-time rules (`AS_CITED`, `NO_EXPRESSION`).
+- Strictly corpus-only provision resolution: since no ACT works exist in `plc.work`, 100% of statute mentions return `resolved_anchor_ids = []` and `resolution_status = "not in MVP corpus"`.
+- Zero new SQL tables for statute mentions per `docs/mvp/03_data_model_and_contracts.md` line 321 (`StatuteMention` lives only inside `ParsedDocument`).
+
+#### C. Citation Resolver & Alias Lifecycle (`backend/parse/citations/resolver.py`)
+- AuthorityView & alias resolution engine implementing Directive #2, #3, #4:
+  - Reporter citations: mints STUB Work (`status="STUB"`, `work_type="JUDGMENT"`), creates T4 alias, emits `acquire.requested.v1` to `ops.event_outbox`.
+  - Case numbers with court stated: mints STUB LegalCase (`status="STUB"`), creates T4 alias, returns `case_id` (never mints a STUB judgment work).
+  - Case numbers without court stated: left UNRESOLVED (`target_id=None`), no alias minted, no STUB minted.
+  - `court_hint`: set only when citation explicitly states court, never inferred from reporter.
+  - Trust tier T4: citation-derived aliases stamped with `trust_tier="T4"`, `source="citation_mention"`, and `evidence={"mention_id": ..., "citing_work_id": ..., "anchor_id": ...}`.
+  - `promote_authoritative_alias`: when an authoritative T0–T2 alias arrives for a key, the T4 alias becomes `SUPERSEDED`, the STUB work merges into the real work via `plc.identity_merge_ledger`, existing `CitationMention` rows re-point, and `identity.merged.v1` event is emitted.
+
+#### D. Deduplication and Merge Ledger (`backend/parse/citations/dedupe.py`)
+- Exact-match deduplication engine: checks `(court_id, normalized_case_no, decision_date)`.
+- Auto-merge executes only when all three match exactly. Ambiguous matches (different year, different bench, missing date) reject merge and route to review queue.
+- `dedupe_and_merge`: updates from_work status to `MERGED`, sets `merged_into`, records in `plc.identity_merge_ledger`, supersedes active aliases, re-points mentions, and emits `identity.merged.v1`.
+- `split_work`: reverts merge, sets from_work back to `ACTIVE`, records `SPLIT` in `plc.identity_merge_ledger`, and emits `identity.split.v1`.
+
+#### E. PostgreSQL Database Migration (`backend/parse/migrations/0002_citation_and_merge_tables.py`)
+- Created `plc.citation_mention` with ULID PK (`cm_`), FKs, resolution fields, and temporal check.
+- Created `plc.identity_merge_ledger` with ULID PK (`evr_`), `kind`, `op`, `from_id`, `to_id`, `reason`, `confidence`.
+- Granted permissions to `app_rw`, `worker`, `plc_writer`, `admin_rw`.
+- Registered bumped pipeline version `p1.citation@0.1.0|det_v1` in `ops.pipeline_version`.
+- Migration is verified reversible.
+
+#### F. Corpus Resolution Management Command (`backend/parse/management/commands/resolve_citations.py`)
+- Processes parsed documents in `plc.parse_run` (skipping QUARANTINED).
+- Writes new `ParsedDocument` JSON artifacts with bumped `pipeline_version = "p1.citation@0.1.0|det_v1"` to S3 without editing old S3 objects or ParseRun stats in place.
+- Corpus execution results across 496 eligible documents (6 quarantined skipped):
+  - Total citations persisted to `plc.citation_mention`: 3,411
+  - Citations by scheme: SCC: 1,404 | CASE_NO: 1,275 | SCC_ONLINE: 453 | NEUTRAL_INSC: 123 | AIR: 93 | SCR: 45 | NEUTRAL_HC: 18
+  - Citations resolution: 3,024 RESOLVED (including case numbers to STUB cases and reporter cites to STUB works), 387 UNRESOLVED
+  - Statute mentions found: 15,355 (100% resolved as "not in MVP corpus")
+  - Degraded citations flagged: 15 (due to `ocr_conf < 0.80` or hidden text)
+
+#### G. Identifier Minting & Prefix Registry (`backend/anchor_lib/ids.py`)
 - **Monotonic Crockford ULID Generator:**
   - 128-bit layout: 48-bit UNIX millisecond timestamp + 80-bit random entropy.
   - Thread-safe generator (`threading.Lock`) that monotonically increments the 80-bit entropy for calls within the same millisecond and guards against backward clock drift.
@@ -238,15 +286,14 @@
     - Stored anchors preserved: 89 / 89 = **100.00%** (target ≥ 99.5% PASS).
     - Tombstones / breaking changes on unchanged re-parse: 0 (0.00%).
 - **Test Suite (`backend/parse/tests/`):**
-  - 22 new tests, 162 total passed across backend:
-    - `test_golden_outputs.py`: verified against 6 hand-checked golden fixtures (3 born-digital, 2 scanned with recorded OCR, 1 Word-export).
-    - `test_anchor_stability.py`: 100% stability on re-parse, strict NW_ALIGN method and confidence assertions on text edits, tombstone with similarity-based forward_to and None case.
-    - `test_hidden_text.py`: adversarial PDF with off-canvas text (cropbox/mediabox), negative footer test, pipeline quarantine check.
-    - `test_ocr_gate.py`: gate evaluation, handwriting flagging, unsupported language quarantine, low OCR claim exclusion.
-    - `test_scan_robustness.py`: auto-rotate, deskewing, low-DPI upscaling, multi-format image wrapping.
-    - `test_s3_db_crash.py`: S3 upload before DB transaction crash resilience.
-    - `test_doc_parsed_event.py`: `doc.parsed.v1` CloudEvents envelope and payload contract validation.
-    - `test_ast_guards.py`: verifies no boto3 Textract calls outside `ocr.py`, and domain models use ULID PKs.
+  - 26 new tests for S05b, 187 total passed across backend:
+    - `test_citation_extractor.py`: full reporter schemes (SCC, SCC OnLine, AIR, SCR, INSC, Neutral HC), case numbers (CP(IB), Company Appeal, bare cases), pinpoints, quote selectors, temporal sanity, and quality degradation flags.
+    - `test_statute_extractor.py`: sections, subsections, articles, in-document definitions, and strictly corpus-only provision resolution ("not in MVP corpus").
+    - `test_resolver.py`: STUB work vs STUB case minting, T4 alias trust tier, case numbers without court staying UNRESOLVED, and `acquire.requested.v1` event contract.
+    - `test_alias_lifecycle.py`: T4 alias supersession upon arrival of authoritative T0–T2 alias, STUB work merge into real work via `plc.identity_merge_ledger`, mention re-pointing, and `identity.merged.v1` event.
+    - `test_dedupe_and_merge.py`: exact-match auto-merge, rejection of ambiguous matches (year mismatch, bench mismatch) to review queue, and `split_work` reversal with `identity.split.v1`.
+    - `test_migration_0002.py`: database schema verification for `plc.citation_mention`, `plc.identity_merge_ledger`, and zero SQL tables for statute mentions.
+  - Plus 22 existing parse tests from S05a (golden outputs, anchor stability, hidden text, OCR gate, scan robustness, S3 crash resilience, doc.parsed.v1 event).
 
 ---
 
@@ -255,15 +302,18 @@
 ```bash
 cd backend
 
-# Type check (strict repo-wide across all 159 source files)
+# Type check (strict repo-wide across all 172 source files)
 uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 162 backend tests against PostgreSQL 18
+# Run all 187 backend tests against PostgreSQL 18
 uv run pytest
+
+# Extract and resolve citations across the parsed corpus
+uv run python manage.py resolve_citations
 
 # Parse captured documents (e.g. 5 sample docs or full corpus)
 uv run python manage.py parse_captured --limit 5

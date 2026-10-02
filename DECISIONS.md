@@ -337,3 +337,18 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Decision:** Added `sample_order_1.pdf` (NCLT Ahmedabad scanned, 16 pages, recorded OCR) and `sample_order_2.pdf` (NCLT Mumbai born-digital, 23 pages) as golden fixtures. Strengthened `nclt_scanned_ahm` golden data from 1 anchor to 5. All 6 fixtures have hand-read golden data with 5 anchors each.
 - **Reason:** User directive to reach 6 fixtures and strengthen scanned goldens.
 - **Doc Reference:** Session S05a requirement 7; `docs/mvp/06_test_set_plan.md`.
+
+---
+
+### 2026-10-02 — IBBI Order Mirror Duplicate PDF Blobs Across Distinct Listing Keys
+- **Decision:** Documented that 160 S04 captures yielded 156 unique PDF blobs (`plc.raw_blob`). Two groups of captures (`sha256:a8eea...` across 3 distinct NCLT listing keys, and `sha256:3bdab...` across 2 distinct NCLT listing keys) downloaded identical PDF file bytes served under different order URLs on the IBBI portal. In the parsing pipeline, unique raw blobs were each parsed into a single `Work` (`wrk_01M3Y2VR23YM6F6HTG56AK5XA1` and `wrk_01M3Y2WB3TBSN758K2K5D69Q70`), with all listing keys mapped to manifestations of that work. Zero listings remain without an attached Work. Crawler investigation is deferred to a future session.
+- **Reason:** Session S05b Directive #0b. Identical PDFs served under distinct listing URLs is a source portal artifact.
+- **Doc Reference:** Session S05b Directive #0b; `docs/mvp/01_corporate_corpus_and_sources.md` §2.4.
+
+---
+
+### 2026-10-02 — Citation-Derived Alias Trust Tier Pinned to T4
+- **Decision:** Pinned `trust_tier = "T4"` on `plc.identifier_alias` for self-minted STUB aliases created from regex-extracted citations inside court orders, with `source = "citation_mention"` and `evidence = {"mention_id": ..., "citing_work_id": ..., "anchor_id": ...}`.
+- **Reason:** Session S05b Directive #4. While `T4` denotes "model-inferred", it represents the lowest available trust tier in the hierarchy (`T0 > T1 > T2 > T3 > T4`). A citation mention extracted from inside a judicial order is not court-authoritative for the cited case's canonical identity. When an authoritative `T0`–`T2` alias arrives later for the same normalized key, `alias_one_active` lifecycle ensures the `T4` row becomes `SUPERSEDED`, the STUB merges into the real work via `plc.identity_merge_ledger`, and existing mentions re-point.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.3 (line 240, 256); `docs/01_master_architecture.md` §5.4 (lines 659–665); Session S05b Directive #4.
+

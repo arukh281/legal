@@ -438,6 +438,11 @@ Progress: [156/156] docs parsed | Gate: PASS=140 FLAGGED=14 QUARANTINED=2 | Anch
 ======================================================================
 Total Captured Documents Processed: 156
 Sections Breakdown: {'supreme-court': 40, 'high-courts': 40, 'nclat': 40, 'nclt': 36}
+  - Capture Duplication Note: 160 total captures in S04 crawl runs resulted in 156 unique PDF blobs (raw_id) in plc.raw_blob. Exactly 4 captures shared identical raw_id bytes with another capture:
+      1) sha256:a8eea33eb970cbb5cbb478ae275cbf722ffd65b9c0b674b0732c8d65aea3812d (3 listing keys: nclt:2026-09-29-115640-houbm-a240fa27925a635b08dc28c9e4f9216d [NEW], nclt:2026-09-26-161944-atwbp-70a17ffa722a3985b86d30b034ad06d7 [NEW], nclt:2026-09-26-161446-tz7m5-70a17ffa722a3985b86d30b034ad06d7 [NEW]) -> all attached to parsed Work wrk_01M3Y2VR23YM6F6HTG56AK5XA1.
+      2) sha256:3bdab9d95aa93994a4ef05d12b65a077cf77112625ab108be4bf46b2b841a7f4 (2 listing keys: nclt:07a351d4615f276f62c1c407bf2603a2 [NEW], nclt:ef3e0992a1d8f64fe6843378d5c2abb5 [NEW]) -> both attached to parsed Work wrk_01M3Y2WB3TBSN758K2K5D69Q70.
+      3) sha256:3ffd0038f7e5145d93fb36ebe57a5ab334058172431dc3747a5ce31c41ba5134 (same listing key nclt:b9a29fb56feca5ec8f2d7bf76128afe5 in NEW & UNCHANGED) -> attached to parsed Work wrk_01M3Y2W18PFSNVVBMGFWCF6FEA.
+    All listing keys have an attached Work (zero listings without a work). Since parsing operates per unique raw_blob, exactly 156/156 (100%) unique captured PDFs were parsed (0 skipped, 0 failed).
 Total Pages Analyzed: 3605
   - Born-Digital Pages (Text Layer): 3502
   - OCR Pages (Scanned/Image):        103 (2.86% OCR Share)
@@ -450,7 +455,20 @@ Quality Gate Distribution:
   - QUARANTINED:    2 (Excluded from Index)
 
 Integrity & Safety Flags:
-  - Hidden Text Detected:   3 documents
+  - Hidden Text Detected:   3 documents (sha256:68a9e964... TINY_FONT, sha256:33d7ff53... TINY_FONT, sha256:f2c64ba9... TINY_FONT)
+  - Hidden Text Flag Drop Note (14 -> 3 docs): Commit 30cc1b9 flagged 14 docs using strict [0, 0, pw, ph] bounding box checks without tolerance. In all 11 unflagged documents, the trigger was OFF_PAGE due to slight margin/header/footer boundary overshoot that is <= 5.0 pt (footer within the new 5pt tolerance):
+      1) sha256:5e841d6c41cb... max overshoot = +2.41 pt (signature line on right margin)
+      2) sha256:166ce9da2795... max overshoot = +3.72 pt (signature line on right margin)
+      3) sha256:b9d6a518d1bf... max overshoot = +0.14 pt (signature line on right margin)
+      4) sha256:d48dd8845c30... max overshoot = +0.56 pt (running header 2026:CHC-AS:739-DB)
+      5) sha256:a7980391d052... max overshoot = +1.11 pt (running header 2026:CHC-OS:177-DB)
+      6) sha256:efe2d46cd083... max overshoot = +0.06 pt (watermark High Court of H.P. on left margin)
+      7) sha256:d5a8715aa64b... max overshoot = +1.32 pt (body text right margin)
+      8) sha256:358b79ff28a5... max overshoot = +2.13 pt (counsel contact line on right margin)
+      9) sha256:ad6059bdf15d... max overshoot = +1.85 pt (header line on right margin)
+      10) sha256:f1811ba5bf2d... max overshoot = +0.10 pt (counsel appearance line on right margin)
+      11) sha256:ef3a878560d7... max overshoot = +2.76 pt (justified paragraph text on right margin)
+    All 11 docs are <= 5.0 pt overshoot and correctly clear the gate under the 5pt tolerance rule.
   - Handwriting Flagged:     0 documents
   - Lang Unsupported Flags:  0 documents
   - LLM Fallback Invocations: 0 documents

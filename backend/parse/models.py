@@ -278,3 +278,49 @@ class AnchorAlias(models.Model):
 
     def __str__(self) -> str:
         return f"AnchorAlias({self.old_anchor} -> {self.new_anchor} via {self.method})"
+
+
+class CitationMention(DomainModel):
+    """Resolution result of a CitationMention in an order (plc.citation_mention)."""
+
+    mention_id = PrefixedULIDField(prefix="cm", primary_key=True)
+    parse = models.ForeignKey(ParseRun, on_delete=models.CASCADE, db_column="parse_id")
+    citing_work = models.ForeignKey(Work, on_delete=models.PROTECT, db_column="citing_work_id")
+    anchor_id = models.TextField()
+    raw_text = models.TextField()
+    mention_kind = models.TextField()
+    scheme = models.TextField(null=True, blank=True)
+    normalized = models.TextField(null=True, blank=True)
+    pin = models.JSONField(null=True, blank=True)
+    resolved_target_id = models.TextField(null=True, blank=True)
+    resolution_confidence = models.FloatField(null=True, blank=True)
+    resolution_method = models.TextField(null=True, blank=True)
+    temporal_check = models.TextField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'plc"."citation_mention'
+
+    def __str__(self) -> str:
+        return f"CitationMention({self.mention_id}, {self.raw_text} -> {self.resolved_target_id})"
+
+
+class IdentityMergeLedger(models.Model):
+    """Ledger of identity merges and splits (plc.identity_merge_ledger)."""
+
+    event_id = models.TextField(primary_key=True)
+    kind = models.TextField()
+    op = models.TextField()
+    from_id = models.TextField()
+    to_id = models.TextField()
+    reason = models.TextField(null=True, blank=True)
+    confidence = models.FloatField(null=True, blank=True)
+    reversible_until = models.DateTimeField(null=True, blank=True)
+    recorded_at = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'plc"."identity_merge_ledger'
+
+    def __str__(self) -> str:
+        return f"IdentityMergeLedger({self.event_id}, {self.op} {self.kind}: {self.from_id} -> {self.to_id})"
