@@ -116,11 +116,27 @@ class Command(BaseCommand):
                 stop_on_unchanged_count=stop_on_unchanged,
             )
 
+            spacing_str = (
+                f"min={summary.min_request_interval_s:.2f}s, "
+                f"avg={summary.avg_request_interval_s:.2f}s, "
+                f"max={summary.max_request_interval_s:.2f}s"
+                if summary.min_request_interval_s is not None
+                and summary.avg_request_interval_s is not None
+                and summary.max_request_interval_s is not None
+                else "N/A"
+            )
+
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Section '{sec}' completed: status={summary.status}, "
-                    f"pages={summary.pages_crawled}, total_items={summary.items_total}, "
-                    f"new={summary.new_count}, unchanged={summary.unchanged_count}, "
-                    f"changed={summary.changed_count}, metadata_changed={summary.metadata_changed_count}."
+                    f"\n=== Section '{sec}' Report ===\n"
+                    f"  Status: {summary.status}\n"
+                    f"  Pages crawled: {summary.pages_crawled}\n"
+                    f"  Rows parsed: {summary.items_total}\n"
+                    f"  PDFs downloaded: {summary.pdf_downloads_count}\n"
+                    f"  Captures by change_kind: NEW={summary.new_count}, "
+                    f"UNCHANGED={summary.unchanged_count}, CHANGED={summary.changed_count}, "
+                    f"METADATA_CHANGED={summary.metadata_changed_count}\n"
+                    f"  Profile ID in fetch_context: {summary.observed_profile_id or 'N/A'}\n"
+                    f"  Observed rate-limit spacing: {spacing_str}"
                 )
             )

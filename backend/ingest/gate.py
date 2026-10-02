@@ -195,11 +195,29 @@ class GatedHttpClient:
         self.offline_fixture_resolver = offline_fixture_resolver
         self.now_fn = now_fn or (lambda: datetime.now(UTC))
         self._raw_client: RawHttpClient | None = None
+        self.observed_intervals: list[float] = []
+        self._last_request_time: float | None = None
 
     def _get_raw_client(self) -> RawHttpClient:
         if self._raw_client is None:
             self._raw_client = RawHttpClient()
         return self._raw_client
+
+    @property
+    def min_observed_interval(self) -> float | None:
+        return min(self.observed_intervals) if self.observed_intervals else None
+
+    @property
+    def avg_observed_interval(self) -> float | None:
+        return (
+            sum(self.observed_intervals) / len(self.observed_intervals)
+            if self.observed_intervals
+            else None
+        )
+
+    @property
+    def max_observed_interval(self) -> float | None:
+        return max(self.observed_intervals) if self.observed_intervals else None
 
     def request(
         self,
@@ -231,7 +249,23 @@ class GatedHttpClient:
         # 3. Cross-process rate limit enforcement (Directive #2)
         parsed_url = urlparse(url)
         host = parsed_url.netloc or self.source_id
-        enforce_host_rate_limit(host, profile.rate_limit_delay_seconds)
+        slept = enforce_host_rate_limit(host, profile.rate_limit_delay_seconds)
+
+        now_mono = time.monotonic()
+        if self._last_request_time is not None:
+            interval = now_mono - self._last_request_time
+            self.observed_intervals.append(interval)
+        self._last_request_time = now_mono
+
+        logger.info(
+            "gated_request_dispatched",
+            url=url,
+            host=host,
+            slept_seconds=round(slept, 3),
+            interval_seconds=round(self.observed_intervals[-1], 3)
+            if self.observed_intervals
+            else None,
+        )
 
         # 4. Prepare headers with declared User-Agent (Directive #3)
         req_headers = dict(headers or {})

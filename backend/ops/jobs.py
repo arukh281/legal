@@ -347,8 +347,8 @@ def reap_stalled_steps(stalled_threshold_seconds: int = 90) -> list[dict[str, An
                 JOIN ops.job_chain jc ON js.job_id = jc.job_id
                 WHERE js.status = 'RUNNING'
                   AND jc.status = 'RUNNING'
-                  AND (js.heartbeat_at < now() - make_interval(secs => %s)
-                       OR (js.heartbeat_at IS NULL AND js.started_at < now() - make_interval(secs => %s)))
+                  AND (js.heartbeat_at <= clock_timestamp() - make_interval(secs => %s)
+                       OR (js.heartbeat_at IS NULL AND js.started_at <= clock_timestamp() - make_interval(secs => %s)))
                 FOR UPDATE SKIP LOCKED;
                 """,
                 [stalled_threshold_seconds, stalled_threshold_seconds],

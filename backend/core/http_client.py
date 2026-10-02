@@ -14,7 +14,6 @@ from typing import Any
 
 import httpx
 import structlog
-from django.conf import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -112,23 +111,3 @@ class RawHttpClient:
 
     def __exit__(self, *args: Any) -> None:
         self.close()
-
-
-def fetch_policy_snapshot(url: str, *, timeout: float = 30.0) -> tuple[int, bytes, str]:
-    """Fetch an official policy or robots snapshot for legal profile onboarding (Directive #5).
-
-    Used exclusively for initial legal profile bootstrapping and terms archiving.
-    """
-    caller_module = sys._getframe(1).f_globals.get("__name__", "")
-    if not (
-        caller_module.startswith("ingest.management.commands.seed_ibbi_profile")
-        or caller_module.startswith("core.http_client")
-        or "test" in caller_module
-    ):
-        raise PermissionError(f"Unauthorized call to fetch_policy_snapshot from '{caller_module}'.")
-
-    ua = getattr(settings, "CRAWLER_USER_AGENT", "LegalIntelligenceBot/1.0")
-    with httpx.Client(verify=True, timeout=timeout, follow_redirects=True) as client:
-        resp = client.get(url, headers={"User-Agent": ua})
-        content_type = resp.headers.get("content-type", "text/html")
-        return resp.status_code, resp.content, content_type

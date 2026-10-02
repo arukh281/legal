@@ -37,6 +37,24 @@ class SafetyBreakerTriggered(Exception):
 
 
 @dataclass
+class ProcessItemResult(str):
+    """Result of processing a listing item, backward-compatible with str."""
+
+    change_kind: str
+    pdf_fetched: bool
+    profile_id: str | None
+
+    def __new__(
+        cls, change_kind: str, pdf_fetched: bool, profile_id: str | None
+    ) -> ProcessItemResult:
+        obj = str.__new__(cls, change_kind)
+        obj.change_kind = change_kind
+        obj.pdf_fetched = pdf_fetched
+        obj.profile_id = profile_id
+        return obj
+
+
+@dataclass
 class CrawlSummary:
     """Summary metrics of a crawl run."""
 
@@ -51,6 +69,11 @@ class CrawlSummary:
     changed_count: int
     metadata_changed_count: int
     status: str
+    pdf_downloads_count: int = 0
+    observed_profile_id: str | None = None
+    min_request_interval_s: float | None = None
+    avg_request_interval_s: float | None = None
+    max_request_interval_s: float | None = None
     error: str | None = None
 
 
@@ -186,12 +209,17 @@ class SourceCrawler:
                     total_items_seen += 1
                     summary.items_total += 1
 
-                    outcome = self._process_listing_item(
+                    res = self._process_listing_item(
                         item=item,
                         crawl_run_id=run_id,
                         crawl_mode=mode,
                         client=client,
                     )
+                    outcome = res.change_kind
+                    if res.pdf_fetched:
+                        summary.pdf_downloads_count += 1
+                    if res.profile_id and not summary.observed_profile_id:
+                        summary.observed_profile_id = res.profile_id
 
                     if outcome == "UNCHANGED":
                         summary.unchanged_count += 1
@@ -272,6 +300,10 @@ class SourceCrawler:
             changed=summary.changed_count,
         )
 
+        summary.min_request_interval_s = client.min_observed_interval
+        summary.avg_request_interval_s = client.avg_observed_interval
+        summary.max_request_interval_s = client.max_observed_interval
+
         return summary
 
     def _process_listing_item(
@@ -281,7 +313,7 @@ class SourceCrawler:
         crawl_run_id: str,
         crawl_mode: str,
         client: GatedHttpClient,
-    ) -> str:
+    ) -> ProcessItemResult:
         """Process a single listing row with content-addressed storage and event emission.
 
         Enforces Directive #7: avoids re-downloading PDFs if URL and metadata are unchanged.
@@ -441,7 +473,11 @@ class SourceCrawler:
                 now=now,
             )
 
-        return change_kind
+        return ProcessItemResult(
+            change_kind=change_kind,
+            pdf_fetched=pdf_fetched,
+            profile_id=profile_id,
+        )
 
     def _record_health(self, status: str, incident_id: str | None) -> None:
         """Record health state in plc.source_health and emit source.health.v1."""

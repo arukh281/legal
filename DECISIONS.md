@@ -256,4 +256,11 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Decision:** Captures emit to `plc.raw.captured.v1` and health updates emit to `plc.source.health.v1`. The `lane` (`rt` or `bulk`) is populated in the outbox `lane` column, not in the topic name. Unproduced fields (`warc`, `norm_fingerprint`, `near_dup_hint`) are present and set to `None`.
 - **Reason:** Directive #8; `docs/01_master_architecture.md` §6.3, §6.4.
 
+---
+
+### 2026-10-02 — Mandatory Gated Client for All Network Fetches (Including Fixtures)
+- **Decision:** Raw curl, direct requests, or un-gated HTTP client calls are strictly prohibited for any source data acquisition across the entire codebase, including test fixture generation and refreshes. All source network calls must proceed through `GatedHttpClient` (e.g. via management commands like `refresh_fixtures` and `seed_ibbi_profile`), ensuring legal profile checks, rate-limit enforcement (≥ 3.0s delay enforced across processes via PostgreSQL advisory locking), and declared User-Agent headers are respected at all times.
+- **Reason:** Session S04 Closure Directive #3; Non-negotiable #5. Guarantees that neither automated crawler processes nor developer fixture refresh workflows ever bypass legal governance or rate limits.
+- **Doc Reference:** Session S04 Closure Directive #3; `docs/02_P0_source_acquisition.md` §5.2; AGENTS.md §4 item 5.
+
 

@@ -184,6 +184,8 @@ def test_job_chain_crash_recovery_killing_real_worker_process() -> None:
         # KILL THE WORKER PROCESS MID-STEP (SIGKILL)
         proc.kill()
         proc.wait(timeout=5)
+        # Brief pause to allow Postgres to detect backend socket disconnect and release row locks
+        time.sleep(0.3)
 
     finally:
         if proc.poll() is None:
@@ -197,7 +199,6 @@ def test_job_chain_crash_recovery_killing_real_worker_process() -> None:
             "SELECT status FROM ops.job_step WHERE job_id = %s AND step = 'crash_step_a';", [job_id]
         )
         assert cur.fetchone()[0] == "DONE"
-
     # Reaper detects stalled step B and re-defers it
     reaped = reap_stalled_steps(stalled_threshold_seconds=0)
     assert any(r["job_id"] == job_id and r["step"] == "crash_step_b" for r in reaped)
