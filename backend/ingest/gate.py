@@ -160,7 +160,8 @@ def enforce_host_rate_limit(host: str, min_delay_seconds: float) -> float:
             if row is not None and row[0] is not None:
                 elapsed = float(row[0])
                 if elapsed < min_delay_seconds:
-                    needed = min_delay_seconds - elapsed
+                    # Add 5ms safety floor to absorb VM clock jitter & scheduler latency
+                    needed = (min_delay_seconds - elapsed) + 0.005
                     # Sleep full remainder using monotonic clock loop to guarantee floor
                     deadline = time.monotonic() + needed
                     while True:
