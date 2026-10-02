@@ -263,4 +263,18 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Session S04 Closure Directive #3; Non-negotiable #5. Guarantees that neither automated crawler processes nor developer fixture refresh workflows ever bypass legal governance or rate limits.
 - **Doc Reference:** Session S04 Closure Directive #3; `docs/02_P0_source_acquisition.md` §5.2; AGENTS.md §4 item 5.
 
+---
+
+### 2026-10-02 — Rate Limit Floor Guarantee via DB Clock and Monotonic Loop
+- **Decision:** In `enforce_host_rate_limit`, elapsed time is calculated using PostgreSQL DB clock (`EXTRACT(EPOCH FROM (clock_timestamp() - last_request_at))`) under row locks, eliminating clock drift between host environments. If elapsed time is below the legal profile floor (`min_delay_seconds`), the worker sleeps the exact remaining duration using a monotonic clock loop (`deadline = time.monotonic() + needed; while time.monotonic() < deadline: time.sleep(...)`). `GatedHttpClient` also validates monotonic floor spacing before recording intervals.
+- **Reason:** S04 Closure Directive #2. Operating system sleep granularity and Python-to-DB clock skew previously caused observed intervals to dip slightly below 3.0s (to ~2.92s). The DB clock computation and monotonic loop strictly guarantee that observed spacing never drops below the legal profile floor.
+- **Doc Reference:** Session S04 Closure Directive #2; `docs/02_P0_source_acquisition.md` §5.8.
+
+---
+
+### 2026-10-02 — AST Guard Prohibiting Disabled TLS Verification (`verify=False`)
+- **Decision:** Added an AST guard test (`test_no_disabled_tls_verification_anywhere_in_backend`) that scans all Python files in `backend/` and asserts that no function or method call passes `verify=False`, `verify=0`, or `verify=None`.
+- **Reason:** S04 Closure Directive #3; Non-negotiable #5; `02_P0 §5.8`. Disabling TLS verification creates critical security vulnerabilities and breaks legal acquisition compliance. The AST test prevents any commit with disabled TLS verification.
+- **Doc Reference:** Session S04 Closure Directive #3; `docs/02_P0_source_acquisition.md` §5.8.
+
 

@@ -100,3 +100,45 @@ def test_no_direct_http_imports_outside_core_http_client() -> None:
         + "\n".join(raw_transport_violations)
         + "\nRawHttpClient is private; all network access must go through GatedHttpClient."
     )
+
+
+def test_no_disabled_tls_verification_anywhere_in_backend() -> None:
+    """Walk all backend python files and assert no call passes verify=False or disables TLS verification."""
+    backend_root = Path(__file__).resolve().parent.parent.parent
+
+    violations: list[str] = []
+
+    for py_file in backend_root.rglob("*.py"):
+        rel_path = py_file.relative_to(backend_root)
+        parts = rel_path.parts
+
+        # Skip virtualenvs, hidden dirs, caches
+        if any(p.startswith(".") for p in parts):
+            continue
+
+        try:
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+        except Exception:
+            continue
+
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for kw in node.keywords:
+                    if kw.arg == "verify":
+                        # Flag verify=False, verify=0, or verify=None
+                        if isinstance(kw.value, ast.Constant) and (
+                            kw.value.value is False or kw.value.value == 0 or kw.value.value is None
+                        ):
+                            violations.append(
+                                f"{rel_path}:{node.lineno} passes 'verify={kw.value.value}' (TLS verification disabled)"
+                            )
+                        elif isinstance(kw.value, ast.Name) and kw.value.id in ("False", "None"):
+                            violations.append(
+                                f"{rel_path}:{node.lineno} passes 'verify={kw.value.id}' (TLS verification disabled)"
+                            )
+
+    assert not violations, (
+        "Disabled TLS verification found in backend codebase:\n"
+        + "\n".join(violations)
+        + "\nTLS verification is strictly non-negotiable and must never be disabled (02_P0 §5.8)."
+    )

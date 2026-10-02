@@ -167,9 +167,9 @@
   - *Re-run Delta Sweep (Idempotency & Deduplication):*
     - All 4 sections yielded 100% `UNCHANGED` (20 consecutive unchanged items per section) and terminated at page 1 with **0 duplicate PDF downloads**.
 - **Contract & Resiliency Test Suites (`backend/ingest/tests/`):**
-  - `test_http_guard.py`: repo-wide AST import verification.
+  - `test_http_guard.py`: repo-wide AST import verification (no direct HTTP clients) + AST verification prohibiting disabled TLS (`verify=False`, `verify=0`, `verify=None`).
   - `test_legal_gate.py`: 8 comprehensive checks covering status, kill switch, expiry, access mode, and midnight-wrapping IST hours.
-  - `test_rate_limit.py`: concurrent multi-threaded cross-process rate limiter verification.
+  - `test_rate_limit.py`: concurrent multi-worker cross-process rate limiter verification, plus assertion that request spacing is strictly never below the profile floor.
   - `test_ibbi_adapter.py`: real HTML listing fixtures, CAPTCHA detection, layout drift detection.
   - `test_crawl_idempotency.py`: first crawl yields NEW, second delta yields UNCHANGED with zero PDF re-downloads; modified PDF yields CHANGED.
   - `test_crash_and_resume.py`: interrupted crawl resumes at page 2 from checkpoint without duplicating page 1.
@@ -183,14 +183,14 @@
 ```bash
 cd backend
 
-# Type check (strict repo-wide across all 132 source files)
+# Type check (strict repo-wide across all 133 source files)
 uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 137 backend tests against PostgreSQL 18
+# Run all 139 backend tests against PostgreSQL 18
 uv run pytest
 
 # Seed IBBI legal profile with live archived ToU / policy snapshots

@@ -132,6 +132,7 @@ def enforce_host_rate_limit(host: str, min_delay_seconds: float) -> float:
     """Enforce cross-process per-host rate limiting in PostgreSQL (Directive #2).
 
     Uses a PostgreSQL transaction advisory lock on host hash and plc.host_rate_limit row.
+    Guarantees that requests to the host are separated by at least min_delay_seconds.
     Returns the number of seconds slept (if any).
     """
     sleep_duration = 0.0
@@ -144,22 +145,32 @@ def enforce_host_rate_limit(host: str, min_delay_seconds: float) -> float:
                 [host],
             )
 
-            # 2. Query last_request_at
+            # 2. Query elapsed time using database clock to avoid skew with client
             cursor.execute(
-                "SELECT last_request_at FROM plc.host_rate_limit WHERE host = %s FOR UPDATE;",
+                """
+                SELECT EXTRACT(EPOCH FROM (clock_timestamp() - last_request_at))
+                FROM plc.host_rate_limit
+                WHERE host = %s
+                FOR UPDATE;
+                """,
                 [host],
             )
             row = cursor.fetchone()
 
-            if row is not None:
-                last_request_at = row[0]
-                now_utc = datetime.now(UTC)
-                elapsed = (now_utc - last_request_at).total_seconds()
+            if row is not None and row[0] is not None:
+                elapsed = float(row[0])
                 if elapsed < min_delay_seconds:
-                    sleep_duration = min_delay_seconds - elapsed
-                    time.sleep(sleep_duration)
+                    needed = min_delay_seconds - elapsed
+                    # Sleep full remainder using monotonic clock loop to guarantee floor
+                    deadline = time.monotonic() + needed
+                    while True:
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            break
+                        time.sleep(remaining)
+                    sleep_duration = needed
 
-            # 3. Update or insert host rate limit row
+            # 3. Update or insert host rate limit row with timestamp AFTER sleep completes
             cursor.execute(
                 """
                 INSERT INTO plc.host_rate_limit (host, last_request_at, min_delay_seconds)
@@ -253,9 +264,19 @@ class GatedHttpClient:
 
         now_mono = time.monotonic()
         if self._last_request_time is not None:
+            # Guarantee the floor: monotonic clock check ensures interval is never below profile rate limit
+            mono_floor = self._last_request_time + profile.rate_limit_delay_seconds
+            while time.monotonic() < mono_floor:
+                remaining = mono_floor - time.monotonic()
+                if remaining > 0:
+                    time.sleep(remaining)
+
+            now_mono = time.monotonic()
             interval = now_mono - self._last_request_time
             self.observed_intervals.append(interval)
-        self._last_request_time = now_mono
+            self._last_request_time = now_mono
+        else:
+            self._last_request_time = now_mono
 
         logger.info(
             "gated_request_dispatched",
