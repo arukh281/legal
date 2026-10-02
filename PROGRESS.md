@@ -45,12 +45,18 @@
 #### F. Corpus Resolution Management Command (`backend/parse/management/commands/resolve_citations.py`)
 - Processes parsed documents in `plc.parse_run` (skipping QUARANTINED).
 - Writes new `ParsedDocument` JSON artifacts with bumped `pipeline_version = "p1.citation@0.1.0|det_v1"` to S3 without editing old S3 objects or ParseRun stats in place.
-- Corpus execution results across 496 eligible documents (6 quarantined skipped):
-  - Total citations persisted to `plc.citation_mention`: 3,411
-  - Citations by scheme: SCC: 1,404 | CASE_NO: 1,275 | SCC_ONLINE: 453 | NEUTRAL_INSC: 123 | AIR: 93 | SCR: 45 | NEUTRAL_HC: 18
-  - Citations resolution: 3,024 RESOLVED (including case numbers to STUB cases and reporter cites to STUB works), 387 UNRESOLVED
-  - Statute mentions found: 15,355 (100% resolved as "not in MVP corpus")
-  - Degraded citations flagged: 15 (due to `ocr_conf < 0.80` or hidden text)
+- Corpus execution results across 156 distinct source PDFs (154 eligible documents, 2 quarantined skipped):
+  - Total citations persisted to `plc.citation_mention`: 1,086 (avg 7.05 per doc; 0 rows from non-latest runs)
+  - Citations by scheme: SCC: 459 | CASE_NO: 393 | SCC_ONLINE: 143 | NEUTRAL_INSC: 37 | AIR: 33 | SCR: 15 | NEUTRAL_HC: 6
+  - Citations honest resolution status:
+    - `RESOLVED_CORPUS` (matched real corpus work): 0 (expected for initial single-source IBBI corpus)
+    - `STUB_CREATED` (STUB work or case minted): 962
+    - `UNRESOLVED` (court unstated on bare case number): 124
+  - Statute mentions found: 4,990 (100% resolved as "not in MVP corpus")
+  - Degraded citations flagged: 3 (due to `ocr_conf < 0.80` or hidden text)
+- Root cause of duplicate works resolved: `parse_captured` now looks up existing work for the same raw blob and passes `existing_work_id` and `supersedes_parse_id`. Idempotency verified by `backend/parse/tests/test_parse_captured_idempotency.py`.
+- 346 duplicate works identified across the 156 unique PDFs. Full audit report generated at `eval/reports/s05b_orphan_works_report.txt`. Retirement proposal (marking `status='MERGED'`, `merged_into=canonical_work_id`, recording in `plc.identity_merge_ledger`) prepared and awaiting user approval before modifying data.
+- Reproducible real corpus citation tests: 6 public fixture PDFs added to `eval/fixtures/ibbi/` (plus existing `nclat_born_digital_del.pdf`). `test_real_corpus_citations.py` parses fixture PDFs live through `ParsingPipeline`, locates anchors, asserts snippets within anchor text, and verifies extraction against hand-written expectations.
 
 #### G. Identifier Minting & Prefix Registry (`backend/anchor_lib/ids.py`)
 - **Monotonic Crockford ULID Generator:**

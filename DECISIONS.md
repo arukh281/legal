@@ -354,9 +354,27 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ---
 
+
+---
+
 ### 2026-10-02 — Idempotent Re-Running of Citation Mention Resolution
 - **Decision:** Re-running `resolve_citations` atomically deletes and rewrites `plc.citation_mention` rows for the same `parse_id`.
 - **Reason:** User Directive #5. `plc.citation_mention` is an extractive mention ledger derived deterministically from immutable, content-addressed `ParsedDocument` anchors and their associated `ParseRun`. It contains no state mutated outside the extraction pipeline. Idempotently deleting and recreating mention rows for a `parse_id` prevents duplicate mentions across re-runs and ensures mentions stay completely synchronized with the latest extractor logic without data loss.
 - **Doc Reference:** Session S05b User Directive #5; `docs/mvp/03_data_model_and_contracts.md` §3.3.
+
+---
+
+### 2026-10-02 — Idempotent Re-Parsing via Existing Work Lookup in parse_captured
+- **Decision:** In `parse_captured`, the command looks up the existing `Work` matching `cap.raw_id` (via the latest `ParseRun` or `Manifestation` for that blob) and passes `existing_work_id` and `supersedes_parse_id` to `pipeline.process()`. A unit test (`test_parse_captured_twice_preserves_work_and_anchors`) enforces that re-parsing the same capture twice via the real command path creates exactly 1 work, mints 0 new works, and preserves 100% of live anchors.
+- **Reason:** Session S05b Blocker #1. Previously, `parse_captured` invoked the pipeline without passing `existing_work_id`, minting a new `Work` on every re-parse pass. The lookup guarantees that re-parsing preserves paragraph anchors and work identity.
+- **Doc Reference:** Session S05b Blocker #1; `docs/01_master_architecture.md` §5.5 (stability rules); `docs/03_P1_ingestion_parsing.md` §5.4.
+
+---
+
+### 2026-10-02 — Duplicate Works Retirement Proposal via Identity Merge Ledger
+- **Decision:** The ~346 duplicate works created during historical development runs prior to the idempotency fix are preserved without deletion and proposed for retirement via `plc.identity_merge_ledger`. When approved by the user, duplicate works will be marked `status = 'MERGED'` with `merged_into = canonical_work_id`, recording an explicit `MERGE` operation in `plc.identity_merge_ledger` with reason `'REPARSE_DUPLICATE_RAW_BLOB'`. Zero rows will be deleted.
+- **Reason:** Session S05b Blocker #2; Non-negotiable #1. Preserving historical parse runs and ledgering merges maintains full bitemporal auditability and adheres strictly to the spine decision record.
+- **Doc Reference:** Session S05b Blocker #2; `docs/03_data_model_and_contracts.md` §3.3; `docs/01_master_architecture.md` §2.4, §5.4.
+
 
 

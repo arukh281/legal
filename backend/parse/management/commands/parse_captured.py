@@ -18,6 +18,7 @@ from django.core.management.base import BaseCommand
 from ingest.models import Capture
 from ingest.storage import BlobStorage
 from parse.consumer import persist_pipeline_result
+from parse.models import Manifestation, ParseRun
 from parse.pipeline import ParsingPipeline
 
 
@@ -105,6 +106,24 @@ class Command(BaseCommand):
             sec = cap.source_record_key.split(":")[0]
             sections[sec] = sections.get(sec, 0) + 1
 
+            # Look up existing work_id for this raw_id to ensure idempotent re-parses
+            existing_run = (
+                ParseRun.objects.filter(raw_ids__contains=[cap.raw_id])
+                .order_by("-created_at")
+                .first()
+            )
+            existing_work_id = existing_run.work_id if existing_run else None
+            supersedes_parse_id = existing_run.parse_id if existing_run else None
+
+            if not existing_work_id:
+                manifestation = (
+                    Manifestation.objects.filter(raw_ids__contains=[cap.raw_id])
+                    .order_by("-first_seen")
+                    .first()
+                )
+                if manifestation:
+                    existing_work_id = manifestation.work_id
+
             try:
                 raw_bytes = storage.get_blob(cap.raw_id, content_type="application/pdf")
             except Exception as e:
@@ -125,6 +144,7 @@ class Command(BaseCommand):
                     rights_class=cap.rights_class,
                     provenance_tier=cap.provenance_tier,
                     source_metadata=cap.source_metadata,
+                    existing_work_id=existing_work_id,
                 )
 
                 # Persist to database & outbox
@@ -136,6 +156,7 @@ class Command(BaseCommand):
                     rights_class=cap.rights_class,
                     provenance_tier=cap.provenance_tier,
                     lane="bulk",
+                    supersedes_parse_id=supersedes_parse_id,
                 )
 
                 stats["total_docs"] += 1

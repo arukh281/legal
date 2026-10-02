@@ -1,27 +1,64 @@
-"""Tests for citation extraction against real parsed text from the IBBI corpus.
+"""Tests for citation extraction by parsing real fixture PDFs from the IBBI corpus.
 
 Normative source:
-- Session S05b Approval Point 8 & User Directive #3:
-  "add tests that use text read from the parsed IBBI corpus (cite the fixture PDF and anchor),
-   with hand-written expected citations, pin and normalised key. Hand-written means read
-   from the PDF, not the extractor's output. At least 10 real mentions across SCC,
-   SCC OnLine, INSC, AIR and a case number. Also one real negative case: text that looks
-   like a citation but must NOT match."
+- Session S05b Approval Point 8 & User Directive #4:
+  "Make test_real_corpus_citations reproducible: commit the 8 source PDFs it cites
+   to eval/fixtures/ibbi/ (they are public IBBI orders like the existing fixtures;
+   check the legal profile allows it, else use only the 6 already committed).
+   Each case must parse the PDF through the pipeline, find the anchor, assert the
+   snippet is in that anchor's text, and then check the extractor's output against
+   the hand-written expectation. Drop source_pdf as a pure label."
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from anchor_lib.ids import mint_id
 from parse.citations.extractor import extract_citations_from_anchor
+from parse.pipeline import ParsingPipeline
 
 
+def _find_fixture_dir() -> Path:
+    candidates = [
+        Path("../eval/fixtures/ibbi"),
+        Path("eval/fixtures/ibbi"),
+    ]
+    for c in candidates:
+        if c.exists() and c.is_dir():
+            return c
+    raise FileNotFoundError("Could not locate eval/fixtures/ibbi directory")
+
+
+_PIPELINE = ParsingPipeline()
+_PARSED_CACHE: dict[str, dict[str, str]] = {}
+
+
+def _get_parsed_nodes(pdf_filename: str) -> dict[str, str]:
+    """Parse fixture PDF through the pipeline and cache node fragments -> text."""
+    if pdf_filename not in _PARSED_CACHE:
+        fixture_dir = _find_fixture_dir()
+        pdf_path = fixture_dir / pdf_filename
+        assert pdf_path.exists(), f"Fixture PDF not found: {pdf_path}"
+        data = pdf_path.read_bytes()
+        res = _PIPELINE.process(
+            data,
+            raw_id=f"raw_{pdf_filename}",
+            existing_work_id=mint_id("wrk"),
+        )
+        _PARSED_CACHE[pdf_filename] = {n.anchor_id.split("#")[-1]: n.text for n in res.nodes}
+    return _PARSED_CACHE[pdf_filename]
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     (
         "test_name",
-        "source_pdf",
-        "source_anchor",
-        "text_snippet",
+        "pdf_filename",
+        "anchor_fragment",
+        "expected_snippet",
         "expected_raw",
         "expected_scheme",
         "expected_normalized",
@@ -29,14 +66,12 @@ from parse.citations.extractor import extract_citations_from_anchor
         "expected_pin_kind",
     ),
     [
-        # 1. SCC — Supreme Court Reports
+        # 1. SCC — Saranga Aggarwal
         (
             "scc_mention_saranga_aggarwal",
             "3dd78accf7aff459a4dbf5eb5e2a975e.pdf",
-            "wrk_01M3XQ9NW5N4RG5SHS4RJ9NSAY/en#p8",
-            "8.A similar approach is reflected in the decision of this Court in Saranga Anilkumar Aggarwal. "
-            "Though the case arose in context of Section 96 IBC, the underlying principle remains instructive. "
-            "It was held in 5 (2024) 5 SCC 745.",
+            "p8",
+            "(2024) 5 SCC 745",
             "(2024) 5 SCC 745",
             "SCC",
             "(2024) 5 SCC 745",
@@ -46,11 +81,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 2. SCC — Ghanshyam Mishra
         (
             "scc_mention_ghanshyam_mishra",
-            "04702ba7c827be9264c922576b509f06.pdf",
-            "wrk_01M3XQ9P5K18ND3MRTJV3CF1FW/en#p24",
-            "Ghanshyam Mishra and Sons Private Limited through the Authorized Signatory v. "
-            "Edelweiss Asset Reconstruction Co. Ltd. (2021) 9 SCC 657, wherein it was categorically held "
-            "that upon approval of the resolution plan...",
+            "11487cc8fdf860689d07fd02e7677b95.pdf",
+            "p24",
+            "(2021) 9 SCC 657",
             "(2021) 9 SCC 657",
             "SCC",
             "(2021) 9 SCC 657",
@@ -60,10 +93,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 3. SCC — Essar Steel CoC
         (
             "scc_mention_essar_steel",
-            "04702ba7c827be9264c922576b509f06.pdf",
-            "wrk_01M3XQ9P5K18ND3MRTJV3CF1FW/en#p16",
-            "Committee of Creditors of Essar Steel India Limited v. Satish Kumar Gupta and Others, "
-            "(2020) 8 SCC 531. In that decision, this Court upheld the practice of resolution applicants...",
+            "11487cc8fdf860689d07fd02e7677b95.pdf",
+            "p16",
+            "(2020) 8 SCC 531",
             "(2020) 8 SCC 531",
             "SCC",
             "(2020) 8 SCC 531",
@@ -73,10 +105,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 4. SCC OnLine — NCLAT
         (
             "scc_online_nclat_standard_chartered",
-            "04702ba7c827be9264c922576b509f06.pdf",
-            "wrk_01M3XQ9P5K18ND3MRTJV3CF1FW/en#p16",
-            "Standard Chartered Bank v. Satish Kumar Gupta, 2019 SCC OnLine NCLAT 388 in holding that "
-            "claims that may exist apart from those decided on merits...",
+            "11487cc8fdf860689d07fd02e7677b95.pdf",
+            "p16",
+            "2019 SCC OnLine NCLAT 388",
             "2019 SCC OnLine NCLAT 388",
             "SCC_ONLINE",
             "2019 SCC OnLine NCLAT 388",
@@ -86,10 +117,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 5. SCC OnLine — Supreme Court
         (
             "scc_online_sc_rainbow_papers",
-            "04702ba7c827be9264c922576b509f06.pdf",
-            "wrk_01M3XQ9P5K18ND3MRTJV3CF1FW/en#p19",
-            "State Tax Officer v. Rainbow Papers Limited and Bhushan Steels and Strips Ltd., "
-            "2025 SCC OnLine SC 2275.",
+            "11487cc8fdf860689d07fd02e7677b95.pdf",
+            "p19",
+            "2025 SCC OnLine SC 2275",
             "2025 SCC OnLine SC 2275",
             "SCC_ONLINE",
             "2025 SCC OnLine SC 2275",
@@ -99,10 +129,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 6. SCC OnLine — NCLAT 2024
         (
             "scc_online_nclat_2024",
-            "687f897fba9ad1853818e9c403e05436.pdf",
-            "wrk_01M3Y2RXFEDZD8ZJFESW11AQHH/en#p19",
-            "Rectified order correcting some clerical errors was issued by the Adjudicating Authority on 12.02.2025. "
-            "Appellant's plea that limitation should run from 12.02.2025 is contrary to 2024 SCC OnLine NCLAT 1036.",
+            "a59818e626e81171b4a517630cf10746.pdf",
+            "p19",
+            "2024 SCC OnLine NCLAT 1036",
             "2024 SCC OnLine NCLAT 1036",
             "SCC_ONLINE",
             "2024 SCC OnLine NCLAT 1036",
@@ -112,10 +141,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 7. INSC Neutral Citation — Supreme Court 2026
         (
             "insc_neutral_2026_1046",
-            "67a21ebaa769c3a3c20092c481977750.pdf",
-            "wrk_01M3XQ8N7ZFF73R87BSM008Y3E/en#u1",
-            "2026 INSC 1046 Non-Reportable IN THE SUPREME COURT OF INDIA CIVIL APPELLATE JURISDICTION "
-            "Civil Appeal No.2594 of 2026 The Committee of Creditors of AMTEK Auto Ltd.",
+            "e9422f2529f4b6d4a3c9b5171aa214fe.pdf",
+            "hdr",
+            "2026 INSC 1046",
             "2026 INSC 1046",
             "NEUTRAL_INSC",
             "2026 INSC 1046",
@@ -126,9 +154,8 @@ from parse.citations.extractor import extract_citations_from_anchor
         (
             "insc_neutral_2026_746",
             "3dd78accf7aff459a4dbf5eb5e2a975e.pdf",
-            "wrk_01M3XQ9NW5N4RG5SHS4RJ9NSAY/en#u1",
-            "2026 INSC 746 1 REPORTABLE IN THE SUPREME COURT OF INDIA CIVIL APPELLATE JURISDICTION "
-            "CIVIL APPEAL NOS.4289-4290 OF 2025 TEJAS J. SHAH & ANR.",
+            "u1",
+            "2026 INSC 746",
             "2026 INSC 746",
             "NEUTRAL_INSC",
             "2026 INSC 746",
@@ -138,10 +165,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 9. AIR — Supreme Court 2025
         (
             "air_sc_2025_aditya_sarda",
-            "6149129528f804fe6c6c7b9605dc7986.pdf",
-            "wrk_01M3XS1MF2PNPV39ZHDP19J8PA/en#p9",
-            "Serious Fraud Investigation Office v. Aditya Sarda AIR 2025 Supreme Court 2431, "
-            "wherein the benefit of anticipatory bail was considered...",
+            "99fa1449ee9367d53f7a9f1d75f3a423.pdf",
+            "p9",
+            "AIR 2025 Supreme Court 2431",
             "AIR 2025 Supreme Court 2431",
             "AIR",
             "AIR 2025 SC 2431",
@@ -151,9 +177,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 10. AIR — Bombay High Court 2007
         (
             "air_bombay_hc_2007",
-            "f6c9d74944b0e51e4bf5a47895bc621f.pdf",
-            "wrk_01M3XS1EKK4B8E68YEQDXQEZ3R/en#p24",
-            "reported in (2006) 5 SCC 920 and AIR 2007 Bombay 50. In that case, the division bench held...",
+            "15019be51394ea0615ab54880b786ee0.pdf",
+            "p24",
+            "AIR 2007 Bombay 50",
             "AIR 2007 Bombay 50",
             "AIR",
             "AIR 2007 Bom 50",
@@ -163,10 +189,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 11. Case Number — NCLT CP (IB)
         (
             "case_no_nclt_cp_ib",
-            "eval/fixtures/ibbi/nclat_born_digital_del.pdf",
-            "pdoc_01M3_nclat_del/v1#p3",
-            "The Adjudicating Authority committed an error in restoring the right to file reply in the "
-            "CP (IB) No. 567/ND/2025 which was restored by this Tribunal.",
+            "nclat_born_digital_del.pdf",
+            "p8",
+            "CP (IB) No. 567/ND/2025",
             "CP (IB) No. 567/ND/2025",
             "CASE_NO",
             "crt_IN_NCLT_DEL|CP (IB)|567|2025",
@@ -176,10 +201,9 @@ from parse.citations.extractor import extract_citations_from_anchor
         # 12. Case Number — NCLAT Company Appeal
         (
             "case_no_nclat_company_appeal",
-            "eval/fixtures/ibbi/nclat_born_digital_del.pdf",
-            "pdoc_01M3_nclat_del/v1#u1",
-            "Company Appeal (AT) (Ins) No. 124 of 2026 (Arising out of Order dated 15.01.2026 passed by "
-            "National Company Law Tribunal, New Delhi Bench)",
+            "nclat_born_digital_del.pdf",
+            "hdr",
+            "Company Appeal (AT) (Ins) No. 124 of 2026",
             "Company Appeal (AT) (Ins) No. 124 of 2026",
             "CASE_NO",
             "crt_IN_NCLAT|Company Appeal (AT) (Insolvency)|124|2026",
@@ -190,22 +214,36 @@ from parse.citations.extractor import extract_citations_from_anchor
 )
 def test_real_corpus_citation_mentions(
     test_name: str,
-    source_pdf: str,
-    source_anchor: str,
-    text_snippet: str,
+    pdf_filename: str,
+    anchor_fragment: str,
+    expected_snippet: str,
     expected_raw: str,
     expected_scheme: str,
     expected_normalized: str,
     expected_court_hint: str | None,
     expected_pin_kind: str,
 ) -> None:
-    """Verify that hand-written expected citations read from the parsed IBBI corpus match extractor output."""
-    citations = extract_citations_from_anchor(text=text_snippet, anchor_id=source_anchor)
+    """Parse fixture PDF through pipeline, locate anchor, assert snippet in anchor text,
 
-    # Find the specific target citation
+    and verify citation extractor output matches hand-written expectation.
+    """
+    nodes = _get_parsed_nodes(pdf_filename)
+    assert anchor_fragment in nodes, (
+        f"[{test_name}] Anchor #{anchor_fragment} not found in {pdf_filename}"
+    )
+
+    anchor_text = nodes[anchor_fragment]
+    assert expected_snippet in anchor_text, (
+        f"[{test_name}] Expected snippet {expected_snippet!r} must be in anchor #{anchor_fragment} of {pdf_filename}. "
+        f"Got text: {anchor_text[:120]}..."
+    )
+
+    full_anchor_id = f"wrk_test/en#{anchor_fragment}"
+    citations = extract_citations_from_anchor(text=anchor_text, anchor_id=full_anchor_id)
+
     matching = [c for c in citations if c.raw_text == expected_raw]
     assert len(matching) == 1, (
-        f"[{test_name}] Expected raw citation {expected_raw!r} in {source_pdf} anchor {source_anchor}, "
+        f"[{test_name}] Expected raw citation {expected_raw!r} in {pdf_filename} #{anchor_fragment}, "
         f"found {[c.raw_text for c in citations]}"
     )
 
@@ -215,7 +253,7 @@ def test_real_corpus_citation_mentions(
     assert cite.court_hint == expected_court_hint
     assert cite.pin.get("kind") == expected_pin_kind
     assert cite.quote_selector["exact"] == expected_raw
-    assert cite.anchor_id == source_anchor
+    assert cite.anchor_id == full_anchor_id
 
 
 def test_real_negative_cases_do_not_match() -> None:
