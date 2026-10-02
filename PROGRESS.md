@@ -221,11 +221,22 @@
   - Executes atomic database commit (`work`, `legal_case`, `manifestation`, `parse_run`, `anchor`, `anchor_alias`) and emits `doc.parsed.v1` event to `ops.event_outbox` in the SAME transaction.
   - Tested crash scenario between S3 upload and DB commit: leaves orphaned S3 artifact but clean database.
 - **Management Command & Full Corpus Exit Check (`backend/parse/management/commands/parse_captured.py`):**
-  - Parsed all 156 captured IBBI orders across Supreme Court, High Courts, NCLAT, and NCLT:
-    - 3,605 pages analyzed (3,502 born-digital, 103 OCR scanned = 2.86% OCR share).
-    - 8,462 permanent anchors issued (average 51.9 paragraphs per document).
-    - Quality gate: 129 PASS (82.7%), 25 FLAGGED (16.0%), 2 QUARANTINED (1.3%).
-    - Zero LLM fallback invocations required.
+  - Full output saved to `eval/reports/s05a_quality.txt`.
+  - Processed all 156 unique captured IBBI orders in storage (`raw_id` deduplicated):
+    - Breakdown by section: Supreme Court (40), High Courts (40), NCLAT (40), NCLT (36).
+    - Note on the 4 missing documents to 160: In Session S04, the IBBI portal mirror captured 40 items each for SC, HC, and NCLAT, but only 36 unique order records existed for NCLT. Zero documents were skipped, zero failed, zero left unparsed — exactly 156 / 156 (100%) captured PDFs were processed.
+    - 3,605 pages analyzed: 3,502 born-digital (97.14%), 103 OCR scanned (2.86% OCR share).
+    - 8,463 permanent anchors issued (average 51.9 numbered paragraphs per document; 8,095 explicit paragraph nodes / 156 docs).
+    - Quality gate distribution:
+      - 140 PASS (89.7%)
+      - 14 FLAGGED (9.0% — routed to admin review queue due to unnumbered paragraphs)
+      - 2 QUARANTINED (1.3% — excluded from index)
+      - Total: 140 + 14 + 2 = 156.
+    - Integrity flags: 3 hidden text detected (quarantined), 0 handwriting, 0 unsupported languages, 0 LLM fallback invocations.
+  - **Re-parse Anchor Stability Canary (6 Golden Fixtures):**
+    - Ran re-parse cycle across all 6 golden fixtures (`nclt_born_digital_chd`, `nclat_word_export`, `nclat_born_digital_del`, `nclt_scanned_ahm`, `nclt_scanned_ahm_2`, `nclt_born_digital_mum`).
+    - Stored anchors preserved: 89 / 89 = **100.00%** (target ≥ 99.5% PASS).
+    - Tombstones / breaking changes on unchanged re-parse: 0 (0.00%).
 - **Test Suite (`backend/parse/tests/`):**
   - 22 new tests, 162 total passed across backend:
     - `test_golden_outputs.py`: verified against 6 hand-checked golden fixtures (3 born-digital, 2 scanned with recorded OCR, 1 Word-export).
