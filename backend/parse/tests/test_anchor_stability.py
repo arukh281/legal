@@ -122,16 +122,11 @@ class TestAnchorStability:
         assert res_v2.anchor_changes["preserved"] == 2
         assert len(res_v2.new_aliases) == 1
         alias = res_v2.new_aliases[0]
-        # Must be valid enum method per Directive #2
-        assert alias["method"] in [
-            "NUM_EQ",
-            "HASH_EQ",
-            "NW_ALIGN",
-            "SPLIT",
-            "MERGE",
-            "RENUMBER",
-            "GRAMMAR_V11",
-        ]
+        # Must be NW_ALIGN with correct confidence and anchor IDs
+        assert alias["method"] == "NW_ALIGN"
+        assert 0.80 <= alias["confidence"] < 0.95
+        assert alias["old_anchor"] == f"{work_id}/en#p1"
+        assert alias["new_anchor"] == f"{work_id}/en#p1"
 
     def test_paragraph_deletion_records_tombstone(self) -> None:
         work_id = "wrk_01H1234567890ABCDEFGHJKMNQ"
@@ -141,14 +136,21 @@ class TestAnchorStability:
                 node_type="PARA",
                 number_as_printed="1",
                 numbering="EXPLICIT",
-                text="Paragraph 1 text content.",
+                text="Paragraph 1 text content about the Corporate Debtor and insolvency.",
             ),
             ParsedBlock(
                 fragment="p2",
                 node_type="PARA",
                 number_as_printed="2",
                 numbering="EXPLICIT",
-                text="Paragraph 2 that will be deleted in version 2.",
+                text="Paragraph 2 about the Corporate Debtor insolvency will be deleted.",
+            ),
+            ParsedBlock(
+                fragment="p3",
+                node_type="PARA",
+                number_as_printed="3",
+                numbering="EXPLICIT",
+                text="XYZZY completely unrelated gibberish text with no overlap at all.",
             ),
         ]
 
@@ -174,20 +176,27 @@ class TestAnchorStability:
                 is_authoritative_expression=True,
             )
 
-        # Version 2 with paragraph 2 deleted
+        # Version 2 with paragraphs 2 and 3 deleted
         blocks_v2 = [
             ParsedBlock(
                 fragment="p1",
                 node_type="PARA",
                 number_as_printed="1",
                 numbering="EXPLICIT",
-                text="Paragraph 1 text content.",
+                text="Paragraph 1 text content about the Corporate Debtor and insolvency.",
             ),
         ]
 
         res_v2 = self.assigner.assign_anchors(blocks_v2, work_id=work_id, expression_key="en")
-        assert res_v2.anchor_changes["tombstoned"] == 1
-        assert len(res_v2.tombstoned_anchors) == 1
-        tomb = res_v2.tombstoned_anchors[0]
-        assert tomb["anchor_id"] == f"{work_id}/en#p2"
-        assert tomb["forward_to"] == f"{work_id}/en#p1"
+        assert res_v2.anchor_changes["tombstoned"] == 2
+        assert len(res_v2.tombstoned_anchors) == 2
+
+        tombs_by_id = {t["anchor_id"]: t for t in res_v2.tombstoned_anchors}
+
+        # p2 had similar text to p1 (both about Corporate Debtor insolvency)
+        tomb_p2 = tombs_by_id[f"{work_id}/en#p2"]
+        assert tomb_p2["forward_to"] == f"{work_id}/en#p1"
+
+        # p3 had completely unrelated text — no good match, forward_to is None
+        tomb_p3 = tombs_by_id[f"{work_id}/en#p3"]
+        assert tomb_p3["forward_to"] is None

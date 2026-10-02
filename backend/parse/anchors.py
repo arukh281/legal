@@ -225,16 +225,32 @@ class AnchorAssigner:
                 )
             )
 
-        # 4. Check for tombstoned old anchors
+        # 4. Check for tombstoned old anchors — find best-overlap forward_to
         unclaimed_old = all_existing_ids - claimed_old_ids
+        # Build lookup for old anchor text
+        existing_by_id = {a.anchor_id: a for a in existing_anchors}
         for old_id in unclaimed_old:
             tombstoned += 1
-            # Best overlap new anchor
-            best_new = aligned_nodes[0].anchor_id if aligned_nodes else None
+            old_anchor = existing_by_id.get(old_id)
+            old_text = old_anchor.text if old_anchor else ""
+
+            # Find best-overlap new anchor by text similarity
+            best_forward: str | None = None
+            best_sim = 0.0
+            for new_node in aligned_nodes:
+                sim = difflib.SequenceMatcher(None, old_text, new_node.text).ratio()
+                if sim > best_sim:
+                    best_sim = sim
+                    best_forward = new_node.anchor_id
+
+            # Only set forward_to if similarity meets threshold
+            if best_sim < 0.50:
+                best_forward = None
+
             tombstoned_records.append(
                 {
                     "anchor_id": old_id,
-                    "forward_to": best_new,
+                    "forward_to": best_forward,
                 }
             )
 

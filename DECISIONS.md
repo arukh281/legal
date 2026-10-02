@@ -310,4 +310,30 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Decision:** Newly introduced numbered paragraphs in court orders keep their printed numbers `p{n}` (`numbering = "EXPLICIT"`), satisfying Constraint A1. Only unnumbered blocks are minted synthetic locators `u{n}` (`numbering = "SYNTHETIC"`).
 - **Reason:** User Directive #3; Constraint A1 (`docs/01_master_architecture.md` §5.3).
 
+---
 
+### 2026-10-02 — CI: MinIO Service Container for S3-Dependent Tests
+- **Decision:** Added `docker run` step for MinIO in `.github/workflows/ci.yml` before Pytest, using the same pinned image digest as `infra/compose.yaml`. Waits up to 30s for `/minio/health/live`.
+- **Reason:** All 7 CI failures in run 36980412972 were `EndpointConnectionError: Could not connect to http://localhost:9000`. Parse pipeline tests upload ParsedDocument JSON to S3 before DB commit (per Directive #5), requiring a live MinIO endpoint.
+- **Doc Reference:** `infra/compose.yaml`; `docs/mvp/04_stack_and_infra.md` §2.11.
+
+---
+
+### 2026-10-02 — Hidden Text Fixture Regenerated with Truly Off-Canvas Text
+- **Decision:** Regenerated `eval/fixtures/synthetic/hidden_text_adversarial.pdf`: mediabox 1000×1000, cropbox 595×842, adversarial text at `Point(700, 900)` (outside visible area). Previous fixture had "off-page" text at y=828 which was still within the 842pt page height and only detectable via a loose `y1 > page_h` check that also flagged normal footers.
+- **Reason:** PyMuPDF clips text extraction to the cropbox regardless of clip parameter. The detection function now temporarily expands cropbox to mediabox to extract hidden text, then applies a 5pt tolerance so footers near the bottom margin are not flagged. A negative test confirms y=830 footers are clean.
+- **Doc Reference:** `docs/03_P1_ingestion_parsing.md` §5.2 item 4; AGENTS.md §4.6.
+
+---
+
+### 2026-10-02 — Tombstone forward_to Uses Best-Overlap Similarity with 0.50 Threshold
+- **Decision:** When a paragraph is deleted between re-parses, `forward_to` is set to the new anchor with highest `SequenceMatcher` similarity if ≥ 0.50, otherwise `None`. Previously defaulted to `aligned_nodes[0]` regardless of similarity.
+- **Reason:** User directive: "forward_to must be the best-overlap new anchor by similarity, and null if nothing is close (no default to the first anchor)."
+- **Doc Reference:** `docs/01_master_architecture.md` §5.5 (stability rules).
+
+---
+
+### 2026-10-02 — Golden Fixtures Expanded to 6 Total
+- **Decision:** Added `sample_order_1.pdf` (NCLT Ahmedabad scanned, 16 pages, recorded OCR) and `sample_order_2.pdf` (NCLT Mumbai born-digital, 23 pages) as golden fixtures. Strengthened `nclt_scanned_ahm` golden data from 1 anchor to 5. All 6 fixtures have hand-read golden data with 5 anchors each.
+- **Reason:** User directive to reach 6 fixtures and strengthen scanned goldens.
+- **Doc Reference:** Session S05a requirement 7; `docs/mvp/06_test_set_plan.md`.

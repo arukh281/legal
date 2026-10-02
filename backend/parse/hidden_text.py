@@ -37,6 +37,10 @@ def inspect_page_for_hidden_text(
 ) -> tuple[list[str], list[HiddenTextRegion], list[dict[str, Any]]]:
     """Inspect a PyMuPDF page for adversarial or hidden text.
 
+    Uses an expanded clip rectangle to catch text placed outside the visible
+    page area (e.g. off-canvas injection). A tolerance of 5pt prevents
+    normal edge/footer text from being flagged.
+
     Returns (flags, hidden_regions, clean_blocks).
     """
     flags: set[str] = set()
@@ -47,7 +51,24 @@ def inspect_page_for_hidden_text(
     page_w = rect.width
     page_h = rect.height
 
-    page_dict = page.get_text("dict")  # type: ignore[no-untyped-call]
+    # Edge tolerance: text within this many points of the page boundary
+    # is considered "on page" (prevents flagging normal footers).
+    TOLERANCE = 5.0  # noqa: N806
+
+    # PyMuPDF clips text extraction to the cropbox. To detect text hidden
+    # outside the visible page (but within the mediabox), we temporarily
+    # expand the cropbox to the full mediabox, extract, then restore.
+    saved_cropbox = page.cropbox
+    needs_restore = False
+    if page.mediabox != page.cropbox:
+        page.set_cropbox(page.mediabox)  # type: ignore[no-untyped-call]
+        needs_restore = True
+
+    try:
+        page_dict = page.get_text("dict")  # type: ignore[no-untyped-call]
+    finally:
+        if needs_restore:
+            page.set_cropbox(saved_cropbox)  # type: ignore[no-untyped-call]
     for block in page_dict.get("blocks", []):
         if block.get("type") != 0:  # Text block
             continue
@@ -96,9 +117,15 @@ def inspect_page_for_hidden_text(
                     )
                     continue
 
-                # 3. Off-page text (outside or extending past [0, 0, page_w, page_h])
+                # 3. Off-page text: truly outside the page rectangle with tolerance
                 x0, y0, x1, y1 = bbox
-                if x0 < 0 or y0 < 0 or x1 > page_w or y1 > page_h:
+                is_off_page = (
+                    x1 < -TOLERANCE
+                    or y1 < -TOLERANCE
+                    or x0 > page_w + TOLERANCE
+                    or y0 > page_h + TOLERANCE
+                )
+                if is_off_page:
                     flags.add("OFF_PAGE")
                     hidden_regions.append(
                         HiddenTextRegion(

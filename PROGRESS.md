@@ -194,7 +194,9 @@
   - Emits word-level bounding boxes normalized to `[0, 1]` with individual word confidences.
   - Caches OCR page JSON results in `eval/fixtures/ocr/` for deterministic offline test runs.
 - **Adversarial Hidden Text Detector (`backend/parse/hidden_text.py`):**
-  - Scans PDF display lists for white text (sRGB ≥ 248), tiny fonts (< 1.0 pt), and off-page text extending past page bounds.
+  - Temporarily expands page cropbox to mediabox to detect text placed outside the visible area (e.g. off-canvas prompt injection).
+  - Applies 5pt edge tolerance so footers near the bottom margin are not falsely flagged as OFF_PAGE.
+  - Flags white text (sRGB ≥ 248), tiny fonts (< 1.0 pt), and off-page text beyond the visible cropbox.
   - Drops adversarial injection text from clean blocks and records flagged regions.
 - **Page-Level Triage (`backend/parse/triage.py`):**
   - Triage decision tree: born-digital text-layer validation vs scan preprocessing + OCR routing.
@@ -208,7 +210,7 @@
 - **Anchor Stability & Assignment Engine (`backend/parse/anchors.py`):**
   - Assigns canonical `PublicAnchor` strings via `anchor_lib.parse()`.
   - Re-parse alignment protocol: aligns blocks across parse runs using `NUM_EQ` (court printed number), `HASH_EQ` (exact text hash), and `NW_ALIGN` (Needleman-Wunsch diff on text modifications).
-  - Tombstones deleted paragraphs on `anchor.state = 'TOMBSTONED'` and `forward_to = <new_anchor_id>`.
+  - Tombstones deleted paragraphs on `anchor.state = 'TOMBSTONED'` and `forward_to` set to the best-overlap new anchor by `SequenceMatcher` similarity (≥ 0.50 threshold); `None` if no match is close.
   - Unmatched new court-numbered paragraphs keep their printed numbers `p{n}` (`EXPLICIT`), satisfying Constraint A1.
 - **Quality Gating & Django Admin Review Queue (`backend/parse/gates.py`, `backend/parse/admin.py`):**
   - Gates documents into `PASS`, `FLAGGED`, or `QUARANTINED`.
@@ -225,10 +227,10 @@
     - Quality gate: 129 PASS (82.7%), 25 FLAGGED (16.0%), 2 QUARANTINED (1.3%).
     - Zero LLM fallback invocations required.
 - **Test Suite (`backend/parse/tests/`):**
-  - 19 new tests, 158 total passed across backend:
-    - `test_golden_outputs.py`: verified against 4 hand-checked golden fixtures.
-    - `test_anchor_stability.py`: 100% stability on re-parse, NW_ALIGN alias on text edits, tombstone on paragraph deletion.
-    - `test_hidden_text.py`: adversarial PDF inspection for white text, tiny font, and off-canvas text.
+  - 22 new tests, 162 total passed across backend:
+    - `test_golden_outputs.py`: verified against 6 hand-checked golden fixtures (3 born-digital, 2 scanned with recorded OCR, 1 Word-export).
+    - `test_anchor_stability.py`: 100% stability on re-parse, strict NW_ALIGN method and confidence assertions on text edits, tombstone with similarity-based forward_to and None case.
+    - `test_hidden_text.py`: adversarial PDF with off-canvas text (cropbox/mediabox), negative footer test, pipeline quarantine check.
     - `test_ocr_gate.py`: gate evaluation, handwriting flagging, unsupported language quarantine, low OCR claim exclusion.
     - `test_scan_robustness.py`: auto-rotate, deskewing, low-DPI upscaling, multi-format image wrapping.
     - `test_s3_db_crash.py`: S3 upload before DB transaction crash resilience.
@@ -249,7 +251,7 @@ uv run mypy .
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 158 backend tests against PostgreSQL 18
+# Run all 162 backend tests against PostgreSQL 18
 uv run pytest
 
 # Parse captured documents (e.g. 5 sample docs or full corpus)

@@ -95,6 +95,17 @@ jobs:
         working-directory: backend
         run: uv run python manage.py migrate --database owner
 
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 -p 9001:9001 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            elestio/minio@sha256:25348a257f1ece1b192f25f6cd9854618fa86422ac87b494b5d4e629c556d4bd \
+            server /data --console-address ":9001"
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break || sleep 1
+          done
+
       - name: Pytest on real PostgreSQL 18 + pgvector
         working-directory: backend
         run: uv run pytest
