@@ -29,7 +29,7 @@ from parse.citations.statutes import (
     extract_in_document_definitions,
     extract_statute_mentions_from_anchor,
 )
-from parse.models import Anchor, CitationMention, ParseRun
+from parse.models import Anchor, CitationMention, ParseRun, Work
 from parse.storage import ParsedDocStorage
 
 
@@ -59,16 +59,21 @@ class Command(BaseCommand):
             self.style.NOTICE("=== Session S05b: Citations Extraction & Resolution ===")
         )
 
-        # 1. Fetch latest parse runs per work, skipping QUARANTINED (Directive #6)
-        all_runs = (
-            ParseRun.objects.select_related("work")
-            .order_by("work_id", "-created_at")
-            .distinct("work_id")
+        # 1. Fetch latest parse run per distinct source PDF (raw_blob sha256)
+        all_latest_runs = list(
+            ParseRun.objects.raw("""
+                SELECT DISTINCT ON (raw_ids[1]) *
+                FROM plc.parse_run
+                ORDER BY raw_ids[1], created_at DESC
+            """)
         )
 
         quarantined_count = 0
         eligible_runs: list[ParseRun] = []
-        for r in all_runs:
+        latest_parse_ids: set[str] = set()
+
+        for r in all_latest_runs:
+            latest_parse_ids.add(r.parse_id)
             if r.gate == "QUARANTINED":
                 quarantined_count += 1
             else:
@@ -77,21 +82,26 @@ class Command(BaseCommand):
         if limit > 0:
             eligible_runs = eligible_runs[:limit]
 
+        # Clean up any citation_mention rows belonging to older duplicate runs
+        with transaction.atomic():
+            CitationMention.objects.exclude(parse_id__in=latest_parse_ids).delete()
+
         self.stdout.write(
-            f"Found {len(all_runs)} total parse runs: {len(eligible_runs)} eligible, {quarantined_count} QUARANTINED (skipped)."
+            f"Found {len(all_latest_runs)} distinct source PDFs: {len(eligible_runs)} eligible documents, {quarantined_count} QUARANTINED (skipped)."
         )
 
         # Statistics accumulators
         citations_by_scheme: Counter[str] = Counter()
         citations_by_status: Counter[str] = Counter()
         statutes_by_status: Counter[str] = Counter()
+        doc_citation_counts: list[int] = []
+        doc_statute_counts: list[int] = []
         degraded_citations = 0
         degraded_statutes = 0
 
-        resolved_examples: list[
-            tuple[ExtractedCitation, str, str]
-        ] = []  # (mention, target, anchor_text)
-        unresolved_examples: list[tuple[ExtractedCitation, str]] = []  # (mention, anchor_text)
+        resolved_corpus_examples: list[tuple[ExtractedCitation, str, str]] = []
+        stub_examples: list[tuple[ExtractedCitation, str, str]] = []
+        unresolved_examples: list[tuple[ExtractedCitation, str]] = []
 
         total_citations_persisted = 0
         total_statute_mentions_found = 0
@@ -146,6 +156,9 @@ class Command(BaseCommand):
                 )
                 doc_statutes.extend(anc_statutes)
 
+            doc_citation_counts.append(len(doc_citations))
+            doc_statute_counts.append(len(doc_statutes))
+
             # Persist citations to plc.citation_mention
             with transaction.atomic():
                 # Clear previous mentions for this parse_id to be idempotent
@@ -162,19 +175,32 @@ class Command(BaseCommand):
                         citing_work_id=work.work_id,
                     )
 
-                    # Determine status
-                    if target_id and method == "ALIAS_EXACT":
-                        status_label = "RESOLVED"
-                        if len(resolved_examples) < 5 and not cite.degraded_quality:
-                            resolved_examples.append((cite, target_id, cite.raw_text))
-                    elif method == "STUB_MINTED":
-                        status_label = "STUB_MINTED"
-                        if len(resolved_examples) < 5 and not cite.degraded_quality:
-                            resolved_examples.append((cite, f"STUB:{target_id}", cite.raw_text))
-                    else:
+                    # Determine honest resolution category (Directive #2)
+                    if not target_id:
                         status_label = "UNRESOLVED"
                         if len(unresolved_examples) < 5:
                             unresolved_examples.append((cite, cite.raw_text))
+                    else:
+                        if target_id.startswith("wrk_"):
+                            w = Work.objects.filter(work_id=target_id).first()
+                            if w and w.status in ("ACTIVE", "PROVISIONAL"):
+                                status_label = "RESOLVED_CORPUS"
+                                if len(resolved_corpus_examples) < 5 and not cite.degraded_quality:
+                                    resolved_corpus_examples.append(
+                                        (cite, target_id, cite.raw_text)
+                                    )
+                            else:
+                                status_label = "STUB_CREATED"
+                                if len(stub_examples) < 5 and not cite.degraded_quality:
+                                    stub_examples.append((cite, f"STUB:{target_id}", cite.raw_text))
+                        elif target_id.startswith("cas_"):
+                            status_label = "STUB_CREATED"
+                            if len(stub_examples) < 5 and not cite.degraded_quality:
+                                stub_examples.append((cite, f"STUB:{target_id}", cite.raw_text))
+                        else:
+                            status_label = "UNRESOLVED"
+                            if len(unresolved_examples) < 5:
+                                unresolved_examples.append((cite, cite.raw_text))
 
                     citations_by_status[status_label] += 1
 
@@ -270,24 +296,40 @@ class Command(BaseCommand):
                 self.stdout.write(f"Processed [{idx}/{len(eligible_runs)}] documents...")
 
         # Print Comprehensive Quality Summary Report
+        mean_cites = (
+            sum(doc_citation_counts) / len(doc_citation_counts) if doc_citation_counts else 0.0
+        )
+        mean_stats = (
+            sum(doc_statute_counts) / len(doc_statute_counts) if doc_statute_counts else 0.0
+        )
+
         self.stdout.write("\n" + "=" * 70)
         self.stdout.write("=== S05b CITATIONS & STATUTE MENTIONS QUALITY REPORT ===")
         self.stdout.write("=" * 70)
         self.stdout.write(
-            f"Total Eligible Documents Processed: {len(eligible_runs)} (Quarantined Skipped: {quarantined_count})"
+            f"Total Eligible Documents Processed (distinct PDFs): {len(eligible_runs)} (Quarantined Skipped: {quarantined_count})"
         )
         self.stdout.write(
-            f"Total Citations Persisted to plc.citation_mention: {total_citations_persisted}"
+            f"Total Citations Persisted to plc.citation_mention: {total_citations_persisted} (avg {mean_cites:.2f} per doc)"
         )
-        self.stdout.write(f"Total Statute Mentions Found: {total_statute_mentions_found}")
+        self.stdout.write(
+            f"Total Statute Mentions Found: {total_statute_mentions_found} (avg {mean_stats:.2f} per doc)"
+        )
 
-        self.stdout.write("\n--- Citations Breakdown by Scheme ---")
+        self.stdout.write("\n--- Citations Breakdown by Scheme (Across Distinct Docs) ---")
         for sch, cnt in sorted(citations_by_scheme.items(), key=lambda x: -x[1]):
             self.stdout.write(f"  • {sch:<15}: {cnt}")
 
-        self.stdout.write("\n--- Citations Resolution Status ---")
-        for status_label, cnt in sorted(citations_by_status.items(), key=lambda x: -x[1]):
-            self.stdout.write(f"  • {status_label:<15}: {cnt}")
+        self.stdout.write("\n--- Citations Honest Resolution Status (Directive #2) ---")
+        self.stdout.write(
+            f"  • RESOLVED_CORPUS (real work) : {citations_by_status.get('RESOLVED_CORPUS', 0)}"
+        )
+        self.stdout.write(
+            f"  • STUB_CREATED (stub minted)  : {citations_by_status.get('STUB_CREATED', 0)}"
+        )
+        self.stdout.write(
+            f"  • UNRESOLVED (court unstated) : {citations_by_status.get('UNRESOLVED', 0)}"
+        )
 
         self.stdout.write("\n--- Statute Mentions Resolution Status ---")
         for status_label, cnt in sorted(statutes_by_status.items(), key=lambda x: -x[1]):
@@ -300,9 +342,9 @@ class Command(BaseCommand):
         self.stdout.write(f"  • Degraded Statute Mentions: {degraded_statutes}")
 
         self.stdout.write("\n" + "=" * 70)
-        self.stdout.write("=== 5 RESOLVED / STUB-LINKED EXAMPLES WITH ANCHORS ===")
+        self.stdout.write("=== 5 STUB-LINKED EXAMPLES (NO REAL CORPUS WORK MATCHED) ===")
         self.stdout.write("=" * 70)
-        for i, (cite, target, raw) in enumerate(resolved_examples[:5], 1):
+        for i, (cite, target, raw) in enumerate(stub_examples[:5], 1):
             self.stdout.write(
                 f"[{i}] Mention ID: {cite.mention_id} | Scheme: {cite.scheme} | Kind: {cite.mention_kind}"
             )

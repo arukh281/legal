@@ -285,8 +285,42 @@
     - Ran re-parse cycle across all 6 golden fixtures (`nclt_born_digital_chd`, `nclat_word_export`, `nclat_born_digital_del`, `nclt_scanned_ahm`, `nclt_scanned_ahm_2`, `nclt_born_digital_mum`).
     - Stored anchors preserved: 89 / 89 = **100.00%** (target ≥ 99.5% PASS).
     - Tombstones / breaking changes on unchanged re-parse: 0 (0.00%).
+#### O. Citations: Extraction, Resolution & Deduplication (Session S05b: `backend/parse/citations/`)
+- **Citation Extractor (`backend/parse/citations/extractor.py`):**
+  - Robust regex grammar extracting SCC, SCC OnLine, AIR (including multi-word Supreme Court), SCR, INSC neutral citations, High Court neutral citations, NCLT CP (IB), NCLAT Company Appeal, and bare case numbers.
+  - Generates `QuoteSelector` (prefix, exact, suffix) for resilient re-anchoring.
+  - Extracts pinpoint locators (`page`, `para`, `unknown`).
+  - Temporal sanity checks: flags citations dated after the citing order's decision date (`CITED_AFTER_CITING`).
+  - Flags degraded mentions (`ocr_conf < 0.80` or `is_hidden`).
+- **Statute Mentions (`backend/parse/citations/statutes.py`):**
+  - Regex grammar for statutory sections, subsections, and Constitution articles.
+  - Extracts in-document definitions (`extract_in_document_definitions`, e.g. `"the Code"` -> IBC 2016).
+  - Point-in-time rules (`AS_CITED` vs `NO_EXPRESSION`).
+  - Corpus-only resolution: returns `resolved_anchor_ids = []` and `resolution_status = "not in MVP corpus"` (zero false positives or external law fabrication).
+  - Zero new SQL tables for statute mentions (persisted strictly inside new `ParsedDocument` objects with bumped `pipeline_version = "p1.citation@0.1.0|det_v1"` in S3).
+- **AuthorityView Citation Resolver & Alias Lifecycle (`backend/parse/citations/resolver.py`):**
+  - Resolves mentions against `plc.identifier_alias` honoring trust tier hierarchy (`T0 > T1 > T2 > T3 > T4`).
+  - Pinned self-minted STUB aliases to `T4` trust tier (`source = "citation_mention"`, `evidence = {mention_id, citing_work_id, anchor_id}`).
+  - Resolves reporter citations to STUB `Work`; resolves case numbers to `LegalCase` with STUB case (not STUB judgment work).
+  - Leaves case numbers without court context `UNRESOLVED` (`target_id = None`) without alias or STUB.
+  - Promotes authoritative aliases upon arrival: supersedes `T4` row, merges STUB into real work via `plc.identity_merge_ledger`, re-points mentions, and emits `plc.identity.merged.v1` and `plc.acquire.requested.v1`.
+- **Deduplication & Auto-Merge Engine (`backend/parse/citations/dedupe.py`):**
+  - Exact-match auto-merge: auto-merges only when court, normalized case number, and decision date match 100% exactly.
+  - Reversible merge via `split_work()` emitting `plc.identity.split.v1`.
+- **Corpus Resolution Run & Quality Report (`eval/reports/s05b_quality.txt`):**
+  - Evaluated across 154 distinct eligible documents (2 quarantined skipped = 156 distinct PDFs).
+  - Total citations persisted to `plc.citation_mention`: **1,086** (average 7.05 per doc).
+  - Citations breakdown by scheme:
+    - SCC: 459 | CASE_NO: 393 | SCC_ONLINE: 143 | NEUTRAL_INSC: 37 | AIR: 33 | SCR: 15 | NEUTRAL_HC: 6.
+  - Citations honest resolution status (Directive #2):
+    - `RESOLVED_CORPUS`: 0 (0.0% — honest status; zero cited judgments exist in initial MVP corpus)
+    - `STUB_CREATED`: 962 (88.6% — STUB works for reporters, STUB cases for case numbers)
+    - `UNRESOLVED`: 124 (11.4% — case numbers without court stated, left un-stubbed)
+  - Statute mentions: 4,990 found across 154 docs (avg 32.40 per doc) — 100% "not in MVP corpus".
+  - Quality degradation flags: 3 citations degraded (`ocr_conf < 0.80`), 0 statute mentions degraded.
 - **Test Suite (`backend/parse/tests/`):**
-  - 26 new tests for S05b, 187 total passed across backend:
+  - 39 new tests for S05b, **200 total passed** across backend (1 skipped: real LLM smoke):
+    - `test_real_corpus_citations.py`: 13 tests asserting citation extraction against real parsed IBBI corpus anchors across SCC, SCC OnLine, INSC, AIR, and case numbers with hand-written expected citations, pin, normalized keys, and real negative cases.
     - `test_citation_extractor.py`: full reporter schemes (SCC, SCC OnLine, AIR, SCR, INSC, Neutral HC), case numbers (CP(IB), Company Appeal, bare cases), pinpoints, quote selectors, temporal sanity, and quality degradation flags.
     - `test_statute_extractor.py`: sections, subsections, articles, in-document definitions, and strictly corpus-only provision resolution ("not in MVP corpus").
     - `test_resolver.py`: STUB work vs STUB case minting, T4 alias trust tier, case numbers without court staying UNRESOLVED, and `acquire.requested.v1` event contract.
@@ -302,17 +336,17 @@
 ```bash
 cd backend
 
-# Type check (strict repo-wide across all 172 source files)
+# Type check (strict repo-wide across all 173 source files)
 uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 187 backend tests against PostgreSQL 18
+# Run all 200 backend tests against PostgreSQL 18
 uv run pytest
 
-# Extract and resolve citations across the parsed corpus
+# Extract and resolve citations across distinct source PDFs
 uv run python manage.py resolve_citations
 
 # Parse captured documents (e.g. 5 sample docs or full corpus)

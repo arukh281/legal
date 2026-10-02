@@ -53,9 +53,9 @@ RE_SCC_ONLINE = re.compile(
     re.IGNORECASE,
 )
 
-# 3. AIR: AIR 1978 SC 597 | AIR 2020 SC 1234 | AIR 1999 Bom 123
+# 3. AIR: AIR 1978 SC 597 | AIR 2020 SC 1234 | AIR 1999 Bom 123 | AIR 2025 Supreme Court 2431
 RE_AIR = re.compile(
-    r"AIR\s*(?P<year>(?:19|20)\d{2})\s*(?P<court>[A-Za-z]+)\s*(?P<page>\d{1,5})",
+    r"AIR\s*(?P<year>(?:19|20)\d{2})\s*(?P<court>Supreme\s+Court|[A-Za-z]+)\s*(?P<page>\d{1,5})",
     re.IGNORECASE,
 )
 
@@ -139,15 +139,26 @@ SCC_ONLINE_COURTS: dict[str, str] = {
 # AIR court code to Court ID mapping
 AIR_COURTS: dict[str, str] = {
     "SC": "crt_IN_SC",
+    "SUPREME COURT": "crt_IN_SC",
     "BOM": "crt_IN_HC_BOM",
+    "BOMBAY": "crt_IN_HC_BOM",
     "DEL": "crt_IN_HC_DEL",
+    "DELHI": "crt_IN_HC_DEL",
     "CAL": "crt_IN_HC_CAL",
+    "CALCUTTA": "crt_IN_HC_CAL",
     "MAD": "crt_IN_HC_MAD",
+    "MADRAS": "crt_IN_HC_MAD",
     "ALL": "crt_IN_HC_ALL",
+    "ALLAHABAD": "crt_IN_HC_ALL",
     "KER": "crt_IN_HC_KER",
+    "KERALA": "crt_IN_HC_KER",
     "KAR": "crt_IN_HC_KAR",
     "KANT": "crt_IN_HC_KAR",
+    "KARNATAKA": "crt_IN_HC_KAR",
     "GUJ": "crt_IN_HC_GUJ",
+    "GUJARAT": "crt_IN_HC_GUJ",
+    "LAH": "crt_IN_HC_LAH",
+    "LAHORE": "crt_IN_HC_LAH",
 }
 
 # NCLT bench code to Court ID mapping
@@ -367,8 +378,25 @@ def extract_citations_from_anchor(
         y = int(m.group("year"))
         court_raw = m.group("court")
         page = m.group("page")
-        norm = f"AIR {y} {court_raw} {page}"
-        chint = AIR_COURTS.get(court_raw.upper())
+        court_key = court_raw.upper()
+        if court_key in ("SC", "SUPREME COURT"):
+            norm_court = "SC"
+        elif court_key in ("BOM", "BOMBAY"):
+            norm_court = "Bom"
+        elif court_key in ("DEL", "DELHI"):
+            norm_court = "Del"
+        elif court_key in ("CAL", "CALCUTTA"):
+            norm_court = "Cal"
+        elif court_key in ("MAD", "MADRAS"):
+            norm_court = "Mad"
+        elif court_key in ("ALL", "ALLAHABAD"):
+            norm_court = "All"
+        elif court_key in ("LAH", "LAHORE"):
+            norm_court = "Lah"
+        else:
+            norm_court = court_raw.capitalize()
+        norm = f"AIR {y} {norm_court} {page}"
+        chint = AIR_COURTS.get(court_key)
         _add_mention(
             m.group(0),
             m.start(),

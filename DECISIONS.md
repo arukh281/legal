@@ -352,3 +352,11 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Session S05b Directive #4. While `T4` denotes "model-inferred", it represents the lowest available trust tier in the hierarchy (`T0 > T1 > T2 > T3 > T4`). A citation mention extracted from inside a judicial order is not court-authoritative for the cited case's canonical identity. When an authoritative `T0`–`T2` alias arrives later for the same normalized key, `alias_one_active` lifecycle ensures the `T4` row becomes `SUPERSEDED`, the STUB merges into the real work via `plc.identity_merge_ledger`, and existing mentions re-point.
 - **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.3 (line 240, 256); `docs/01_master_architecture.md` §5.4 (lines 659–665); Session S05b Directive #4.
 
+---
+
+### 2026-10-02 — Idempotent Re-Running of Citation Mention Resolution
+- **Decision:** Re-running `resolve_citations` atomically deletes and rewrites `plc.citation_mention` rows for the same `parse_id`.
+- **Reason:** User Directive #5. `plc.citation_mention` is an extractive mention ledger derived deterministically from immutable, content-addressed `ParsedDocument` anchors and their associated `ParseRun`. It contains no state mutated outside the extraction pipeline. Idempotently deleting and recreating mention rows for a `parse_id` prevents duplicate mentions across re-runs and ensures mentions stay completely synchronized with the latest extractor logic without data loss.
+- **Doc Reference:** Session S05b User Directive #5; `docs/mvp/03_data_model_and_contracts.md` §3.3.
+
+

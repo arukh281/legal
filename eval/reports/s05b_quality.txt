@@ -1,0 +1,102 @@
+=== Session S05b: Citations Extraction & Resolution ===
+Found 156 distinct source PDFs: 154 eligible documents, 2 QUARANTINED (skipped).
+Processed [20/154] documents...
+Processed [40/154] documents...
+Processed [60/154] documents...
+Processed [80/154] documents...
+Processed [100/154] documents...
+Processed [120/154] documents...
+Processed [140/154] documents...
+Processed [154/154] documents...
+
+======================================================================
+=== S05b CITATIONS & STATUTE MENTIONS QUALITY REPORT ===
+======================================================================
+Total Eligible Documents Processed (distinct PDFs): 154 (Quarantined Skipped: 2)
+Total Citations Persisted to plc.citation_mention: 1086 (avg 7.05 per doc)
+Total Statute Mentions Found: 4990 (avg 32.40 per doc)
+
+--- Citations Breakdown by Scheme (Across Distinct Docs) ---
+  • SCC            : 459
+  • CASE_NO        : 393
+  • SCC_ONLINE     : 143
+  • NEUTRAL_INSC   : 37
+  • AIR            : 33
+  • SCR            : 15
+  • NEUTRAL_HC     : 6
+
+--- Citations Honest Resolution Status (Directive #2) ---
+  • RESOLVED_CORPUS (real work) : 0
+  • STUB_CREATED (stub minted)  : 962
+  • UNRESOLVED (court unstated) : 124
+
+--- Statute Mentions Resolution Status ---
+  • not in MVP corpus   : 4990
+
+--- Quality Degradation (Directive #6) ---
+  • Degraded Citations (ocr_conf < 0.80 or hidden text): 3
+  • Degraded Statute Mentions: 0
+
+======================================================================
+=== 5 STUB-LINKED EXAMPLES (NO REAL CORPUS WORK MATCHED) ===
+======================================================================
+[1] Mention ID: cm_01M3Y9ZJK8BVQEN3DWVTKQS6S5 | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2VBEYH14C1ZA4JYFSC3QY/en#hdr
+    Raw Text:        'Comp. App. (AT) (Ins) No. 830 of 2024'
+    Normalized Key:  crt_IN_NCLAT|Company Appeal (AT) (Insolvency)|830|2024
+    Resolved Target: STUB:cas_01M3Y7CCCHR6E91K6XWFKHQ8KE
+    Quote Selector:  prefix='UNAL PRINCIPAL BENCH, NEW DELHI ', exact='Comp. App. (AT) (Ins) No. 830 of 2024', suffix=' IN THE MATTER OF: Yashwant Lalc'
+[2] Mention ID: cm_01M3Y9ZJKEVSPJPQDZCGGFDQCK | Scheme: SCC | Kind: FULL
+    Source Anchor:   wrk_01M3Y2VBEYH14C1ZA4JYFSC3QY/en#p26
+    Raw Text:        '(1997) 7 SCC 137'
+    Normalized Key:  (1997) 7 SCC 137
+    Resolved Target: STUB:wrk_01M3Y7CCCQXCM1AEVTJA2QWX5N
+    Quote Selector:  prefix=' versus Daulat Singh and Others ', exact='(1997) 7 SCC 137', suffix=' has been relied upon. It is sub'
+[3] Mention ID: cm_01M3Y9ZJKGTZW7Z0B6WVR0MYYV | Scheme: SCC_ONLINE | Kind: FULL
+    Source Anchor:   wrk_01M3Y2VBEYH14C1ZA4JYFSC3QY/en#p29
+    Raw Text:        '2023 SCC Online Cal 5347'
+    Normalized Key:  2023 SCC OnLine Cal 5347
+    Resolved Target: STUB:wrk_01M3Y7CCCYAZE634HTFHW0VK6Z
+    Quote Selector:  prefix='mar Kejriwal v. UCO Bank & Ors. ', exact='2023 SCC Online Cal 5347', suffix=' (Hon’ble High Court of Calcutta'
+[4] Mention ID: cm_01M3Y9ZJKGTZW7Z0B6WVR0MYYW | Scheme: SCC_ONLINE | Kind: FULL
+    Source Anchor:   wrk_01M3Y2VBEYH14C1ZA4JYFSC3QY/en#p29
+    Raw Text:        '2019 SCC Online NCLT 24522'
+    Normalized Key:  2019 SCC OnLine NCLT 24522
+    Resolved Target: STUB:wrk_01M3Y7CCD60Q07J39MP6C6P1RJ
+    Quote Selector:  prefix=' Maharashtra v. VISA Power Ltd. ', exact='2019 SCC Online NCLT 24522', suffix=' (Hon’ble NCLT Calcutta Bench) ('
+[5] Mention ID: cm_01M3Y9ZJKGTZW7Z0B6WVR0MYYX | Scheme: SCC_ONLINE | Kind: FULL
+    Source Anchor:   wrk_01M3Y2VBEYH14C1ZA4JYFSC3QY/en#p29
+    Raw Text:        '2021 SCC Online NCLT 9658'
+    Normalized Key:  2021 SCC OnLine NCLT 9658
+    Resolved Target: STUB:wrk_01M3Y7CCDDPRE7S0J5BGSMCXHE
+    Quote Selector:  prefix=' Ind-Barath Power (Madras) Ltd. ', exact='2021 SCC Online NCLT 9658', suffix=' (Hon’ble NCLT Hyderabad Bench) '
+
+======================================================================
+=== 5 UNRESOLVED EXAMPLES WITH ANCHORS ===
+======================================================================
+[1] Mention ID: cm_01M3Y9ZK9A00J5ZEW5V888R58C | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2TQQDT36TSXZYK24TAVRD/en#u1
+    Raw Text:        'CIVIL APPEAL NO. 8247 OF 2022'
+    Normalized Key:  |CIVIL APPEAL|8247|2022
+    Quote Selector:  prefix='IA CIVIL APPELLATE JURISDICTION ', exact='CIVIL APPEAL NO. 8247 OF 2022', suffix=' ANJANI TECHNOPLAST LTD. …APPELL'
+[2] Mention ID: cm_01M3Y9ZQ6H3NYEP1N54ZVJCZ6Q | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2TK5V99W6S9JPR0Q69T41/en#u1
+    Raw Text:        'CIVIL APPEAL NO.6529 OF 2026'
+    Normalized Key:  |CIVIL APPEAL|6529|2026
+    Quote Selector:  prefix='IA CIVIL APPELLATE JURISDICTION ', exact='CIVIL APPEAL NO.6529 OF 2026', suffix=' MR. NILESH SHAH & ORS. …APPELLA'
+[3] Mention ID: cm_01M3Y9ZQ6H3NYEP1N54ZVJCZ6R | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2TK5V99W6S9JPR0Q69T41/en#u1
+    Raw Text:        'CIVIL APPEAL NO.4681 OF 2026'
+    Normalized Key:  |CIVIL APPEAL|4681|2026
+    Quote Selector:  prefix=' INDIA & ANR. …RESPONDENTS WITH ', exact='CIVIL APPEAL NO.4681 OF 2026', suffix=' KOTAK MAHINDRA ASSET MANAGEMENT'
+[4] Mention ID: cm_01M3Y9ZQ6H3NYEP1N54ZVJCZ6S | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2TK5V99W6S9JPR0Q69T41/en#u1
+    Raw Text:        'CIVIL APPEAL NO.6527 OF 2026'
+    Normalized Key:  |CIVIL APPEAL|6527|2026
+    Quote Selector:  prefix='BOARD OF INDIA …RESPONDENT WITH ', exact='CIVIL APPEAL NO.6527 OF 2026', suffix=' KOTAK MAHINDRA TRUSTEE COMPANY '
+[5] Mention ID: cm_01M3Y9ZQCD8ZJPJ5SF9CKAP16X | Scheme: CASE_NO | Kind: CASE_NUMBER
+    Source Anchor:   wrk_01M3Y2VYHW2N1B7KCCG4Y5ZTE7/en#p68
+    Raw Text:        'Civil Appeal No.10673/2018'
+    Normalized Key:  |Civil Appeal|10673|2018
+    Quote Selector:  prefix='dian Overseas Bank & Others (in ', exact='Civil Appeal No.10673/2018', suffix=' decided on 05.02.2019) the Hon’'
+======================================================================
