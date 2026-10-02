@@ -1,0 +1,2228 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 7,
+  "lines": [
+    {
+      "text": "vii.",
+      "bbox": [
+        0.1459,
+        0.2537,
+        0.1773,
+        0.2662
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "vii.",
+          "bbox": [
+            0.1459,
+            0.2537,
+            0.1773,
+            0.2662
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB) 374 OF 2025",
+      "bbox": [
+        0.7284,
+        0.0525,
+        0.8767,
+        0.0639
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7284,
+            0.053,
+            0.747,
+            0.0616
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7526,
+            0.0525,
+            0.7768,
+            0.0639
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "374",
+          "bbox": [
+            0.7824,
+            0.053,
+            0.8098,
+            0.0616
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.8155,
+            0.053,
+            0.8348,
+            0.0616
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.8405,
+            0.0525,
+            0.8767,
+            0.0616
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Committee of IL&FS proposed cancellation of the share",
+      "bbox": [
+        0.2119,
+        0.0958,
+        0.8767,
+        0.1129
+      ],
+      "confidence": 0.9487,
+      "words": [
+        {
+          "text": "Committee",
+          "bbox": [
+            0.2119,
+            0.0981,
+            0.3336,
+            0.1106
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3481,
+            0.0975,
+            0.3699,
+            0.11
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.3803,
+            0.0975,
+            0.4504,
+            0.1095
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proposed",
+          "bbox": [
+            0.4641,
+            0.0969,
+            0.5681,
+            0.1129
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cancellation",
+          "bbox": [
+            0.5818,
+            0.0964,
+            0.7188,
+            0.1089
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7317,
+            0.0964,
+            0.7542,
+            0.1083
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7647,
+            0.0964,
+            0.8002,
+            0.1083
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "share",
+          "bbox": [
+            0.8139,
+            0.0958,
+            0.8767,
+            0.1083
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "sale and initiation of closure proceedings, as GIMCO had",
+      "bbox": [
+        0.2119,
+        0.1345,
+        0.8767,
+        0.1511
+      ],
+      "confidence": 0.9511,
+      "words": [
+        {
+          "text": "sale",
+          "bbox": [
+            0.2119,
+            0.1368,
+            0.2546,
+            0.1488
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.2651,
+            0.1368,
+            0.3078,
+            0.1488
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "initiation",
+          "bbox": [
+            0.3175,
+            0.1363,
+            0.4206,
+            0.1482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4311,
+            0.1363,
+            0.4529,
+            0.1482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "closure",
+          "bbox": [
+            0.4601,
+            0.1363,
+            0.5415,
+            0.1482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proceedings,",
+          "bbox": [
+            0.552,
+            0.1357,
+            0.6938,
+            0.1511
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.7059,
+            0.1391,
+            0.7301,
+            0.1471
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.7405,
+            0.1351,
+            0.8227,
+            0.1471
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "had",
+          "bbox": [
+            0.8332,
+            0.1345,
+            0.8767,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "substantial liabilities against limited assets and cash",
+      "bbox": [
+        0.2111,
+        0.1733,
+        0.8767,
+        0.1904
+      ],
+      "confidence": 0.9571,
+      "words": [
+        {
+          "text": "substantial",
+          "bbox": [
+            0.2111,
+            0.1756,
+            0.34,
+            0.1881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "liabilities",
+          "bbox": [
+            0.357,
+            0.175,
+            0.4601,
+            0.187
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "against",
+          "bbox": [
+            0.4786,
+            0.1745,
+            0.5616,
+            0.1904
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "limited",
+          "bbox": [
+            0.5786,
+            0.1745,
+            0.6567,
+            0.1864
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "assets",
+          "bbox": [
+            0.6753,
+            0.175,
+            0.7446,
+            0.1864
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7631,
+            0.1733,
+            0.8058,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cash",
+          "bbox": [
+            0.8243,
+            0.1733,
+            0.8767,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "balances.",
+      "bbox": [
+        0.2103,
+        0.2144,
+        0.3167,
+        0.2269
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "balances.",
+          "bbox": [
+            0.2103,
+            0.2144,
+            0.3167,
+            0.2269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "On 11.2.2002, the Additional Collector, Kutch allotted",
+      "bbox": [
+        0.2111,
+        0.2509,
+        0.8767,
+        0.268
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "On",
+          "bbox": [
+            0.2111,
+            0.2543,
+            0.2442,
+            0.2657
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "11.2.2002,",
+          "bbox": [
+            0.2635,
+            0.2537,
+            0.382,
+            0.268
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3989,
+            0.2531,
+            0.4343,
+            0.2651
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Additional",
+          "bbox": [
+            0.4504,
+            0.2526,
+            0.5673,
+            0.2651
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Collector,",
+          "bbox": [
+            0.5842,
+            0.252,
+            0.6898,
+            0.2668
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Kutch",
+          "bbox": [
+            0.7075,
+            0.2514,
+            0.776,
+            0.264
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "allotted",
+          "bbox": [
+            0.7921,
+            0.2509,
+            0.8767,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "industrial land at Nana Layja, Kutch to GIMCO. On",
+      "bbox": [
+        0.2103,
+        0.2902,
+        0.8767,
+        0.3073
+      ],
+      "confidence": 0.9433,
+      "words": [
+        {
+          "text": "industrial",
+          "bbox": [
+            0.2103,
+            0.2925,
+            0.3223,
+            0.305
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "land",
+          "bbox": [
+            0.3392,
+            0.2925,
+            0.3892,
+            0.3044
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.4077,
+            0.2936,
+            0.4295,
+            0.3044
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Nana",
+          "bbox": [
+            0.4464,
+            0.2925,
+            0.5068,
+            0.3039
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Layja,",
+          "bbox": [
+            0.5238,
+            0.2913,
+            0.5898,
+            0.3073
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Kutch",
+          "bbox": [
+            0.6092,
+            0.2913,
+            0.6777,
+            0.3033
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6954,
+            0.2925,
+            0.7156,
+            0.3033
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO.",
+          "bbox": [
+            0.7349,
+            0.2908,
+            0.8235,
+            0.3027
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "On",
+          "bbox": [
+            0.8437,
+            0.2902,
+            0.8767,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "30.9.2007. GIMCO signed an MoU with Gujarat Maritime",
+      "bbox": [
+        0.2111,
+        0.329,
+        0.8759,
+        0.3466
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "30.9.2007.",
+          "bbox": [
+            0.2111,
+            0.3318,
+            0.332,
+            0.3444
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.3441,
+            0.3312,
+            0.4263,
+            0.3438
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "signed",
+          "bbox": [
+            0.4376,
+            0.3307,
+            0.5101,
+            0.3466
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "an",
+          "bbox": [
+            0.5197,
+            0.3347,
+            0.5479,
+            0.3426
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MoU",
+          "bbox": [
+            0.5576,
+            0.3307,
+            0.6092,
+            0.3426
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.618,
+            0.3301,
+            0.6672,
+            0.3421
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gujarat",
+          "bbox": [
+            0.6777,
+            0.3295,
+            0.7655,
+            0.3455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Maritime",
+          "bbox": [
+            0.7744,
+            0.329,
+            0.8759,
+            0.3415
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Board (\u201cGMB\u201d) to undertake development of a",
+      "bbox": [
+        0.2103,
+        0.3677,
+        0.8767,
+        0.386
+      ],
+      "confidence": 0.9414,
+      "words": [
+        {
+          "text": "Board",
+          "bbox": [
+            0.2103,
+            0.3706,
+            0.2788,
+            0.3831
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(\u201cGMB\u201d)",
+          "bbox": [
+            0.3127,
+            0.37,
+            0.3989,
+            0.386
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.4327,
+            0.3712,
+            0.4529,
+            0.382
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "undertake",
+          "bbox": [
+            0.4851,
+            0.3694,
+            0.6027,
+            0.382
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "development",
+          "bbox": [
+            0.6358,
+            0.3689,
+            0.78,
+            0.3843
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8114,
+            0.3677,
+            0.8332,
+            0.3803
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8638,
+            0.3717,
+            0.8767,
+            0.3797
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "shipbuilding and repair facility at Nana Layja, pursuant",
+      "bbox": [
+        0.2111,
+        0.4076,
+        0.8767,
+        0.4259
+      ],
+      "confidence": 0.9512,
+      "words": [
+        {
+          "text": "shipbuilding",
+          "bbox": [
+            0.2111,
+            0.4094,
+            0.3537,
+            0.4259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3658,
+            0.4088,
+            0.4077,
+            0.4213
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "repair",
+          "bbox": [
+            0.419,
+            0.4088,
+            0.4875,
+            0.4247
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "facility",
+          "bbox": [
+            0.498,
+            0.4082,
+            0.5745,
+            0.4242
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.5866,
+            0.4094,
+            0.6076,
+            0.4208
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Nana",
+          "bbox": [
+            0.6189,
+            0.4082,
+            0.6793,
+            0.4202
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Layja,",
+          "bbox": [
+            0.6906,
+            0.4076,
+            0.7566,
+            0.423
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pursuant",
+          "bbox": [
+            0.7695,
+            0.4082,
+            0.8767,
+            0.423
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "to which GMB issued a 30-year Letter of Intent (\u201cLol\u201d)",
+      "bbox": [
+        0.2103,
+        0.4453,
+        0.8751,
+        0.4629
+      ],
+      "confidence": 0.956,
+      "words": [
+        {
+          "text": "to",
+          "bbox": [
+            0.2103,
+            0.4504,
+            0.2313,
+            0.4612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "which",
+          "bbox": [
+            0.2458,
+            0.4487,
+            0.3135,
+            0.4607
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GMB",
+          "bbox": [
+            0.3288,
+            0.4487,
+            0.3844,
+            0.4607
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issued",
+          "bbox": [
+            0.3989,
+            0.4475,
+            0.4722,
+            0.4601
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.4867,
+            0.4515,
+            0.4996,
+            0.4595
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "30-year",
+          "bbox": [
+            0.5133,
+            0.4475,
+            0.6003,
+            0.4629
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Letter",
+          "bbox": [
+            0.614,
+            0.4475,
+            0.6801,
+            0.459
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6946,
+            0.4464,
+            0.7164,
+            0.4584
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Intent",
+          "bbox": [
+            0.7276,
+            0.4464,
+            0.7961,
+            0.4584
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(\u201cLol\u201d)",
+          "bbox": [
+            0.8114,
+            0.4453,
+            0.8751,
+            0.4612
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "subject to GIMCO obtaining necessary statutory",
+      "bbox": [
+        0.2119,
+        0.4857,
+        0.8775,
+        0.504
+      ],
+      "confidence": 0.8517,
+      "words": [
+        {
+          "text": "subject",
+          "bbox": [
+            0.2119,
+            0.488,
+            0.2933,
+            0.504
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.3239,
+            0.4886,
+            0.3449,
+            0.4994
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.3771,
+            0.4869,
+            0.4585,
+            0.4994
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "obtaining",
+          "bbox": [
+            0.4915,
+            0.4857,
+            0.5987,
+            0.5017
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "necessary",
+          "bbox": [
+            0.6285,
+            0.4886,
+            0.7421,
+            0.5006
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        },
+        {
+          "text": "statutory",
+          "bbox": [
+            0.7736,
+            0.4857,
+            0.8775,
+            0.5
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "clearances. However, as these statutory clearances were",
+      "bbox": [
+        0.2119,
+        0.5239,
+        0.8759,
+        0.5405
+      ],
+      "confidence": 0.9586,
+      "words": [
+        {
+          "text": "clearances.",
+          "bbox": [
+            0.2119,
+            0.5274,
+            0.3368,
+            0.5399
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "However,",
+          "bbox": [
+            0.3513,
+            0.5268,
+            0.4529,
+            0.5405
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4674,
+            0.5296,
+            0.4915,
+            0.5382
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "these",
+          "bbox": [
+            0.5036,
+            0.5257,
+            0.5641,
+            0.5376
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "statutory",
+          "bbox": [
+            0.577,
+            0.5262,
+            0.6809,
+            0.5405
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "clearances",
+          "bbox": [
+            0.693,
+            0.5239,
+            0.8122,
+            0.5365
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.8235,
+            0.5268,
+            0.8759,
+            0.5353
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "not obtained by GIMCO, GMB terminated the LOI and",
+      "bbox": [
+        0.2111,
+        0.5616,
+        0.8775,
+        0.581
+      ],
+      "confidence": 0.91,
+      "words": [
+        {
+          "text": "not",
+          "bbox": [
+            0.2111,
+            0.5678,
+            0.249,
+            0.5787
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "obtained",
+          "bbox": [
+            0.2627,
+            0.5656,
+            0.361,
+            0.5781
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.3747,
+            0.565,
+            0.4021,
+            0.581
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO,",
+          "bbox": [
+            0.4158,
+            0.565,
+            0.5052,
+            0.5792
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GMB",
+          "bbox": [
+            0.5214,
+            0.5644,
+            0.577,
+            0.5764
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "terminated",
+          "bbox": [
+            0.5915,
+            0.5627,
+            0.7164,
+            0.5758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7309,
+            0.5627,
+            0.7663,
+            0.5747
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LOI",
+          "bbox": [
+            0.7808,
+            0.5621,
+            0.8203,
+            0.5747
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8348,
+            0.5616,
+            0.8775,
+            0.5741
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "resultantly, the Project was terminated. In view of this,",
+      "bbox": [
+        0.2119,
+        0.6009,
+        0.8759,
+        0.6203
+      ],
+      "confidence": 0.9567,
+      "words": [
+        {
+          "text": "resultantly,",
+          "bbox": [
+            0.2119,
+            0.6049,
+            0.3417,
+            0.6203
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3562,
+            0.6043,
+            0.3916,
+            0.6169
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Project",
+          "bbox": [
+            0.4045,
+            0.6043,
+            0.4827,
+            0.6197
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.4948,
+            0.6072,
+            0.5383,
+            0.6157
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "terminated.",
+          "bbox": [
+            0.5512,
+            0.6021,
+            0.6817,
+            0.6152
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "In",
+          "bbox": [
+            0.697,
+            0.6026,
+            0.7196,
+            0.614
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "view",
+          "bbox": [
+            0.7317,
+            0.6021,
+            0.7824,
+            0.614
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7945,
+            0.6009,
+            0.8163,
+            0.6135
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this,",
+          "bbox": [
+            0.8268,
+            0.6009,
+            0.8759,
+            0.6152
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the Collector, Kutch, issued a notice calling for a",
+      "bbox": [
+        0.2119,
+        0.6403,
+        0.8791,
+        0.6579
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2119,
+            0.6448,
+            0.2474,
+            0.6568
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Collector,",
+          "bbox": [
+            0.2699,
+            0.6437,
+            0.3763,
+            0.6579
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Kutch,",
+          "bbox": [
+            0.3997,
+            0.6425,
+            0.4738,
+            0.6574
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issued",
+          "bbox": [
+            0.4972,
+            0.642,
+            0.5705,
+            0.6545
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.5931,
+            0.6454,
+            0.6068,
+            0.6539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "notice",
+          "bbox": [
+            0.6269,
+            0.6414,
+            0.6946,
+            0.6534
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "calling",
+          "bbox": [
+            0.718,
+            0.6408,
+            0.7921,
+            0.6556
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.8131,
+            0.6403,
+            0.8437,
+            0.6517
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8654,
+            0.6431,
+            0.8791,
+            0.6517
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "premium of INR 250.85 crores on account of non",
+      "bbox": [
+        0.2119,
+        0.6784,
+        0.8783,
+        0.699
+      ],
+      "confidence": 0.9556,
+      "words": [
+        {
+          "text": "premium",
+          "bbox": [
+            0.2119,
+            0.683,
+            0.3159,
+            0.699
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3376,
+            0.6824,
+            0.3594,
+            0.6944
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INR",
+          "bbox": [
+            0.3779,
+            0.6824,
+            0.4198,
+            0.6938
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "250.85",
+          "bbox": [
+            0.4408,
+            0.6813,
+            0.5197,
+            0.6933
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "crores",
+          "bbox": [
+            0.5423,
+            0.6842,
+            0.6108,
+            0.6927
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.6326,
+            0.6842,
+            0.66,
+            0.6921
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "account",
+          "bbox": [
+            0.6817,
+            0.6802,
+            0.7728,
+            0.6916
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7937,
+            0.6784,
+            0.8155,
+            0.691
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "non",
+          "bbox": [
+            0.8348,
+            0.6819,
+            0.8783,
+            0.6904
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "compliance of the initial allotment conditions. Since",
+      "bbox": [
+        0.2127,
+        0.7172,
+        0.8775,
+        0.7372
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "compliance",
+          "bbox": [
+            0.2127,
+            0.7218,
+            0.3409,
+            0.7372
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3618,
+            0.7206,
+            0.3836,
+            0.7332
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4013,
+            0.7206,
+            0.4367,
+            0.7326
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "initial",
+          "bbox": [
+            0.4569,
+            0.7195,
+            0.523,
+            0.732
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "allotment",
+          "bbox": [
+            0.5431,
+            0.7195,
+            0.6511,
+            0.7315
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "conditions.",
+          "bbox": [
+            0.6704,
+            0.7178,
+            0.7945,
+            0.7303
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Since",
+          "bbox": [
+            0.8171,
+            0.7172,
+            0.8775,
+            0.7292
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "GIMCO was unable to make this payment, an order dated",
+      "bbox": [
+        0.2135,
+        0.7554,
+        0.8783,
+        0.7731
+      ],
+      "confidence": 0.956,
+      "words": [
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.2135,
+            0.7605,
+            0.2949,
+            0.7725
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.3046,
+            0.7634,
+            0.3481,
+            0.7719
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "unable",
+          "bbox": [
+            0.3562,
+            0.7588,
+            0.4343,
+            0.7714
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.4432,
+            0.7605,
+            0.4641,
+            0.7708
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "make",
+          "bbox": [
+            0.473,
+            0.7583,
+            0.5351,
+            0.7708
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.5439,
+            0.7577,
+            0.5866,
+            0.7702
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "payment,",
+          "bbox": [
+            0.5955,
+            0.7583,
+            0.7002,
+            0.7731
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "an",
+          "bbox": [
+            0.7107,
+            0.7605,
+            0.7381,
+            0.7691
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.747,
+            0.756,
+            0.8066,
+            0.7685
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dated",
+          "bbox": [
+            0.8155,
+            0.7554,
+            0.8783,
+            0.768
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "30.11.2019 directed GIMCO to relinquish the allotted",
+      "bbox": [
+        0.2135,
+        0.7942,
+        0.8783,
+        0.8113
+      ],
+      "confidence": 0.9486,
+      "words": [
+        {
+          "text": "30.11.2019",
+          "bbox": [
+            0.2135,
+            0.7987,
+            0.3425,
+            0.8113
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "directed",
+          "bbox": [
+            0.361,
+            0.7976,
+            0.4512,
+            0.8101
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.4698,
+            0.797,
+            0.552,
+            0.8096
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.5697,
+            0.7982,
+            0.5907,
+            0.8084
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "relinquish",
+          "bbox": [
+            0.6084,
+            0.7959,
+            0.7236,
+            0.8113
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7413,
+            0.7953,
+            0.7768,
+            0.8073
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "allotted",
+          "bbox": [
+            0.7945,
+            0.7942,
+            0.8783,
+            0.8067
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "land. Currently, GIMCO only has few acres of land in the",
+      "bbox": [
+        0.2127,
+        0.8335,
+        0.8783,
+        0.8529
+      ],
+      "confidence": 0.9555,
+      "words": [
+        {
+          "text": "land.",
+          "bbox": [
+            0.2127,
+            0.8381,
+            0.2683,
+            0.8506
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Currently,",
+          "bbox": [
+            0.2804,
+            0.8375,
+            0.3956,
+            0.8529
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.4069,
+            0.8369,
+            0.4891,
+            0.8489
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "only",
+          "bbox": [
+            0.4996,
+            0.8358,
+            0.5479,
+            0.8518
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.5568,
+            0.8358,
+            0.5971,
+            0.8478
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "few",
+          "bbox": [
+            0.6068,
+            0.8352,
+            0.6446,
+            0.8478
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "acres",
+          "bbox": [
+            0.6543,
+            0.8387,
+            0.7131,
+            0.8472
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7236,
+            0.8341,
+            0.7454,
+            0.8466
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "land",
+          "bbox": [
+            0.7518,
+            0.8341,
+            0.8018,
+            0.8461
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.8114,
+            0.8335,
+            0.8332,
+            0.8461
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8429,
+            0.8335,
+            0.8783,
+            0.8455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "entirety of Gujarat.",
+      "bbox": [
+        0.2135,
+        0.8757,
+        0.4295,
+        0.8922
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "entirety",
+          "bbox": [
+            0.2135,
+            0.8769,
+            0.3006,
+            0.8922
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3086,
+            0.8763,
+            0.3312,
+            0.8888
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gujarat.",
+          "bbox": [
+            0.3376,
+            0.8757,
+            0.4295,
+            0.8917
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Qd/- &q/- Page 6 of 17",
+      "bbox": [
+        0.2691,
+        0.9168,
+        0.8791,
+        0.9595
+      ],
+      "confidence": 0.7283,
+      "words": [
+        {
+          "text": "Qd/-",
+          "bbox": [
+            0.2691,
+            0.9168,
+            0.3457,
+            0.9595
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        },
+        {
+          "text": "&q/-",
+          "bbox": [
+            0.635,
+            0.9179,
+            0.7035,
+            0.9521
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7889,
+            0.9327,
+            0.8211,
+            0.9436
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6",
+          "bbox": [
+            0.8284,
+            0.9322,
+            0.8356,
+            0.9407
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8421,
+            0.931,
+            0.8574,
+            0.9407
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17",
+          "bbox": [
+            0.8646,
+            0.9316,
+            0.8791,
+            0.9401
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9395,
+  "latency_ms": 464,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "vii.\nCP (IB) 374 OF 2025\nCommittee of IL&FS proposed cancellation of the share\nsale and initiation of closure proceedings, as GIMCO had\nsubstantial liabilities against limited assets and cash\nbalances.\nOn 11.2.2002, the Additional Collector, Kutch allotted\nindustrial land at Nana Layja, Kutch to GIMCO. On\n30.9.2007. GIMCO signed an MoU with Gujarat Maritime\nBoard (\u201cGMB\u201d) to undertake development of a\nshipbuilding and repair facility at Nana Layja, pursuant\nto which GMB issued a 30-year Letter of Intent (\u201cLol\u201d)\nsubject to GIMCO obtaining necessary statutory\nclearances. However, as these statutory clearances were\nnot obtained by GIMCO, GMB terminated the LOI and\nresultantly, the Project was terminated. In view of this,\nthe Collector, Kutch, issued a notice calling for a\npremium of INR 250.85 crores on account of non\ncompliance of the initial allotment conditions. Since\nGIMCO was unable to make this payment, an order dated\n30.11.2019 directed GIMCO to relinquish the allotted\nland. Currently, GIMCO only has few acres of land in the\nentirety of Gujarat.\nQd/- &q/- Page 6 of 17"
+}

@@ -1,0 +1,464 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 15,
+  "lines": [
+    {
+      "text": "ifles",
+      "bbox": [
+        0.3952,
+        0.2136,
+        0.4173,
+        0.2208
+      ],
+      "confidence": 0.09,
+      "words": [
+        {
+          "text": "ifles",
+          "bbox": [
+            0.3952,
+            0.2136,
+            0.4173,
+            0.2208
+          ],
+          "confidence": 0.09,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2018Ganara} anager",
+      "bbox": [
+        0.6718,
+        0.2108,
+        0.7267,
+        0.2185
+      ],
+      "confidence": 0.025,
+      "words": [
+        {
+          "text": "\u2018Ganara}",
+          "bbox": [
+            0.6718,
+            0.2125,
+            0.6966,
+            0.2185
+          ],
+          "confidence": 0.05,
+          "text_type": "unknown"
+        },
+        {
+          "text": "anager",
+          "bbox": [
+            0.6993,
+            0.2108,
+            0.7267,
+            0.2163
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Srnatl Indus!",
+      "bbox": [
+        0.3329,
+        0.2163,
+        0.3945,
+        0.2274
+      ],
+      "confidence": 0.245,
+      "words": [
+        {
+          "text": "Srnatl",
+          "bbox": [
+            0.3329,
+            0.2185,
+            0.3617,
+            0.2274
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Indus!",
+          "bbox": [
+            0.3657,
+            0.2163,
+            0.3945,
+            0.2241
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "at Bank",
+      "bbox": [
+        0.3952,
+        0.2219,
+        0.4347,
+        0.2312
+      ],
+      "confidence": 0.81,
+      "words": [
+        {
+          "text": "at",
+          "bbox": [
+            0.3952,
+            0.2252,
+            0.4039,
+            0.2312
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bank",
+          "bbox": [
+            0.4079,
+            0.2219,
+            0.4347,
+            0.2296
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Resolution NO",
+      "bbox": [
+        0.3389,
+        0.4553,
+        0.4166,
+        0.4652
+      ],
+      "confidence": 0.255,
+      "words": [
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.3389,
+            0.4553,
+            0.3891,
+            0.4652
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NO",
+          "bbox": [
+            0.4146,
+            0.4564,
+            0.4166,
+            0.4575
+          ],
+          "confidence": 0.11,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": ". ap Registration \"\u00b0\u00b0",
+      "bbox": [
+        0.5171,
+        0.4542,
+        0.6269,
+        0.4674
+      ],
+      "confidence": 0.46,
+      "words": [
+        {
+          "text": ".",
+          "bbox": [
+            0.5171,
+            0.4625,
+            0.5184,
+            0.4636
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ap",
+          "bbox": [
+            0.5298,
+            0.4608,
+            0.5392,
+            0.4674
+          ],
+          "confidence": 0.57,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Registration",
+          "bbox": [
+            0.5466,
+            0.4542,
+            0.6048,
+            0.4658
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\"\u00b0\u00b0",
+          "bbox": [
+            0.6256,
+            0.4553,
+            0.6269,
+            0.457
+          ],
+          "confidence": 0.36,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Liquidator of tHe corporate",
+      "bbox": [
+        0.582,
+        0.4553,
+        0.7227,
+        0.4763
+      ],
+      "confidence": 0.53,
+      "words": [
+        {
+          "text": "Liquidator",
+          "bbox": [
+            0.582,
+            0.4658,
+            0.6323,
+            0.4763
+          ],
+          "confidence": 0.16,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6383,
+            0.4625,
+            0.647,
+            0.4691
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tHe",
+          "bbox": [
+            0.653,
+            0.4614,
+            0.6685,
+            0.4674
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "corporate",
+          "bbox": [
+            0.6745,
+            0.4553,
+            0.7227,
+            0.4652
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "tion of Ligaidstor Fee (Re",
+      "bbox": [
+        0.4977,
+        0.6093,
+        0.6457,
+        0.6297
+      ],
+      "confidence": 0.69,
+      "words": [
+        {
+          "text": "tion",
+          "bbox": [
+            0.4977,
+            0.6231,
+            0.5191,
+            0.6297
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5265,
+            0.6198,
+            0.5365,
+            0.6269
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ligaidstor",
+          "bbox": [
+            0.5425,
+            0.6153,
+            0.5975,
+            0.6253
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Fee",
+          "bbox": [
+            0.6035,
+            0.612,
+            0.6222,
+            0.6187
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Re",
+          "bbox": [
+            0.6289,
+            0.6093,
+            0.6457,
+            0.6181
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Fixe!",
+      "bbox": [
+        0.4749,
+        0.6253,
+        0.4983,
+        0.6319
+      ],
+      "confidence": 0.29,
+      "words": [
+        {
+          "text": "Fixe!",
+          "bbox": [
+            0.4749,
+            0.6253,
+            0.4983,
+            0.6319
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "meeting:",
+      "bbox": [
+        0.5566,
+        0.6297,
+        0.6021,
+        0.6385
+      ],
+      "confidence": 0.1,
+      "words": [
+        {
+          "text": "meeting:",
+          "bbox": [
+            0.5566,
+            0.6297,
+            0.6021,
+            0.6385
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "page 14 of 19",
+      "bbox": [
+        0.8145,
+        0.8907,
+        0.8747,
+        0.9089
+      ],
+      "confidence": 0.875,
+      "words": [
+        {
+          "text": "page",
+          "bbox": [
+            0.8145,
+            0.8935,
+            0.8721,
+            0.9067
+          ],
+          "confidence": 0.76,
+          "text_type": "unknown"
+        },
+        {
+          "text": "14",
+          "bbox": [
+            0.8392,
+            0.8907,
+            0.8473,
+            0.9089
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.85,
+            0.8907,
+            0.86,
+            0.9089
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "19",
+          "bbox": [
+            0.8634,
+            0.8907,
+            0.8747,
+            0.9089
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.5021,
+  "latency_ms": 264,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "ifles\n\u2018Ganara} anager\nSrnatl Indus!\nat Bank\nResolution NO\n. ap Registration \"\u00b0\u00b0\nLiquidator of tHe corporate\ntion of Ligaidstor Fee (Re\nFixe!\nmeeting:\npage 14 of 19"
+}

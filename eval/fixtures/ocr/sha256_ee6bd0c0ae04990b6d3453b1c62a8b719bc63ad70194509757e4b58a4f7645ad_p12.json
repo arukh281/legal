@@ -1,0 +1,2113 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 12,
+  "lines": [
+    {
+      "text": "CP (IB) 374 OF 2025",
+      "bbox": [
+        0.7373,
+        0.0519,
+        0.8848,
+        0.0633
+      ],
+      "confidence": 0.948,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7373,
+            0.0525,
+            0.7558,
+            0.061
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7615,
+            0.0519,
+            0.7857,
+            0.0633
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "374",
+          "bbox": [
+            0.7913,
+            0.0525,
+            0.8187,
+            0.061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.8243,
+            0.0525,
+            0.8437,
+            0.061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.8485,
+            0.0525,
+            0.8848,
+            0.061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Proposed IRP, Ms. Dipti Narayan Mundra, including the",
+      "bbox": [
+        0.2119,
+        0.0952,
+        0.8751,
+        0.1112
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "Proposed",
+          "bbox": [
+            0.2119,
+            0.0958,
+            0.3159,
+            0.1112
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IRP,",
+          "bbox": [
+            0.3272,
+            0.0958,
+            0.3723,
+            0.11
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ms.",
+          "bbox": [
+            0.3852,
+            0.0958,
+            0.4239,
+            0.1078
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Dipti",
+          "bbox": [
+            0.4367,
+            0.0958,
+            0.4932,
+            0.1112
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Narayan",
+          "bbox": [
+            0.5036,
+            0.0958,
+            0.6003,
+            0.1112
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mundra,",
+          "bbox": [
+            0.6116,
+            0.0952,
+            0.7083,
+            0.11
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "including",
+          "bbox": [
+            0.7212,
+            0.0952,
+            0.8292,
+            0.1106
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8396,
+            0.0952,
+            0.8751,
+            0.1072
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Authorization for Assignment dated 15.12.2025 issued by",
+      "bbox": [
+        0.2103,
+        0.134,
+        0.8751,
+        0.1499
+      ],
+      "confidence": 0.9586,
+      "words": [
+        {
+          "text": "Authorization",
+          "bbox": [
+            0.2103,
+            0.1345,
+            0.3674,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.3755,
+            0.1345,
+            0.4061,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Assignment",
+          "bbox": [
+            0.4134,
+            0.1345,
+            0.5479,
+            0.1499
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dated",
+          "bbox": [
+            0.556,
+            0.1345,
+            0.6189,
+            0.1465
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15.12.2025",
+          "bbox": [
+            0.6301,
+            0.1345,
+            0.7575,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issued",
+          "bbox": [
+            0.7663,
+            0.134,
+            0.8396,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.8485,
+            0.134,
+            0.8751,
+            0.1494
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the Indian Institute of Insolvency Professionals of ICAI",
+      "bbox": [
+        0.2103,
+        0.1727,
+        0.8743,
+        0.1887
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2103,
+            0.1733,
+            0.2466,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Indian",
+          "bbox": [
+            0.2611,
+            0.1733,
+            0.3344,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Institute",
+          "bbox": [
+            0.3489,
+            0.1733,
+            0.4448,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4601,
+            0.1733,
+            0.4819,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.4932,
+            0.1733,
+            0.614,
+            0.1887
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Professionals",
+          "bbox": [
+            0.6277,
+            0.1727,
+            0.7776,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7921,
+            0.1727,
+            0.8147,
+            0.1853
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ICAI",
+          "bbox": [
+            0.8259,
+            0.1733,
+            0.8743,
+            0.1847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "and the fresh Form 2 dated 01.07.2026.",
+      "bbox": [
+        0.2111,
+        0.2121,
+        0.6688,
+        0.2246
+      ],
+      "confidence": 0.9571,
+      "words": [
+        {
+          "text": "and",
+          "bbox": [
+            0.2111,
+            0.2121,
+            0.2538,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2619,
+            0.2121,
+            0.2973,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fresh",
+          "bbox": [
+            0.3062,
+            0.2121,
+            0.3634,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Form",
+          "bbox": [
+            0.3715,
+            0.2127,
+            0.4311,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2",
+          "bbox": [
+            0.4392,
+            0.2127,
+            0.4521,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dated",
+          "bbox": [
+            0.4617,
+            0.2121,
+            0.5246,
+            0.2241
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "01.07.2026.",
+          "bbox": [
+            0.5334,
+            0.2121,
+            0.6688,
+            0.2241
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Vide order dated 22.06.2026 all the seven respondents",
+      "bbox": [
+        0.2095,
+        0.2509,
+        0.8735,
+        0.2662
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Vide",
+          "bbox": [
+            0.2095,
+            0.2514,
+            0.2595,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.2732,
+            0.2514,
+            0.3328,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dated",
+          "bbox": [
+            0.3465,
+            0.2514,
+            0.4093,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "22.06.2026",
+          "bbox": [
+            0.423,
+            0.2514,
+            0.552,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "all",
+          "bbox": [
+            0.5673,
+            0.2509,
+            0.5939,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6068,
+            0.2509,
+            0.6422,
+            0.2628
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "seven",
+          "bbox": [
+            0.6567,
+            0.2548,
+            0.7196,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "respondents",
+          "bbox": [
+            0.7333,
+            0.2509,
+            0.8735,
+            0.2662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "are proceeded exparte in view of non-appearance after",
+      "bbox": [
+        0.2103,
+        0.2891,
+        0.8735,
+        0.3062
+      ],
+      "confidence": 0.9387,
+      "words": [
+        {
+          "text": "are",
+          "bbox": [
+            0.2103,
+            0.2936,
+            0.245,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proceeded",
+          "bbox": [
+            0.2595,
+            0.2896,
+            0.3747,
+            0.3062
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "exparte",
+          "bbox": [
+            0.39,
+            0.2913,
+            0.473,
+            0.3062
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.4875,
+            0.2896,
+            0.5093,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "view",
+          "bbox": [
+            0.523,
+            0.2896,
+            0.5737,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5882,
+            0.2896,
+            0.61,
+            0.3022
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "non-appearance",
+          "bbox": [
+            0.6213,
+            0.293,
+            0.8066,
+            0.3056
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "after",
+          "bbox": [
+            0.8219,
+            0.2891,
+            0.8735,
+            0.3016
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "service.",
+      "bbox": [
+        0.2095,
+        0.3295,
+        0.2933,
+        0.3415
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "service.",
+          "bbox": [
+            0.2095,
+            0.3295,
+            0.2933,
+            0.3415
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Income tax department has filed its report and submitted",
+      "bbox": [
+        0.2087,
+        0.3672,
+        0.8727,
+        0.3837
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Income",
+          "bbox": [
+            0.2087,
+            0.3689,
+            0.2909,
+            0.3803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tax",
+          "bbox": [
+            0.3006,
+            0.3694,
+            0.336,
+            0.3803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "department",
+          "bbox": [
+            0.3449,
+            0.3683,
+            0.477,
+            0.3837
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.4851,
+            0.3677,
+            0.5254,
+            0.3803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "filed",
+          "bbox": [
+            0.5342,
+            0.3677,
+            0.5826,
+            0.3803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.5907,
+            0.3677,
+            0.618,
+            0.3797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "report",
+          "bbox": [
+            0.6269,
+            0.3689,
+            0.6962,
+            0.3831
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7051,
+            0.3677,
+            0.7486,
+            0.3797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "submitted",
+          "bbox": [
+            0.7575,
+            0.3672,
+            0.8727,
+            0.3797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "that the details of outstanding demand and pending",
+      "bbox": [
+        0.2087,
+        0.4059,
+        0.8735,
+        0.4225
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "that",
+          "bbox": [
+            0.2087,
+            0.4071,
+            0.2554,
+            0.4196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2724,
+            0.4071,
+            0.3078,
+            0.4196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "details",
+          "bbox": [
+            0.3263,
+            0.4071,
+            0.4005,
+            0.4196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.419,
+            0.4071,
+            0.4408,
+            0.419
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "outstanding",
+          "bbox": [
+            0.4561,
+            0.4065,
+            0.5939,
+            0.4225
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "demand",
+          "bbox": [
+            0.6116,
+            0.4065,
+            0.7027,
+            0.419
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7212,
+            0.4065,
+            0.7639,
+            0.4185
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pending",
+          "bbox": [
+            0.7808,
+            0.4059,
+            0.8735,
+            0.4219
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "proceedings in the case of Gujarat Integrated Maritime",
+      "bbox": [
+        0.2087,
+        0.4447,
+        0.8719,
+        0.4618
+      ],
+      "confidence": 0.9587,
+      "words": [
+        {
+          "text": "proceedings",
+          "bbox": [
+            0.2087,
+            0.4464,
+            0.3441,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.3578,
+            0.4458,
+            0.3803,
+            0.4584
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.394,
+            0.4458,
+            0.4287,
+            0.4584
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "case",
+          "bbox": [
+            0.444,
+            0.4498,
+            0.4923,
+            0.4578
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.506,
+            0.4458,
+            0.5278,
+            0.4578
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gujarat",
+          "bbox": [
+            0.5399,
+            0.4458,
+            0.6277,
+            0.4612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Integrated",
+          "bbox": [
+            0.6406,
+            0.4453,
+            0.7566,
+            0.4612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Maritime",
+          "bbox": [
+            0.7712,
+            0.4447,
+            0.8719,
+            0.4572
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Complex Private Limited (PAN: AABCM4507E) is as",
+      "bbox": [
+        0.2095,
+        0.484,
+        0.8719,
+        0.5011
+      ],
+      "confidence": 0.85,
+      "words": [
+        {
+          "text": "Complex",
+          "bbox": [
+            0.2095,
+            0.4852,
+            0.3086,
+            0.5011
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Private",
+          "bbox": [
+            0.3255,
+            0.4852,
+            0.4037,
+            0.4971
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.4222,
+            0.4846,
+            0.5068,
+            0.4971
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(PAN:",
+          "bbox": [
+            0.5262,
+            0.4846,
+            0.585,
+            0.5006
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AABCM4507E)",
+          "bbox": [
+            0.6044,
+            0.484,
+            0.7736,
+            0.5
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.7929,
+            0.484,
+            0.8106,
+            0.496
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.8477,
+            0.4875,
+            0.8719,
+            0.496
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "under:",
+      "bbox": [
+        0.2079,
+        0.5251,
+        0.282,
+        0.5371
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "under:",
+          "bbox": [
+            0.2079,
+            0.5251,
+            0.282,
+            0.5371
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Details of outstanding demand:",
+      "bbox": [
+        0.2087,
+        0.5627,
+        0.5673,
+        0.5792
+      ],
+      "confidence": 0.9525,
+      "words": [
+        {
+          "text": "Details",
+          "bbox": [
+            0.2087,
+            0.5639,
+            0.2877,
+            0.5758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2965,
+            0.5633,
+            0.3183,
+            0.5758
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "outstanding",
+          "bbox": [
+            0.3247,
+            0.5633,
+            0.4625,
+            0.5792
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "demand:",
+          "bbox": [
+            0.4706,
+            0.5627,
+            0.5673,
+            0.5753
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Sr. | A.Y. Demand | Date of | Demand",
+      "bbox": [
+        0.2184,
+        0.5992,
+        0.7647,
+        0.622
+      ],
+      "confidence": 0.8678,
+      "words": [
+        {
+          "text": "Sr.",
+          "bbox": [
+            0.2184,
+            0.6038,
+            0.2482,
+            0.6157
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.2683,
+            0.6015,
+            0.278,
+            0.622
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "A.Y.",
+          "bbox": [
+            0.2828,
+            0.6038,
+            0.3272,
+            0.6152
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Demand",
+          "bbox": [
+            0.3844,
+            0.6026,
+            0.4795,
+            0.6152
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.4851,
+            0.6003,
+            0.5004,
+            0.6214
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Date",
+          "bbox": [
+            0.5085,
+            0.6032,
+            0.5608,
+            0.6146
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6197,
+            0.6021,
+            0.6414,
+            0.614
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.6567,
+            0.5992,
+            0.6704,
+            0.6209
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Demand",
+          "bbox": [
+            0.668,
+            0.6015,
+            0.7647,
+            0.614
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "No. Section _| order Outstanding |",
+      "bbox": [
+        0.2176,
+        0.6186,
+        0.8243,
+        0.6425
+      ],
+      "confidence": 0.695,
+      "words": [
+        {
+          "text": "No.",
+          "bbox": [
+            0.2176,
+            0.6209,
+            0.253,
+            0.6425
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.3852,
+            0.622,
+            0.4674,
+            0.6345
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "_|",
+          "bbox": [
+            0.4786,
+            0.6197,
+            0.502,
+            0.6414
+          ],
+          "confidence": 0.52,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.5085,
+            0.622,
+            0.5689,
+            0.634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Outstanding",
+          "bbox": [
+            0.6688,
+            0.6209,
+            0.8203,
+            0.6374
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.8155,
+            0.6186,
+            0.8243,
+            0.6403
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1./2018- | 143(3) 22.04.2021 | Rs.",
+      "bbox": [
+        0.2506,
+        0.6385,
+        0.7019,
+        0.6619
+      ],
+      "confidence": 0.7083,
+      "words": [
+        {
+          "text": "1./2018-",
+          "bbox": [
+            0.2506,
+            0.6431,
+            0.3497,
+            0.6545
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3674,
+            0.6397,
+            0.3787,
+            0.6619
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "143(3)",
+          "bbox": [
+            0.3868,
+            0.6425,
+            0.4537,
+            0.6579
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "22.04.2021",
+          "bbox": [
+            0.5085,
+            0.642,
+            0.6366,
+            0.6539
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.6487,
+            0.6385,
+            0.66,
+            0.6608
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.",
+          "bbox": [
+            0.668,
+            0.6414,
+            0.7019,
+            0.6534
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "19 12,85,94,840/-",
+      "bbox": [
+        0.2869,
+        0.6596,
+        0.8437,
+        0.6756
+      ],
+      "confidence": 0.93,
+      "words": [
+        {
+          "text": "19",
+          "bbox": [
+            0.2869,
+            0.6625,
+            0.311,
+            0.6739
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "12,85,94,840/-",
+          "bbox": [
+            0.6712,
+            0.6596,
+            0.8437,
+            0.6756
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "2.|2018- | 270A 27.03.2022 | Rs.",
+      "bbox": [
+        0.2474,
+        0.6779,
+        0.7019,
+        0.7013
+      ],
+      "confidence": 0.5483,
+      "words": [
+        {
+          "text": "2.|2018-",
+          "bbox": [
+            0.2474,
+            0.6819,
+            0.3497,
+            0.6944
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3699,
+            0.679,
+            0.3803,
+            0.7013
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "270A",
+          "bbox": [
+            0.3836,
+            0.6819,
+            0.4424,
+            0.6938
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "27.03.2022",
+          "bbox": [
+            0.5085,
+            0.6807,
+            0.6382,
+            0.6933
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.6487,
+            0.6779,
+            0.66,
+            0.7001
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.",
+          "bbox": [
+            0.668,
+            0.6807,
+            0.7019,
+            0.6927
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "19 4,92,96,884/-",
+      "bbox": [
+        0.2869,
+        0.699,
+        0.8292,
+        0.7144
+      ],
+      "confidence": 0.865,
+      "words": [
+        {
+          "text": "19",
+          "bbox": [
+            0.2869,
+            0.7018,
+            0.311,
+            0.7138
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4,92,96,884/-",
+          "bbox": [
+            0.668,
+            0.699,
+            0.8292,
+            0.7144
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "3.) 2022- | 154 08.04.2024 | Rs. 61,320/-",
+      "bbox": [
+        0.2482,
+        0.7166,
+        0.8219,
+        0.7406
+      ],
+      "confidence": 0.7888,
+      "words": [
+        {
+          "text": "3.)",
+          "bbox": [
+            0.2482,
+            0.7218,
+            0.2667,
+            0.7338
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2022-",
+          "bbox": [
+            0.2836,
+            0.7218,
+            0.3497,
+            0.7338
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3674,
+            0.7184,
+            0.3787,
+            0.7406
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "154",
+          "bbox": [
+            0.3868,
+            0.7212,
+            0.4255,
+            0.7332
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "08.04.2024",
+          "bbox": [
+            0.5085,
+            0.7206,
+            0.6382,
+            0.7326
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.6487,
+            0.7166,
+            0.6624,
+            0.7389
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.",
+          "bbox": [
+            0.6753,
+            0.7201,
+            0.7091,
+            0.732
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "61,320/-",
+          "bbox": [
+            0.7196,
+            0.7189,
+            0.8219,
+            0.7349
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "23",
+      "bbox": [
+        0.2836,
+        0.7412,
+        0.311,
+        0.7526
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "23",
+          "bbox": [
+            0.2836,
+            0.7412,
+            0.311,
+            0.7526
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "4.;2024- | 154 28.09.2025 | Rs. 6,87,100/-",
+      "bbox": [
+        0.2474,
+        0.756,
+        0.8364,
+        0.7799
+      ],
+      "confidence": 0.7443,
+      "words": [
+        {
+          "text": "4.;2024-",
+          "bbox": [
+            0.2474,
+            0.7611,
+            0.3497,
+            0.7731
+          ],
+          "confidence": 0.02,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3666,
+            0.7577,
+            0.3779,
+            0.7799
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        },
+        {
+          "text": "154",
+          "bbox": [
+            0.3868,
+            0.7605,
+            0.4255,
+            0.7725
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        },
+        {
+          "text": "28.09.2025",
+          "bbox": [
+            0.5085,
+            0.7594,
+            0.6382,
+            0.7719
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.6471,
+            0.756,
+            0.6591,
+            0.7788
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.",
+          "bbox": [
+            0.668,
+            0.7594,
+            0.7019,
+            0.7714
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6,87,100/-",
+          "bbox": [
+            0.7123,
+            0.7583,
+            0.8364,
+            0.7737
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "25",
+      "bbox": [
+        0.2836,
+        0.7805,
+        0.311,
+        0.7925
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "25",
+          "bbox": [
+            0.2836,
+            0.7805,
+            0.311,
+            0.7925
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Details of pending proceedings:",
+      "bbox": [
+        0.2079,
+        0.8381,
+        0.5649,
+        0.8546
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Details",
+          "bbox": [
+            0.2079,
+            0.8387,
+            0.2869,
+            0.8512
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2957,
+            0.8387,
+            0.3175,
+            0.8512
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pending",
+          "bbox": [
+            0.3231,
+            0.8387,
+            0.4158,
+            0.8546
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proceedings:",
+          "bbox": [
+            0.423,
+            0.8381,
+            0.5649,
+            0.854
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "On verification of the ITBA systems and CPC 2.0 portal it",
+      "bbox": [
+        0.2087,
+        0.8751,
+        0.8719,
+        0.8922
+      ],
+      "confidence": 0.9527,
+      "words": [
+        {
+          "text": "On",
+          "bbox": [
+            0.2087,
+            0.878,
+            0.2417,
+            0.89
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "verification",
+          "bbox": [
+            0.2498,
+            0.8774,
+            0.3771,
+            0.89
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3868,
+            0.8774,
+            0.4085,
+            0.8894
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.415,
+            0.8774,
+            0.4504,
+            0.8894
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ITBA",
+          "bbox": [
+            0.4601,
+            0.8774,
+            0.5157,
+            0.8888
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "systems",
+          "bbox": [
+            0.5254,
+            0.878,
+            0.6156,
+            0.8922
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.6261,
+            0.8763,
+            0.668,
+            0.8883
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CPC",
+          "bbox": [
+            0.6777,
+            0.8763,
+            0.7252,
+            0.8883
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2.0",
+          "bbox": [
+            0.7357,
+            0.8757,
+            0.7712,
+            0.8877
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "portal",
+          "bbox": [
+            0.7808,
+            0.8751,
+            0.8477,
+            0.8911
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "it",
+          "bbox": [
+            0.8566,
+            0.8751,
+            0.8719,
+            0.8871
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "-\u2014sp- <q |- Page 11 of 17",
+      "bbox": [
+        0.303,
+        0.9185,
+        0.8815,
+        0.9498
+      ],
+      "confidence": 0.8171,
+      "words": [
+        {
+          "text": "-\u2014sp-",
+          "bbox": [
+            0.303,
+            0.9299,
+            0.382,
+            0.9498
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "<q",
+          "bbox": [
+            0.6269,
+            0.9185,
+            0.66,
+            0.9401
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|-",
+          "bbox": [
+            0.6688,
+            0.9202,
+            0.6865,
+            0.9401
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7816,
+            0.9316,
+            0.8139,
+            0.9424
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "11",
+          "bbox": [
+            0.8211,
+            0.9316,
+            0.8372,
+            0.9401
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8445,
+            0.931,
+            0.8598,
+            0.9401
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17",
+          "bbox": [
+            0.8678,
+            0.9316,
+            0.8815,
+            0.9401
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.8853,
+  "latency_ms": 433,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "CP (IB) 374 OF 2025\nProposed IRP, Ms. Dipti Narayan Mundra, including the\nAuthorization for Assignment dated 15.12.2025 issued by\nthe Indian Institute of Insolvency Professionals of ICAI\nand the fresh Form 2 dated 01.07.2026.\nVide order dated 22.06.2026 all the seven respondents\nare proceeded exparte in view of non-appearance after\nservice.\nIncome tax department has filed its report and submitted\nthat the details of outstanding demand and pending\nproceedings in the case of Gujarat Integrated Maritime\nComplex Private Limited (PAN: AABCM4507E) is as\nunder:\nDetails of outstanding demand:\nSr. | A.Y. Demand | Date of | Demand\nNo. Section _| order Outstanding |\n1./2018- | 143(3) 22.04.2021 | Rs.\n19 12,85,94,840/-\n2.|2018- | 270A 27.03.2022 | Rs.\n19 4,92,96,884/-\n3.) 2022- | 154 08.04.2024 | Rs. 61,320/-\n23\n4.;2024- | 154 28.09.2025 | Rs. 6,87,100/-\n25\nDetails of pending proceedings:\nOn verification of the ITBA systems and CPC 2.0 portal it\n-\u2014sp- <q |- Page 11 of 17"
+}

@@ -1,0 +1,511 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 23,
+  "lines": [
+    {
+      "text": "23",
+      "bbox": [
+        0.5119,
+        0.0567,
+        0.5288,
+        0.0662
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "23",
+          "bbox": [
+            0.5119,
+            0.0567,
+            0.5288,
+            0.0662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Wand $2 I inher sayy",
+      "bbox": [
+        0.3507,
+        0.3026,
+        0.5817,
+        0.3198
+      ],
+      "confidence": 0.254,
+      "words": [
+        {
+          "text": "Wand",
+          "bbox": [
+            0.3507,
+            0.3026,
+            0.373,
+            0.3087
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "$2",
+          "bbox": [
+            0.383,
+            0.3042,
+            0.3922,
+            0.3103
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "I",
+          "bbox": [
+            0.4559,
+            0.3076,
+            0.4927,
+            0.3137
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inher",
+          "bbox": [
+            0.5081,
+            0.3042,
+            0.5388,
+            0.3198
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sayy",
+          "bbox": [
+            0.5526,
+            0.3042,
+            0.5817,
+            0.3198
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "tnt fae Hopes",
+      "bbox": [
+        0.3139,
+        0.3126,
+        0.5372,
+        0.3259
+      ],
+      "confidence": 0.2033,
+      "words": [
+        {
+          "text": "tnt",
+          "bbox": [
+            0.3139,
+            0.3126,
+            0.3653,
+            0.322
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fae",
+          "bbox": [
+            0.4674,
+            0.317,
+            0.4866,
+            0.3231
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hopes",
+          "bbox": [
+            0.5042,
+            0.3192,
+            0.5372,
+            0.3259
+          ],
+          "confidence": 0.19,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CA No une mites inant py as",
+      "bbox": [
+        0.34,
+        0.3198,
+        0.4912,
+        0.3354
+      ],
+      "confidence": 0.1714,
+      "words": [
+        {
+          "text": "CA",
+          "bbox": [
+            0.34,
+            0.3226,
+            0.3661,
+            0.3287
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No",
+          "bbox": [
+            0.3768,
+            0.3198,
+            0.3891,
+            0.3354
+          ],
+          "confidence": 0.14,
+          "text_type": "unknown"
+        },
+        {
+          "text": "une",
+          "bbox": [
+            0.396,
+            0.3198,
+            0.4091,
+            0.3354
+          ],
+          "confidence": 0.27,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mites",
+          "bbox": [
+            0.4137,
+            0.3198,
+            0.439,
+            0.3354
+          ],
+          "confidence": 0.02,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inant",
+          "bbox": [
+            0.4444,
+            0.3198,
+            0.4628,
+            0.3354
+          ],
+          "confidence": 0.22,
+          "text_type": "unknown"
+        },
+        {
+          "text": "py",
+          "bbox": [
+            0.4658,
+            0.3198,
+            0.4751,
+            0.3354
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4797,
+            0.3198,
+            0.4912,
+            0.3354
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "7 Ihe -Sieeiy aaeegioeen \u2014 eDiets mine eR pRON Ee ci of",
+      "bbox": [
+        0.317,
+        0.3749,
+        0.6654,
+        0.3971
+      ],
+      "confidence": 0.2333,
+      "words": [
+        {
+          "text": "7",
+          "bbox": [
+            0.317,
+            0.3871,
+            0.3185,
+            0.3927
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ihe",
+          "bbox": [
+            0.3246,
+            0.3749,
+            0.3492,
+            0.391
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-Sieeiy",
+          "bbox": [
+            0.3523,
+            0.3749,
+            0.3807,
+            0.391
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aaeegioeen",
+          "bbox": [
+            0.3853,
+            0.3799,
+            0.4467,
+            0.3882
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2014",
+          "bbox": [
+            0.4497,
+            0.3815,
+            0.4735,
+            0.3899
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eDiets",
+          "bbox": [
+            0.4697,
+            0.3804,
+            0.5196,
+            0.3971
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mine",
+          "bbox": [
+            0.5249,
+            0.3804,
+            0.5411,
+            0.3971
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eR",
+          "bbox": [
+            0.5464,
+            0.3804,
+            0.5695,
+            0.3971
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pRON",
+          "bbox": [
+            0.5902,
+            0.3804,
+            0.614,
+            0.3971
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ee",
+          "bbox": [
+            0.617,
+            0.3877,
+            0.6293,
+            0.3943
+          ],
+          "confidence": 0.15,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ci",
+          "bbox": [
+            0.6339,
+            0.3888,
+            0.6585,
+            0.391
+          ],
+          "confidence": 0.11,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6631,
+            0.3882,
+            0.6654,
+            0.391
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ID weveineter",
+      "bbox": [
+        0.5825,
+        0.5056,
+        0.6616,
+        0.5245
+      ],
+      "confidence": 0.25,
+      "words": [
+        {
+          "text": "ID",
+          "bbox": [
+            0.5825,
+            0.5056,
+            0.6025,
+            0.5245
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        },
+        {
+          "text": "weveineter",
+          "bbox": [
+            0.6124,
+            0.5078,
+            0.6616,
+            0.52
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CA (AT) (Ins) No. 1217 of 2026",
+      "bbox": [
+        0.1213,
+        0.8882,
+        0.3292,
+        0.9027
+      ],
+      "confidence": 0.9471,
+      "words": [
+        {
+          "text": "CA",
+          "bbox": [
+            0.1213,
+            0.8882,
+            0.1404,
+            0.896
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(AT)",
+          "bbox": [
+            0.1458,
+            0.8888,
+            0.1719,
+            0.8988
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Ins)",
+          "bbox": [
+            0.1773,
+            0.8899,
+            0.2057,
+            0.9004
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.2095,
+            0.8904,
+            0.231,
+            0.8988
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1217",
+          "bbox": [
+            0.2379,
+            0.8915,
+            0.2732,
+            0.8993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2771,
+            0.8921,
+            0.2909,
+            0.9027
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.2939,
+            0.8927,
+            0.3292,
+            0.901
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.3776,
+  "latency_ms": 219,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "23\nWand $2 I inher sayy\ntnt fae Hopes\nCA No une mites inant py as\n7 Ihe -Sieeiy aaeegioeen \u2014 eDiets mine eR pRON Ee ci of\nID weveineter\nCA (AT) (Ins) No. 1217 of 2026"
+}

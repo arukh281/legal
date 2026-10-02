@@ -1,0 +1,1269 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5",
+  "page_number": 1,
+  "lines": [
+    {
+      "text": "IN THE NATIONAL COMPANY LAW TRIBUNAL",
+      "bbox": [
+        0.3135,
+        0.0775,
+        0.7309,
+        0.0884
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "IN",
+          "bbox": [
+            0.3135,
+            0.0787,
+            0.3296,
+            0.0884
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.3368,
+            0.0787,
+            0.3739,
+            0.0884
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NATIONAL",
+          "bbox": [
+            0.3811,
+            0.0781,
+            0.477,
+            0.0884
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANY",
+          "bbox": [
+            0.4843,
+            0.0775,
+            0.5802,
+            0.0878
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAW",
+          "bbox": [
+            0.5866,
+            0.0775,
+            0.6285,
+            0.0872
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "TRIBUNAL",
+          "bbox": [
+            0.6342,
+            0.0775,
+            0.7309,
+            0.0872
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "AHMEDABAD",
+      "bbox": [
+        0.4593,
+        0.0929,
+        0.5826,
+        0.1032
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "AHMEDABAD",
+          "bbox": [
+            0.4593,
+            0.0929,
+            0.5826,
+            0.1032
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "COURT -2",
+      "bbox": [
+        0.4682,
+        0.106,
+        0.5729,
+        0.1277
+      ],
+      "confidence": 0.415,
+      "words": [
+        {
+          "text": "COURT",
+          "bbox": [
+            0.4682,
+            0.106,
+            0.5375,
+            0.1277
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-2",
+          "bbox": [
+            0.5439,
+            0.106,
+            0.5729,
+            0.1277
+          ],
+          "confidence": 0.06,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ITEM No.302",
+      "bbox": [
+        0.7857,
+        0.1534,
+        0.8952,
+        0.1636
+      ],
+      "confidence": 0.92,
+      "words": [
+        {
+          "text": "ITEM",
+          "bbox": [
+            0.7857,
+            0.1534,
+            0.8284,
+            0.1636
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.302",
+          "bbox": [
+            0.8364,
+            0.1534,
+            0.8952,
+            0.1636
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "C.P.(IB)/86(AHM)2026",
+      "bbox": [
+        0.7035,
+        0.1727,
+        0.8952,
+        0.1859
+      ],
+      "confidence": 0.33,
+      "words": [
+        {
+          "text": "C.P.(IB)/86(AHM)2026",
+          "bbox": [
+            0.7035,
+            0.1727,
+            0.8952,
+            0.1859
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Proceedings under Section 9 IBC",
+      "bbox": [
+        0.1491,
+        0.1933,
+        0.4456,
+        0.207
+      ],
+      "confidence": 0.954,
+      "words": [
+        {
+          "text": "Proceedings",
+          "bbox": [
+            0.1491,
+            0.1944,
+            0.2603,
+            0.207
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.2675,
+            0.1944,
+            0.3199,
+            0.2041
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.3255,
+            0.1938,
+            0.3924,
+            0.2035
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "9",
+          "bbox": [
+            0.3997,
+            0.1938,
+            0.4085,
+            0.2035
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IBC",
+          "bbox": [
+            0.415,
+            0.1933,
+            0.4456,
+            0.203
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IN THE MATTER OF:",
+      "bbox": [
+        0.1491,
+        0.2246,
+        0.3304,
+        0.2355
+      ],
+      "confidence": 0.9475,
+      "words": [
+        {
+          "text": "IN",
+          "bbox": [
+            0.1491,
+            0.2258,
+            0.1652,
+            0.2355
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.1724,
+            0.2252,
+            0.2087,
+            0.2349
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MATTER",
+          "bbox": [
+            0.216,
+            0.2246,
+            0.2933,
+            0.2349
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF:",
+          "bbox": [
+            0.3006,
+            0.2246,
+            0.3304,
+            0.2343
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Agrirevolve Trading Private Limited aan Applicant",
+      "bbox": [
+        0.1475,
+        0.2412,
+        0.8122,
+        0.256
+      ],
+      "confidence": 0.7567,
+      "words": [
+        {
+          "text": "Agrirevolve",
+          "bbox": [
+            0.1475,
+            0.2434,
+            0.2417,
+            0.256
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Trading",
+          "bbox": [
+            0.2474,
+            0.2429,
+            0.3102,
+            0.2554
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Private",
+          "bbox": [
+            0.3183,
+            0.2429,
+            0.3755,
+            0.2526
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.3828,
+            0.2423,
+            0.4416,
+            0.252
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aan",
+          "bbox": [
+            0.6841,
+            0.2491,
+            0.7244,
+            0.2509
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Applicant",
+          "bbox": [
+            0.7252,
+            0.2412,
+            0.8122,
+            0.2537
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Vis",
+      "bbox": [
+        0.1475,
+        0.2588,
+        0.1741,
+        0.2685
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "Vis",
+          "bbox": [
+            0.1475,
+            0.2588,
+            0.1741,
+            0.2685
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SprightAgro Limited nen Respondent",
+      "bbox": [
+        0.1483,
+        0.2714,
+        0.8356,
+        0.2868
+      ],
+      "confidence": 0.6875,
+      "words": [
+        {
+          "text": "SprightAgro",
+          "bbox": [
+            0.1483,
+            0.2742,
+            0.2522,
+            0.2868
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.2595,
+            0.2731,
+            0.3183,
+            0.2834
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nen",
+          "bbox": [
+            0.6841,
+            0.2794,
+            0.7244,
+            0.2816
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Respondent",
+          "bbox": [
+            0.726,
+            0.2714,
+            0.8356,
+            0.2839
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Order delivered on: 24/09/2026",
+      "bbox": [
+        0.6205,
+        0.3033,
+        0.8944,
+        0.3136
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Order",
+          "bbox": [
+            0.6205,
+            0.3039,
+            0.6712,
+            0.3136
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "delivered",
+          "bbox": [
+            0.6777,
+            0.3039,
+            0.7591,
+            0.3136
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on:",
+          "bbox": [
+            0.7663,
+            0.3062,
+            0.7937,
+            0.3136
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "24/09/2026",
+          "bbox": [
+            0.801,
+            0.3033,
+            0.8944,
+            0.313
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Coram:",
+      "bbox": [
+        0.1491,
+        0.3255,
+        0.2119,
+        0.3347
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Coram:",
+          "bbox": [
+            0.1491,
+            0.3255,
+            0.2119,
+            0.3347
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Mrs. Chitra Hankare, Hon\u2019ble Member(J)",
+      "bbox": [
+        0.1491,
+        0.3426,
+        0.5068,
+        0.3552
+      ],
+      "confidence": 0.926,
+      "words": [
+        {
+          "text": "Mrs.",
+          "bbox": [
+            0.1491,
+            0.3444,
+            0.1853,
+            0.354
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Chitra",
+          "bbox": [
+            0.1926,
+            0.3444,
+            0.2458,
+            0.354
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hankare,",
+          "bbox": [
+            0.253,
+            0.3438,
+            0.3304,
+            0.3552
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hon\u2019ble",
+          "bbox": [
+            0.3384,
+            0.3432,
+            0.4061,
+            0.3529
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Member(J)",
+          "bbox": [
+            0.4134,
+            0.3426,
+            0.5068,
+            0.3552
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Dr. Velamur G Venkata Chalapathy, Hon\u2019ble Member(T)",
+      "bbox": [
+        0.1491,
+        0.3575,
+        0.6414,
+        0.3712
+      ],
+      "confidence": 0.9186,
+      "words": [
+        {
+          "text": "Dr.",
+          "bbox": [
+            0.1491,
+            0.3603,
+            0.1724,
+            0.37
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Velamur",
+          "bbox": [
+            0.1797,
+            0.3597,
+            0.2538,
+            0.3694
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "G",
+          "bbox": [
+            0.2603,
+            0.3592,
+            0.2732,
+            0.3689
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Venkata",
+          "bbox": [
+            0.2796,
+            0.3592,
+            0.3513,
+            0.3689
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Chalapathy,",
+          "bbox": [
+            0.3578,
+            0.3586,
+            0.4633,
+            0.3712
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hon\u2019ble",
+          "bbox": [
+            0.4714,
+            0.358,
+            0.5391,
+            0.3683
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Member(T)",
+          "bbox": [
+            0.5463,
+            0.3575,
+            0.6414,
+            0.3706
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ORDER",
+      "bbox": [
+        0.473,
+        0.4173,
+        0.5407,
+        0.427
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "ORDER",
+          "bbox": [
+            0.473,
+            0.4173,
+            0.5407,
+            0.427
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "This case is fixed for pronouncement of order",
+      "bbox": [
+        0.1507,
+        0.4635,
+        0.531,
+        0.4766
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "This",
+          "bbox": [
+            0.1507,
+            0.4652,
+            0.1853,
+            0.4749
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "case",
+          "bbox": [
+            0.1918,
+            0.4675,
+            0.2305,
+            0.4749
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.2369,
+            0.4647,
+            0.249,
+            0.4743
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fixed",
+          "bbox": [
+            0.2554,
+            0.4647,
+            0.2941,
+            0.4743
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.3006,
+            0.4641,
+            0.3231,
+            0.4743
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pronouncement",
+          "bbox": [
+            0.3296,
+            0.4641,
+            0.4601,
+            0.4766
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4658,
+            0.4635,
+            0.4819,
+            0.4738
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.4875,
+            0.4635,
+            0.531,
+            0.4738
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The order is pronounced in open court vide separate sheet",
+      "bbox": [
+        0.1507,
+        0.492,
+        0.6422,
+        0.5057
+      ],
+      "confidence": 0.961,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.1507,
+            0.4937,
+            0.1821,
+            0.504
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.1894,
+            0.4932,
+            0.2321,
+            0.504
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.2385,
+            0.4932,
+            0.2506,
+            0.5034
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pronounced",
+          "bbox": [
+            0.2571,
+            0.4926,
+            0.3554,
+            0.5057
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.3626,
+            0.4926,
+            0.3755,
+            0.5029
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "open",
+          "bbox": [
+            0.3828,
+            0.4949,
+            0.423,
+            0.5051
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "court",
+          "bbox": [
+            0.4303,
+            0.4926,
+            0.4714,
+            0.5029
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "vide",
+          "bbox": [
+            0.477,
+            0.492,
+            0.5109,
+            0.5023
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "separate",
+          "bbox": [
+            0.5173,
+            0.492,
+            0.5898,
+            0.5051
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sheet",
+          "bbox": [
+            0.5963,
+            0.492,
+            0.6422,
+            0.5023
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "- y",
+      "bbox": [
+        0.3086,
+        0.5479,
+        0.3795,
+        0.5525
+      ],
+      "confidence": 0.505,
+      "words": [
+        {
+          "text": "-",
+          "bbox": [
+            0.3086,
+            0.5496,
+            0.3143,
+            0.5507
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "y",
+          "bbox": [
+            0.3755,
+            0.5479,
+            0.3795,
+            0.5525
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "3d{ \u2014 sd] -",
+      "bbox": [
+        0.2667,
+        0.5627,
+        0.7913,
+        0.5878
+      ],
+      "confidence": 0.5275,
+      "words": [
+        {
+          "text": "3d{",
+          "bbox": [
+            0.2667,
+            0.5627,
+            0.3006,
+            0.5821
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2014",
+          "bbox": [
+            0.3094,
+            0.5724,
+            0.328,
+            0.5758
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sd]",
+          "bbox": [
+            0.7252,
+            0.5644,
+            0.7615,
+            0.5878
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-",
+          "bbox": [
+            0.7752,
+            0.5747,
+            0.7913,
+            0.5798
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\\",
+      "bbox": [
+        0.3263,
+        0.5941,
+        0.3312,
+        0.6072
+      ],
+      "confidence": 0.83,
+      "words": [
+        {
+          "text": "\\",
+          "bbox": [
+            0.3263,
+            0.5941,
+            0.3312,
+            0.6072
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "DR. V. G. VENKATA CHALAPATHY CHITRA HANKARE",
+      "bbox": [
+        0.1515,
+        0.6066,
+        0.838,
+        0.6186
+      ],
+      "confidence": 0.9014,
+      "words": [
+        {
+          "text": "DR.",
+          "bbox": [
+            0.1515,
+            0.6089,
+            0.1813,
+            0.6186
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "V.",
+          "bbox": [
+            0.1886,
+            0.6083,
+            0.2047,
+            0.618
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "G.",
+          "bbox": [
+            0.2119,
+            0.6083,
+            0.2305,
+            0.618
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "VENKATA",
+          "bbox": [
+            0.2361,
+            0.6078,
+            0.328,
+            0.618
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CHALAPATHY",
+          "bbox": [
+            0.3344,
+            0.6072,
+            0.4633,
+            0.6174
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CHITRA",
+          "bbox": [
+            0.668,
+            0.6072,
+            0.7389,
+            0.6169
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HANKARE",
+          "bbox": [
+            0.7454,
+            0.6066,
+            0.838,
+            0.6163
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MEMBER (TECHNICAL) MEMBER (JUDICIAL)",
+      "bbox": [
+        0.1515,
+        0.6209,
+        0.8574,
+        0.6414
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.1515,
+            0.6237,
+            0.2345,
+            0.6334
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(TECHNICAL)",
+          "bbox": [
+            0.2409,
+            0.6209,
+            0.361,
+            0.6414
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.6696,
+            0.622,
+            0.7526,
+            0.6317
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(JUDICIAL)",
+          "bbox": [
+            0.7591,
+            0.622,
+            0.8574,
+            0.6345
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SJ/AD/AP",
+      "bbox": [
+        0.1499,
+        0.9076,
+        0.2151,
+        0.9185
+      ],
+      "confidence": 0.32,
+      "words": [
+        {
+          "text": "SJ/AD/AP",
+          "bbox": [
+            0.1499,
+            0.9076,
+            0.2151,
+            0.9185
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.8618,
+  "latency_ms": 345,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "IN THE NATIONAL COMPANY LAW TRIBUNAL\nAHMEDABAD\nCOURT -2\nITEM No.302\nC.P.(IB)/86(AHM)2026\nProceedings under Section 9 IBC\nIN THE MATTER OF:\nAgrirevolve Trading Private Limited aan Applicant\nVis\nSprightAgro Limited nen Respondent\nOrder delivered on: 24/09/2026\nCoram:\nMrs. Chitra Hankare, Hon\u2019ble Member(J)\nDr. Velamur G Venkata Chalapathy, Hon\u2019ble Member(T)\nORDER\nThis case is fixed for pronouncement of order\nThe order is pronounced in open court vide separate sheet\n- y\n3d{ \u2014 sd] -\n\\\nDR. V. G. VENKATA CHALAPATHY CHITRA HANKARE\nMEMBER (TECHNICAL) MEMBER (JUDICIAL)\nSJ/AD/AP"
+}

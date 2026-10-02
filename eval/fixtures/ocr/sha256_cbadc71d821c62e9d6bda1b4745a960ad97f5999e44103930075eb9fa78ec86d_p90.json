@@ -1,0 +1,2320 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 90,
+  "lines": [
+    {
+      "text": "2",
+      "bbox": [
+        0.8473,
+        0.4705,
+        0.8573,
+        0.48
+      ],
+      "confidence": 0.4,
+      "words": [
+        {
+          "text": "2",
+          "bbox": [
+            0.8473,
+            0.4705,
+            0.8573,
+            0.48
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "eG",
+      "bbox": [
+        0.8258,
+        0.3943,
+        0.8596,
+        0.4677
+      ],
+      "confidence": 0.09,
+      "words": [
+        {
+          "text": "eG",
+          "bbox": [
+            0.8258,
+            0.3943,
+            0.8596,
+            0.4677
+          ],
+          "confidence": 0.09,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "pe a",
+      "bbox": [
+        0.8143,
+        0.436,
+        0.8427,
+        0.5295
+      ],
+      "confidence": 0.44,
+      "words": [
+        {
+          "text": "pe",
+          "bbox": [
+            0.8143,
+            0.436,
+            0.8427,
+            0.4566
+          ],
+          "confidence": 0.57,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8181,
+            0.5239,
+            0.8266,
+            0.5295
+          ],
+          "confidence": 0.31,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "se",
+      "bbox": [
+        0.7997,
+        0.4166,
+        0.825,
+        0.4333
+      ],
+      "confidence": 0.53,
+      "words": [
+        {
+          "text": "se",
+          "bbox": [
+            0.7997,
+            0.4166,
+            0.825,
+            0.4333
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "eidng sewny Aelia \u201csy",
+      "bbox": [
+        0.7606,
+        0.599,
+        0.7767,
+        0.6924
+      ],
+      "confidence": 0.325,
+      "words": [
+        {
+          "text": "eidng",
+          "bbox": [
+            0.7644,
+            0.599,
+            0.7767,
+            0.6229
+          ],
+          "confidence": 0.15,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sewny",
+          "bbox": [
+            0.7629,
+            0.6263,
+            0.7736,
+            0.6535
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Aelia",
+          "bbox": [
+            0.7613,
+            0.6568,
+            0.7744,
+            0.6769
+          ],
+          "confidence": 0.22,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201csy",
+          "bbox": [
+            0.7606,
+            0.6802,
+            0.7713,
+            0.6924
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IE O/M exdND ey \u201cs4yy",
+      "bbox": [
+        0.7452,
+        0.5862,
+        0.7606,
+        0.6924
+      ],
+      "confidence": 0.266,
+      "words": [
+        {
+          "text": "IE",
+          "bbox": [
+            0.749,
+            0.5862,
+            0.7598,
+            0.6034
+          ],
+          "confidence": 0.01,
+          "text_type": "unknown"
+        },
+        {
+          "text": "O/M",
+          "bbox": [
+            0.7475,
+            0.6073,
+            0.7606,
+            0.6235
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "exdND",
+          "bbox": [
+            0.7467,
+            0.6274,
+            0.7598,
+            0.6518
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ey",
+          "bbox": [
+            0.746,
+            0.6552,
+            0.7559,
+            0.673
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cs4yy",
+          "bbox": [
+            0.7452,
+            0.6763,
+            0.7559,
+            0.6924
+          ],
+          "confidence": 0.19,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "e",
+      "bbox": [
+        0.7214,
+        0.6863,
+        0.7322,
+        0.6924
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "e",
+          "bbox": [
+            0.7214,
+            0.6863,
+            0.7322,
+            0.6924
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "edn sewnyy Aefi, \u201c4 327",
+      "bbox": [
+        0.7061,
+        0.5773,
+        0.7237,
+        0.6919
+      ],
+      "confidence": 0.16,
+      "words": [
+        {
+          "text": "edn",
+          "bbox": [
+            0.7099,
+            0.5773,
+            0.7237,
+            0.6012
+          ],
+          "confidence": 0.23,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sewnyy",
+          "bbox": [
+            0.7084,
+            0.6046,
+            0.7199,
+            0.6313
+          ],
+          "confidence": 0.09,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Aefi,",
+          "bbox": [
+            0.7076,
+            0.6346,
+            0.7214,
+            0.6552
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201c4",
+          "bbox": [
+            0.7068,
+            0.6585,
+            0.7176,
+            0.6707
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "327",
+          "bbox": [
+            0.7061,
+            0.6746,
+            0.7168,
+            0.6919
+          ],
+          "confidence": 0.15,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Pepunjey Panjos) 20U WrepLsY O/S edn Jewny ysaley \u201cTHE",
+      "bbox": [
+        0.6876,
+        0.1852,
+        0.7291,
+        0.7414
+      ],
+      "confidence": 0.32,
+      "words": [
+        {
+          "text": "Pepunjey",
+          "bbox": [
+            0.7045,
+            0.1852,
+            0.7291,
+            0.2264
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Panjos)",
+          "bbox": [
+            0.7091,
+            0.2725,
+            0.7199,
+            0.3065
+          ],
+          "confidence": 0.08,
+          "text_type": "unknown"
+        },
+        {
+          "text": "20U",
+          "bbox": [
+            0.7084,
+            0.3092,
+            0.7183,
+            0.3231
+          ],
+          "confidence": 0.26,
+          "text_type": "unknown"
+        },
+        {
+          "text": "WrepLsY",
+          "bbox": [
+            0.7053,
+            0.3259,
+            0.7176,
+            0.361
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "O/S",
+          "bbox": [
+            0.6938,
+            0.589,
+            0.7068,
+            0.6023
+          ],
+          "confidence": 0.72,
+          "text_type": "unknown"
+        },
+        {
+          "text": "edn",
+          "bbox": [
+            0.693,
+            0.6062,
+            0.7068,
+            0.6307
+          ],
+          "confidence": 0.13,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jewny",
+          "bbox": [
+            0.6915,
+            0.6335,
+            0.703,
+            0.6602
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ysaley",
+          "bbox": [
+            0.6907,
+            0.6641,
+            0.7038,
+            0.6913
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cTHE",
+          "bbox": [
+            0.6876,
+            0.7202,
+            0.6999,
+            0.7414
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "yseyeig",
+      "bbox": [
+        0.66,
+        0.6591,
+        0.6715,
+        0.6908
+      ],
+      "confidence": 0.42,
+      "words": [
+        {
+          "text": "yseyeig",
+          "bbox": [
+            0.66,
+            0.6591,
+            0.6715,
+            0.6908
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "{EC \u201cIW O/S IuIeS yEBIeIg \u201cAW",
+      "bbox": [
+        0.6439,
+        0.5729,
+        0.6592,
+        0.6902
+      ],
+      "confidence": 0.4067,
+      "words": [
+        {
+          "text": "{EC",
+          "bbox": [
+            0.6485,
+            0.5729,
+            0.6592,
+            0.584
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cIW",
+          "bbox": [
+            0.6477,
+            0.5868,
+            0.6592,
+            0.5996
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "O/S",
+          "bbox": [
+            0.647,
+            0.6029,
+            0.6592,
+            0.6168
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IuIeS",
+          "bbox": [
+            0.6462,
+            0.6201,
+            0.6577,
+            0.6396
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        },
+        {
+          "text": "yEBIeIg",
+          "bbox": [
+            0.6447,
+            0.6429,
+            0.6562,
+            0.6735
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cAW",
+          "bbox": [
+            0.6439,
+            0.6774,
+            0.6546,
+            0.6902
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "8",
+      "bbox": [
+        0.6278,
+        0.6835,
+        0.6385,
+        0.6897
+      ],
+      "confidence": 0.32,
+      "words": [
+        {
+          "text": "8",
+          "bbox": [
+            0.6278,
+            0.6835,
+            0.6385,
+            0.6897
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IUIES YSPYEg Jer",
+      "bbox": [
+        0.6124,
+        0.6201,
+        0.6255,
+        0.6902
+      ],
+      "confidence": 0.2967,
+      "words": [
+        {
+          "text": "IUIES",
+          "bbox": [
+            0.614,
+            0.6201,
+            0.6255,
+            0.6402
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        },
+        {
+          "text": "YSPYEg",
+          "bbox": [
+            0.6132,
+            0.6435,
+            0.6247,
+            0.6758
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jer",
+          "bbox": [
+            0.6124,
+            0.6785,
+            0.6232,
+            0.6902
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SN. papunyay, PeAI8984 JOU AEP \u201cIW O/M WWles WnyWNy, \u201cSW \u201cor/e",
+      "bbox": [
+        0.594,
+        0.1635,
+        0.6324,
+        0.7392
+      ],
+      "confidence": 0.3818,
+      "words": [
+        {
+          "text": "SN.",
+          "bbox": [
+            0.6193,
+            0.1635,
+            0.6324,
+            0.1796
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "papunyay,",
+          "bbox": [
+            0.6186,
+            0.1846,
+            0.6309,
+            0.2241
+          ],
+          "confidence": 0.31,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PeAI8984",
+          "bbox": [
+            0.6155,
+            0.2697,
+            0.6262,
+            0.3037
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JOU",
+          "bbox": [
+            0.6147,
+            0.307,
+            0.6247,
+            0.3204
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AEP",
+          "bbox": [
+            0.6124,
+            0.3237,
+            0.6239,
+            0.3582
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cIW",
+          "bbox": [
+            0.6017,
+            0.5762,
+            0.6117,
+            0.589
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "O/M",
+          "bbox": [
+            0.6002,
+            0.5923,
+            0.6132,
+            0.6096
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "WWles",
+          "bbox": [
+            0.5994,
+            0.6129,
+            0.6101,
+            0.6324
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        },
+        {
+          "text": "WnyWNy,",
+          "bbox": [
+            0.5979,
+            0.6357,
+            0.6094,
+            0.6719
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cSW",
+          "bbox": [
+            0.5963,
+            0.6758,
+            0.6078,
+            0.6891
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cor/e",
+          "bbox": [
+            0.594,
+            0.718,
+            0.6063,
+            0.7392
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201cUOANad",
+      "bbox": [
+        0.5817,
+        0.3154,
+        0.5948,
+        0.3565
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "\u201cUOANad",
+          "bbox": [
+            0.5817,
+            0.3154,
+            0.5948,
+            0.3565
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "2M) 0} JuaWAed Jo ayep ay",
+      "bbox": [
+        0.5656,
+        0.2319,
+        0.5825,
+        0.3565
+      ],
+      "confidence": 0.425,
+      "words": [
+        {
+          "text": "2M)",
+          "bbox": [
+            0.571,
+            0.2319,
+            0.5825,
+            0.2453
+          ],
+          "confidence": 0.23,
+          "text_type": "unknown"
+        },
+        {
+          "text": "0}",
+          "bbox": [
+            0.571,
+            0.2508,
+            0.5817,
+            0.2586
+          ],
+          "confidence": 0.22,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JuaWAed",
+          "bbox": [
+            0.5718,
+            0.2642,
+            0.5817,
+            0.2998
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jo",
+          "bbox": [
+            0.5687,
+            0.3053,
+            0.5787,
+            0.3137
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ayep",
+          "bbox": [
+            0.5672,
+            0.3192,
+            0.5779,
+            0.3376
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ay",
+          "bbox": [
+            0.5656,
+            0.3437,
+            0.5771,
+            0.3565
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "WO ISBIAU! % 9 YUM Buge",
+      "bbox": [
+        0.5503,
+        0.2314,
+        0.5672,
+        0.3565
+      ],
+      "confidence": 0.38,
+      "words": [
+        {
+          "text": "WO",
+          "bbox": [
+            0.5556,
+            0.2314,
+            0.5672,
+            0.2508
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ISBIAU!",
+          "bbox": [
+            0.5549,
+            0.2542,
+            0.5656,
+            0.2859
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "%",
+          "bbox": [
+            0.5541,
+            0.2903,
+            0.5641,
+            0.2987
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "9",
+          "bbox": [
+            0.5526,
+            0.3026,
+            0.5633,
+            0.3081
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        },
+        {
+          "text": "YUM",
+          "bbox": [
+            0.5526,
+            0.312,
+            0.5633,
+            0.3293
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Buge",
+          "bbox": [
+            0.5503,
+            0.3337,
+            0.5641,
+            0.3565
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "~/00Z'ET'9b YNI JO JunoWe",
+      "bbox": [
+        0.5365,
+        0.2314,
+        0.5526,
+        0.356
+      ],
+      "confidence": 0.575,
+      "words": [
+        {
+          "text": "~/00Z'ET'9b",
+          "bbox": [
+            0.5388,
+            0.2314,
+            0.5526,
+            0.2798
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        },
+        {
+          "text": "YNI",
+          "bbox": [
+            0.538,
+            0.2864,
+            0.548,
+            0.302
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JO",
+          "bbox": [
+            0.5365,
+            0.3081,
+            0.5472,
+            0.317
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JunoWe",
+          "bbox": [
+            0.5365,
+            0.3242,
+            0.5464,
+            0.356
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "enp ay) punjar oj aiqey",
+      "bbox": [
+        0.5188,
+        0.2303,
+        0.5357,
+        0.3548
+      ],
+      "confidence": 0.388,
+      "words": [
+        {
+          "text": "enp",
+          "bbox": [
+            0.5242,
+            0.2303,
+            0.5357,
+            0.2458
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ay)",
+          "bbox": [
+            0.5234,
+            0.2558,
+            0.5342,
+            0.2692
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "punjar",
+          "bbox": [
+            0.5219,
+            0.2792,
+            0.5326,
+            0.3053
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        },
+        {
+          "text": "oj",
+          "bbox": [
+            0.5211,
+            0.3159,
+            0.5311,
+            0.3237
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aiqey",
+          "bbox": [
+            0.5188,
+            0.3337,
+            0.5303,
+            0.3548
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "S{ alosasayy pue quawaas6e",
+      "bbox": [
+        0.5058,
+        0.2297,
+        0.5196,
+        0.3548
+      ],
+      "confidence": 0.3925,
+      "words": [
+        {
+          "text": "S{",
+          "bbox": [
+            0.5096,
+            0.2297,
+            0.5196,
+            0.2358
+          ],
+          "confidence": 0.52,
+          "text_type": "unknown"
+        },
+        {
+          "text": "alosasayy",
+          "bbox": [
+            0.5065,
+            0.2408,
+            0.5188,
+            0.2786
+          ],
+          "confidence": 0.13,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pue",
+          "bbox": [
+            0.5073,
+            0.2836,
+            0.5173,
+            0.2987
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "quawaas6e",
+          "bbox": [
+            0.5058,
+            0.3026,
+            0.5165,
+            0.3548
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ples 943 yO uonpuco",
+      "bbox": [
+        0.4881,
+        0.2297,
+        0.5035,
+        0.3543
+      ],
+      "confidence": 0.35,
+      "words": [
+        {
+          "text": "ples",
+          "bbox": [
+            0.4927,
+            0.2297,
+            0.5035,
+            0.2492
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "943",
+          "bbox": [
+            0.4912,
+            0.2614,
+            0.5019,
+            0.2764
+          ],
+          "confidence": 0.36,
+          "text_type": "unknown"
+        },
+        {
+          "text": "yO",
+          "bbox": [
+            0.4904,
+            0.2875,
+            0.5004,
+            0.2981
+          ],
+          "confidence": 0.31,
+          "text_type": "unknown"
+        },
+        {
+          "text": "uonpuco",
+          "bbox": [
+            0.4881,
+            0.3103,
+            0.4996,
+            0.3543
+          ],
+          "confidence": 0.11,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "pue swe} 943 Ajdwioo",
+      "bbox": [
+        0.4728,
+        0.2291,
+        0.4881,
+        0.3537
+      ],
+      "confidence": 0.3725,
+      "words": [
+        {
+          "text": "pue",
+          "bbox": [
+            0.4774,
+            0.2291,
+            0.4881,
+            0.2464
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        },
+        {
+          "text": "swe}",
+          "bbox": [
+            0.4758,
+            0.257,
+            0.4866,
+            0.2848
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        },
+        {
+          "text": "943",
+          "bbox": [
+            0.4735,
+            0.2937,
+            0.485,
+            0.3098
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ajdwioo",
+          "bbox": [
+            0.4728,
+            0.3204,
+            0.4858,
+            0.3537
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "0} peyiey sey souoRned",
+      "bbox": [
+        0.4566,
+        0.2286,
+        0.4728,
+        0.3532
+      ],
+      "confidence": 0.425,
+      "words": [
+        {
+          "text": "0}",
+          "bbox": [
+            0.462,
+            0.2286,
+            0.4728,
+            0.238
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "peyiey",
+          "bbox": [
+            0.4597,
+            0.2469,
+            0.4712,
+            0.2731
+          ],
+          "confidence": 0.13,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sey",
+          "bbox": [
+            0.4589,
+            0.2814,
+            0.4697,
+            0.2976
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "souoRned",
+          "bbox": [
+            0.4566,
+            0.3065,
+            0.4689,
+            0.3532
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ey? 3nq quawseise",
+      "bbox": [
+        0.4413,
+        0.2258,
+        0.4612,
+        0.3532
+      ],
+      "confidence": 0.33,
+      "words": [
+        {
+          "text": "ey?",
+          "bbox": [
+            0.4428,
+            0.2258,
+            0.4612,
+            0.2436
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        },
+        {
+          "text": "3nq",
+          "bbox": [
+            0.4413,
+            0.267,
+            0.4597,
+            0.2809
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "quawseise",
+          "bbox": [
+            0.4428,
+            0.3065,
+            0.4551,
+            0.3532
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "8UA JO sta] pue suo;!puds",
+      "bbox": [
+        0.4252,
+        0.228,
+        0.4405,
+        0.3526
+      ],
+      "confidence": 0.43,
+      "words": [
+        {
+          "text": "8UA",
+          "bbox": [
+            0.4298,
+            0.228,
+            0.4405,
+            0.2414
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JO",
+          "bbox": [
+            0.4298,
+            0.2464,
+            0.4398,
+            0.2547
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sta]",
+          "bbox": [
+            0.429,
+            0.2603,
+            0.439,
+            0.2836
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pue",
+          "bbox": [
+            0.4275,
+            0.2898,
+            0.4375,
+            0.3048
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "suo;!puds",
+          "bbox": [
+            0.4252,
+            0.3109,
+            0.4367,
+            0.3526
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2018aoeid ay JO aoueyduios ayy Joy",
+      "bbox": [
+        0.4083,
+        0.1941,
+        0.4259,
+        0.3521
+      ],
+      "confidence": 0.4733,
+      "words": [
+        {
+          "text": "\u2018aoeid",
+          "bbox": [
+            0.4091,
+            0.1941,
+            0.4221,
+            0.2169
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ay",
+          "bbox": [
+            0.4144,
+            0.2275,
+            0.4259,
+            0.2408
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JO",
+          "bbox": [
+            0.4144,
+            0.2481,
+            0.4244,
+            0.2564
+          ],
+          "confidence": 0.72,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aoueyduios",
+          "bbox": [
+            0.4114,
+            0.2647,
+            0.4252,
+            0.3109
+          ],
+          "confidence": 0.04,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ayy",
+          "bbox": [
+            0.4098,
+            0.3192,
+            0.4206,
+            0.3326
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Joy",
+          "bbox": [
+            0.4083,
+            0.3404,
+            0.4198,
+            0.3521
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "8 }OU IIIM AysiGar yeuy | SUA Jo sequuinu e saUOQNEd",
+      "bbox": [
+        0.3914,
+        0.1101,
+        0.4129,
+        0.3515
+      ],
+      "confidence": 0.3127,
+      "words": [
+        {
+          "text": "8",
+          "bbox": [
+            0.4006,
+            0.1101,
+            0.4083,
+            0.1151
+          ],
+          "confidence": 0.36,
+          "text_type": "unknown"
+        },
+        {
+          "text": "}OU",
+          "bbox": [
+            0.3991,
+            0.1352,
+            0.4075,
+            0.1446
+          ],
+          "confidence": 0.55,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IIIM",
+          "bbox": [
+            0.3983,
+            0.1557,
+            0.406,
+            0.1624
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AysiGar",
+          "bbox": [
+            0.3968,
+            0.1663,
+            0.4083,
+            0.1963
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        },
+        {
+          "text": "yeuy",
+          "bbox": [
+            0.396,
+            0.2041,
+            0.4037,
+            0.2086
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3914,
+            0.2208,
+            0.4129,
+            0.2253
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SUA",
+          "bbox": [
+            0.3991,
+            0.2269,
+            0.4098,
+            0.2486
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jo",
+          "bbox": [
+            0.3975,
+            0.2525,
+            0.4083,
+            0.2614
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sequuinu",
+          "bbox": [
+            0.3968,
+            0.2653,
+            0.4075,
+            0.2976
+          ],
+          "confidence": 0.01,
+          "text_type": "unknown"
+        },
+        {
+          "text": "e",
+          "bbox": [
+            0.3983,
+            0.3026,
+            0.406,
+            0.307
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "saUOQNEd",
+          "bbox": [
+            0.3945,
+            0.3115,
+            0.406,
+            0.3515
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Buipaoyate 3b9 ren 8} Payreoidde quapuodsay",
+      "bbox": [
+        0.3776,
+        0.1079,
+        0.4114,
+        0.3509
+      ],
+      "confidence": 0.0583,
+      "words": [
+        {
+          "text": "Buipaoyate",
+          "bbox": [
+            0.3776,
+            0.1079,
+            0.4114,
+            0.1663
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "3b9",
+          "bbox": [
+            0.3784,
+            0.1741,
+            0.4052,
+            0.1919
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ren",
+          "bbox": [
+            0.3799,
+            0.2002,
+            0.4045,
+            0.2169
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "8}",
+          "bbox": [
+            0.3837,
+            0.2264,
+            0.3937,
+            0.2397
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Payreoidde",
+          "bbox": [
+            0.3822,
+            0.2464,
+            0.3937,
+            0.2948
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "quapuodsay",
+          "bbox": [
+            0.3776,
+            0.3009,
+            0.3906,
+            0.3509
+          ],
+          "confidence": 0.02,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "G3I1IdWo> (edo pesetg",
+      "bbox": [
+        0.3492,
+        0.2992,
+        0.3707,
+        0.4855
+      ],
+      "confidence": 0.1167,
+      "words": [
+        {
+          "text": "G3I1IdWo>",
+          "bbox": [
+            0.3507,
+            0.2992,
+            0.3707,
+            0.3504
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(edo",
+          "bbox": [
+            0.35,
+            0.4316,
+            0.3638,
+            0.4544
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pesetg",
+          "bbox": [
+            0.3492,
+            0.4577,
+            0.3599,
+            0.4855
+          ],
+          "confidence": 0.01,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "LON ANSWATLLAS | $20z'TT'9z Jemysawey 609 @idng tnyuy \u2018e/T",
+      "bbox": [
+        0.3216,
+        0.2247,
+        0.3553,
+        0.7325
+      ],
+      "confidence": 0.4256,
+      "words": [
+        {
+          "text": "LON",
+          "bbox": [
+            0.3446,
+            0.2247,
+            0.3553,
+            0.2447
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ANSWATLLAS",
+          "bbox": [
+            0.3392,
+            0.2875,
+            0.3523,
+            0.3498
+          ],
+          "confidence": 0.21,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.3331,
+            0.3521,
+            0.3553,
+            0.3571
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "$20z'TT'9z",
+          "bbox": [
+            0.3369,
+            0.3626,
+            0.3484,
+            0.4088
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jemysawey",
+          "bbox": [
+            0.3269,
+            0.4366,
+            0.3484,
+            0.485
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        },
+        {
+          "text": "609",
+          "bbox": [
+            0.3239,
+            0.5334,
+            0.3431,
+            0.5512
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "@idng",
+          "bbox": [
+            0.3246,
+            0.6307,
+            0.3384,
+            0.6552
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tnyuy",
+          "bbox": [
+            0.3239,
+            0.658,
+            0.3354,
+            0.683
+          ],
+          "confidence": 0.16,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018e/T",
+          "bbox": [
+            0.3216,
+            0.7169,
+            0.3346,
+            0.7325
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ayeq",
+      "bbox": [
+        0.307,
+        0.3715,
+        0.3177,
+        0.3938
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "ayeq",
+          "bbox": [
+            0.307,
+            0.3715,
+            0.3177,
+            0.3938
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "qWepuodsay Jad se snje7g wAepIyy =}200apy zn awen \u201cON \u2018soy",
+      "bbox": [
+        0.2748,
+        0.2247,
+        0.3101,
+        0.7303
+      ],
+      "confidence": 0.44,
+      "words": [
+        {
+          "text": "qWepuodsay",
+          "bbox": [
+            0.297,
+            0.2247,
+            0.3101,
+            0.2814
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jad",
+          "bbox": [
+            0.2978,
+            0.2842,
+            0.3085,
+            0.2998
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "se",
+          "bbox": [
+            0.2978,
+            0.3037,
+            0.3054,
+            0.3137
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "snje7g",
+          "bbox": [
+            0.2939,
+            0.3165,
+            0.3047,
+            0.3471
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "wAepIyy",
+          "bbox": [
+            0.287,
+            0.3626,
+            0.3078,
+            0.4032
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        },
+        {
+          "text": "=}200apy",
+          "bbox": [
+            0.284,
+            0.4266,
+            0.3047,
+            0.4727
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "zn",
+          "bbox": [
+            0.2847,
+            0.5122,
+            0.2955,
+            0.5328
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "awen",
+          "bbox": [
+            0.2755,
+            0.6079,
+            0.2962,
+            0.6357
+          ],
+          "confidence": 0.02,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cON",
+          "bbox": [
+            0.2763,
+            0.6919,
+            0.287,
+            0.7069
+          ],
+          "confidence": 0.75,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018soy",
+          "bbox": [
+            0.2748,
+            0.7108,
+            0.2863,
+            0.7303
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "GLO% 40 ve",
+      "bbox": [
+        0.2379,
+        0.3115,
+        0.2487,
+        0.3621
+      ],
+      "confidence": 0.43,
+      "words": [
+        {
+          "text": "GLO%",
+          "bbox": [
+            0.2387,
+            0.3115,
+            0.2487,
+            0.3315
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "40",
+          "bbox": [
+            0.2379,
+            0.3337,
+            0.2471,
+            0.3454
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ve",
+          "bbox": [
+            0.2379,
+            0.3476,
+            0.2464,
+            0.3621
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "YANOLLILAd FHL HU",
+      "bbox": [
+        0.2218,
+        0.2725,
+        0.2341,
+        0.3593
+      ],
+      "confidence": 0.2933,
+      "words": [
+        {
+          "text": "YANOLLILAd",
+          "bbox": [
+            0.2233,
+            0.2725,
+            0.2341,
+            0.3237
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FHL",
+          "bbox": [
+            0.2226,
+            0.3259,
+            0.2318,
+            0.3432
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HU",
+          "bbox": [
+            0.2218,
+            0.3454,
+            0.2302,
+            0.3593
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201cON (1H9) dM NI-\u00a5Z0Z 40 6&7 \u201cON VW NI",
+      "bbox": [
+        0.2256,
+        0.3648,
+        0.2502,
+        0.5328
+      ],
+      "confidence": 0.5211,
+      "words": [
+        {
+          "text": "\u201cON",
+          "bbox": [
+            0.2356,
+            0.3648,
+            0.2456,
+            0.3804
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(1H9)",
+          "bbox": [
+            0.2256,
+            0.3832,
+            0.2502,
+            0.4055
+          ],
+          "confidence": 0.05,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dM",
+          "bbox": [
+            0.2341,
+            0.4099,
+            0.2433,
+            0.4205
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NI-\u00a5Z0Z",
+          "bbox": [
+            0.2318,
+            0.4255,
+            0.2425,
+            0.47
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "40",
+          "bbox": [
+            0.2256,
+            0.4605,
+            0.2502,
+            0.4694
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6&7",
+          "bbox": [
+            0.2318,
+            0.4727,
+            0.2402,
+            0.4872
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cON",
+          "bbox": [
+            0.2302,
+            0.49,
+            0.2394,
+            0.505
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "VW",
+          "bbox": [
+            0.2295,
+            0.5078,
+            0.2387,
+            0.5211
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NI",
+          "bbox": [
+            0.2287,
+            0.5239,
+            0.2387,
+            0.5328
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IM SINSWATHAS 4O STIVI3G 40 LMVHO HvINavL",
+      "bbox": [
+        0.2111,
+        0.3593,
+        0.2295,
+        0.5712
+      ],
+      "confidence": 0.4414,
+      "words": [
+        {
+          "text": "IM",
+          "bbox": [
+            0.221,
+            0.3593,
+            0.2295,
+            0.3682
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SINSWATHAS",
+          "bbox": [
+            0.218,
+            0.3704,
+            0.2295,
+            0.4316
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4O",
+          "bbox": [
+            0.2172,
+            0.4338,
+            0.2264,
+            0.4455
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "STIVI3G",
+          "bbox": [
+            0.2157,
+            0.4483,
+            0.2256,
+            0.4828
+          ],
+          "confidence": 0.11,
+          "text_type": "unknown"
+        },
+        {
+          "text": "40",
+          "bbox": [
+            0.2149,
+            0.4861,
+            0.2241,
+            0.4967
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LMVHO",
+          "bbox": [
+            0.2134,
+            0.4989,
+            0.2233,
+            0.5289
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HvINavL",
+          "bbox": [
+            0.2111,
+            0.5317,
+            0.2218,
+            0.5712
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "v",
+      "bbox": [
+        0.1911,
+        0.4127,
+        0.208,
+        0.4221
+      ],
+      "confidence": 0.89,
+      "words": [
+        {
+          "text": "v",
+          "bbox": [
+            0.1911,
+            0.4127,
+            0.208,
+            0.4221
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.3669,
+  "latency_ms": 486,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "2\neG\npe a\nse\neidng sewny Aelia \u201csy\nIE O/M exdND ey \u201cs4yy\ne\nedn sewnyy Aefi, \u201c4 327\nPepunjey Panjos) 20U WrepLsY O/S edn Jewny ysaley \u201cTHE\nyseyeig\n{EC \u201cIW O/S IuIeS yEBIeIg \u201cAW\n8\nIUIES YSPYEg Jer\nSN. papunyay, PeAI8984 JOU AEP \u201cIW O/M WWles WnyWNy, \u201cSW \u201cor/e\n\u201cUOANad\n2M) 0} JuaWAed Jo ayep ay\nWO ISBIAU! % 9 YUM Buge\n~/00Z'ET'9b YNI JO JunoWe\nenp ay) punjar oj aiqey\nS{ alosasayy pue quawaas6e\nples 943 yO uonpuco\npue swe} 943 Ajdwioo\n0} peyiey sey souoRned\ney? 3nq quawseise\n8UA JO sta] pue suo;!puds\n\u2018aoeid ay JO aoueyduios ayy Joy\n8 }OU IIIM AysiGar yeuy | SUA Jo sequuinu e saUOQNEd\nBuipaoyate 3b9 ren 8} Payreoidde quapuodsay\nG3I1IdWo> (edo pesetg\nLON ANSWATLLAS | $20z'TT'9z Jemysawey 609 @idng tnyuy \u2018e/T\nayeq\nqWepuodsay Jad se snje7g wAepIyy =}200apy zn awen \u201cON \u2018soy\nGLO% 40 ve\nYANOLLILAd FHL HU\n\u201cON (1H9) dM NI-\u00a5Z0Z 40 6&7 \u201cON VW NI\nIM SINSWATHAS 4O STIVI3G 40 LMVHO HvINavL\nv"
+}

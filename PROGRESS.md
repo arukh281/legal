@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S04 Complete (Source capture + legal gate: IBBI orders first)
+## Current State: Session S05a Complete (Parsing: text layer, OCR, judgment structure, anchors)
 
 ### 1. What Was Built
 
@@ -176,6 +176,65 @@
   - `test_safety_breakers.py`: CAPTCHA, layout drift, and mass-change breakers tested against fixtures.
   - `test_outbox_events.py`: field-for-field contract verification of `raw.captured.v1` and `source.health.v1` against master architecture §6.3/§6.4.
 
+#### N. Parsing Engine & Judgment Structure (Session S05a: `backend/parse/`)
+- **Schema & Models (`backend/parse/models.py`, `backend/parse/migrations/0001_initial_parse_tables.py`):**
+  - Applied verbatim SQL DDL for 10 domain tables in `plc`: `court`, `work`, `legal_case`, `work_case`, `expression`, `manifestation`, `identifier_alias`, `parse_run`, `anchor`, `anchor_alias`.
+  - Configured RLS grants for `app_rw` and seeded initial court registry mnemonics (`crt_IN_SC`, `crt_IN_NCLAT`, `crt_IN_NCLT_MUM`, `crt_IN_NCLT_CHD`, etc.) using 01 §5.2 rules.
+  - Registered `p1.parser@0.1.0|det_v1` in `ops.pipeline_version`.
+- **Pre-processor & Scan Robustness (`backend/parse/preprocessor.py`):**
+  - Auto-rotates upside-down/sideways pages using projection variance.
+  - Deskews skewed scans (-10° to +10° projection profile peak search).
+  - Low-DPI detection and upscaling to 300 DPI, contrast stretching for faint scans.
+  - Multi-format image wrapping: accepts JPG, PNG, TIFF, and HEIC inputs and wraps them into single-page PDF streams for identical processing.
+  - Indic script detection: post-OCR check flags `lang_unsupported` on Indic pages to avoid OCR hallucinations.
+- **OCR Engine Abstraction & Tesseract Integration (`backend/parse/ocr.py`):**
+  - `OcrEngine` protocol and `TesseractOcrEngine` implementation using local binary.
+  - Queries dynamic version (`pytesseract.get_tesseract_version()`, verified `5.5.3`), records engine name and exact version per page.
+  - Fails loudly if binary is missing (never silently skips OCR).
+  - Emits word-level bounding boxes normalized to `[0, 1]` with individual word confidences.
+  - Caches OCR page JSON results in `eval/fixtures/ocr/` for deterministic offline test runs.
+- **Adversarial Hidden Text Detector (`backend/parse/hidden_text.py`):**
+  - Scans PDF display lists for white text (sRGB ≥ 248), tiny fonts (< 1.0 pt), and off-page text extending past page bounds.
+  - Drops adversarial injection text from clean blocks and records flagged regions.
+- **Page-Level Triage (`backend/parse/triage.py`):**
+  - Triage decision tree: born-digital text-layer validation vs scan preprocessing + OCR routing.
+- **Judgment Parser & Court Header Extraction (`backend/parse/judgment.py`):**
+  - Strips repeated furniture lines (headers/footers appearing on ≥60% of pages).
+  - Extracts Indian court and bench identity, resolving bench city over party address matches.
+  - Resolves case number, court type, and decision date using prioritized stamp hierarchy.
+  - Robust party extraction using backward line traversal from `Versus`/`Vs.` to distinguish party names from representative/address blocks.
+  - Order divider handling: detects `ORDER` / `O R D E R` / `JUDGMENT` before body; accumulates header into `hdr` block; resets unnumbered index so first narrative paragraph starts at `u1`.
+  - Extracts explicit numbered paragraphs `p{n}`, sub-paragraphs `p{n}.{m}`, unnumbered paragraphs `u{n}`, and operative order `ord`.
+- **Anchor Stability & Assignment Engine (`backend/parse/anchors.py`):**
+  - Assigns canonical `PublicAnchor` strings via `anchor_lib.parse()`.
+  - Re-parse alignment protocol: aligns blocks across parse runs using `NUM_EQ` (court printed number), `HASH_EQ` (exact text hash), and `NW_ALIGN` (Needleman-Wunsch diff on text modifications).
+  - Tombstones deleted paragraphs on `anchor.state = 'TOMBSTONED'` and `forward_to = <new_anchor_id>`.
+  - Unmatched new court-numbered paragraphs keep their printed numbers `p{n}` (`EXPLICIT`), satisfying Constraint A1.
+- **Quality Gating & Django Admin Review Queue (`backend/parse/gates.py`, `backend/parse/admin.py`):**
+  - Gates documents into `PASS`, `FLAGGED`, or `QUARANTINED`.
+  - Enforces per-anchor `ocr_conf < 0.80` restriction, preventing low-confidence OCR text from backing Tier-1 legal claims.
+  - Django Admin provides review queue with colored gate badges, filter by gate status, and direct inspection of parsed blocks.
+- **S3 Storage & DB Atomic Persistence (`backend/parse/storage.py`, `backend/parse/consumer.py`):**
+  - Uploads gzip-compressed `ParsedDocument` JSON to `parsed/{work_id}/{expression_key}/{parse_id}.json.gz` in MinIO/S3 first, hashes SHA-256.
+  - Executes atomic database commit (`work`, `legal_case`, `manifestation`, `parse_run`, `anchor`, `anchor_alias`) and emits `doc.parsed.v1` event to `ops.event_outbox` in the SAME transaction.
+  - Tested crash scenario between S3 upload and DB commit: leaves orphaned S3 artifact but clean database.
+- **Management Command & Full Corpus Exit Check (`backend/parse/management/commands/parse_captured.py`):**
+  - Parsed all 156 captured IBBI orders across Supreme Court, High Courts, NCLAT, and NCLT:
+    - 3,605 pages analyzed (3,502 born-digital, 103 OCR scanned = 2.86% OCR share).
+    - 8,462 permanent anchors issued (average 51.9 paragraphs per document).
+    - Quality gate: 129 PASS (82.7%), 25 FLAGGED (16.0%), 2 QUARANTINED (1.3%).
+    - Zero LLM fallback invocations required.
+- **Test Suite (`backend/parse/tests/`):**
+  - 19 new tests, 158 total passed across backend:
+    - `test_golden_outputs.py`: verified against 4 hand-checked golden fixtures.
+    - `test_anchor_stability.py`: 100% stability on re-parse, NW_ALIGN alias on text edits, tombstone on paragraph deletion.
+    - `test_hidden_text.py`: adversarial PDF inspection for white text, tiny font, and off-canvas text.
+    - `test_ocr_gate.py`: gate evaluation, handwriting flagging, unsupported language quarantine, low OCR claim exclusion.
+    - `test_scan_robustness.py`: auto-rotate, deskewing, low-DPI upscaling, multi-format image wrapping.
+    - `test_s3_db_crash.py`: S3 upload before DB transaction crash resilience.
+    - `test_doc_parsed_event.py`: `doc.parsed.v1` CloudEvents envelope and payload contract validation.
+    - `test_ast_guards.py`: verifies no boto3 Textract calls outside `ocr.py`, and domain models use ULID PKs.
+
 ---
 
 ### 2. How to Run It
@@ -183,39 +242,38 @@
 ```bash
 cd backend
 
-# Type check (strict repo-wide across all 133 source files)
+# Type check (strict repo-wide across all 159 source files)
 uv run mypy .
 
 # Lint & formatting check
 uv run ruff check .
 uv run ruff format --check .
 
-# Run all 139 backend tests against PostgreSQL 18
+# Run all 158 backend tests against PostgreSQL 18
 uv run pytest
 
-# Seed IBBI legal profile with live archived ToU / policy snapshots
-uv run python manage.py seed_ibbi_profile
+# Parse captured documents (e.g. 5 sample docs or full corpus)
+uv run python manage.py parse_captured --limit 5
+uv run python manage.py parse_captured --limit 160
 
-# Run IBBI crawl (e.g. NCLT 2 pages delta)
+# Run IBBI crawl
 uv run python manage.py crawl_ibbi --section nclt --pages 2 --mode delta
 
-# Refresh evaluation fixtures strictly via GatedHttpClient
-uv run python manage.py refresh_fixtures --section nclt --max-sample-pdfs 2
-
 # Test migration reversibility
-uv run python manage.py migrate ingest zero --database=owner
-uv run python manage.py migrate ingest --database=owner
+uv run python manage.py migrate parse zero --database=owner
+uv run python manage.py migrate parse --database=owner
 ```
 
 ---
 
 ### 3. Stubs & Notes
-- **Downstream Domain Phases (S05–S18):**
-  - Parsing (`parse` / P1): S05 will consume `raw.captured.v1` outbox events, extract text layer/OCR, parse judgments/statutes, assign anchors, and emit `doc.parsed.v1`.
-  - Indexing & Retrieval (`index`, `retrieve` / P2, P5): S06–S07.
+- **Downstream Domain Phases (S06–S18):**
+  - Indexing & Retrieval (`index`, `retrieve` / P2, P5): S06 will build chunks, FTS `legal_en`, embeddings (Voyage), pgvector generations + aliases, and Index Access Layer.
   - Citator (`citator` / P3): S09.
 - **Model Gateway Real-API Smoke Test:**
   - `test_real_llm_smoke` is marked `@pytest.mark.skipif` unless real API keys (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`) are present in the environment.
+- **OCR Engine Migration (S15):**
+  - Tesseract local engine configured for dev and CI; AWS Textract (ap-south-1) migration planned behind the same `OcrEngine` contract for production deployment in S15.
 
 ---
 
@@ -228,11 +286,11 @@ uv run python manage.py migrate ingest --database=owner
 
 ---
 
-### 5. What the Next Session (S05) Needs
-- **Session S05: Parsing (text layer + OCR, judgment and statute parsers, anchors, citation extraction):**
-  - Consumes `raw.captured.v1` events from `ops.event_outbox`.
-  - PDF text layer extraction (PDF.js / pypdf / Amazon Textract OCR fallback).
-  - Indian legal document structure parsing (coram, bench, date, party names, headnotes, paragraph numbering).
-  - Anchor generator for judgment paragraphs (`wrk_...#p45`) and statute sections (`wrk_...#sec-138`).
-  - Citation extractor and preliminary resolution.
-  - Emits `doc.parsed.v1` and generates `ParsedDocument` JSON.
+### 5. What the Next Session (S06) Needs
+- **Session S06: Index: chunks, FTS `legal_en`, embeddings, pgvector generations + aliases, Index Access Layer (IAL):**
+  - Consumes `doc.parsed.v1` events from `ops.event_outbox`.
+  - Chunking strategy rooted strictly in durable anchors (`anchor_id` + `quote_selector`).
+  - PostgreSQL 18 FTS config `legal_en` with custom stop words and legal stemmer.
+  - Vector embeddings (Voyage `halfvec` HNSW in pgvector).
+  - Dual generation index aliases with zero-downtime hot-swapping.
+  - Index Access Layer contract adhering to 01 §5.4.

@@ -1,0 +1,2116 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 14,
+  "lines": [
+    {
+      "text": "CP (IB) 374 OF 2025",
+      "bbox": [
+        0.7365,
+        0.0525,
+        0.884,
+        0.0639
+      ],
+      "confidence": 0.902,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7365,
+            0.053,
+            0.7542,
+            0.0616
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7607,
+            0.0525,
+            0.784,
+            0.0639
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        },
+        {
+          "text": "374",
+          "bbox": [
+            0.7905,
+            0.053,
+            0.8171,
+            0.0616
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.8227,
+            0.053,
+            0.8429,
+            0.0616
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.8477,
+            0.053,
+            0.884,
+            0.0616
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "process as per provisions of IBC 2016 to this",
+      "bbox": [
+        0.2184,
+        0.0958,
+        0.8735,
+        0.1112
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "process",
+          "bbox": [
+            0.2184,
+            0.0992,
+            0.3046,
+            0.1106
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.3312,
+            0.0992,
+            0.3554,
+            0.1078
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "per",
+          "bbox": [
+            0.3811,
+            0.0992,
+            0.4182,
+            0.1112
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "provisions",
+          "bbox": [
+            0.4432,
+            0.0958,
+            0.56,
+            0.1112
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5866,
+            0.0958,
+            0.6092,
+            0.1078
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IBC",
+          "bbox": [
+            0.6326,
+            0.0958,
+            0.6737,
+            0.1078
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016",
+          "bbox": [
+            0.701,
+            0.0964,
+            0.7566,
+            0.1078
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.784,
+            0.0969,
+            0.805,
+            0.1078
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.8316,
+            0.0958,
+            0.8735,
+            0.1078
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "adjudicating authority along with the minutes of the",
+      "bbox": [
+        0.2184,
+        0.134,
+        0.8735,
+        0.1505
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "adjudicating",
+          "bbox": [
+            0.2184,
+            0.134,
+            0.3602,
+            0.1499
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "authority",
+          "bbox": [
+            0.3763,
+            0.1345,
+            0.4819,
+            0.1499
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "along",
+          "bbox": [
+            0.498,
+            0.1345,
+            0.5592,
+            0.1505
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.5745,
+            0.1345,
+            0.6237,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6398,
+            0.1345,
+            0.6753,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "minutes",
+          "bbox": [
+            0.6922,
+            0.1345,
+            0.7849,
+            0.1471
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8026,
+            0.1345,
+            0.8243,
+            0.1471
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8372,
+            0.1345,
+            0.8735,
+            0.1471
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "meetings conducted of the COC/any other authority. We",
+      "bbox": [
+        0.2176,
+        0.1733,
+        0.8727,
+        0.1893
+      ],
+      "confidence": 0.9463,
+      "words": [
+        {
+          "text": "meetings",
+          "bbox": [
+            0.2176,
+            0.1733,
+            0.3191,
+            0.1887
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "conducted",
+          "bbox": [
+            0.3296,
+            0.1733,
+            0.4472,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4569,
+            0.1733,
+            0.4786,
+            0.1859
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4851,
+            0.1733,
+            0.5205,
+            0.1859
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COC/any",
+          "bbox": [
+            0.531,
+            0.1733,
+            0.6398,
+            0.1893
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "other",
+          "bbox": [
+            0.6487,
+            0.1733,
+            0.7083,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "authority.",
+          "bbox": [
+            0.7172,
+            0.1733,
+            0.8276,
+            0.1893
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "We",
+          "bbox": [
+            0.838,
+            0.1739,
+            0.8727,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "allow this application and appoint the RP suggested by",
+      "bbox": [
+        0.2176,
+        0.2121,
+        0.8735,
+        0.2281
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "allow",
+          "bbox": [
+            0.2176,
+            0.2121,
+            0.2764,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.2869,
+            0.2121,
+            0.3296,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "application",
+          "bbox": [
+            0.3417,
+            0.2121,
+            0.4674,
+            0.2281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.4795,
+            0.2127,
+            0.5222,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "appoint",
+          "bbox": [
+            0.5342,
+            0.2127,
+            0.6205,
+            0.2281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6317,
+            0.2127,
+            0.6672,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RP",
+          "bbox": [
+            0.6793,
+            0.2132,
+            0.7099,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "suggested",
+          "bbox": [
+            0.722,
+            0.2127,
+            0.8348,
+            0.2281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.8461,
+            0.2127,
+            0.8735,
+            0.2281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the applicant.",
+      "bbox": [
+        0.216,
+        0.2509,
+        0.3723,
+        0.2668
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.216,
+            0.2509,
+            0.2522,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "applicant.",
+          "bbox": [
+            0.2611,
+            0.2514,
+            0.3723,
+            0.2668
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "In view of the above, we pass the following order:",
+      "bbox": [
+        0.216,
+        0.2902,
+        0.7744,
+        0.3067
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "In",
+          "bbox": [
+            0.216,
+            0.2908,
+            0.2393,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "view",
+          "bbox": [
+            0.2466,
+            0.2902,
+            0.2973,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3054,
+            0.2902,
+            0.3272,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3328,
+            0.2902,
+            0.3674,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "above,",
+          "bbox": [
+            0.3771,
+            0.2902,
+            0.4472,
+            0.3056
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "we",
+          "bbox": [
+            0.4569,
+            0.2942,
+            0.4867,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pass",
+          "bbox": [
+            0.4948,
+            0.2942,
+            0.5463,
+            0.3062
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5552,
+            0.2908,
+            0.5907,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "following",
+          "bbox": [
+            0.5995,
+            0.2902,
+            0.701,
+            0.3067
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order:",
+          "bbox": [
+            0.7091,
+            0.2902,
+            0.7744,
+            0.3027
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ORDER",
+      "bbox": [
+        0.4585,
+        0.3415,
+        0.5479,
+        0.3535
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "ORDER",
+          "bbox": [
+            0.4585,
+            0.3415,
+            0.5479,
+            0.3535
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The Corporate Person, viz., Gujarat Integrated Maritime",
+      "bbox": [
+        0.2143,
+        0.3917,
+        0.8799,
+        0.4076
+      ],
+      "confidence": 0.9471,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2143,
+            0.3917,
+            0.2562,
+            0.4042
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.2699,
+            0.3922,
+            0.3811,
+            0.4076
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Person,",
+          "bbox": [
+            0.3948,
+            0.3922,
+            0.4778,
+            0.4065
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "viz.,",
+          "bbox": [
+            0.4907,
+            0.3917,
+            0.5351,
+            0.4065
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gujarat",
+          "bbox": [
+            0.5504,
+            0.3917,
+            0.6374,
+            0.4071
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Integrated",
+          "bbox": [
+            0.6495,
+            0.3917,
+            0.7663,
+            0.4076
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Maritime",
+          "bbox": [
+            0.7792,
+            0.3917,
+            0.8799,
+            0.4036
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Complex Private Limited is admitted in Corporate",
+      "bbox": [
+        0.2151,
+        0.4304,
+        0.8799,
+        0.4464
+      ],
+      "confidence": 0.9571,
+      "words": [
+        {
+          "text": "Complex",
+          "bbox": [
+            0.2151,
+            0.431,
+            0.3143,
+            0.4464
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Private",
+          "bbox": [
+            0.3384,
+            0.431,
+            0.4158,
+            0.443
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.4416,
+            0.4304,
+            0.5262,
+            0.443
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.5512,
+            0.4304,
+            0.5689,
+            0.443
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "admitted",
+          "bbox": [
+            0.5947,
+            0.4304,
+            0.6954,
+            0.443
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.7204,
+            0.4304,
+            0.7429,
+            0.443
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.7679,
+            0.4304,
+            0.8799,
+            0.4464
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Insolvency Resolution Process under Section 10 of the",
+      "bbox": [
+        0.2143,
+        0.4698,
+        0.8799,
+        0.4857
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.2143,
+            0.4704,
+            0.3352,
+            0.4857
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.3497,
+            0.4704,
+            0.4698,
+            0.4823
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Process",
+          "bbox": [
+            0.4851,
+            0.4704,
+            0.5705,
+            0.4823
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.585,
+            0.4698,
+            0.6535,
+            0.4823
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.6696,
+            0.4698,
+            0.7518,
+            0.4818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "10",
+          "bbox": [
+            0.7703,
+            0.4698,
+            0.7945,
+            0.4818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8106,
+            0.4698,
+            0.8316,
+            0.4818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8445,
+            0.4698,
+            0.8799,
+            0.4818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Insolvency and Bankruptcy Code, 2016.",
+      "bbox": [
+        0.2143,
+        0.5091,
+        0.672,
+        0.5251
+      ],
+      "confidence": 0.954,
+      "words": [
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.2143,
+            0.5091,
+            0.3352,
+            0.5251
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3433,
+            0.5091,
+            0.3852,
+            0.5217
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bankruptcy",
+          "bbox": [
+            0.394,
+            0.5091,
+            0.5294,
+            0.5251
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Code,",
+          "bbox": [
+            0.5375,
+            0.5091,
+            0.5995,
+            0.5239
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016.",
+          "bbox": [
+            0.61,
+            0.5091,
+            0.672,
+            0.5211
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The suspended management is directed to file affidavit to",
+      "bbox": [
+        0.2208,
+        0.5473,
+        0.8791,
+        0.5639
+      ],
+      "confidence": 0.9611,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2208,
+            0.5485,
+            0.2627,
+            0.5604
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "suspended",
+          "bbox": [
+            0.2732,
+            0.5485,
+            0.3956,
+            0.5639
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "management",
+          "bbox": [
+            0.4037,
+            0.5496,
+            0.552,
+            0.5639
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.56,
+            0.5479,
+            0.5778,
+            0.5599
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "directed",
+          "bbox": [
+            0.5874,
+            0.5473,
+            0.6785,
+            0.5599
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6873,
+            0.549,
+            0.7083,
+            0.5599
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "file",
+          "bbox": [
+            0.7172,
+            0.5473,
+            0.7502,
+            0.5593
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "affidavit",
+          "bbox": [
+            0.7599,
+            0.5473,
+            0.8509,
+            0.5593
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.859,
+            0.5485,
+            0.8791,
+            0.5593
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the Resolution Professional that they will provide all",
+      "bbox": [
+        0.2143,
+        0.5855,
+        0.8807,
+        0.6021
+      ],
+      "confidence": 0.9575,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2143,
+            0.5872,
+            0.2498,
+            0.5998
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.2683,
+            0.5872,
+            0.39,
+            0.5992
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Professional",
+          "bbox": [
+            0.4077,
+            0.5867,
+            0.5455,
+            0.5992
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "that",
+          "bbox": [
+            0.5633,
+            0.5867,
+            0.61,
+            0.5986
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "they",
+          "bbox": [
+            0.6277,
+            0.5867,
+            0.6769,
+            0.6021
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "will",
+          "bbox": [
+            0.6946,
+            0.5861,
+            0.7341,
+            0.5981
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "provide",
+          "bbox": [
+            0.7518,
+            0.5861,
+            0.8348,
+            0.6015
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "all",
+          "bbox": [
+            0.8541,
+            0.5855,
+            0.8807,
+            0.5981
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "documents and extend cooperation within 7 days of this",
+      "bbox": [
+        0.2143,
+        0.6243,
+        0.8791,
+        0.6408
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "documents",
+          "bbox": [
+            0.2143,
+            0.626,
+            0.34,
+            0.638
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3513,
+            0.6254,
+            0.394,
+            0.638
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "extend",
+          "bbox": [
+            0.4053,
+            0.6254,
+            0.4811,
+            0.638
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cooperation",
+          "bbox": [
+            0.4923,
+            0.6254,
+            0.6245,
+            0.6408
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "within",
+          "bbox": [
+            0.635,
+            0.6249,
+            0.7067,
+            0.6368
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "7",
+          "bbox": [
+            0.7188,
+            0.6249,
+            0.7317,
+            0.6368
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "days",
+          "bbox": [
+            0.7429,
+            0.6249,
+            0.7953,
+            0.6403
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8066,
+            0.6243,
+            0.8284,
+            0.6368
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.8372,
+            0.6243,
+            0.8791,
+            0.6363
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "order.",
+      "bbox": [
+        0.2143,
+        0.6653,
+        0.2796,
+        0.6773
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "order.",
+          "bbox": [
+            0.2143,
+            0.6653,
+            0.2796,
+            0.6773
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The moratorium under Section 14 of Insolvency and",
+      "bbox": [
+        0.2127,
+        0.7024,
+        0.8799,
+        0.7178
+      ],
+      "confidence": 0.9575,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2127,
+            0.7041,
+            0.2546,
+            0.7161
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "moratorium",
+          "bbox": [
+            0.2732,
+            0.7035,
+            0.4093,
+            0.7161
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.4263,
+            0.7035,
+            0.4948,
+            0.7155
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.5133,
+            0.703,
+            0.5963,
+            0.7155
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "14",
+          "bbox": [
+            0.618,
+            0.7035,
+            0.6422,
+            0.7149
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6608,
+            0.703,
+            0.6833,
+            0.7149
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.6986,
+            0.7024,
+            0.8195,
+            0.7178
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8372,
+            0.7024,
+            0.8799,
+            0.7144
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Bankruptcy Code, 2016 is declared for prohibiting all of",
+      "bbox": [
+        0.2135,
+        0.7412,
+        0.8815,
+        0.7583
+      ],
+      "confidence": 0.9611,
+      "words": [
+        {
+          "text": "Bankruptcy",
+          "bbox": [
+            0.2135,
+            0.7429,
+            0.3489,
+            0.7583
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Code,",
+          "bbox": [
+            0.361,
+            0.7429,
+            0.4222,
+            0.7571
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016",
+          "bbox": [
+            0.4351,
+            0.7429,
+            0.4923,
+            0.7548
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.5044,
+            0.7423,
+            0.5222,
+            0.7543
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "declared",
+          "bbox": [
+            0.5351,
+            0.7417,
+            0.6309,
+            0.7543
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.6422,
+            0.7417,
+            0.6728,
+            0.7537
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "prohibiting",
+          "bbox": [
+            0.6833,
+            0.7412,
+            0.8098,
+            0.7571
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "all",
+          "bbox": [
+            0.8211,
+            0.7412,
+            0.8477,
+            0.7531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8598,
+            0.7412,
+            0.8815,
+            0.7531
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the following in terms of Section 14(1) of the Code.",
+      "bbox": [
+        0.2135,
+        0.7799,
+        0.7905,
+        0.797
+      ],
+      "confidence": 0.952,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2135,
+            0.7816,
+            0.249,
+            0.7936
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "following",
+          "bbox": [
+            0.2579,
+            0.7816,
+            0.3586,
+            0.797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.3666,
+            0.7816,
+            0.3884,
+            0.7936
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "terms",
+          "bbox": [
+            0.3965,
+            0.7828,
+            0.4609,
+            0.7936
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4698,
+            0.7811,
+            0.4923,
+            0.793
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.4988,
+            0.7811,
+            0.5818,
+            0.793
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "14(1)",
+          "bbox": [
+            0.5931,
+            0.7805,
+            0.6454,
+            0.7965
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6559,
+            0.7805,
+            0.6777,
+            0.7925
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6833,
+            0.7805,
+            0.7196,
+            0.7925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Code.",
+          "bbox": [
+            0.7284,
+            0.7799,
+            0.7905,
+            0.7925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "a. the institution of suits or continuation of pending",
+      "bbox": [
+        0.2442,
+        0.8187,
+        0.8799,
+        0.8341
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "a.",
+          "bbox": [
+            0.2442,
+            0.8244,
+            0.2619,
+            0.8324
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2732,
+            0.8204,
+            0.3086,
+            0.8324
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "institution",
+          "bbox": [
+            0.3231,
+            0.8198,
+            0.4424,
+            0.8324
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4569,
+            0.8198,
+            0.4786,
+            0.8318
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "suits",
+          "bbox": [
+            0.4899,
+            0.8198,
+            0.5447,
+            0.8318
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.5592,
+            0.8233,
+            0.5818,
+            0.8318
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "continuation",
+          "bbox": [
+            0.5955,
+            0.8193,
+            0.7413,
+            0.8312
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.755,
+            0.8187,
+            0.7768,
+            0.8307
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pending",
+          "bbox": [
+            0.7881,
+            0.8187,
+            0.8799,
+            0.8341
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "suits or proceedings against the corporate debtor",
+      "bbox": [
+        0.274,
+        0.8575,
+        0.8791,
+        0.874
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "suits",
+          "bbox": [
+            0.274,
+            0.8592,
+            0.3288,
+            0.8706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.3449,
+            0.8626,
+            0.3674,
+            0.8706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proceedings",
+          "bbox": [
+            0.382,
+            0.8586,
+            0.5173,
+            0.874
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "against",
+          "bbox": [
+            0.5334,
+            0.858,
+            0.6164,
+            0.8734
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6317,
+            0.858,
+            0.6672,
+            0.87
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "corporate",
+          "bbox": [
+            0.6833,
+            0.8592,
+            0.7905,
+            0.8729
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "debtor",
+          "bbox": [
+            0.8066,
+            0.8575,
+            0.8791,
+            0.8694
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "including execution of any judgment, decree or",
+      "bbox": [
+        0.2732,
+        0.8962,
+        0.8791,
+        0.9139
+      ],
+      "confidence": 0.9571,
+      "words": [
+        {
+          "text": "including",
+          "bbox": [
+            0.2732,
+            0.8979,
+            0.3803,
+            0.9139
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "execution",
+          "bbox": [
+            0.3997,
+            0.8974,
+            0.5093,
+            0.9099
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5286,
+            0.8974,
+            0.5504,
+            0.9094
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "any",
+          "bbox": [
+            0.5681,
+            0.9008,
+            0.6092,
+            0.9128
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "judgment,",
+          "bbox": [
+            0.6253,
+            0.8968,
+            0.7429,
+            0.9128
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "decree",
+          "bbox": [
+            0.7639,
+            0.8962,
+            0.8364,
+            0.9088
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.8566,
+            0.8997,
+            0.8791,
+            0.9082
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Sdj- Sh /- : Page 13 of 17",
+      "bbox": [
+        0.2941,
+        0.9247,
+        0.8783,
+        0.9624
+      ],
+      "confidence": 0.61,
+      "words": [
+        {
+          "text": "Sdj-",
+          "bbox": [
+            0.2941,
+            0.935,
+            0.3602,
+            0.9595
+          ],
+          "confidence": 0.21,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sh",
+          "bbox": [
+            0.6317,
+            0.9356,
+            0.6809,
+            0.9624
+          ],
+          "confidence": 0.24,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/-",
+          "bbox": [
+            0.693,
+            0.9344,
+            0.7276,
+            0.9601
+          ],
+          "confidence": 0.24,
+          "text_type": "unknown"
+        },
+        {
+          "text": ":",
+          "bbox": [
+            0.755,
+            0.9247,
+            0.7566,
+            0.9259
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7784,
+            0.9327,
+            0.8106,
+            0.9436
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "13",
+          "bbox": [
+            0.8187,
+            0.9327,
+            0.834,
+            0.9413
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8413,
+            0.9316,
+            0.8566,
+            0.9413
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17",
+          "bbox": [
+            0.8622,
+            0.9327,
+            0.8783,
+            0.9407
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9382,
+  "latency_ms": 451,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "CP (IB) 374 OF 2025\nprocess as per provisions of IBC 2016 to this\nadjudicating authority along with the minutes of the\nmeetings conducted of the COC/any other authority. We\nallow this application and appoint the RP suggested by\nthe applicant.\nIn view of the above, we pass the following order:\nORDER\nThe Corporate Person, viz., Gujarat Integrated Maritime\nComplex Private Limited is admitted in Corporate\nInsolvency Resolution Process under Section 10 of the\nInsolvency and Bankruptcy Code, 2016.\nThe suspended management is directed to file affidavit to\nthe Resolution Professional that they will provide all\ndocuments and extend cooperation within 7 days of this\norder.\nThe moratorium under Section 14 of Insolvency and\nBankruptcy Code, 2016 is declared for prohibiting all of\nthe following in terms of Section 14(1) of the Code.\na. the institution of suits or continuation of pending\nsuits or proceedings against the corporate debtor\nincluding execution of any judgment, decree or\nSdj- Sh /- : Page 13 of 17"
+}

@@ -1,0 +1,2294 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 4,
+  "lines": [
+    {
+      "text": "CP (IB) 374 OF 2025",
+      "bbox": [
+        0.7357,
+        0.0485,
+        0.8832,
+        0.0599
+      ],
+      "confidence": 0.952,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7357,
+            0.049,
+            0.7542,
+            0.0576
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7599,
+            0.0485,
+            0.7832,
+            0.0599
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "374",
+          "bbox": [
+            0.7897,
+            0.049,
+            0.8171,
+            0.0576
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.8227,
+            0.049,
+            0.8421,
+            0.0576
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.8469,
+            0.049,
+            0.8832,
+            0.0576
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "3638 of 2018 under Sections 241-242 of the Companies",
+      "bbox": [
+        0.2184,
+        0.0924,
+        0.8832,
+        0.1078
+      ],
+      "confidence": 0.9589,
+      "words": [
+        {
+          "text": "3638",
+          "bbox": [
+            0.2184,
+            0.0929,
+            0.2748,
+            0.1049
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2869,
+            0.0929,
+            0.3086,
+            0.1049
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2018",
+          "bbox": [
+            0.3175,
+            0.0929,
+            0.3739,
+            0.1049
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.3852,
+            0.0924,
+            0.4537,
+            0.1043
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sections",
+          "bbox": [
+            0.4658,
+            0.0924,
+            0.56,
+            0.1043
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "241-242",
+          "bbox": [
+            0.5721,
+            0.0929,
+            0.6664,
+            0.1043
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6793,
+            0.0924,
+            0.701,
+            0.1043
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7099,
+            0.0924,
+            0.7454,
+            0.1043
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Companies",
+          "bbox": [
+            0.7575,
+            0.0924,
+            0.8832,
+            0.1078
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Act before the NCLT, Mumbai. On 01.10.2018, NCLT",
+      "bbox": [
+        0.2168,
+        0.1311,
+        0.884,
+        0.1465
+      ],
+      "confidence": 0.9375,
+      "words": [
+        {
+          "text": "Act",
+          "bbox": [
+            0.2168,
+            0.1323,
+            0.2546,
+            0.1437
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "before",
+          "bbox": [
+            0.2707,
+            0.1317,
+            0.3392,
+            0.1437
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.357,
+            0.1317,
+            0.3924,
+            0.1437
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NCLT,",
+          "bbox": [
+            0.4093,
+            0.1317,
+            0.4778,
+            0.1465
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mumbai.",
+          "bbox": [
+            0.4964,
+            0.1317,
+            0.5963,
+            0.1437
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "On",
+          "bbox": [
+            0.6156,
+            0.1317,
+            0.6487,
+            0.1437
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "01.10.2018,",
+          "bbox": [
+            0.6664,
+            0.1317,
+            0.8026,
+            0.146
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NCLT",
+          "bbox": [
+            0.8211,
+            0.1311,
+            0.884,
+            0.1431
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Mumbai superseded the erstwhile board of directors of",
+      "bbox": [
+        0.2176,
+        0.1699,
+        0.8856,
+        0.1859
+      ],
+      "confidence": 0.9562,
+      "words": [
+        {
+          "text": "Mumbai",
+          "bbox": [
+            0.2176,
+            0.1705,
+            0.311,
+            0.1824
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "superseded",
+          "bbox": [
+            0.3255,
+            0.1705,
+            0.4553,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.469,
+            0.1705,
+            0.5044,
+            0.1824
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "erstwhile",
+          "bbox": [
+            0.5189,
+            0.1705,
+            0.6213,
+            0.1824
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "board",
+          "bbox": [
+            0.6358,
+            0.1699,
+            0.701,
+            0.1824
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7156,
+            0.1699,
+            0.7373,
+            0.1824
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "directors",
+          "bbox": [
+            0.7494,
+            0.1699,
+            0.8485,
+            0.1819
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8638,
+            0.1699,
+            0.8856,
+            0.1819
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IL&FS and appointed nominees recommended by MCA",
+      "bbox": [
+        0.2168,
+        0.2087,
+        0.8832,
+        0.2246
+      ],
+      "confidence": 0.9071,
+      "words": [
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.2168,
+            0.2098,
+            0.2869,
+            0.2212
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.303,
+            0.2092,
+            0.3449,
+            0.2212
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "appointed",
+          "bbox": [
+            0.3602,
+            0.2092,
+            0.473,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nominees",
+          "bbox": [
+            0.4875,
+            0.2092,
+            0.5963,
+            0.2212
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "recommended",
+          "bbox": [
+            0.6116,
+            0.2087,
+            0.7728,
+            0.2212
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.7873,
+            0.2087,
+            0.8147,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MCA",
+          "bbox": [
+            0.8284,
+            0.2087,
+            0.8832,
+            0.2206
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(\"New Board\") in place.",
+      "bbox": [
+        0.2176,
+        0.248,
+        0.4746,
+        0.264
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "(\"New",
+          "bbox": [
+            0.2176,
+            0.248,
+            0.2804,
+            0.264
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Board\")",
+          "bbox": [
+            0.2877,
+            0.248,
+            0.3707,
+            0.264
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.3803,
+            0.248,
+            0.4021,
+            0.26
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "place.",
+          "bbox": [
+            0.4102,
+            0.248,
+            0.4746,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The New Board of IL&FS has been inter alia mandated to",
+      "bbox": [
+        0.2151,
+        0.2862,
+        0.8815,
+        0.2993
+      ],
+      "confidence": 0.9545,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2151,
+            0.2868,
+            0.2571,
+            0.2993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.2675,
+            0.2873,
+            0.3151,
+            0.2993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Board",
+          "bbox": [
+            0.3239,
+            0.2868,
+            0.3916,
+            0.2993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4021,
+            0.2868,
+            0.4239,
+            0.2993
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.4303,
+            0.2868,
+            0.5004,
+            0.2987
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.5109,
+            0.2868,
+            0.5504,
+            0.2987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "been",
+          "bbox": [
+            0.5608,
+            0.2868,
+            0.614,
+            0.2987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inter",
+          "bbox": [
+            0.6237,
+            0.2862,
+            0.6777,
+            0.2987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "alia",
+          "bbox": [
+            0.6873,
+            0.2862,
+            0.7284,
+            0.2987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mandated",
+          "bbox": [
+            0.7365,
+            0.2862,
+            0.8509,
+            0.2982
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8606,
+            0.2873,
+            0.8815,
+            0.2982
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "resolve the debt burden of IL&FS, its subsidiaries, and",
+      "bbox": [
+        0.216,
+        0.3255,
+        0.8815,
+        0.3404
+      ],
+      "confidence": 0.9522,
+      "words": [
+        {
+          "text": "resolve",
+          "bbox": [
+            0.216,
+            0.3267,
+            0.2941,
+            0.3387
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3078,
+            0.3267,
+            0.3433,
+            0.3387
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "debt",
+          "bbox": [
+            0.357,
+            0.3261,
+            0.4069,
+            0.3387
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "burden",
+          "bbox": [
+            0.419,
+            0.3261,
+            0.502,
+            0.3381
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5149,
+            0.3261,
+            0.5375,
+            0.3381
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS,",
+          "bbox": [
+            0.5479,
+            0.3261,
+            0.6245,
+            0.3404
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.639,
+            0.3261,
+            0.6664,
+            0.3381
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "subsidiaries,",
+          "bbox": [
+            0.6801,
+            0.3255,
+            0.8243,
+            0.3404
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8396,
+            0.3255,
+            0.8815,
+            0.3375
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "other group companies (including GIMCO). In this regard,",
+      "bbox": [
+        0.216,
+        0.3643,
+        0.8799,
+        0.3814
+      ],
+      "confidence": 0.945,
+      "words": [
+        {
+          "text": "other",
+          "bbox": [
+            0.216,
+            0.3655,
+            0.2756,
+            0.3774
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "group",
+          "bbox": [
+            0.2836,
+            0.3694,
+            0.3489,
+            0.3814
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "companies",
+          "bbox": [
+            0.3586,
+            0.3655,
+            0.4795,
+            0.3808
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(including",
+          "bbox": [
+            0.4899,
+            0.3649,
+            0.6027,
+            0.3808
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO).",
+          "bbox": [
+            0.6116,
+            0.3649,
+            0.7075,
+            0.3803
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "In",
+          "bbox": [
+            0.718,
+            0.3649,
+            0.7405,
+            0.3769
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.7494,
+            0.3649,
+            0.7921,
+            0.3769
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "regard,",
+          "bbox": [
+            0.801,
+            0.3643,
+            0.8799,
+            0.3797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the New Board conceived the Resolution Framework to",
+      "bbox": [
+        0.2151,
+        0.4031,
+        0.8807,
+        0.4168
+      ],
+      "confidence": 0.9587,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2151,
+            0.4048,
+            0.2514,
+            0.4168
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.2651,
+            0.4048,
+            0.3127,
+            0.4168
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Board",
+          "bbox": [
+            0.3263,
+            0.4042,
+            0.394,
+            0.4162
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "conceived",
+          "bbox": [
+            0.4085,
+            0.4042,
+            0.5181,
+            0.4162
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5326,
+            0.4042,
+            0.5681,
+            0.4156
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.5826,
+            0.4036,
+            0.7035,
+            0.4156
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Framework",
+          "bbox": [
+            0.718,
+            0.4031,
+            0.8469,
+            0.4156
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8598,
+            0.4048,
+            0.8807,
+            0.4151
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "resolve the IL&FS Group and submitted multiple progress",
+      "bbox": [
+        0.2151,
+        0.4418,
+        0.8807,
+        0.4584
+      ],
+      "confidence": 0.9487,
+      "words": [
+        {
+          "text": "resolve",
+          "bbox": [
+            0.2151,
+            0.4436,
+            0.2933,
+            0.4555
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3022,
+            0.443,
+            0.3376,
+            0.4555
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.3465,
+            0.443,
+            0.4166,
+            0.4555
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Group",
+          "bbox": [
+            0.4263,
+            0.443,
+            0.4972,
+            0.4584
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.506,
+            0.4424,
+            0.5488,
+            0.455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "submitted",
+          "bbox": [
+            0.5584,
+            0.4424,
+            0.6737,
+            0.455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "multiple",
+          "bbox": [
+            0.6817,
+            0.4418,
+            0.7752,
+            0.4578
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "progress",
+          "bbox": [
+            0.784,
+            0.4453,
+            0.8807,
+            0.4578
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "reports and addendums to the MCA. These were filed by",
+      "bbox": [
+        0.2151,
+        0.4806,
+        0.8824,
+        0.4983
+      ],
+      "confidence": 0.959,
+      "words": [
+        {
+          "text": "reports",
+          "bbox": [
+            0.2151,
+            0.484,
+            0.2957,
+            0.4983
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3078,
+            0.4823,
+            0.3497,
+            0.4943
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "addendums",
+          "bbox": [
+            0.361,
+            0.4818,
+            0.4948,
+            0.4943
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.506,
+            0.4829,
+            0.5262,
+            0.4937
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5375,
+            0.4818,
+            0.5729,
+            0.4937
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MCA.",
+          "bbox": [
+            0.585,
+            0.4818,
+            0.6446,
+            0.4937
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "These",
+          "bbox": [
+            0.6559,
+            0.4812,
+            0.7228,
+            0.4932
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.7333,
+            0.4846,
+            0.7857,
+            0.4932
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "filed",
+          "bbox": [
+            0.7969,
+            0.4806,
+            0.8445,
+            0.4926
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.855,
+            0.4806,
+            0.8824,
+            0.496
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the MCA before the Hon'ble National Company Law",
+      "bbox": [
+        0.2151,
+        0.52,
+        0.8815,
+        0.5359
+      ],
+      "confidence": 0.9587,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.2151,
+            0.5217,
+            0.2506,
+            0.5342
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MCA",
+          "bbox": [
+            0.2707,
+            0.5217,
+            0.3255,
+            0.5336
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "before",
+          "bbox": [
+            0.3441,
+            0.5211,
+            0.4126,
+            0.5336
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4327,
+            0.5211,
+            0.4682,
+            0.5336
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hon'ble",
+          "bbox": [
+            0.4883,
+            0.5205,
+            0.5737,
+            0.5331
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "National",
+          "bbox": [
+            0.5939,
+            0.5205,
+            0.689,
+            0.5331
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Company",
+          "bbox": [
+            0.7091,
+            0.5205,
+            0.8171,
+            0.5359
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Law",
+          "bbox": [
+            0.8364,
+            0.52,
+            0.8815,
+            0.5319
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Appellate Tribunal (\"NCLAT\"). On 12.3.2020, the Hon'ble",
+      "bbox": [
+        0.2151,
+        0.5587,
+        0.8807,
+        0.577
+      ],
+      "confidence": 0.9357,
+      "words": [
+        {
+          "text": "Appellate",
+          "bbox": [
+            0.2151,
+            0.561,
+            0.3207,
+            0.577
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Tribunal",
+          "bbox": [
+            0.3312,
+            0.5604,
+            0.4295,
+            0.573
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(\"NCLAT\").",
+          "bbox": [
+            0.4416,
+            0.5604,
+            0.5568,
+            0.5758
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "On",
+          "bbox": [
+            0.5705,
+            0.5599,
+            0.6027,
+            0.5718
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "12.3.2020,",
+          "bbox": [
+            0.6172,
+            0.5599,
+            0.7365,
+            0.5741
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7486,
+            0.5593,
+            0.784,
+            0.5713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hon'ble",
+          "bbox": [
+            0.7961,
+            0.5587,
+            0.8807,
+            0.5713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "NCLAT approved the resolution procedure for the IL&FS",
+      "bbox": [
+        0.216,
+        0.5975,
+        0.8807,
+        0.6152
+      ],
+      "confidence": 0.9437,
+      "words": [
+        {
+          "text": "NCLAT",
+          "bbox": [
+            0.216,
+            0.6003,
+            0.2949,
+            0.6123
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "approved",
+          "bbox": [
+            0.3062,
+            0.5992,
+            0.4102,
+            0.6152
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4214,
+            0.5992,
+            0.4569,
+            0.6112
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resolution",
+          "bbox": [
+            0.469,
+            0.5986,
+            0.5842,
+            0.6112
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "procedure",
+          "bbox": [
+            0.5947,
+            0.5981,
+            0.7099,
+            0.614
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.722,
+            0.5981,
+            0.7526,
+            0.61
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7631,
+            0.5975,
+            0.7985,
+            0.61
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.8106,
+            0.5975,
+            0.8807,
+            0.6095
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Group (Ann. 5, pg. 35, Vol-I), where, amongst others, the",
+      "bbox": [
+        0.216,
+        0.6357,
+        0.8807,
+        0.6539
+      ],
+      "confidence": 0.948,
+      "words": [
+        {
+          "text": "Group",
+          "bbox": [
+            0.216,
+            0.6391,
+            0.2869,
+            0.6539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Ann.",
+          "bbox": [
+            0.299,
+            0.6385,
+            0.3562,
+            0.6539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "5,",
+          "bbox": [
+            0.3683,
+            0.6385,
+            0.3876,
+            0.6528
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pg.",
+          "bbox": [
+            0.3981,
+            0.642,
+            0.4303,
+            0.6539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "35,",
+          "bbox": [
+            0.4424,
+            0.638,
+            0.4762,
+            0.6522
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vol-I),",
+          "bbox": [
+            0.4867,
+            0.6374,
+            0.5536,
+            0.6528
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "where,",
+          "bbox": [
+            0.5641,
+            0.6374,
+            0.639,
+            0.6517
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amongst",
+          "bbox": [
+            0.6503,
+            0.638,
+            0.7478,
+            0.6522
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "others,",
+          "bbox": [
+            0.7575,
+            0.6363,
+            0.8348,
+            0.6505
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8453,
+            0.6357,
+            0.8807,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "resolution procedure such as closure/ liquidation under",
+      "bbox": [
+        0.2151,
+        0.6745,
+        0.8815,
+        0.6927
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "resolution",
+          "bbox": [
+            0.2151,
+            0.6773,
+            0.3304,
+            0.6893
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "procedure",
+          "bbox": [
+            0.3417,
+            0.6767,
+            0.4561,
+            0.6927
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "such",
+          "bbox": [
+            0.4682,
+            0.6762,
+            0.523,
+            0.6887
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.5351,
+            0.6796,
+            0.5592,
+            0.6881
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "closure/",
+          "bbox": [
+            0.5721,
+            0.6756,
+            0.6656,
+            0.691
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "liquidation",
+          "bbox": [
+            0.6793,
+            0.675,
+            0.8026,
+            0.691
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.8131,
+            0.6745,
+            0.8815,
+            0.687
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "relevant laws were also set out under the supervision of",
+      "bbox": [
+        0.2151,
+        0.7132,
+        0.884,
+        0.7292
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "relevant",
+          "bbox": [
+            0.2151,
+            0.7161,
+            0.307,
+            0.7281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "laws",
+          "bbox": [
+            0.3183,
+            0.7161,
+            0.3683,
+            0.7281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.3795,
+            0.7195,
+            0.4319,
+            0.7275
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "also",
+          "bbox": [
+            0.444,
+            0.7149,
+            0.4883,
+            0.7275
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "set",
+          "bbox": [
+            0.5004,
+            0.7161,
+            0.5326,
+            0.7269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "out",
+          "bbox": [
+            0.5439,
+            0.7161,
+            0.5818,
+            0.7269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.5915,
+            0.7144,
+            0.6608,
+            0.7269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6712,
+            0.7144,
+            0.7067,
+            0.7263
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "supervision",
+          "bbox": [
+            0.7196,
+            0.7132,
+            0.8501,
+            0.7292
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8622,
+            0.7132,
+            0.884,
+            0.7252
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Hon'ble Justice (Retd.) D.K. Jain (Retired Judge of the",
+      "bbox": [
+        0.216,
+        0.752,
+        0.8807,
+        0.7697
+      ],
+      "confidence": 0.9433,
+      "words": [
+        {
+          "text": "Hon'ble",
+          "bbox": [
+            0.216,
+            0.7548,
+            0.3006,
+            0.7674
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Justice",
+          "bbox": [
+            0.3151,
+            0.7548,
+            0.3965,
+            0.7668
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Retd.)",
+          "bbox": [
+            0.4126,
+            0.7543,
+            0.4827,
+            0.7697
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "D.K.",
+          "bbox": [
+            0.4988,
+            0.7543,
+            0.5463,
+            0.7657
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jain",
+          "bbox": [
+            0.5624,
+            0.7537,
+            0.6124,
+            0.7657
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Retired",
+          "bbox": [
+            0.6277,
+            0.7526,
+            0.7147,
+            0.7691
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Judge",
+          "bbox": [
+            0.7284,
+            0.7526,
+            0.7969,
+            0.768
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8122,
+            0.752,
+            0.834,
+            0.7645
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8453,
+            0.752,
+            0.8807,
+            0.764
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Hon'ble Supreme Court)",
+      "bbox": [
+        0.216,
+        0.793,
+        0.4899,
+        0.809
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Hon'ble",
+          "bbox": [
+            0.216,
+            0.7942,
+            0.3006,
+            0.8062
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Supreme",
+          "bbox": [
+            0.311,
+            0.7942,
+            0.411,
+            0.809
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Court)",
+          "bbox": [
+            0.4206,
+            0.793,
+            0.4899,
+            0.809
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The Resolution Framework inter alia also sets out a",
+      "bbox": [
+        0.2143,
+        0.8307,
+        0.8824,
+        0.8449
+      ],
+      "confidence": 0.9556,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2143,
+            0.833,
+            0.2571,
+            0.8449
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.2748,
+            0.8324,
+            0.3956,
+            0.8444
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Framework",
+          "bbox": [
+            0.4134,
+            0.8312,
+            0.5431,
+            0.8438
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inter",
+          "bbox": [
+            0.56,
+            0.8312,
+            0.6132,
+            0.8432
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "alia",
+          "bbox": [
+            0.6309,
+            0.8307,
+            0.672,
+            0.8426
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "also",
+          "bbox": [
+            0.689,
+            0.8307,
+            0.7333,
+            0.8426
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sets",
+          "bbox": [
+            0.7518,
+            0.8318,
+            0.7953,
+            0.8421
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "out",
+          "bbox": [
+            0.8139,
+            0.8312,
+            0.8517,
+            0.8421
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8687,
+            0.8335,
+            0.8824,
+            0.8415
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "revised distribution framework (\"Revised Distribution",
+      "bbox": [
+        0.2151,
+        0.8683,
+        0.8807,
+        0.8854
+      ],
+      "confidence": 0.952,
+      "words": [
+        {
+          "text": "revised",
+          "bbox": [
+            0.2151,
+            0.8712,
+            0.2957,
+            0.8837
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "distribution",
+          "bbox": [
+            0.3183,
+            0.8706,
+            0.4521,
+            0.8831
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "framework",
+          "bbox": [
+            0.4738,
+            0.87,
+            0.5963,
+            0.8826
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(\"Revised",
+          "bbox": [
+            0.6189,
+            0.8694,
+            0.7204,
+            0.8854
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Distribution",
+          "bbox": [
+            0.7429,
+            0.8683,
+            0.8807,
+            0.8808
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "pad",
+      "bbox": [
+        0.303,
+        0.9151,
+        0.332,
+        0.9196
+      ],
+      "confidence": 0.01,
+      "words": [
+        {
+          "text": "pad",
+          "bbox": [
+            0.303,
+            0.9151,
+            0.332,
+            0.9196
+          ],
+          "confidence": 0.01,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Sk. eg ] Page 3 of 17",
+      "bbox": [
+        0.2691,
+        0.923,
+        0.8807,
+        0.9521
+      ],
+      "confidence": 0.6129,
+      "words": [
+        {
+          "text": "Sk.",
+          "bbox": [
+            0.2691,
+            0.9276,
+            0.3554,
+            0.9521
+          ],
+          "confidence": 0.14,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eg",
+          "bbox": [
+            0.6446,
+            0.9339,
+            0.7389,
+            0.947
+          ],
+          "confidence": 0.31,
+          "text_type": "unknown"
+        },
+        {
+          "text": "]",
+          "bbox": [
+            0.7542,
+            0.923,
+            0.7647,
+            0.9253
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7905,
+            0.9287,
+            0.8227,
+            0.9396
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "3",
+          "bbox": [
+            0.83,
+            0.9282,
+            0.838,
+            0.9373
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8453,
+            0.9276,
+            0.859,
+            0.9373
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17",
+          "bbox": [
+            0.867,
+            0.9282,
+            0.8807,
+            0.9367
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9315,
+  "latency_ms": 488,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "CP (IB) 374 OF 2025\n3638 of 2018 under Sections 241-242 of the Companies\nAct before the NCLT, Mumbai. On 01.10.2018, NCLT\nMumbai superseded the erstwhile board of directors of\nIL&FS and appointed nominees recommended by MCA\n(\"New Board\") in place.\nThe New Board of IL&FS has been inter alia mandated to\nresolve the debt burden of IL&FS, its subsidiaries, and\nother group companies (including GIMCO). In this regard,\nthe New Board conceived the Resolution Framework to\nresolve the IL&FS Group and submitted multiple progress\nreports and addendums to the MCA. These were filed by\nthe MCA before the Hon'ble National Company Law\nAppellate Tribunal (\"NCLAT\"). On 12.3.2020, the Hon'ble\nNCLAT approved the resolution procedure for the IL&FS\nGroup (Ann. 5, pg. 35, Vol-I), where, amongst others, the\nresolution procedure such as closure/ liquidation under\nrelevant laws were also set out under the supervision of\nHon'ble Justice (Retd.) D.K. Jain (Retired Judge of the\nHon'ble Supreme Court)\nThe Resolution Framework inter alia also sets out a\nrevised distribution framework (\"Revised Distribution\npad\nSk. eg ] Page 3 of 17"
+}

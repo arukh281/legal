@@ -1,0 +1,2870 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 7,
+  "lines": [
+    {
+      "text": "NCLT Amaravati Bench",
+      "bbox": [
+        0.7294,
+        0.0164,
+        0.8502,
+        0.0236
+      ],
+      "confidence": 0.93,
+      "words": [
+        {
+          "text": "NCLT",
+          "bbox": [
+            0.7294,
+            0.0164,
+            0.7616,
+            0.0236
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Amaravati",
+          "bbox": [
+            0.7655,
+            0.017,
+            0.8157,
+            0.0236
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bench",
+          "bbox": [
+            0.8204,
+            0.0164,
+            0.8502,
+            0.0236
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Regulations, determining the fair value and liquidation value of the",
+      "bbox": [
+        0.3082,
+        0.0842,
+        0.8502,
+        0.0988
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Regulations,",
+          "bbox": [
+            0.3082,
+            0.0848,
+            0.4071,
+            0.0988
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "determining",
+          "bbox": [
+            0.4149,
+            0.0848,
+            0.5098,
+            0.0988
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5169,
+            0.0848,
+            0.5412,
+            0.0958
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fair",
+          "bbox": [
+            0.5482,
+            0.0848,
+            0.5741,
+            0.0958
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "value",
+          "bbox": [
+            0.5804,
+            0.0848,
+            0.6235,
+            0.0958
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.6298,
+            0.0842,
+            0.6588,
+            0.0958
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "liquidation",
+          "bbox": [
+            0.6667,
+            0.0842,
+            0.7475,
+            0.0982
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "value",
+          "bbox": [
+            0.7545,
+            0.0842,
+            0.7976,
+            0.0958
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8047,
+            0.0842,
+            0.8204,
+            0.0952
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8251,
+            0.0842,
+            0.8502,
+            0.0952
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Corporate Debtor. The valuation reports were collated and",
+      "bbox": [
+        0.3082,
+        0.1176,
+        0.8502,
+        0.1315
+      ],
+      "confidence": 0.9587,
+      "words": [
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.3082,
+            0.1182,
+            0.3875,
+            0.1315
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor.",
+          "bbox": [
+            0.4047,
+            0.1182,
+            0.4627,
+            0.1285
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.4792,
+            0.1182,
+            0.5098,
+            0.1285
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "valuation",
+          "bbox": [
+            0.5263,
+            0.1182,
+            0.5992,
+            0.1285
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "reports",
+          "bbox": [
+            0.6165,
+            0.1182,
+            0.6722,
+            0.1315
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.6871,
+            0.1206,
+            0.7263,
+            0.1285
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "collated",
+          "bbox": [
+            0.7427,
+            0.1176,
+            0.8047,
+            0.1279
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8212,
+            0.1176,
+            0.8502,
+            0.1279
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "averaged in accordance with the applicable regulations to",
+      "bbox": [
+        0.3082,
+        0.1503,
+        0.851,
+        0.1642
+      ],
+      "confidence": 0.9512,
+      "words": [
+        {
+          "text": "averaged",
+          "bbox": [
+            0.3082,
+            0.1509,
+            0.382,
+            0.1642
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.4,
+            0.1509,
+            0.4125,
+            0.1612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "accordance",
+          "bbox": [
+            0.4298,
+            0.1509,
+            0.5239,
+            0.1612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.5412,
+            0.1509,
+            0.5725,
+            0.1612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5906,
+            0.1509,
+            0.6149,
+            0.1612
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "applicable",
+          "bbox": [
+            0.6322,
+            0.1503,
+            0.7137,
+            0.1636
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "regulations",
+          "bbox": [
+            0.731,
+            0.1503,
+            0.8196,
+            0.1636
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8369,
+            0.1509,
+            0.851,
+            0.1606
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "determine the final fair value and liquidation value, which were duly",
+      "bbox": [
+        0.3082,
+        0.183,
+        0.8525,
+        0.197
+      ],
+      "confidence": 0.9618,
+      "words": [
+        {
+          "text": "determine",
+          "bbox": [
+            0.3082,
+            0.1836,
+            0.3882,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3945,
+            0.1842,
+            0.4188,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "final",
+          "bbox": [
+            0.4243,
+            0.1836,
+            0.4565,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fair",
+          "bbox": [
+            0.4627,
+            0.1836,
+            0.4886,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "value",
+          "bbox": [
+            0.4941,
+            0.1836,
+            0.5373,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5443,
+            0.1836,
+            0.5733,
+            0.1945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "liquidation",
+          "bbox": [
+            0.5804,
+            0.1836,
+            0.6612,
+            0.197
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "value,",
+          "bbox": [
+            0.6682,
+            0.183,
+            0.7153,
+            0.1958
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "which",
+          "bbox": [
+            0.7224,
+            0.183,
+            0.7678,
+            0.1939
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.7741,
+            0.1861,
+            0.8133,
+            0.1939
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "duly",
+          "bbox": [
+            0.8196,
+            0.183,
+            0.8525,
+            0.197
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "placed before the CoC for deliberation and record.",
+      "bbox": [
+        0.309,
+        0.2158,
+        0.7161,
+        0.2297
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "placed",
+          "bbox": [
+            0.309,
+            0.2164,
+            0.3608,
+            0.2297
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "before",
+          "bbox": [
+            0.3678,
+            0.2164,
+            0.418,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4243,
+            0.2164,
+            0.4486,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CoC",
+          "bbox": [
+            0.4557,
+            0.2164,
+            0.4902,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.4973,
+            0.2164,
+            0.5184,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "deliberation",
+          "bbox": [
+            0.5239,
+            0.2164,
+            0.618,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.6251,
+            0.2164,
+            0.6541,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "record.",
+          "bbox": [
+            0.662,
+            0.2158,
+            0.7161,
+            0.2267
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(xi) The RP convened the 5'\" meeting of the CoC on 16.10.2025,",
+      "bbox": [
+        0.2643,
+        0.2552,
+        0.8518,
+        0.2703
+      ],
+      "confidence": 0.885,
+      "words": [
+        {
+          "text": "(xi)",
+          "bbox": [
+            0.2643,
+            0.2564,
+            0.2886,
+            0.2703
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.3082,
+            0.2564,
+            0.338,
+            0.2679
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RP",
+          "bbox": [
+            0.3506,
+            0.2564,
+            0.3741,
+            0.2673
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "convened",
+          "bbox": [
+            0.3851,
+            0.2564,
+            0.4627,
+            0.2679
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4745,
+            0.2564,
+            0.4996,
+            0.2673
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "5'\"",
+          "bbox": [
+            0.5106,
+            0.2552,
+            0.5302,
+            0.2673
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        },
+        {
+          "text": "meeting",
+          "bbox": [
+            0.542,
+            0.2564,
+            0.6063,
+            0.2703
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.618,
+            0.2564,
+            0.6329,
+            0.2673
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6431,
+            0.2564,
+            0.6675,
+            0.2673
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CoC",
+          "bbox": [
+            0.6784,
+            0.2564,
+            0.7137,
+            0.2673
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.7255,
+            0.2588,
+            0.7443,
+            0.2673
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "16.10.2025,",
+          "bbox": [
+            0.7576,
+            0.2564,
+            0.8518,
+            0.2691
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "wherein the eligibility criteria and the detailed Invitation for Eol were",
+      "bbox": [
+        0.3082,
+        0.2891,
+        0.8525,
+        0.303
+      ],
+      "confidence": 0.9518,
+      "words": [
+        {
+          "text": "wherein",
+          "bbox": [
+            0.3082,
+            0.2891,
+            0.371,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3765,
+            0.2891,
+            0.4016,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eligibility",
+          "bbox": [
+            0.4071,
+            0.2891,
+            0.4761,
+            0.303
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "criteria",
+          "bbox": [
+            0.4816,
+            0.2891,
+            0.5357,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.542,
+            0.2891,
+            0.571,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5773,
+            0.2891,
+            0.6016,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "detailed",
+          "bbox": [
+            0.6078,
+            0.2891,
+            0.6706,
+            0.3
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Invitation",
+          "bbox": [
+            0.6776,
+            0.2891,
+            0.749,
+            0.3
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.7545,
+            0.2891,
+            0.7765,
+            0.3
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Eol",
+          "bbox": [
+            0.782,
+            0.2891,
+            0.8071,
+            0.3
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.8133,
+            0.2921,
+            0.8525,
+            0.3
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "presented and duly approved by the CoC.",
+      "bbox": [
+        0.309,
+        0.3224,
+        0.6486,
+        0.3358
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "presented",
+          "bbox": [
+            0.309,
+            0.3224,
+            0.3882,
+            0.3358
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3953,
+            0.3224,
+            0.4243,
+            0.3333
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "duly",
+          "bbox": [
+            0.4314,
+            0.3224,
+            0.4635,
+            0.3358
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "approved",
+          "bbox": [
+            0.4698,
+            0.3224,
+            0.5459,
+            0.3358
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.5529,
+            0.3224,
+            0.5718,
+            0.3358
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5773,
+            0.3224,
+            0.6016,
+            0.3333
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CoC.",
+          "bbox": [
+            0.6086,
+            0.3224,
+            0.6486,
+            0.3333
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(xii) The RP published the Form-G on 18.10.2025 in \u2018Eenadu\u2019 (Guntur",
+      "bbox": [
+        0.2651,
+        0.3618,
+        0.8533,
+        0.3764
+      ],
+      "confidence": 0.9082,
+      "words": [
+        {
+          "text": "(xii)",
+          "bbox": [
+            0.2651,
+            0.3618,
+            0.2933,
+            0.3758
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.3082,
+            0.3624,
+            0.3388,
+            0.3733
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RP",
+          "bbox": [
+            0.3475,
+            0.3624,
+            0.371,
+            0.3733
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "published",
+          "bbox": [
+            0.3788,
+            0.3624,
+            0.4557,
+            0.3764
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4635,
+            0.3624,
+            0.4878,
+            0.3733
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Form-G",
+          "bbox": [
+            0.4973,
+            0.3624,
+            0.5584,
+            0.3733
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.5671,
+            0.3648,
+            0.5859,
+            0.3733
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "18.10.2025",
+          "bbox": [
+            0.5953,
+            0.3624,
+            0.6847,
+            0.3733
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.6933,
+            0.3624,
+            0.7051,
+            0.3727
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018Eenadu\u2019",
+          "bbox": [
+            0.7137,
+            0.3618,
+            0.7835,
+            0.3733
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Guntur",
+          "bbox": [
+            0.7922,
+            0.3618,
+            0.8533,
+            0.3758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "and Ongole editions) and \u2018The Times of India\u2019 (Guntur and Ongole",
+      "bbox": [
+        0.309,
+        0.3952,
+        0.8533,
+        0.4091
+      ],
+      "confidence": 0.9473,
+      "words": [
+        {
+          "text": "and",
+          "bbox": [
+            0.309,
+            0.3958,
+            0.3373,
+            0.4061
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ongole",
+          "bbox": [
+            0.3451,
+            0.3952,
+            0.4024,
+            0.4091
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "editions)",
+          "bbox": [
+            0.4094,
+            0.3952,
+            0.4776,
+            0.4085
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.4847,
+            0.3958,
+            0.5137,
+            0.4061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018The",
+          "bbox": [
+            0.5224,
+            0.3958,
+            0.5569,
+            0.4061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Times",
+          "bbox": [
+            0.5631,
+            0.3958,
+            0.6125,
+            0.4061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6196,
+            0.3952,
+            0.6353,
+            0.4061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "India\u2019",
+          "bbox": [
+            0.6416,
+            0.3952,
+            0.6831,
+            0.4061
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Guntur",
+          "bbox": [
+            0.6902,
+            0.3952,
+            0.7529,
+            0.4091
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7592,
+            0.3952,
+            0.7875,
+            0.4061
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ongole",
+          "bbox": [
+            0.7953,
+            0.3952,
+            0.8533,
+            0.4091
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "editions), inviting Eol from Prospective Resolution Applicants",
+      "bbox": [
+        0.309,
+        0.4279,
+        0.8533,
+        0.4418
+      ],
+      "confidence": 0.9486,
+      "words": [
+        {
+          "text": "editions),",
+          "bbox": [
+            0.309,
+            0.4279,
+            0.3812,
+            0.4412
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inviting",
+          "bbox": [
+            0.3969,
+            0.4285,
+            0.4518,
+            0.4418
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Eol",
+          "bbox": [
+            0.4675,
+            0.4285,
+            0.4925,
+            0.4388
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "from",
+          "bbox": [
+            0.5082,
+            0.4279,
+            0.5443,
+            0.4388
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Prospective",
+          "bbox": [
+            0.56,
+            0.4285,
+            0.6541,
+            0.4412
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.6698,
+            0.4285,
+            0.7545,
+            0.4388
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Applicants",
+          "bbox": [
+            0.7686,
+            0.4285,
+            0.8533,
+            0.4412
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(hereinafter referred to as the \u201cPRA\u201d) with the last date for",
+      "bbox": [
+        0.3098,
+        0.4606,
+        0.8541,
+        0.4752
+      ],
+      "confidence": 0.9173,
+      "words": [
+        {
+          "text": "(hereinafter",
+          "bbox": [
+            0.3098,
+            0.4606,
+            0.4024,
+            0.4745
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "referred",
+          "bbox": [
+            0.4157,
+            0.4612,
+            0.4776,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.4918,
+            0.4618,
+            0.5067,
+            0.4721
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.5208,
+            0.4642,
+            0.5388,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5522,
+            0.4612,
+            0.5773,
+            0.4721
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cPRA\u201d)",
+          "bbox": [
+            0.5914,
+            0.4606,
+            0.6471,
+            0.4752
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.6604,
+            0.4612,
+            0.6918,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7059,
+            0.4612,
+            0.7302,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "last",
+          "bbox": [
+            0.7443,
+            0.4612,
+            0.7718,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "date",
+          "bbox": [
+            0.7851,
+            0.4612,
+            0.8196,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.8329,
+            0.4612,
+            0.8541,
+            0.4721
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "submission of the Eol as 02.11.2025.",
+      "bbox": [
+        0.309,
+        0.4933,
+        0.6118,
+        0.5042
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "submission",
+          "bbox": [
+            0.309,
+            0.4933,
+            0.3992,
+            0.5042
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4063,
+            0.4933,
+            0.4212,
+            0.5042
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4259,
+            0.4933,
+            0.451,
+            0.5042
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Eol",
+          "bbox": [
+            0.458,
+            0.4933,
+            0.4831,
+            0.5042
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4902,
+            0.4964,
+            0.509,
+            0.5042
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "02.11.2025.",
+          "bbox": [
+            0.5153,
+            0.4933,
+            0.6118,
+            0.5042
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(xiii) The RP received six Eols, out of which five were found eligible and",
+      "bbox": [
+        0.2651,
+        0.5333,
+        0.8533,
+        0.5479
+      ],
+      "confidence": 0.9493,
+      "words": [
+        {
+          "text": "(xiii)",
+          "bbox": [
+            0.2651,
+            0.5333,
+            0.298,
+            0.5473
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.309,
+            0.5333,
+            0.3388,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RP",
+          "bbox": [
+            0.3467,
+            0.5339,
+            0.3702,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "received",
+          "bbox": [
+            0.3765,
+            0.5339,
+            0.4447,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "six",
+          "bbox": [
+            0.451,
+            0.5339,
+            0.4729,
+            0.5442
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Eols,",
+          "bbox": [
+            0.48,
+            0.5333,
+            0.5192,
+            0.5467
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "out",
+          "bbox": [
+            0.5271,
+            0.5345,
+            0.5522,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5584,
+            0.5333,
+            0.5741,
+            0.5442
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "which",
+          "bbox": [
+            0.578,
+            0.5333,
+            0.6243,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "five",
+          "bbox": [
+            0.6306,
+            0.5333,
+            0.6588,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.6651,
+            0.5364,
+            0.7035,
+            0.5442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "found",
+          "bbox": [
+            0.7098,
+            0.5333,
+            0.7545,
+            0.5442
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eligible",
+          "bbox": [
+            0.7616,
+            0.5339,
+            0.8173,
+            0.5479
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8243,
+            0.5339,
+            0.8533,
+            0.5448
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "accordingly, declared as PRAs on 10.11.2025. Upon issuance of",
+      "bbox": [
+        0.3098,
+        0.5667,
+        0.8557,
+        0.5806
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "accordingly,",
+          "bbox": [
+            0.3098,
+            0.5667,
+            0.4055,
+            0.5806
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "declared",
+          "bbox": [
+            0.4149,
+            0.5667,
+            0.4839,
+            0.5776
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4933,
+            0.5697,
+            0.5114,
+            0.5776
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PRAs",
+          "bbox": [
+            0.5208,
+            0.5667,
+            0.5663,
+            0.5776
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.5749,
+            0.5697,
+            0.5945,
+            0.5776
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "10.11.2025.",
+          "bbox": [
+            0.6047,
+            0.5667,
+            0.6988,
+            0.5776
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Upon",
+          "bbox": [
+            0.709,
+            0.5667,
+            0.7514,
+            0.5806
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issuance",
+          "bbox": [
+            0.7608,
+            0.5667,
+            0.8314,
+            0.5782
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.84,
+            0.5667,
+            0.8557,
+            0.5782
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the Request for Resolution Plans (hereinafter referred to as the",
+      "bbox": [
+        0.309,
+        0.5994,
+        0.8541,
+        0.6133
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.309,
+            0.5994,
+            0.3333,
+            0.6103
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Request",
+          "bbox": [
+            0.3443,
+            0.5994,
+            0.411,
+            0.6127
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.4204,
+            0.6,
+            0.4416,
+            0.6103
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.451,
+            0.6,
+            0.5365,
+            0.6103
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Plans",
+          "bbox": [
+            0.5475,
+            0.6,
+            0.5914,
+            0.6103
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(hereinafter",
+          "bbox": [
+            0.6024,
+            0.5994,
+            0.6957,
+            0.6133
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "referred",
+          "bbox": [
+            0.7051,
+            0.6,
+            0.7678,
+            0.6109
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.7773,
+            0.6006,
+            0.7914,
+            0.6103
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.8016,
+            0.6024,
+            0.8204,
+            0.6109
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8298,
+            0.6,
+            0.8541,
+            0.6109
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201cRFRP\"), two Resolution Plans? were received from Mr. Araga Sai",
+      "bbox": [
+        0.3098,
+        0.6309,
+        0.8541,
+        0.6461
+      ],
+      "confidence": 0.851,
+      "words": [
+        {
+          "text": "\u201cRFRP\"),",
+          "bbox": [
+            0.3098,
+            0.6321,
+            0.3804,
+            0.6455
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        },
+        {
+          "text": "two",
+          "bbox": [
+            0.3882,
+            0.6327,
+            0.4157,
+            0.643
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.4243,
+            0.6321,
+            0.509,
+            0.643
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Plans?",
+          "bbox": [
+            0.5176,
+            0.6309,
+            0.5694,
+            0.643
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.5765,
+            0.6352,
+            0.6149,
+            0.643
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "received",
+          "bbox": [
+            0.6235,
+            0.6327,
+            0.6902,
+            0.643
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "from",
+          "bbox": [
+            0.698,
+            0.6327,
+            0.7341,
+            0.643
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mr.",
+          "bbox": [
+            0.742,
+            0.6327,
+            0.7663,
+            0.643
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Araga",
+          "bbox": [
+            0.7733,
+            0.6327,
+            0.822,
+            0.6461
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sai",
+          "bbox": [
+            0.829,
+            0.6327,
+            0.8541,
+            0.643
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Siddhartha Reddy and Mr. Madireddy Sandeep Reddy within the",
+      "bbox": [
+        0.3098,
+        0.6648,
+        0.8541,
+        0.6788
+      ],
+      "confidence": 0.9511,
+      "words": [
+        {
+          "text": "Siddhartha",
+          "bbox": [
+            0.3098,
+            0.6648,
+            0.3969,
+            0.6752
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Reddy",
+          "bbox": [
+            0.4063,
+            0.6655,
+            0.458,
+            0.6782
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.4667,
+            0.6655,
+            0.4957,
+            0.6752
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mr.",
+          "bbox": [
+            0.5059,
+            0.6655,
+            0.5294,
+            0.6752
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Madireddy",
+          "bbox": [
+            0.5396,
+            0.6655,
+            0.6251,
+            0.6782
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sandeep",
+          "bbox": [
+            0.6337,
+            0.6655,
+            0.7059,
+            0.6782
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Reddy",
+          "bbox": [
+            0.7153,
+            0.6655,
+            0.7671,
+            0.6788
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "within",
+          "bbox": [
+            0.7749,
+            0.6655,
+            0.8204,
+            0.6758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8298,
+            0.6661,
+            0.8541,
+            0.6758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "stipulated timelines prescribed under the Code and CIRP",
+      "bbox": [
+        0.3098,
+        0.6976,
+        0.8549,
+        0.7115
+      ],
+      "confidence": 0.945,
+      "words": [
+        {
+          "text": "stipulated",
+          "bbox": [
+            0.3098,
+            0.6976,
+            0.3867,
+            0.7109
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "timelines",
+          "bbox": [
+            0.4039,
+            0.6976,
+            0.4761,
+            0.7085
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "prescribed",
+          "bbox": [
+            0.4949,
+            0.6976,
+            0.5796,
+            0.7115
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.5984,
+            0.6982,
+            0.6455,
+            0.7091
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6612,
+            0.6976,
+            0.6863,
+            0.7091
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Code",
+          "bbox": [
+            0.7043,
+            0.6976,
+            0.7467,
+            0.7091
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7647,
+            0.6982,
+            0.7937,
+            0.7091
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CIRP",
+          "bbox": [
+            0.8125,
+            0.6982,
+            0.8549,
+            0.7091
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Regulations.",
+      "bbox": [
+        0.3106,
+        0.7303,
+        0.4102,
+        0.7436
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "Regulations.",
+          "bbox": [
+            0.3106,
+            0.7303,
+            0.4102,
+            0.7436
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(xiv) Upon receipt of the Resolution Plans, the RP undertook a detailed",
+      "bbox": [
+        0.2659,
+        0.7697,
+        0.8541,
+        0.7842
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "(xiv)",
+          "bbox": [
+            0.2659,
+            0.7697,
+            0.2996,
+            0.7842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Upon",
+          "bbox": [
+            0.3106,
+            0.7703,
+            0.3514,
+            0.7836
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "receipt",
+          "bbox": [
+            0.36,
+            0.7703,
+            0.4141,
+            0.7836
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4204,
+            0.7703,
+            0.4361,
+            0.7812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4416,
+            0.7703,
+            0.4659,
+            0.7812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.4737,
+            0.7703,
+            0.56,
+            0.7812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Plans,",
+          "bbox": [
+            0.5678,
+            0.7703,
+            0.6165,
+            0.783
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6243,
+            0.7703,
+            0.6486,
+            0.7818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RP",
+          "bbox": [
+            0.6565,
+            0.7703,
+            0.68,
+            0.7812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "undertook",
+          "bbox": [
+            0.6878,
+            0.7709,
+            0.7686,
+            0.7818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.7757,
+            0.7733,
+            0.7835,
+            0.7818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "detailed",
+          "bbox": [
+            0.7906,
+            0.7709,
+            0.8541,
+            0.7818
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "scrutiny and verification to ascertain their compliance with the",
+      "bbox": [
+        0.3098,
+        0.803,
+        0.8549,
+        0.817
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "scrutiny",
+          "bbox": [
+            0.3098,
+            0.803,
+            0.3718,
+            0.817
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3835,
+            0.8036,
+            0.4125,
+            0.8139
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "verification",
+          "bbox": [
+            0.4251,
+            0.8036,
+            0.5122,
+            0.8145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.5239,
+            0.8042,
+            0.5388,
+            0.8145
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ascertain",
+          "bbox": [
+            0.5506,
+            0.8036,
+            0.6243,
+            0.8145
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "their",
+          "bbox": [
+            0.6369,
+            0.8036,
+            0.6722,
+            0.8145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "compliance",
+          "bbox": [
+            0.6831,
+            0.8036,
+            0.7749,
+            0.817
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.7867,
+            0.8036,
+            0.818,
+            0.8145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8306,
+            0.8042,
+            0.8549,
+            0.8145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "3 Copy of Resolution Plans received from the Resolution Applicants are at Pages 170",
+      "bbox": [
+        0.2651,
+        0.8758,
+        0.8549,
+        0.8891
+      ],
+      "confidence": 0.9529,
+      "words": [
+        {
+          "text": "3",
+          "bbox": [
+            0.2651,
+            0.8758,
+            0.2698,
+            0.8818
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Copy",
+          "bbox": [
+            0.2761,
+            0.8764,
+            0.3114,
+            0.8879
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3176,
+            0.8764,
+            0.3294,
+            0.8855
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.3349,
+            0.877,
+            0.4063,
+            0.8855
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Plans",
+          "bbox": [
+            0.4133,
+            0.877,
+            0.4494,
+            0.8861
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "received",
+          "bbox": [
+            0.4565,
+            0.877,
+            0.5129,
+            0.8861
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "from",
+          "bbox": [
+            0.5192,
+            0.877,
+            0.549,
+            0.8861
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5561,
+            0.877,
+            0.5765,
+            0.8861
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Resolution",
+          "bbox": [
+            0.5835,
+            0.877,
+            0.6541,
+            0.8861
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Applicants",
+          "bbox": [
+            0.6604,
+            0.877,
+            0.7302,
+            0.8885
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "are",
+          "bbox": [
+            0.7365,
+            0.8794,
+            0.7576,
+            0.8867
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.7639,
+            0.8782,
+            0.7757,
+            0.8867
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Pages",
+          "bbox": [
+            0.782,
+            0.8776,
+            0.8243,
+            0.8891
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "170",
+          "bbox": [
+            0.8314,
+            0.8776,
+            0.8549,
+            0.8867
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "to 274 of the Application.",
+      "bbox": [
+        0.2651,
+        0.8933,
+        0.4329,
+        0.9048
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "to",
+          "bbox": [
+            0.2651,
+            0.8933,
+            0.2769,
+            0.9024
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "274",
+          "bbox": [
+            0.2831,
+            0.8933,
+            0.3067,
+            0.9024
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3129,
+            0.8933,
+            0.3255,
+            0.9024
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3294,
+            0.8933,
+            0.3498,
+            0.9024
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Application.",
+          "bbox": [
+            0.3553,
+            0.8933,
+            0.4329,
+            0.9048
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Page 6 of 19",
+      "bbox": [
+        0.7953,
+        0.9733,
+        0.8565,
+        0.9824
+      ],
+      "confidence": 0.945,
+      "words": [
+        {
+          "text": "Page",
+          "bbox": [
+            0.7953,
+            0.9733,
+            0.8188,
+            0.9824
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6",
+          "bbox": [
+            0.8227,
+            0.9733,
+            0.8275,
+            0.9806
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8314,
+            0.9733,
+            0.8424,
+            0.9806
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "19",
+          "bbox": [
+            0.8455,
+            0.9733,
+            0.8565,
+            0.9806
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9417,
+  "latency_ms": 529,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "NCLT Amaravati Bench\nRegulations, determining the fair value and liquidation value of the\nCorporate Debtor. The valuation reports were collated and\naveraged in accordance with the applicable regulations to\ndetermine the final fair value and liquidation value, which were duly\nplaced before the CoC for deliberation and record.\n(xi) The RP convened the 5'\" meeting of the CoC on 16.10.2025,\nwherein the eligibility criteria and the detailed Invitation for Eol were\npresented and duly approved by the CoC.\n(xii) The RP published the Form-G on 18.10.2025 in \u2018Eenadu\u2019 (Guntur\nand Ongole editions) and \u2018The Times of India\u2019 (Guntur and Ongole\neditions), inviting Eol from Prospective Resolution Applicants\n(hereinafter referred to as the \u201cPRA\u201d) with the last date for\nsubmission of the Eol as 02.11.2025.\n(xiii) The RP received six Eols, out of which five were found eligible and\naccordingly, declared as PRAs on 10.11.2025. Upon issuance of\nthe Request for Resolution Plans (hereinafter referred to as the\n\u201cRFRP\"), two Resolution Plans? were received from Mr. Araga Sai\nSiddhartha Reddy and Mr. Madireddy Sandeep Reddy within the\nstipulated timelines prescribed under the Code and CIRP\nRegulations.\n(xiv) Upon receipt of the Resolution Plans, the RP undertook a detailed\nscrutiny and verification to ascertain their compliance with the\n3 Copy of Resolution Plans received from the Resolution Applicants are at Pages 170\nto 274 of the Application.\nPage 6 of 19"
+}

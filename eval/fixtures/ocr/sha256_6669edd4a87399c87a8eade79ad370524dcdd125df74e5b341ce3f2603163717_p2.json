@@ -1,0 +1,1810 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5",
+  "page_number": 2,
+  "lines": [
+    {
+      "text": "BEFORE THE ADJUDICATING AUTHORITY",
+      "bbox": [
+        0.2969,
+        0.0738,
+        0.8178,
+        0.1019
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "BEFORE",
+          "bbox": [
+            0.2969,
+            0.0738,
+            0.3998,
+            0.0873
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.4085,
+            0.0766,
+            0.4603,
+            0.0884
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADJUDICATING",
+          "bbox": [
+            0.4682,
+            0.0783,
+            0.6591,
+            0.0935
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AUTHORITY",
+          "bbox": [
+            0.6669,
+            0.0816,
+            0.8178,
+            0.1019
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "NATIONAL COMPANY LAW TRIBUNAL",
+      "bbox": [
+        0.3268,
+        0.0929,
+        0.784,
+        0.1194
+      ],
+      "confidence": 0.9575,
+      "words": [
+        {
+          "text": "NATIONAL",
+          "bbox": [
+            0.3268,
+            0.0929,
+            0.454,
+            0.1064
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANY",
+          "bbox": [
+            0.4635,
+            0.0963,
+            0.5868,
+            0.1098
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAW",
+          "bbox": [
+            0.5954,
+            0.0997,
+            0.6489,
+            0.1109
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "TRIBUNAL",
+          "bbox": [
+            0.6567,
+            0.0985,
+            0.784,
+            0.1194
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "AHMEDABAD BENCH",
+      "bbox": [
+        0.4195,
+        0.1132,
+        0.6889,
+        0.1301
+      ],
+      "confidence": 0.955,
+      "words": [
+        {
+          "text": "AHMEDABAD",
+          "bbox": [
+            0.4195,
+            0.1132,
+            0.5884,
+            0.1273
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BENCH",
+          "bbox": [
+            0.5978,
+            0.1177,
+            0.6889,
+            0.1301
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "COURT-II,",
+      "bbox": [
+        0.4933,
+        0.1329,
+        0.6198,
+        0.1486
+      ],
+      "confidence": 0.78,
+      "words": [
+        {
+          "text": "COURT-II,",
+          "bbox": [
+            0.4933,
+            0.1329,
+            0.6198,
+            0.1486
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB)86(AHM)2026",
+      "bbox": [
+        0.4116,
+        0.1661,
+        0.6685,
+        0.1841
+      ],
+      "confidence": 0.86,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.4116,
+            0.1661,
+            0.4446,
+            0.1774
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)86(AHM)2026",
+          "bbox": [
+            0.4548,
+            0.1672,
+            0.6685,
+            0.1841
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(under Section 9 of the Insolvency and Bankruptcy Code, 2016 r/w Rule",
+      "bbox": [
+        0.1901,
+        0.1982,
+        0.9104,
+        0.2258
+      ],
+      "confidence": 0.9533,
+      "words": [
+        {
+          "text": "(under",
+          "bbox": [
+            0.1901,
+            0.1982,
+            0.2522,
+            0.21
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Section",
+          "bbox": [
+            0.2616,
+            0.1999,
+            0.3315,
+            0.2106
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "9",
+          "bbox": [
+            0.3409,
+            0.2016,
+            0.3504,
+            0.2111
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3614,
+            0.2021,
+            0.3794,
+            0.2117
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3865,
+            0.2033,
+            0.4156,
+            0.2128
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.425,
+            0.2038,
+            0.5271,
+            0.2179
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.535,
+            0.2072,
+            0.5703,
+            0.2162
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bankruptcy",
+          "bbox": [
+            0.5797,
+            0.2078,
+            0.6944,
+            0.2224
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Code,",
+          "bbox": [
+            0.7031,
+            0.2111,
+            0.7557,
+            0.2235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016",
+          "bbox": [
+            0.7659,
+            0.2128,
+            0.8138,
+            0.223
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "r/w",
+          "bbox": [
+            0.8233,
+            0.2151,
+            0.8586,
+            0.2258
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rule",
+          "bbox": [
+            0.8672,
+            0.2151,
+            0.9104,
+            0.2252
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "4 of Insolvency and Bankruptcy Application to Adjudicating Authority",
+      "bbox": [
+        0.1885,
+        0.2134,
+        0.9097,
+        0.2455
+      ],
+      "confidence": 0.9467,
+      "words": [
+        {
+          "text": "4",
+          "bbox": [
+            0.1885,
+            0.2134,
+            0.1995,
+            0.2224
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2129,
+            0.214,
+            0.2317,
+            0.2235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Insolvency",
+          "bbox": [
+            0.2419,
+            0.2145,
+            0.3441,
+            0.2286
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3559,
+            0.2179,
+            0.3912,
+            0.2275
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bankruptcy",
+          "bbox": [
+            0.4046,
+            0.2162,
+            0.5192,
+            0.2354
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Application",
+          "bbox": [
+            0.5302,
+            0.2224,
+            0.6394,
+            0.2342
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6528,
+            0.2258,
+            0.6701,
+            0.2348
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Adjudicating",
+          "bbox": [
+            0.6826,
+            0.2235,
+            0.806,
+            0.2432
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Authority",
+          "bbox": [
+            0.8178,
+            0.2269,
+            0.9097,
+            0.2455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Rules 2016)",
+      "bbox": [
+        0.1877,
+        0.2286,
+        0.3009,
+        0.2427
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Rules",
+          "bbox": [
+            0.1877,
+            0.2286,
+            0.2404,
+            0.2387
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016)",
+          "bbox": [
+            0.2482,
+            0.2297,
+            0.3009,
+            0.2427
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Agrirevolve Trading Private Limited",
+      "bbox": [
+        0.1815,
+        0.2635,
+        0.6198,
+        0.2849
+      ],
+      "confidence": 0.945,
+      "words": [
+        {
+          "text": "Agrirevolve",
+          "bbox": [
+            0.1815,
+            0.2635,
+            0.3189,
+            0.2776
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Trading",
+          "bbox": [
+            0.3291,
+            0.2663,
+            0.4218,
+            0.2827
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Private",
+          "bbox": [
+            0.4305,
+            0.2691,
+            0.5161,
+            0.2815
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.5255,
+            0.272,
+            0.6198,
+            0.2849
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Through its Director",
+      "bbox": [
+        0.1815,
+        0.281,
+        0.414,
+        0.2973
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Through",
+          "bbox": [
+            0.1815,
+            0.281,
+            0.2773,
+            0.2973
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.2859,
+            0.2832,
+            0.3126,
+            0.295
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Director",
+          "bbox": [
+            0.3221,
+            0.2843,
+            0.414,
+            0.2973
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Mr. Nileshbhai Dalsing Bhuriya",
+      "bbox": [
+        0.1807,
+        0.299,
+        0.5436,
+        0.3209
+      ],
+      "confidence": 0.915,
+      "words": [
+        {
+          "text": "Mr.",
+          "bbox": [
+            0.1807,
+            0.299,
+            0.2168,
+            0.3108
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Nileshbhai",
+          "bbox": [
+            0.2278,
+            0.3001,
+            0.3488,
+            0.3136
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Dalsing",
+          "bbox": [
+            0.3574,
+            0.3035,
+            0.443,
+            0.3198
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bhuriya",
+          "bbox": [
+            0.4517,
+            0.3057,
+            0.5436,
+            0.3209
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Registered office at A-1323,",
+      "bbox": [
+        0.1791,
+        0.317,
+        0.4918,
+        0.3401
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "Registered",
+          "bbox": [
+            0.1791,
+            0.317,
+            0.2969,
+            0.3316
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "office",
+          "bbox": [
+            0.3064,
+            0.3198,
+            0.3645,
+            0.3316
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.3739,
+            0.3232,
+            0.3943,
+            0.3328
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "A-1323,",
+          "bbox": [
+            0.4022,
+            0.3204,
+            0.4918,
+            0.3401
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Sun West Bank,",
+      "bbox": [
+        0.1799,
+        0.3345,
+        0.3621,
+        0.3542
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Sun",
+          "bbox": [
+            0.1799,
+            0.3345,
+            0.2239,
+            0.3463
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "West",
+          "bbox": [
+            0.2325,
+            0.3356,
+            0.2875,
+            0.3474
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bank,",
+          "bbox": [
+            0.2969,
+            0.335,
+            0.3621,
+            0.3542
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Ashram Road,Ahmedabad-380009",
+      "bbox": [
+        0.1767,
+        0.3502,
+        0.5711,
+        0.375
+      ],
+      "confidence": 0.935,
+      "words": [
+        {
+          "text": "Ashram",
+          "bbox": [
+            0.1767,
+            0.3502,
+            0.2647,
+            0.3699
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Road,Ahmedabad-380009",
+          "bbox": [
+            0.2749,
+            0.3525,
+            0.5711,
+            0.375
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "-.. Operational Creditor / Petitioner",
+      "bbox": [
+        0.4925,
+        0.3784,
+        0.8735,
+        0.3986
+      ],
+      "confidence": 0.584,
+      "words": [
+        {
+          "text": "-..",
+          "bbox": [
+            0.4925,
+            0.3868,
+            0.5106,
+            0.3885
+          ],
+          "confidence": 0.04,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Operational",
+          "bbox": [
+            0.5153,
+            0.3784,
+            0.6473,
+            0.393
+          ],
+          "confidence": 0.04,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.6567,
+            0.3823,
+            0.7494,
+            0.3947
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/",
+          "bbox": [
+            0.751,
+            0.3846,
+            0.7612,
+            0.3986
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Petitioner",
+          "bbox": [
+            0.7643,
+            0.3851,
+            0.8735,
+            0.3981
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Versus",
+      "bbox": [
+        0.2419,
+        0.4043,
+        0.3205,
+        0.4167
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Versus",
+          "bbox": [
+            0.2419,
+            0.4043,
+            0.3205,
+            0.4167
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Spright Agro Limited",
+      "bbox": [
+        0.1728,
+        0.4386,
+        0.4281,
+        0.455
+      ],
+      "confidence": 0.9467,
+      "words": [
+        {
+          "text": "Spright",
+          "bbox": [
+            0.1728,
+            0.4386,
+            0.2616,
+            0.4533
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Agro",
+          "bbox": [
+            0.2694,
+            0.4409,
+            0.3252,
+            0.455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.3339,
+            0.442,
+            0.4281,
+            0.455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Registered Office Address:",
+      "bbox": [
+        0.172,
+        0.4561,
+        0.4674,
+        0.4741
+      ],
+      "confidence": 0.9567,
+      "words": [
+        {
+          "text": "Registered",
+          "bbox": [
+            0.172,
+            0.4561,
+            0.2891,
+            0.4713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Office",
+          "bbox": [
+            0.2993,
+            0.4595,
+            0.3621,
+            0.4713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Address:",
+          "bbox": [
+            0.37,
+            0.4611,
+            0.4674,
+            0.4741
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1216, Shilp Epitom,",
+      "bbox": [
+        0.1736,
+        0.4741,
+        0.3983,
+        0.4927
+      ],
+      "confidence": 0.9233,
+      "words": [
+        {
+          "text": "1216,",
+          "bbox": [
+            0.1736,
+            0.4741,
+            0.2333,
+            0.4882
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Shilp",
+          "bbox": [
+            0.2443,
+            0.4752,
+            0.3016,
+            0.4904
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Epitom,",
+          "bbox": [
+            0.3111,
+            0.4775,
+            0.3983,
+            0.4927
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Rajpath- Rangoli Road,",
+      "bbox": [
+        0.1697,
+        0.4916,
+        0.4328,
+        0.5113
+      ],
+      "confidence": 0.92,
+      "words": [
+        {
+          "text": "Rajpath-",
+          "bbox": [
+            0.1697,
+            0.4916,
+            0.2671,
+            0.5068
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rangoli",
+          "bbox": [
+            0.2773,
+            0.4938,
+            0.3614,
+            0.5096
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Road,",
+          "bbox": [
+            0.3708,
+            0.4961,
+            0.4328,
+            0.5113
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Off Sindhu Bhavan Road,",
+      "bbox": [
+        0.1689,
+        0.5096,
+        0.4595,
+        0.5332
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Off",
+          "bbox": [
+            0.1689,
+            0.5096,
+            0.2042,
+            0.5208
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sindhu",
+          "bbox": [
+            0.2105,
+            0.5107,
+            0.2922,
+            0.5231
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bhavan",
+          "bbox": [
+            0.3016,
+            0.513,
+            0.3881,
+            0.5259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Road,",
+          "bbox": [
+            0.3967,
+            0.5135,
+            0.4595,
+            0.5332
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Bodakdev, Ahmedabad-380054",
+      "bbox": [
+        0.1681,
+        0.5253,
+        0.5271,
+        0.5473
+      ],
+      "confidence": 0.91,
+      "words": [
+        {
+          "text": "Bodakdev,",
+          "bbox": [
+            0.1681,
+            0.5253,
+            0.2844,
+            0.5456
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ahmedabad-380054",
+          "bbox": [
+            0.2946,
+            0.531,
+            0.5271,
+            0.5473
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "--- Corporate Debtor/Respondent",
+      "bbox": [
+        0.4902,
+        0.5546,
+        0.8672,
+        0.5755
+      ],
+      "confidence": 0.7433,
+      "words": [
+        {
+          "text": "---",
+          "bbox": [
+            0.4902,
+            0.5625,
+            0.5082,
+            0.5648
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.52,
+            0.5546,
+            0.6316,
+            0.5693
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor/Respondent",
+          "bbox": [
+            0.6402,
+            0.5574,
+            0.8672,
+            0.5755
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Order pronounced on 24/09/2026",
+      "bbox": [
+        0.4266,
+        0.607,
+        0.8523,
+        0.6301
+      ],
+      "confidence": 0.955,
+      "words": [
+        {
+          "text": "Order",
+          "bbox": [
+            0.4266,
+            0.607,
+            0.4941,
+            0.6194
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pronounced",
+          "bbox": [
+            0.5012,
+            0.6115,
+            0.6418,
+            0.6233
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.6504,
+            0.6154,
+            0.6795,
+            0.6244
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "24/09/2026",
+          "bbox": [
+            0.7038,
+            0.6143,
+            0.8523,
+            0.6301
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Coram:",
+      "bbox": [
+        0.1658,
+        0.6188,
+        0.2427,
+        0.6306
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Coram:",
+          "bbox": [
+            0.1658,
+            0.6188,
+            0.2427,
+            0.6306
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MRS.CHITRA HANKARE",
+      "bbox": [
+        0.1626,
+        0.6543,
+        0.4297,
+        0.6712
+      ],
+      "confidence": 0.915,
+      "words": [
+        {
+          "text": "MRS.CHITRA",
+          "bbox": [
+            0.1626,
+            0.6543,
+            0.3095,
+            0.6678
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HANKARE",
+          "bbox": [
+            0.3166,
+            0.6577,
+            0.4297,
+            0.6712
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MEMBER (J UDICIAL)",
+      "bbox": [
+        0.161,
+        0.6717,
+        0.3912,
+        0.6937
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.161,
+            0.6717,
+            0.2639,
+            0.6847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(J",
+          "bbox": [
+            0.2718,
+            0.6745,
+            0.2922,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "UDICIAL)",
+          "bbox": [
+            0.293,
+            0.6723,
+            0.3912,
+            0.6937
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "DR.VELAMUR G VENKATA CHALAPATHY",
+      "bbox": [
+        0.1595,
+        0.7005,
+        0.6143,
+        0.7269
+      ],
+      "confidence": 0.9075,
+      "words": [
+        {
+          "text": "DR.VELAMUR",
+          "bbox": [
+            0.1595,
+            0.7005,
+            0.3119,
+            0.7145
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "G",
+          "bbox": [
+            0.3205,
+            0.7044,
+            0.3362,
+            0.7151
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "VENKATA",
+          "bbox": [
+            0.3441,
+            0.7055,
+            0.4525,
+            0.7185
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CHALAPATHY",
+          "bbox": [
+            0.4603,
+            0.7061,
+            0.6143,
+            0.7269
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MEMBER (TECHNICAL)",
+      "bbox": [
+        0.1587,
+        0.7185,
+        0.414,
+        0.7404
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.1587,
+            0.7185,
+            0.2616,
+            0.7309
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(TECHNICAL)",
+          "bbox": [
+            0.2694,
+            0.7185,
+            0.414,
+            0.7404
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Appearance:",
+      "bbox": [
+        0.1563,
+        0.7511,
+        0.3111,
+        0.7652
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Appearance:",
+          "bbox": [
+            0.1563,
+            0.7511,
+            0.3111,
+            0.7652
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "For the Petitioner : Ms. Prutha Bhavsar, Adv.",
+      "bbox": [
+        0.1555,
+        0.7827,
+        0.6968,
+        0.8091
+      ],
+      "confidence": 0.9225,
+      "words": [
+        {
+          "text": "For",
+          "bbox": [
+            0.1555,
+            0.7827,
+            0.194,
+            0.7945
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2035,
+            0.7843,
+            0.2396,
+            0.7956
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Petitioner",
+          "bbox": [
+            0.2498,
+            0.786,
+            0.3637,
+            0.799
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": ":",
+          "bbox": [
+            0.3739,
+            0.7922,
+            0.3771,
+            0.7995
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ms.",
+          "bbox": [
+            0.392,
+            0.7894,
+            0.4313,
+            0.8012
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Prutha",
+          "bbox": [
+            0.443,
+            0.7911,
+            0.524,
+            0.8041
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bhavsar,",
+          "bbox": [
+            0.5334,
+            0.7934,
+            0.6371,
+            0.8091
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Adv.",
+          "bbox": [
+            0.6465,
+            0.7973,
+            0.6968,
+            0.808
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "For the Respondent : Mr. Rajiv Chawla, Adv.",
+      "bbox": [
+        0.1524,
+        0.8316,
+        0.6819,
+        0.8581
+      ],
+      "confidence": 0.9463,
+      "words": [
+        {
+          "text": "For",
+          "bbox": [
+            0.1524,
+            0.8316,
+            0.1909,
+            0.8435
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2003,
+            0.8333,
+            0.2364,
+            0.8446
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Respondent",
+          "bbox": [
+            0.2459,
+            0.8345,
+            0.3873,
+            0.8497
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": ":",
+          "bbox": [
+            0.3967,
+            0.8418,
+            0.4006,
+            0.8491
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mr.",
+          "bbox": [
+            0.4116,
+            0.839,
+            0.4493,
+            0.8502
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rajiv",
+          "bbox": [
+            0.4603,
+            0.8401,
+            0.5192,
+            0.8553
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Chawla,",
+          "bbox": [
+            0.5279,
+            0.8423,
+            0.6214,
+            0.8581
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Adv.",
+          "bbox": [
+            0.6316,
+            0.8457,
+            0.6819,
+            0.857
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1|Page",
+      "bbox": [
+        0.791,
+        0.9071,
+        0.8641,
+        0.9195
+      ],
+      "confidence": 0.68,
+      "words": [
+        {
+          "text": "1|Page",
+          "bbox": [
+            0.791,
+            0.9071,
+            0.8641,
+            0.9195
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "gal -",
+      "bbox": [
+        0.2553,
+        0.9077,
+        0.3103,
+        0.9324
+      ],
+      "confidence": 0.33,
+      "words": [
+        {
+          "text": "gal",
+          "bbox": [
+            0.2553,
+            0.9099,
+            0.3079,
+            0.9302
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-",
+          "bbox": [
+            0.2954,
+            0.9077,
+            0.3103,
+            0.9324
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": ", ad -",
+      "bbox": [
+        0.2859,
+        0.9403,
+        0.762,
+        0.9657
+      ],
+      "confidence": 0.5267,
+      "words": [
+        {
+          "text": ",",
+          "bbox": [
+            0.2859,
+            0.9403,
+            0.2883,
+            0.9448
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ad",
+          "bbox": [
+            0.7086,
+            0.9437,
+            0.7604,
+            0.9611
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-",
+          "bbox": [
+            0.7502,
+            0.9414,
+            0.762,
+            0.9657
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.8984,
+  "latency_ms": 418,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "BEFORE THE ADJUDICATING AUTHORITY\nNATIONAL COMPANY LAW TRIBUNAL\nAHMEDABAD BENCH\nCOURT-II,\nCP (IB)86(AHM)2026\n(under Section 9 of the Insolvency and Bankruptcy Code, 2016 r/w Rule\n4 of Insolvency and Bankruptcy Application to Adjudicating Authority\nRules 2016)\nAgrirevolve Trading Private Limited\nThrough its Director\nMr. Nileshbhai Dalsing Bhuriya\nRegistered office at A-1323,\nSun West Bank,\nAshram Road,Ahmedabad-380009\n-.. Operational Creditor / Petitioner\nVersus\nSpright Agro Limited\nRegistered Office Address:\n1216, Shilp Epitom,\nRajpath- Rangoli Road,\nOff Sindhu Bhavan Road,\nBodakdev, Ahmedabad-380054\n--- Corporate Debtor/Respondent\nOrder pronounced on 24/09/2026\nCoram:\nMRS.CHITRA HANKARE\nMEMBER (J UDICIAL)\nDR.VELAMUR G VENKATA CHALAPATHY\nMEMBER (TECHNICAL)\nAppearance:\nFor the Petitioner : Ms. Prutha Bhavsar, Adv.\nFor the Respondent : Mr. Rajiv Chawla, Adv.\n1|Page\ngal -\n, ad -"
+}

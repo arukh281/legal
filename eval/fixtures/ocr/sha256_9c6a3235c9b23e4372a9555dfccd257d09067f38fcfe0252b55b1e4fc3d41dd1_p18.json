@@ -1,0 +1,3537 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 18,
+  "lines": [
+    {
+      "text": "Pat Ot",
+      "bbox": [
+        0.1209,
+        0.6129,
+        0.137,
+        0.6556
+      ],
+      "confidence": 0.27,
+      "words": [
+        {
+          "text": "Pat",
+          "bbox": [
+            0.1209,
+            0.6323,
+            0.133,
+            0.6556
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ot",
+          "bbox": [
+            0.1257,
+            0.6129,
+            0.137,
+            0.6157
+          ],
+          "confidence": 0.06,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "yi fe,",
+      "bbox": [
+        0.1217,
+        0.5889,
+        0.1507,
+        0.6283
+      ],
+      "confidence": 0.32,
+      "words": [
+        {
+          "text": "yi",
+          "bbox": [
+            0.1217,
+            0.6146,
+            0.1507,
+            0.6283
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fe,",
+          "bbox": [
+            0.1217,
+            0.5889,
+            0.1507,
+            0.5992
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Neca,",
+      "bbox": [
+        0.1741,
+        0.6095,
+        0.1918,
+        0.6437
+      ],
+      "confidence": 0.1,
+      "words": [
+        {
+          "text": "Neca,",
+          "bbox": [
+            0.1741,
+            0.6095,
+            0.1918,
+            0.6437
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ei nial \u00a9 Indian-Non Judicial Stamp",
+      "bbox": [
+        0.1459,
+        0.1249,
+        0.5391,
+        0.1528
+      ],
+      "confidence": 0.6533,
+      "words": [
+        {
+          "text": "ei",
+          "bbox": [
+            0.1459,
+            0.1249,
+            0.1684,
+            0.1425
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nial",
+          "bbox": [
+            0.1716,
+            0.1249,
+            0.195,
+            0.1425
+          ],
+          "confidence": 0.19,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u00a9",
+          "bbox": [
+            0.3006,
+            0.1271,
+            0.3384,
+            0.1528
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Indian-Non",
+          "bbox": [
+            0.3449,
+            0.1249,
+            0.4206,
+            0.1425
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Judicial",
+          "bbox": [
+            0.4287,
+            0.1249,
+            0.4867,
+            0.1425
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Stamp",
+          "bbox": [
+            0.4948,
+            0.1249,
+            0.5391,
+            0.1425
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Haryana Government Dae ren22026",
+      "bbox": [
+        0.3626,
+        0.1368,
+        0.7083,
+        0.1539
+      ],
+      "confidence": 0.6275,
+      "words": [
+        {
+          "text": "Haryana",
+          "bbox": [
+            0.3626,
+            0.1368,
+            0.423,
+            0.1539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Government",
+          "bbox": [
+            0.4311,
+            0.1368,
+            0.5173,
+            0.1539
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Dae",
+          "bbox": [
+            0.6172,
+            0.1391,
+            0.6398,
+            0.1454
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ren22026",
+          "bbox": [
+            0.6567,
+            0.1391,
+            0.7083,
+            0.1454
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "corttcae no \u2014 cowaoasezo72 \u2014 MINTANTNNINUUUAIIN Stamp Duty Pad \u20ac 10",
+      "bbox": [
+        0.1499,
+        0.167,
+        0.664,
+        0.1876
+      ],
+      "confidence": 0.3473,
+      "words": [
+        {
+          "text": "corttcae",
+          "bbox": [
+            0.1499,
+            0.175,
+            0.2143,
+            0.1819
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "no",
+          "bbox": [
+            0.2023,
+            0.167,
+            0.2168,
+            0.1876
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2014",
+          "bbox": [
+            0.2264,
+            0.167,
+            0.2337,
+            0.1876
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cowaoasezo72",
+          "bbox": [
+            0.2401,
+            0.175,
+            0.3167,
+            0.1819
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2014",
+          "bbox": [
+            0.328,
+            0.167,
+            0.34,
+            0.1876
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MINTANTNNINUUUAIIN",
+          "bbox": [
+            0.3473,
+            0.1699,
+            0.4496,
+            0.183
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Stamp",
+          "bbox": [
+            0.5447,
+            0.1745,
+            0.6253,
+            0.1842
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Duty",
+          "bbox": [
+            0.5802,
+            0.167,
+            0.5995,
+            0.1876
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Pad",
+          "bbox": [
+            0.6068,
+            0.167,
+            0.6285,
+            0.1876
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u20ac",
+          "bbox": [
+            0.639,
+            0.1745,
+            0.643,
+            0.1807
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "10",
+          "bbox": [
+            0.6487,
+            0.1745,
+            0.664,
+            0.1807
+          ],
+          "confidence": 0.36,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(GRN No Vi27468o4 Penaity eo",
+      "bbox": [
+        0.1475,
+        0.1864,
+        0.6551,
+        0.2001
+      ],
+      "confidence": 0.314,
+      "words": [
+        {
+          "text": "(GRN",
+          "bbox": [
+            0.1475,
+            0.1876,
+            0.1716,
+            0.2001
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No",
+          "bbox": [
+            0.1765,
+            0.1876,
+            0.1902,
+            0.2001
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vi27468o4",
+          "bbox": [
+            0.2417,
+            0.1881,
+            0.2965,
+            0.2001
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Penaity",
+          "bbox": [
+            0.5431,
+            0.1864,
+            0.585,
+            0.199
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "eo",
+          "bbox": [
+            0.6406,
+            0.1887,
+            0.6551,
+            0.1944
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "| Seller / First Party Detail",
+      "bbox": [
+        0.137,
+        0.2035,
+        0.5093,
+        0.2206
+      ],
+      "confidence": 0.8067,
+      "words": [
+        {
+          "text": "|",
+          "bbox": [
+            0.137,
+            0.2087,
+            0.1386,
+            0.2172
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Seller",
+          "bbox": [
+            0.3537,
+            0.2035,
+            0.39,
+            0.2206
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/",
+          "bbox": [
+            0.3956,
+            0.2035,
+            0.3981,
+            0.2206
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "First",
+          "bbox": [
+            0.4037,
+            0.2035,
+            0.4303,
+            0.2206
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Party",
+          "bbox": [
+            0.4359,
+            0.2035,
+            0.4666,
+            0.2206
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Detail",
+          "bbox": [
+            0.4722,
+            0.2035,
+            0.5093,
+            0.2206
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "| Naere: Puneat jain And Swati jy",
+      "bbox": [
+        0.137,
+        0.2149,
+        0.3417,
+        0.2309
+      ],
+      "confidence": 0.5071,
+      "words": [
+        {
+          "text": "|",
+          "bbox": [
+            0.137,
+            0.2178,
+            0.1386,
+            0.2212
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Naere:",
+          "bbox": [
+            0.1483,
+            0.2218,
+            0.1757,
+            0.2275
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Puneat",
+          "bbox": [
+            0.2151,
+            0.2206,
+            0.3392,
+            0.2286
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        },
+        {
+          "text": "jain",
+          "bbox": [
+            0.2514,
+            0.2149,
+            0.2667,
+            0.2309
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "And",
+          "bbox": [
+            0.2716,
+            0.2149,
+            0.2909,
+            0.2309
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Swati",
+          "bbox": [
+            0.2965,
+            0.2149,
+            0.3191,
+            0.2309
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "jy",
+          "bbox": [
+            0.3223,
+            0.2149,
+            0.3417,
+            0.2309
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "HNoFioo = E13/11 SectorWard. Na dandMark Na",
+      "bbox": [
+        0.1483,
+        0.2303,
+        0.5423,
+        0.2434
+      ],
+      "confidence": 0.2729,
+      "words": [
+        {
+          "text": "HNoFioo",
+          "bbox": [
+            0.1483,
+            0.2326,
+            0.199,
+            0.2389
+          ],
+          "confidence": 0.02,
+          "text_type": "unknown"
+        },
+        {
+          "text": "=",
+          "bbox": [
+            0.2063,
+            0.2303,
+            0.2119,
+            0.2434
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "E13/11",
+          "bbox": [
+            0.2151,
+            0.2326,
+            0.2474,
+            0.2389
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SectorWard.",
+          "bbox": [
+            0.2981,
+            0.232,
+            0.3578,
+            0.2389
+          ],
+          "confidence": 0.16,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Na",
+          "bbox": [
+            0.3715,
+            0.2326,
+            0.3844,
+            0.2389
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dandMark",
+          "bbox": [
+            0.4649,
+            0.2326,
+            0.5125,
+            0.2389
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Na",
+          "bbox": [
+            0.5286,
+            0.2326,
+            0.5423,
+            0.2389
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "City'Vilage = Vasant war Distinct New dette \u2018State Deine",
+      "bbox": [
+        0.1483,
+        0.2423,
+        0.5536,
+        0.256
+      ],
+      "confidence": 0.3633,
+      "words": [
+        {
+          "text": "City'Vilage",
+          "bbox": [
+            0.1483,
+            0.2446,
+            0.2006,
+            0.2531
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "=",
+          "bbox": [
+            0.2079,
+            0.2423,
+            0.2111,
+            0.256
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vasant",
+          "bbox": [
+            0.2176,
+            0.2423,
+            0.2482,
+            0.256
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "war",
+          "bbox": [
+            0.253,
+            0.2423,
+            0.2772,
+            0.256
+          ],
+          "confidence": 0.45,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Distinct",
+          "bbox": [
+            0.3159,
+            0.2446,
+            0.3489,
+            0.2514
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.3634,
+            0.2423,
+            0.386,
+            0.2554
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dette",
+          "bbox": [
+            0.3892,
+            0.2423,
+            0.415,
+            0.2554
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018State",
+          "bbox": [
+            0.4762,
+            0.2423,
+            0.5093,
+            0.2554
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Deine",
+          "bbox": [
+            0.5286,
+            0.2446,
+            0.5536,
+            0.2514
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Phone ores Otners. Ms ashinna ispat itd",
+      "bbox": [
+        0.145,
+        0.2543,
+        0.4641,
+        0.268
+      ],
+      "confidence": 0.4743,
+      "words": [
+        {
+          "text": "Phone",
+          "bbox": [
+            0.145,
+            0.2543,
+            0.1821,
+            0.2674
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ores",
+          "bbox": [
+            0.2111,
+            0.2543,
+            0.2627,
+            0.2674
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Otners.",
+          "bbox": [
+            0.3159,
+            0.2571,
+            0.3489,
+            0.264
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ms",
+          "bbox": [
+            0.3642,
+            0.2571,
+            0.3811,
+            0.2634
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ashinna",
+          "bbox": [
+            0.3836,
+            0.2571,
+            0.4609,
+            0.2645
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ispat",
+          "bbox": [
+            0.4239,
+            0.2548,
+            0.4456,
+            0.268
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "itd",
+          "bbox": [
+            0.4496,
+            0.2548,
+            0.4641,
+            0.268
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "|",
+      "bbox": [
+        0.1378,
+        0.2759,
+        0.1386,
+        0.2851
+      ],
+      "confidence": 0.91,
+      "words": [
+        {
+          "text": "|",
+          "bbox": [
+            0.1378,
+            0.2759,
+            0.1386,
+            0.2851
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Buyer / Second Party Dotail",
+      "bbox": [
+        0.3417,
+        0.2845,
+        0.5149,
+        0.3005
+      ],
+      "confidence": 0.814,
+      "words": [
+        {
+          "text": "Buyer",
+          "bbox": [
+            0.3417,
+            0.2845,
+            0.3795,
+            0.3005
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/",
+          "bbox": [
+            0.3844,
+            0.2845,
+            0.3908,
+            0.3005
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Second",
+          "bbox": [
+            0.3956,
+            0.2845,
+            0.4343,
+            0.3005
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Party",
+          "bbox": [
+            0.4408,
+            0.2845,
+            0.4714,
+            0.3005
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Dotail",
+          "bbox": [
+            0.4786,
+            0.2845,
+            0.5149,
+            0.3005
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Name Nawietya parkasn goyal",
+      "bbox": [
+        0.1459,
+        0.2993,
+        0.3239,
+        0.3119
+      ],
+      "confidence": 0.35,
+      "words": [
+        {
+          "text": "Name",
+          "bbox": [
+            0.1459,
+            0.2993,
+            0.1805,
+            0.3119
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Nawietya",
+          "bbox": [
+            0.2135,
+            0.2993,
+            0.2546,
+            0.3113
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "parkasn",
+          "bbox": [
+            0.2595,
+            0.2993,
+            0.2949,
+            0.3113
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        },
+        {
+          "text": "goyal",
+          "bbox": [
+            0.3006,
+            0.2993,
+            0.3239,
+            0.3113
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "HNoMioor F2ES SectorWard $7",
+      "bbox": [
+        0.1483,
+        0.3136,
+        0.3828,
+        0.3198
+      ],
+      "confidence": 0.3125,
+      "words": [
+        {
+          "text": "HNoMioor",
+          "bbox": [
+            0.1483,
+            0.3136,
+            0.1982,
+            0.3193
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "F2ES",
+          "bbox": [
+            0.2135,
+            0.3136,
+            0.2377,
+            0.3193
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SectorWard",
+          "bbox": [
+            0.2981,
+            0.3136,
+            0.3578,
+            0.3193
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        },
+        {
+          "text": "$7",
+          "bbox": [
+            0.3715,
+            0.3136,
+            0.3828,
+            0.3198
+          ],
+          "confidence": 0.75,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Cayrvitage Gurugeam Dsinct. Gurugram",
+      "bbox": [
+        0.1491,
+        0.3261,
+        0.4126,
+        0.3341
+      ],
+      "confidence": 0.3125,
+      "words": [
+        {
+          "text": "Cayrvitage",
+          "bbox": [
+            0.1491,
+            0.3261,
+            0.2015,
+            0.3335
+          ],
+          "confidence": 0.21,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gurugeam",
+          "bbox": [
+            0.2143,
+            0.3261,
+            0.2619,
+            0.3335
+          ],
+          "confidence": 0.21,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Dsinct.",
+          "bbox": [
+            0.3159,
+            0.3261,
+            0.3489,
+            0.3324
+          ],
+          "confidence": 0.22,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gurugram",
+          "bbox": [
+            0.365,
+            0.3261,
+            0.4126,
+            0.3341
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "| Phone one Others M's mary mahesh ispat pvt Rd",
+      "bbox": [
+        0.137,
+        0.3347,
+        0.5101,
+        0.3495
+      ],
+      "confidence": 0.579,
+      "words": [
+        {
+          "text": "|",
+          "bbox": [
+            0.137,
+            0.3364,
+            0.1386,
+            0.3415
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Phone",
+          "bbox": [
+            0.1491,
+            0.3369,
+            0.1789,
+            0.3438
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "one",
+          "bbox": [
+            0.2103,
+            0.3347,
+            0.2611,
+            0.3489
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Others",
+          "bbox": [
+            0.3183,
+            0.3381,
+            0.3505,
+            0.3449
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M's",
+          "bbox": [
+            0.365,
+            0.3352,
+            0.3828,
+            0.3495
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mary",
+          "bbox": [
+            0.3868,
+            0.3352,
+            0.4093,
+            0.3495
+          ],
+          "confidence": 0.79,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mahesh",
+          "bbox": [
+            0.4134,
+            0.3352,
+            0.4464,
+            0.3495
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ispat",
+          "bbox": [
+            0.4504,
+            0.3352,
+            0.4746,
+            0.3495
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pvt",
+          "bbox": [
+            0.4795,
+            0.3352,
+            0.4915,
+            0.3495
+          ],
+          "confidence": 0.76,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rd",
+          "bbox": [
+            0.4956,
+            0.3352,
+            0.5101,
+            0.3495
+          ],
+          "confidence": 0.37,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Purpose Deed of agreement",
+      "bbox": [
+        0.1491,
+        0.3615,
+        0.2998,
+        0.3786
+      ],
+      "confidence": 0.65,
+      "words": [
+        {
+          "text": "Purpose",
+          "bbox": [
+            0.1491,
+            0.3666,
+            0.1878,
+            0.3729
+          ],
+          "confidence": 0.64,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Deed",
+          "bbox": [
+            0.2079,
+            0.3666,
+            0.2998,
+            0.3746
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2361,
+            0.3615,
+            0.245,
+            0.3786
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement",
+          "bbox": [
+            0.2506,
+            0.3666,
+            0.2998,
+            0.3746
+          ],
+          "confidence": 0.79,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Toe aaheenty of Bee erred Can We restora ty wearaieng tw OnCarn Trine\u201d tat are oe oe ween NBS RYAN",
+      "bbox": [
+        0.1797,
+        0.4054,
+        0.6648,
+        0.4213
+      ],
+      "confidence": 0.2765,
+      "words": [
+        {
+          "text": "Toe",
+          "bbox": [
+            0.1797,
+            0.4054,
+            0.195,
+            0.4213
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aaheenty",
+          "bbox": [
+            0.1998,
+            0.4054,
+            0.2417,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.245,
+            0.4054,
+            0.2514,
+            0.4213
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bee",
+          "bbox": [
+            0.2562,
+            0.4054,
+            0.2667,
+            0.4213
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        },
+        {
+          "text": "erred",
+          "bbox": [
+            0.2716,
+            0.4054,
+            0.3062,
+            0.4213
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Can",
+          "bbox": [
+            0.3094,
+            0.4054,
+            0.3207,
+            0.4213
+          ],
+          "confidence": 0.52,
+          "text_type": "unknown"
+        },
+        {
+          "text": "We",
+          "bbox": [
+            0.328,
+            0.4054,
+            0.3344,
+            0.4213
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "restora",
+          "bbox": [
+            0.3392,
+            0.4054,
+            0.3642,
+            0.4213
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ty",
+          "bbox": [
+            0.3674,
+            0.4054,
+            0.3763,
+            0.4213
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "wearaieng",
+          "bbox": [
+            0.3803,
+            0.4054,
+            0.411,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tw",
+          "bbox": [
+            0.4166,
+            0.4054,
+            0.4279,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OnCarn",
+          "bbox": [
+            0.4335,
+            0.4054,
+            0.4601,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Trine\u201d",
+          "bbox": [
+            0.4649,
+            0.4054,
+            0.494,
+            0.4213
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tat",
+          "bbox": [
+            0.5012,
+            0.4054,
+            0.5181,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "are",
+          "bbox": [
+            0.5254,
+            0.4054,
+            0.5447,
+            0.4213
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        },
+        {
+          "text": "oe",
+          "bbox": [
+            0.5479,
+            0.4111,
+            0.5657,
+            0.4151
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "oe",
+          "bbox": [
+            0.5721,
+            0.4054,
+            0.5802,
+            0.4213
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ween",
+          "bbox": [
+            0.585,
+            0.4054,
+            0.6108,
+            0.4213
+          ],
+          "confidence": 0.26,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NBS",
+          "bbox": [
+            0.6156,
+            0.4054,
+            0.6334,
+            0.4213
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RYAN",
+          "bbox": [
+            0.6398,
+            0.4054,
+            0.6648,
+            0.4213
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2018This Deed of agreement is executed at New Delhi on this 14\" day of Feb, 2024, by & between:",
+      "bbox": [
+        0.2192,
+        0.4339,
+        0.7438,
+        0.4487
+      ],
+      "confidence": 0.9189,
+      "words": [
+        {
+          "text": "\u2018This",
+          "bbox": [
+            0.2192,
+            0.4361,
+            0.2434,
+            0.4441
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Deed",
+          "bbox": [
+            0.2474,
+            0.4361,
+            0.2748,
+            0.4441
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.278,
+            0.4339,
+            0.2893,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement",
+          "bbox": [
+            0.2941,
+            0.4339,
+            0.3505,
+            0.4487
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.3554,
+            0.4367,
+            0.3658,
+            0.4441
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "executed",
+          "bbox": [
+            0.3707,
+            0.4339,
+            0.4174,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.4214,
+            0.4339,
+            0.4343,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.4392,
+            0.4339,
+            0.4593,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Delhi",
+          "bbox": [
+            0.4633,
+            0.4339,
+            0.4932,
+            0.4487
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.498,
+            0.4339,
+            0.5077,
+            0.4487
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.5125,
+            0.4339,
+            0.5342,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "14\"",
+          "bbox": [
+            0.5399,
+            0.4339,
+            0.5584,
+            0.4487
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "day",
+          "bbox": [
+            0.5633,
+            0.4339,
+            0.5794,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5858,
+            0.4339,
+            0.5971,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Feb,",
+          "bbox": [
+            0.6011,
+            0.4339,
+            0.6229,
+            0.4487
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2024,",
+          "bbox": [
+            0.6293,
+            0.4339,
+            0.6567,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.6624,
+            0.4339,
+            0.6753,
+            0.4487
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "&",
+          "bbox": [
+            0.6801,
+            0.4361,
+            0.6849,
+            0.4436
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "between:",
+          "bbox": [
+            0.6906,
+            0.4339,
+            0.7438,
+            0.4487
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MR. PUNEET JAIN S/o Sh, Naresh Chand resident of E-13/11, Pirst Ploor, Vs Vihar, New Delhi ~",
+      "bbox": [
+        0.1789,
+        0.4555,
+        0.7486,
+        0.4704
+      ],
+      "confidence": 0.8065,
+      "words": [
+        {
+          "text": "MR.",
+          "bbox": [
+            0.1789,
+            0.4555,
+            0.2039,
+            0.4704
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PUNEET",
+          "bbox": [
+            0.2095,
+            0.4555,
+            0.2506,
+            0.4704
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JAIN",
+          "bbox": [
+            0.2571,
+            0.4555,
+            0.282,
+            0.4704
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "S/o",
+          "bbox": [
+            0.2893,
+            0.4578,
+            0.3086,
+            0.4669
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sh,",
+          "bbox": [
+            0.3127,
+            0.4555,
+            0.3312,
+            0.4704
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Naresh",
+          "bbox": [
+            0.3376,
+            0.4555,
+            0.3747,
+            0.4704
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Chand",
+          "bbox": [
+            0.3811,
+            0.4555,
+            0.4134,
+            0.4704
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resident",
+          "bbox": [
+            0.419,
+            0.4555,
+            0.4674,
+            0.4704
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4714,
+            0.4555,
+            0.4827,
+            0.4704
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "E-13/11,",
+          "bbox": [
+            0.4851,
+            0.4578,
+            0.6108,
+            0.4669
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Pirst",
+          "bbox": [
+            0.5399,
+            0.4555,
+            0.5649,
+            0.4704
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ploor,",
+          "bbox": [
+            0.5697,
+            0.4555,
+            0.6003,
+            0.4704
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vs",
+          "bbox": [
+            0.6044,
+            0.4555,
+            0.614,
+            0.4704
+          ],
+          "confidence": 0.79,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vihar,",
+          "bbox": [
+            0.643,
+            0.4578,
+            0.7454,
+            0.4652
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.6833,
+            0.4555,
+            0.701,
+            0.4704
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Delhi",
+          "bbox": [
+            0.7075,
+            0.4578,
+            0.7381,
+            0.4652
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "~",
+          "bbox": [
+            0.7421,
+            0.4555,
+            0.7486,
+            0.4704
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "110057 (AADHAR No- PAN No.",
+      "bbox": [
+        0.1813,
+        0.4704,
+        0.5737,
+        0.4795
+      ],
+      "confidence": 0.784,
+      "words": [
+        {
+          "text": "110057",
+          "bbox": [
+            0.1813,
+            0.4704,
+            0.2224,
+            0.4778
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(AADHAR",
+          "bbox": [
+            0.2256,
+            0.4704,
+            0.2812,
+            0.4795
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No-",
+          "bbox": [
+            0.2844,
+            0.4704,
+            0.3046,
+            0.4778
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PAN",
+          "bbox": [
+            0.5302,
+            0.4704,
+            0.5536,
+            0.4778
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.5576,
+            0.4704,
+            0.5737,
+            0.4778
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Director M/s Ashiana [spat Ltd, Regd office at Netaji Subash Place, Delhi hereinafter called as",
+      "bbox": [
+        0.1765,
+        0.48,
+        0.7301,
+        0.4954
+      ],
+      "confidence": 0.8647,
+      "words": [
+        {
+          "text": "Director",
+          "bbox": [
+            0.1765,
+            0.48,
+            0.2297,
+            0.4954
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M/s",
+          "bbox": [
+            0.2361,
+            0.4823,
+            0.2562,
+            0.492
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ashiana",
+          "bbox": [
+            0.2611,
+            0.48,
+            0.3054,
+            0.4954
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "[spat",
+          "bbox": [
+            0.3102,
+            0.48,
+            0.34,
+            0.4954
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ltd,",
+          "bbox": [
+            0.3449,
+            0.48,
+            0.3674,
+            0.4954
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Regd",
+          "bbox": [
+            0.3739,
+            0.48,
+            0.3981,
+            0.4954
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "office",
+          "bbox": [
+            0.4029,
+            0.48,
+            0.4359,
+            0.4954
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.4408,
+            0.48,
+            0.4521,
+            0.4954
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Netaji",
+          "bbox": [
+            0.4569,
+            0.48,
+            0.4907,
+            0.4954
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Subash",
+          "bbox": [
+            0.4972,
+            0.48,
+            0.5342,
+            0.4954
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Place,",
+          "bbox": [
+            0.5391,
+            0.48,
+            0.5753,
+            0.4954
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Delhi",
+          "bbox": [
+            0.5802,
+            0.48,
+            0.61,
+            0.4954
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "hereinafter",
+          "bbox": [
+            0.6164,
+            0.48,
+            0.6769,
+            0.4954
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "called",
+          "bbox": [
+            0.6817,
+            0.48,
+            0.7131,
+            0.4954
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.718,
+            0.48,
+            0.7301,
+            0.4954
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201cFIRST PARTY\u2019, (Which expression shall mean and include its legal heirs, Successors,",
+      "bbox": [
+        0.1765,
+        0.4926,
+        0.6567,
+        0.5074
+      ],
+      "confidence": 0.8808,
+      "words": [
+        {
+          "text": "\u201cFIRST",
+          "bbox": [
+            0.1765,
+            0.4926,
+            0.2151,
+            0.5074
+          ],
+          "confidence": 0.64,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PARTY\u2019,",
+          "bbox": [
+            0.2216,
+            0.4926,
+            0.2675,
+            0.5074
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Which",
+          "bbox": [
+            0.2724,
+            0.4926,
+            0.3094,
+            0.5074
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "expression",
+          "bbox": [
+            0.3159,
+            0.4926,
+            0.3739,
+            0.5074
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "shall",
+          "bbox": [
+            0.3787,
+            0.4926,
+            0.4053,
+            0.5074
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mean",
+          "bbox": [
+            0.4118,
+            0.4926,
+            0.4384,
+            0.5074
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.4432,
+            0.4926,
+            0.4617,
+            0.5074
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "include",
+          "bbox": [
+            0.4658,
+            0.4926,
+            0.5052,
+            0.5074
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.5109,
+            0.4926,
+            0.5246,
+            0.5074
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "legal",
+          "bbox": [
+            0.5286,
+            0.4926,
+            0.556,
+            0.5074
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "heirs,",
+          "bbox": [
+            0.56,
+            0.4926,
+            0.5907,
+            0.5074
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Successors,",
+          "bbox": [
+            0.5947,
+            0.4926,
+            0.6567,
+            0.5074
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "representatives, administrators, executors, nominees and assigns).",
+      "bbox": [
+        0.1765,
+        0.5051,
+        0.5528,
+        0.5205
+      ],
+      "confidence": 0.945,
+      "words": [
+        {
+          "text": "representatives,",
+          "bbox": [
+            0.1765,
+            0.5051,
+            0.2707,
+            0.5205
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "administrators,",
+          "bbox": [
+            0.2756,
+            0.5051,
+            0.3602,
+            0.5205
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "executors,",
+          "bbox": [
+            0.365,
+            0.5051,
+            0.4214,
+            0.5205
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nominees",
+          "bbox": [
+            0.4263,
+            0.5051,
+            0.4762,
+            0.5205
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.4811,
+            0.5051,
+            0.4996,
+            0.5205
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "assigns).",
+          "bbox": [
+            0.5044,
+            0.5051,
+            0.5528,
+            0.5205
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MRS. SWATI JAIN W/o Sh, PUNEET JAIN resident of E-13/11, First Floor, Vasant Vihar, New",
+      "bbox": [
+        0.2031,
+        0.545,
+        0.7462,
+        0.5553
+      ],
+      "confidence": 0.8327,
+      "words": [
+        {
+          "text": "MRS.",
+          "bbox": [
+            0.2031,
+            0.5462,
+            0.2321,
+            0.5536
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SWATI",
+          "bbox": [
+            0.2361,
+            0.5462,
+            0.278,
+            0.5542
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JAIN",
+          "bbox": [
+            0.282,
+            0.5462,
+            0.3086,
+            0.5547
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "W/o",
+          "bbox": [
+            0.3135,
+            0.5462,
+            0.3409,
+            0.5553
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sh,",
+          "bbox": [
+            0.3441,
+            0.5456,
+            0.3626,
+            0.5536
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PUNEET",
+          "bbox": [
+            0.3666,
+            0.5456,
+            0.4166,
+            0.5536
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JAIN",
+          "bbox": [
+            0.4198,
+            0.5456,
+            0.4464,
+            0.5547
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resident",
+          "bbox": [
+            0.4521,
+            0.545,
+            0.4988,
+            0.5536
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5028,
+            0.5456,
+            0.5141,
+            0.5536
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "E-13/11,",
+          "bbox": [
+            0.5189,
+            0.545,
+            0.5689,
+            0.5547
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "First",
+          "bbox": [
+            0.5737,
+            0.5456,
+            0.6003,
+            0.5536
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Floor,",
+          "bbox": [
+            0.6044,
+            0.5456,
+            0.6374,
+            0.5542
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vasant",
+          "bbox": [
+            0.6414,
+            0.5456,
+            0.6793,
+            0.5536
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Vihar,",
+          "bbox": [
+            0.6833,
+            0.5456,
+            0.7164,
+            0.5542
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.722,
+            0.5456,
+            0.7462,
+            0.5536
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Delhi ~ 110057 (AADHAR NoLSS8.SQ6L42TAAN NoADLPINOTD. hereinafter",
+      "bbox": [
+        0.2039,
+        0.5547,
+        0.7462,
+        0.5713
+      ],
+      "confidence": 0.49,
+      "words": [
+        {
+          "text": "Delhi",
+          "bbox": [
+            0.2039,
+            0.5627,
+            0.2321,
+            0.5696
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "~",
+          "bbox": [
+            0.2385,
+            0.5661,
+            0.2442,
+            0.5678
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "110057",
+          "bbox": [
+            0.2514,
+            0.5627,
+            0.2941,
+            0.5696
+          ],
+          "confidence": 0.79,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(AADHAR",
+          "bbox": [
+            0.3006,
+            0.5621,
+            0.3554,
+            0.5713
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NoLSS8.SQ6L42TAAN",
+          "bbox": [
+            0.3626,
+            0.5547,
+            0.5415,
+            0.5707
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NoADLPINOTD.",
+          "bbox": [
+            0.5479,
+            0.5547,
+            0.6753,
+            0.5713
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "hereinafter",
+          "bbox": [
+            0.6841,
+            0.5621,
+            0.7462,
+            0.5696
+          ],
+          "confidence": 0.08,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "called as \u2018CONFIRMING PARTY, (Which expression shall mean and include its legal heirs,",
+      "bbox": [
+        0.199,
+        0.5701,
+        0.7486,
+        0.5912
+      ],
+      "confidence": 0.8777,
+      "words": [
+        {
+          "text": "called",
+          "bbox": [
+            0.199,
+            0.5701,
+            0.2369,
+            0.5912
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.2434,
+            0.5701,
+            0.2546,
+            0.5912
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018CONFIRMING",
+          "bbox": [
+            0.2635,
+            0.5701,
+            0.3409,
+            0.5912
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PARTY,",
+          "bbox": [
+            0.3481,
+            0.5701,
+            0.3924,
+            0.5912
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Which",
+          "bbox": [
+            0.3997,
+            0.5701,
+            0.4408,
+            0.5912
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "expression",
+          "bbox": [
+            0.4472,
+            0.5701,
+            0.5077,
+            0.5912
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "shall",
+          "bbox": [
+            0.5141,
+            0.5701,
+            0.5423,
+            0.5912
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mean",
+          "bbox": [
+            0.5512,
+            0.5701,
+            0.5794,
+            0.5912
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5866,
+            0.5701,
+            0.6068,
+            0.5912
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "include",
+          "bbox": [
+            0.6132,
+            0.5701,
+            0.6543,
+            0.5912
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.6608,
+            0.5701,
+            0.6761,
+            0.5912
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "legal",
+          "bbox": [
+            0.6833,
+            0.5701,
+            0.7115,
+            0.5912
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "heirs,",
+          "bbox": [
+            0.7156,
+            0.5701,
+            0.7486,
+            0.5912
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IN FAVOUR OF",
+      "bbox": [
+        0.4343,
+        0.6106,
+        0.5165,
+        0.618
+      ],
+      "confidence": 0.9267,
+      "words": [
+        {
+          "text": "IN",
+          "bbox": [
+            0.4343,
+            0.6106,
+            0.4464,
+            0.618
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FAVOUR",
+          "bbox": [
+            0.4504,
+            0.6106,
+            0.498,
+            0.618
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.5012,
+            0.6106,
+            0.5165,
+            0.618
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MR NAVNITYA PARKASH GOYAL S/0 SH, KUNDAN LAL resident of F-268, Ground Floor,",
+      "bbox": [
+        0.2031,
+        0.6425,
+        0.7462,
+        0.6517
+      ],
+      "confidence": 0.8354,
+      "words": [
+        {
+          "text": "MR",
+          "bbox": [
+            0.2031,
+            0.6431,
+            0.2232,
+            0.6505
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NAVNITYA",
+          "bbox": [
+            0.2288,
+            0.6431,
+            0.2933,
+            0.6505
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PARKASH",
+          "bbox": [
+            0.299,
+            0.6431,
+            0.3586,
+            0.6505
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GOYAL",
+          "bbox": [
+            0.365,
+            0.6425,
+            0.4061,
+            0.6505
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "S/0",
+          "bbox": [
+            0.4118,
+            0.6431,
+            0.4327,
+            0.6517
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SH,",
+          "bbox": [
+            0.4384,
+            0.6425,
+            0.4585,
+            0.6505
+          ],
+          "confidence": 0.79,
+          "text_type": "unknown"
+        },
+        {
+          "text": "KUNDAN",
+          "bbox": [
+            0.4641,
+            0.6431,
+            0.5181,
+            0.6505
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAL",
+          "bbox": [
+            0.5246,
+            0.6431,
+            0.5479,
+            0.6499
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resident",
+          "bbox": [
+            0.5536,
+            0.6431,
+            0.6011,
+            0.6505
+          ],
+          "confidence": 0.3,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6068,
+            0.6431,
+            0.6189,
+            0.6499
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "F-268,",
+          "bbox": [
+            0.6245,
+            0.6425,
+            0.6591,
+            0.6505
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ground",
+          "bbox": [
+            0.6664,
+            0.6431,
+            0.7075,
+            0.6499
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Floor,",
+          "bbox": [
+            0.7139,
+            0.6431,
+            0.7462,
+            0.6505
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "= Sushant Lokll, Sector-S7, Near Hongkong Bazar, Gurgaon-122011, Director M/s Mani Mahesh",
+      "bbox": [
+        0.1475,
+        0.6522,
+        0.7478,
+        0.6739
+      ],
+      "confidence": 0.8442,
+      "words": [
+        {
+          "text": "=",
+          "bbox": [
+            0.1475,
+            0.6522,
+            0.1757,
+            0.6739
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sushant",
+          "bbox": [
+            0.1998,
+            0.6522,
+            0.2482,
+            0.6716
+          ],
+          "confidence": 0.37,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Lokll,",
+          "bbox": [
+            0.2546,
+            0.6522,
+            0.2877,
+            0.6716
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sector-S7,",
+          "bbox": [
+            0.2957,
+            0.6522,
+            0.3489,
+            0.6716
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Near",
+          "bbox": [
+            0.357,
+            0.6522,
+            0.3828,
+            0.6716
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Hongkong",
+          "bbox": [
+            0.3892,
+            0.6522,
+            0.44,
+            0.6716
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bazar,",
+          "bbox": [
+            0.4464,
+            0.6522,
+            0.4811,
+            0.6716
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Gurgaon-122011,",
+          "bbox": [
+            0.4875,
+            0.6522,
+            0.5818,
+            0.6716
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Director",
+          "bbox": [
+            0.5874,
+            0.6522,
+            0.6382,
+            0.6716
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M/s",
+          "bbox": [
+            0.6446,
+            0.6522,
+            0.664,
+            0.6716
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mani",
+          "bbox": [
+            0.672,
+            0.6522,
+            0.6978,
+            0.6716
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Mahesh",
+          "bbox": [
+            0.7043,
+            0.6522,
+            0.7478,
+            0.6716
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "/ Ispat Pvt Ltd, Regd Office Shalimar Bagh, New Delhi, hereinafter",
+      "bbox": [
+        0.1418,
+        0.6693,
+        0.5915,
+        0.6881
+      ],
+      "confidence": 0.8873,
+      "words": [
+        {
+          "text": "/",
+          "bbox": [
+            0.1418,
+            0.6745,
+            0.1475,
+            0.6807
+          ],
+          "confidence": 0.76,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ispat",
+          "bbox": [
+            0.2006,
+            0.6693,
+            0.2321,
+            0.6881
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Pvt",
+          "bbox": [
+            0.2377,
+            0.6693,
+            0.2562,
+            0.6881
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ltd,",
+          "bbox": [
+            0.2627,
+            0.6693,
+            0.2853,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Regd",
+          "bbox": [
+            0.2909,
+            0.6693,
+            0.3159,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Office",
+          "bbox": [
+            0.3199,
+            0.6693,
+            0.3562,
+            0.6881
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Shalimar",
+          "bbox": [
+            0.3642,
+            0.6693,
+            0.4158,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bagh,",
+          "bbox": [
+            0.4222,
+            0.6693,
+            0.4561,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "New",
+          "bbox": [
+            0.4617,
+            0.6693,
+            0.4827,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Delhi,",
+          "bbox": [
+            0.4883,
+            0.6693,
+            0.5222,
+            0.6881
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "hereinafter",
+          "bbox": [
+            0.5278,
+            0.6745,
+            0.5915,
+            0.6842
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "fadher Ne FISELATITSS fade PFOTETHEE",
+      "bbox": [
+        0.2079,
+        0.6853,
+        0.5721,
+        0.6978
+      ],
+      "confidence": 0.358,
+      "words": [
+        {
+          "text": "fadher",
+          "bbox": [
+            0.2079,
+            0.6876,
+            0.2546,
+            0.6978
+          ],
+          "confidence": 0.64,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ne",
+          "bbox": [
+            0.2619,
+            0.6881,
+            0.282,
+            0.6961
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FISELATITSS",
+          "bbox": [
+            0.2893,
+            0.6859,
+            0.4134,
+            0.695
+          ],
+          "confidence": 0.06,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fade",
+          "bbox": [
+            0.4239,
+            0.6864,
+            0.4601,
+            0.6961
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PFOTETHEE",
+          "bbox": [
+            0.4722,
+            0.6853,
+            0.5721,
+            0.6961
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CA (AT) (Ins) No. 1217 of 2026",
+      "bbox": [
+        0.1225,
+        0.9014,
+        0.3409,
+        0.9208
+      ],
+      "confidence": 0.9529,
+      "words": [
+        {
+          "text": "CA",
+          "bbox": [
+            0.1225,
+            0.9076,
+            0.1426,
+            0.9151
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(AT)",
+          "bbox": [
+            0.1483,
+            0.9076,
+            0.1757,
+            0.9173
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(Ins)",
+          "bbox": [
+            0.1813,
+            0.9076,
+            0.2111,
+            0.9173
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.2151,
+            0.9076,
+            0.2369,
+            0.9151
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1217",
+          "bbox": [
+            0.245,
+            0.9071,
+            0.3409,
+            0.9179
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2853,
+            0.9014,
+            0.2998,
+            0.9208
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.3086,
+            0.9071,
+            0.3409,
+            0.9179
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.6681,
+  "latency_ms": 617,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "Pat Ot\nyi fe,\nNeca,\nei nial \u00a9 Indian-Non Judicial Stamp\nHaryana Government Dae ren22026\ncorttcae no \u2014 cowaoasezo72 \u2014 MINTANTNNINUUUAIIN Stamp Duty Pad \u20ac 10\n(GRN No Vi27468o4 Penaity eo\n| Seller / First Party Detail\n| Naere: Puneat jain And Swati jy\nHNoFioo = E13/11 SectorWard. Na dandMark Na\nCity'Vilage = Vasant war Distinct New dette \u2018State Deine\nPhone ores Otners. Ms ashinna ispat itd\n|\nBuyer / Second Party Dotail\nName Nawietya parkasn goyal\nHNoMioor F2ES SectorWard $7\nCayrvitage Gurugeam Dsinct. Gurugram\n| Phone one Others M's mary mahesh ispat pvt Rd\nPurpose Deed of agreement\nToe aaheenty of Bee erred Can We restora ty wearaieng tw OnCarn Trine\u201d tat are oe oe ween NBS RYAN\n\u2018This Deed of agreement is executed at New Delhi on this 14\" day of Feb, 2024, by & between:\nMR. PUNEET JAIN S/o Sh, Naresh Chand resident of E-13/11, Pirst Ploor, Vs Vihar, New Delhi ~\n110057 (AADHAR No- PAN No.\nDirector M/s Ashiana [spat Ltd, Regd office at Netaji Subash Place, Delhi hereinafter called as\n\u201cFIRST PARTY\u2019, (Which expression shall mean and include its legal heirs, Successors,\nrepresentatives, administrators, executors, nominees and assigns).\nMRS. SWATI JAIN W/o Sh, PUNEET JAIN resident of E-13/11, First Floor, Vasant Vihar, New\nDelhi ~ 110057 (AADHAR NoLSS8.SQ6L42TAAN NoADLPINOTD. hereinafter\ncalled as \u2018CONFIRMING PARTY, (Which expression shall mean and include its legal heirs,\nIN FAVOUR OF\nMR NAVNITYA PARKASH GOYAL S/0 SH, KUNDAN LAL resident of F-268, Ground Floor,\n= Sushant Lokll, Sector-S7, Near Hongkong Bazar, Gurgaon-122011, Director M/s Mani Mahesh\n/ Ispat Pvt Ltd, Regd Office Shalimar Bagh, New Delhi, hereinafter\nfadher Ne FISELATITSS fade PFOTETHEE\nCA (AT) (Ins) No. 1217 of 2026"
+}

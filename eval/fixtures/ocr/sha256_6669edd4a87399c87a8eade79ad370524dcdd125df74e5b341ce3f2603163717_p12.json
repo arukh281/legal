@@ -1,0 +1,486 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 12,
+  "lines": [
+    {
+      "text": "CP (IB)86(AHM)2026",
+      "bbox": [
+        0.7156,
+        0.0507,
+        0.8904,
+        0.061
+      ],
+      "confidence": 0.79,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7156,
+            0.0507,
+            0.7381,
+            0.0587
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)86(AHM)2026",
+          "bbox": [
+            0.7454,
+            0.0507,
+            0.8904,
+            0.061
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(xiv) Accordingly, CP(IB) 86 of 2026 is allowed and",
+      "bbox": [
+        0.2192,
+        0.0861,
+        0.8364,
+        0.1015
+      ],
+      "confidence": 0.8867,
+      "words": [
+        {
+          "text": "(xiv)",
+          "bbox": [
+            0.2192,
+            0.0872,
+            0.2514,
+            0.1015
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Accordingly,",
+          "bbox": [
+            0.2893,
+            0.0867,
+            0.4182,
+            0.1015
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CP(IB)",
+          "bbox": [
+            0.4376,
+            0.0867,
+            0.5012,
+            0.1009
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        },
+        {
+          "text": "86",
+          "bbox": [
+            0.5197,
+            0.0867,
+            0.5447,
+            0.0975
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5633,
+            0.0861,
+            0.5834,
+            0.0975
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.5979,
+            0.0861,
+            0.6495,
+            0.0975
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.668,
+            0.0861,
+            0.6841,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "allowed",
+          "bbox": [
+            0.7019,
+            0.0861,
+            0.7808,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7985,
+            0.0861,
+            0.8364,
+            0.0969
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "stands admitted.",
+      "bbox": [
+        0.2909,
+        0.1226,
+        0.4682,
+        0.1345
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "stands",
+          "bbox": [
+            0.2909,
+            0.1231,
+            0.3602,
+            0.1345
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "admitted.",
+          "bbox": [
+            0.3691,
+            0.1226,
+            0.4682,
+            0.134
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "<A |",
+      "bbox": [
+        0.4102,
+        0.1745,
+        0.4972,
+        0.2127
+      ],
+      "confidence": 0.435,
+      "words": [
+        {
+          "text": "<A",
+          "bbox": [
+            0.4102,
+            0.1767,
+            0.4964,
+            0.2024
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.4698,
+            0.1745,
+            0.4972,
+            0.2127
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "DR. V. G. VENKATA CRALAPATHY",
+      "bbox": [
+        0.1491,
+        0.2269,
+        0.5391,
+        0.2383
+      ],
+      "confidence": 0.816,
+      "words": [
+        {
+          "text": "DR.",
+          "bbox": [
+            0.1491,
+            0.2281,
+            0.1886,
+            0.2383
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        },
+        {
+          "text": "V.",
+          "bbox": [
+            0.1974,
+            0.2281,
+            0.2192,
+            0.2383
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        },
+        {
+          "text": "G.",
+          "bbox": [
+            0.2297,
+            0.2275,
+            0.2514,
+            0.2383
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "VENKATA",
+          "bbox": [
+            0.2603,
+            0.2275,
+            0.3731,
+            0.2383
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CRALAPATHY",
+          "bbox": [
+            0.3811,
+            0.2269,
+            0.5391,
+            0.2377
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MEMBER (TECHNICAL}",
+      "bbox": [
+        0.1491,
+        0.2452,
+        0.4102,
+        0.2594
+      ],
+      "confidence": 0.87,
+      "words": [
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.1491,
+            0.2457,
+            0.2546,
+            0.2566
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(TECHNICAL}",
+          "bbox": [
+            0.2627,
+            0.2452,
+            0.4102,
+            0.2594
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ve",
+      "bbox": [
+        0.1491,
+        0.2765,
+        0.1644,
+        0.2822
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "ve",
+          "bbox": [
+            0.1491,
+            0.2765,
+            0.1644,
+            0.2822
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2014=SD \u2014",
+      "bbox": [
+        0.6906,
+        0.1682,
+        0.7913,
+        0.1853
+      ],
+      "confidence": 0.43,
+      "words": [
+        {
+          "text": "\u2014=SD",
+          "bbox": [
+            0.6906,
+            0.1682,
+            0.7631,
+            0.1853
+          ],
+          "confidence": 0.24,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2014",
+          "bbox": [
+            0.7768,
+            0.1773,
+            0.7913,
+            0.179
+          ],
+          "confidence": 0.62,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CHITRA SANKARE",
+      "bbox": [
+        0.6438,
+        0.2229,
+        0.8582,
+        0.2372
+      ],
+      "confidence": 0.9,
+      "words": [
+        {
+          "text": "CHITRA",
+          "bbox": [
+            0.6438,
+            0.2229,
+            0.7341,
+            0.2372
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SANKARE",
+          "bbox": [
+            0.7421,
+            0.2263,
+            0.8582,
+            0.2372
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "MEMBER (JUDICIAL)",
+      "bbox": [
+        0.6406,
+        0.2446,
+        0.8775,
+        0.2588
+      ],
+      "confidence": 0.955,
+      "words": [
+        {
+          "text": "MEMBER",
+          "bbox": [
+            0.6406,
+            0.2446,
+            0.7462,
+            0.2554
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(JUDICIAL)",
+          "bbox": [
+            0.7542,
+            0.2446,
+            0.8775,
+            0.2588
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "d1}Page",
+      "bbox": [
+        0.7921,
+        0.9019,
+        0.8799,
+        0.9139
+      ],
+      "confidence": 0.01,
+      "words": [
+        {
+          "text": "d1}Page",
+          "bbox": [
+            0.7921,
+            0.9019,
+            0.8799,
+            0.9139
+          ],
+          "confidence": 0.01,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.79,
+  "latency_ms": 173,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "CP (IB)86(AHM)2026\n(xiv) Accordingly, CP(IB) 86 of 2026 is allowed and\nstands admitted.\n<A |\nDR. V. G. VENKATA CRALAPATHY\nMEMBER (TECHNICAL}\nve\n\u2014=SD \u2014\nCHITRA SANKARE\nMEMBER (JUDICIAL)\nd1}Page"
+}

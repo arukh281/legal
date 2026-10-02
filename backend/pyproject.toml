@@ -20,6 +20,13 @@ dependencies = [
     "jsonschema>=4.20.0",
     "boto3>=1.43.107",
     "beautifulsoup4>=4.15.0",
+    "pypdf>=6.19.0",
+    "pymupdf>=1.28.2",
+    "xxhash>=4.0.1",
+    "types-xxhash>=3.0.5.2",
+    "pillow>=12.3.0",
+    "pillow-heif>=1.8.0",
+    "pytesseract>=0.3.13",
 ]
 
 [dependency-groups]

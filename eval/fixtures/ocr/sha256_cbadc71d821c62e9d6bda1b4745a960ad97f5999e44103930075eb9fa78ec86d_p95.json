@@ -1,0 +1,245 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 95,
+  "lines": [
+    {
+      "text": "aqons0 8 ON",
+      "bbox": [
+        0.2593,
+        0.4789,
+        0.2908,
+        0.5689
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "aqons0",
+          "bbox": [
+            0.2593,
+            0.4789,
+            0.2908,
+            0.5118
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "8",
+          "bbox": [
+            0.2692,
+            0.518,
+            0.279,
+            0.5262
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ON",
+          "bbox": [
+            0.2731,
+            0.5345,
+            0.2881,
+            0.5689
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "qsvise a sane",
+      "bbox": [
+        0.2489,
+        0.4861,
+        0.2737,
+        0.5679
+      ],
+      "confidence": 0.3067,
+      "words": [
+        {
+          "text": "qsvise",
+          "bbox": [
+            0.2489,
+            0.4861,
+            0.2646,
+            0.5262
+          ],
+          "confidence": 0.03,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.258,
+            0.5288,
+            0.2672,
+            0.5391
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sane",
+          "bbox": [
+            0.2613,
+            0.5412,
+            0.2737,
+            0.5679
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "py crs) aA",
+      "bbox": [
+        0.2489,
+        0.4254,
+        0.2685,
+        0.4794
+      ],
+      "confidence": 0.23,
+      "words": [
+        {
+          "text": "py",
+          "bbox": [
+            0.2489,
+            0.4254,
+            0.258,
+            0.4311
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        },
+        {
+          "text": "crs)",
+          "bbox": [
+            0.2508,
+            0.4331,
+            0.2639,
+            0.4542
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aA",
+          "bbox": [
+            0.2561,
+            0.4563,
+            0.2685,
+            0.4794
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "NaMeaTuas 4",
+      "bbox": [
+        0.2358,
+        0.4295,
+        0.2554,
+        0.4856
+      ],
+      "confidence": 0.305,
+      "words": [
+        {
+          "text": "NaMeaTuas",
+          "bbox": [
+            0.2358,
+            0.4295,
+            0.2547,
+            0.4794
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4",
+          "bbox": [
+            0.2475,
+            0.4815,
+            0.2554,
+            0.4856
+          ],
+          "confidence": 0.61,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "6",
+      "bbox": [
+        0.2207,
+        0.466,
+        0.2364,
+        0.4743
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "6",
+          "bbox": [
+            0.2207,
+            0.466,
+            0.2364,
+            0.4743
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ze \u20180!",
+      "bbox": [
+        0.2443,
+        0.4002,
+        0.2561,
+        0.4249
+      ],
+      "confidence": 0.185,
+      "words": [
+        {
+          "text": "ze",
+          "bbox": [
+            0.2443,
+            0.4002,
+            0.2541,
+            0.4141
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u20180!",
+          "bbox": [
+            0.2482,
+            0.4167,
+            0.2561,
+            0.4249
+          ],
+          "confidence": 0.37,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.2521,
+  "latency_ms": 206,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "aqons0 8 ON\nqsvise a sane\npy crs) aA\nNaMeaTuas 4\n6\nze \u20180!"
+}

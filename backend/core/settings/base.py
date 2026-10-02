@@ -206,6 +206,7 @@ S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin")
 S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")
 S3_REGION = os.environ.get("AWS_REGION", "ap-south-1")
 S3_RAW_BUCKET = os.environ.get("S3_RAW_BUCKET", "plc-raw")
+S3_PARSED_BUCKET = os.environ.get("S3_PARSED_BUCKET", "plc-parsed")
 
 # Configure structured JSON logging
 setup_logging(os.environ.get("LOG_LEVEL", "INFO"))

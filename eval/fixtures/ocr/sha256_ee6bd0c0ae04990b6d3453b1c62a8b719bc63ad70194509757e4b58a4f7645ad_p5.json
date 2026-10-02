@@ -1,0 +1,2318 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 5,
+  "lines": [
+    {
+      "text": "iv.",
+      "bbox": [
+        0.1579,
+        0.2908,
+        0.1821,
+        0.3027
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "iv.",
+          "bbox": [
+            0.1579,
+            0.2908,
+            0.1821,
+            0.3027
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB) 374 OF 2025",
+      "bbox": [
+        0.7333,
+        0.0496,
+        0.8807,
+        0.061
+      ],
+      "confidence": 0.906,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7333,
+            0.0502,
+            0.751,
+            0.0587
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7566,
+            0.0496,
+            0.7808,
+            0.061
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "374",
+          "bbox": [
+            0.7865,
+            0.0502,
+            0.8139,
+            0.0587
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.8195,
+            0.0496,
+            0.8388,
+            0.0587
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.8445,
+            0.0496,
+            0.8807,
+            0.0582
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Framework\") for the resolution of the IL&FS Group, which",
+      "bbox": [
+        0.216,
+        0.0924,
+        0.8807,
+        0.1106
+      ],
+      "confidence": 0.9522,
+      "words": [
+        {
+          "text": "Framework\")",
+          "bbox": [
+            0.216,
+            0.0952,
+            0.3586,
+            0.1106
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.3683,
+            0.0952,
+            0.3989,
+            0.1072
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4069,
+            0.0946,
+            0.4424,
+            0.1066
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resolution",
+          "bbox": [
+            0.4512,
+            0.0941,
+            0.5657,
+            0.1066
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5745,
+            0.0941,
+            0.5963,
+            0.106
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6019,
+            0.0941,
+            0.6374,
+            0.106
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.6463,
+            0.0935,
+            0.7172,
+            0.1055
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Group,",
+          "bbox": [
+            0.726,
+            0.0935,
+            0.8034,
+            0.1083
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "which",
+          "bbox": [
+            0.8131,
+            0.0924,
+            0.8807,
+            0.1049
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "provides that the distributable amounts to the creditors",
+      "bbox": [
+        0.2151,
+        0.1317,
+        0.8807,
+        0.1505
+      ],
+      "confidence": 0.9612,
+      "words": [
+        {
+          "text": "provides",
+          "bbox": [
+            0.2151,
+            0.1345,
+            0.3102,
+            0.1505
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "that",
+          "bbox": [
+            0.3223,
+            0.1345,
+            0.3691,
+            0.1465
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3803,
+            0.134,
+            0.4158,
+            0.146
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "distributable",
+          "bbox": [
+            0.4287,
+            0.1334,
+            0.5745,
+            0.146
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amounts",
+          "bbox": [
+            0.5874,
+            0.134,
+            0.6873,
+            0.1454
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.7002,
+            0.134,
+            0.7204,
+            0.1448
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7333,
+            0.1323,
+            0.7687,
+            0.1442
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "creditors",
+          "bbox": [
+            0.7816,
+            0.1317,
+            0.8807,
+            0.1442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "of the IL&FS Group entities would be distributed in",
+      "bbox": [
+        0.216,
+        0.1705,
+        0.8815,
+        0.1881
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "of",
+          "bbox": [
+            0.216,
+            0.1739,
+            0.2377,
+            0.1859
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.253,
+            0.1739,
+            0.2885,
+            0.1859
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.3062,
+            0.1733,
+            0.3763,
+            0.1859
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Group",
+          "bbox": [
+            0.3956,
+            0.1733,
+            0.4666,
+            0.1881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "entities",
+          "bbox": [
+            0.4851,
+            0.1722,
+            0.5673,
+            0.1847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "would",
+          "bbox": [
+            0.585,
+            0.1716,
+            0.6543,
+            0.1842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "be",
+          "bbox": [
+            0.672,
+            0.1716,
+            0.6978,
+            0.1836
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "distributed",
+          "bbox": [
+            0.7164,
+            0.1705,
+            0.8421,
+            0.1836
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.859,
+            0.1705,
+            0.8815,
+            0.1824
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "accordance with the procedure set out under the Revised",
+      "bbox": [
+        0.216,
+        0.2092,
+        0.8807,
+        0.2269
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "accordance",
+          "bbox": [
+            0.216,
+            0.2127,
+            0.3433,
+            0.2252
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.3529,
+            0.2121,
+            0.4029,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4118,
+            0.2121,
+            0.4472,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "procedure",
+          "bbox": [
+            0.4577,
+            0.2115,
+            0.5721,
+            0.2269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "set",
+          "bbox": [
+            0.5826,
+            0.2121,
+            0.6156,
+            0.2229
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "out",
+          "bbox": [
+            0.6245,
+            0.2121,
+            0.6624,
+            0.2229
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.6704,
+            0.2104,
+            0.7397,
+            0.2223
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7494,
+            0.2098,
+            0.784,
+            0.2223
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Revised",
+          "bbox": [
+            0.7945,
+            0.2092,
+            0.8807,
+            0.2218
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Distribution Framework.",
+      "bbox": [
+        0.2151,
+        0.2503,
+        0.4964,
+        0.2634
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "Distribution",
+          "bbox": [
+            0.2151,
+            0.2514,
+            0.3537,
+            0.2634
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Framework.",
+          "bbox": [
+            0.3626,
+            0.2503,
+            0.4964,
+            0.2628
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The Applicant submits that it is a \"Red List\" classified",
+      "bbox": [
+        0.2143,
+        0.2868,
+        0.8807,
+        0.3062
+      ],
+      "confidence": 0.959,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2143,
+            0.2902,
+            0.2562,
+            0.3022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Applicant",
+          "bbox": [
+            0.2699,
+            0.2902,
+            0.3795,
+            0.3062
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "submits",
+          "bbox": [
+            0.3932,
+            0.2891,
+            0.4843,
+            0.3016
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "that",
+          "bbox": [
+            0.4988,
+            0.2891,
+            0.5455,
+            0.301
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "it",
+          "bbox": [
+            0.5584,
+            0.2885,
+            0.5737,
+            0.3005
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.5874,
+            0.2885,
+            0.6052,
+            0.3005
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.6197,
+            0.2919,
+            0.6334,
+            0.3005
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\"Red",
+          "bbox": [
+            0.6471,
+            0.2879,
+            0.6978,
+            0.2999
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "List\"",
+          "bbox": [
+            0.7123,
+            0.2879,
+            0.7607,
+            0.2999
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "classified",
+          "bbox": [
+            0.776,
+            0.2868,
+            0.8807,
+            0.2993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "entity, which is the internal classification of IL&FS Group",
+      "bbox": [
+        0.216,
+        0.3261,
+        0.8807,
+        0.3449
+      ],
+      "confidence": 0.9567,
+      "words": [
+        {
+          "text": "entity,",
+          "bbox": [
+            0.216,
+            0.3295,
+            0.2861,
+            0.3449
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "which",
+          "bbox": [
+            0.2957,
+            0.329,
+            0.3642,
+            0.3409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.3723,
+            0.3284,
+            0.3908,
+            0.3409
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4005,
+            0.3284,
+            0.4351,
+            0.3404
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "internal",
+          "bbox": [
+            0.4448,
+            0.3278,
+            0.5342,
+            0.3404
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "classification",
+          "bbox": [
+            0.5439,
+            0.3273,
+            0.6922,
+            0.3398
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.701,
+            0.3267,
+            0.7236,
+            0.3387
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IL&FS",
+          "bbox": [
+            0.7293,
+            0.3261,
+            0.7994,
+            0.3387
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Group",
+          "bbox": [
+            0.8098,
+            0.3261,
+            0.8807,
+            0.3409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "companies that were determined to be financially",
+      "bbox": [
+        0.216,
+        0.3626,
+        0.8824,
+        0.3843
+      ],
+      "confidence": 0.9543,
+      "words": [
+        {
+          "text": "companies",
+          "bbox": [
+            0.216,
+            0.3683,
+            0.3368,
+            0.3843
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "that",
+          "bbox": [
+            0.3626,
+            0.3677,
+            0.4085,
+            0.3803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.4327,
+            0.3712,
+            0.4851,
+            0.3797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "determined",
+          "bbox": [
+            0.5117,
+            0.3666,
+            0.6406,
+            0.3791
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6656,
+            0.3677,
+            0.6857,
+            0.378
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "be",
+          "bbox": [
+            0.7123,
+            0.366,
+            0.7373,
+            0.378
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "financially",
+          "bbox": [
+            0.7631,
+            0.3626,
+            0.8824,
+            0.3831
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "distressed or non-viable. GIMCO, due to its inability to",
+      "bbox": [
+        0.216,
+        0.4036,
+        0.8807,
+        0.4202
+      ],
+      "confidence": 0.9489,
+      "words": [
+        {
+          "text": "distressed",
+          "bbox": [
+            0.216,
+            0.4071,
+            0.3312,
+            0.4202
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.3449,
+            0.4105,
+            0.3674,
+            0.4196
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "non-viable.",
+          "bbox": [
+            0.3803,
+            0.4059,
+            0.5052,
+            0.419
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO,",
+          "bbox": [
+            0.5205,
+            0.4059,
+            0.61,
+            0.4202
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "due",
+          "bbox": [
+            0.6253,
+            0.4054,
+            0.6664,
+            0.4173
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6801,
+            0.4065,
+            0.7002,
+            0.4168
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.7139,
+            0.4048,
+            0.7413,
+            0.4168
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "inability",
+          "bbox": [
+            0.7542,
+            0.4036,
+            0.8477,
+            0.4196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8598,
+            0.4048,
+            0.8807,
+            0.4156
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "meet its financial obligations and lack of substantial on",
+      "bbox": [
+        0.216,
+        0.4424,
+        0.8815,
+        0.4607
+      ],
+      "confidence": 0.9544,
+      "words": [
+        {
+          "text": "meet",
+          "bbox": [
+            0.216,
+            0.4481,
+            0.2707,
+            0.459
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.282,
+            0.4464,
+            0.3086,
+            0.4584
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "financial",
+          "bbox": [
+            0.3215,
+            0.4453,
+            0.4198,
+            0.4584
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "obligations",
+          "bbox": [
+            0.4319,
+            0.4447,
+            0.5552,
+            0.4607
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5681,
+            0.4441,
+            0.6108,
+            0.4567
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "lack",
+          "bbox": [
+            0.6221,
+            0.4436,
+            0.6704,
+            0.4561
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6817,
+            0.4436,
+            0.7035,
+            0.4561
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "substantial",
+          "bbox": [
+            0.7139,
+            0.4424,
+            0.8421,
+            0.4555
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.8541,
+            0.4458,
+            0.8815,
+            0.4544
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "going business operations, was placed on this Red List.",
+      "bbox": [
+        0.216,
+        0.4812,
+        0.8799,
+        0.5017
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "going",
+          "bbox": [
+            0.216,
+            0.4857,
+            0.2772,
+            0.5017
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "business",
+          "bbox": [
+            0.2885,
+            0.4852,
+            0.3892,
+            0.4977
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "operations,",
+          "bbox": [
+            0.4021,
+            0.484,
+            0.5278,
+            0.5
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.5407,
+            0.4869,
+            0.5842,
+            0.4954
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "placed",
+          "bbox": [
+            0.5963,
+            0.4823,
+            0.6704,
+            0.4989
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.6833,
+            0.4863,
+            0.7107,
+            0.4949
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "this",
+          "bbox": [
+            0.7228,
+            0.4818,
+            0.7647,
+            0.4943
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Red",
+          "bbox": [
+            0.7776,
+            0.4812,
+            0.8203,
+            0.4937
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "List.",
+          "bbox": [
+            0.8324,
+            0.4812,
+            0.8799,
+            0.4932
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "In order to protect stakeholder interests and stop",
+      "bbox": [
+        0.2168,
+        0.5205,
+        0.8815,
+        0.5393
+      ],
+      "confidence": 0.9387,
+      "words": [
+        {
+          "text": "In",
+          "bbox": [
+            0.2168,
+            0.5251,
+            0.2393,
+            0.5371
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "order",
+          "bbox": [
+            0.2619,
+            0.5245,
+            0.3223,
+            0.5371
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.3441,
+            0.5257,
+            0.365,
+            0.5365
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "protect",
+          "bbox": [
+            0.3884,
+            0.5245,
+            0.4682,
+            0.5393
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "stakeholder",
+          "bbox": [
+            0.4915,
+            0.5222,
+            0.6245,
+            0.5353
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "interests",
+          "bbox": [
+            0.6463,
+            0.5217,
+            0.7454,
+            0.5336
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7687,
+            0.5205,
+            0.8114,
+            0.5331
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "stop",
+          "bbox": [
+            0.8348,
+            0.5217,
+            0.8815,
+            0.5353
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "additional liability accumulation, entities listed on the",
+      "bbox": [
+        0.2176,
+        0.5587,
+        0.8824,
+        0.5787
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "additional",
+          "bbox": [
+            0.2176,
+            0.5633,
+            0.3312,
+            0.5764
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "liability",
+          "bbox": [
+            0.3465,
+            0.5627,
+            0.4311,
+            0.5787
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "accumulation,",
+          "bbox": [
+            0.4472,
+            0.561,
+            0.61,
+            0.5758
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "entities",
+          "bbox": [
+            0.6277,
+            0.5604,
+            0.7099,
+            0.573
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "listed",
+          "bbox": [
+            0.726,
+            0.5593,
+            0.7881,
+            0.5724
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.8042,
+            0.5627,
+            0.8308,
+            0.5713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8469,
+            0.5587,
+            0.8824,
+            0.5713
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Red List were usually given consideration for resolution,",
+      "bbox": [
+        0.2176,
+        0.5981,
+        0.8815,
+        0.6169
+      ],
+      "confidence": 0.9612,
+      "words": [
+        {
+          "text": "Red",
+          "bbox": [
+            0.2176,
+            0.6032,
+            0.2603,
+            0.6157
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "List",
+          "bbox": [
+            0.2716,
+            0.6032,
+            0.3135,
+            0.6152
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "were",
+          "bbox": [
+            0.3239,
+            0.606,
+            0.3763,
+            0.6146
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "usually",
+          "bbox": [
+            0.3876,
+            0.6015,
+            0.4722,
+            0.6169
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "given",
+          "bbox": [
+            0.4827,
+            0.6015,
+            0.5423,
+            0.6169
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "consideration",
+          "bbox": [
+            0.5544,
+            0.5998,
+            0.7083,
+            0.6129
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.7196,
+            0.5992,
+            0.7502,
+            0.6112
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "resolution,",
+          "bbox": [
+            0.7607,
+            0.5981,
+            0.8815,
+            0.6123
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "restructuring, or the start of insolvency proceedings",
+      "bbox": [
+        0.2176,
+        0.6368,
+        0.8832,
+        0.6568
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "restructuring,",
+          "bbox": [
+            0.2176,
+            0.6414,
+            0.3755,
+            0.6568
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.3973,
+            0.6448,
+            0.4198,
+            0.6528
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4392,
+            0.6403,
+            0.4746,
+            0.6522
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "start",
+          "bbox": [
+            0.4956,
+            0.6408,
+            0.5488,
+            0.6522
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5689,
+            0.6391,
+            0.5907,
+            0.6511
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "insolvency",
+          "bbox": [
+            0.6084,
+            0.6385,
+            0.7284,
+            0.6534
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "proceedings",
+          "bbox": [
+            0.7478,
+            0.6368,
+            0.8832,
+            0.6534
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "under the IBC.",
+      "bbox": [
+        0.2176,
+        0.6802,
+        0.386,
+        0.6927
+      ],
+      "confidence": 0.9567,
+      "words": [
+        {
+          "text": "under",
+          "bbox": [
+            0.2176,
+            0.6807,
+            0.2861,
+            0.6927
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2941,
+            0.6802,
+            0.3296,
+            0.6921
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IBC.",
+          "bbox": [
+            0.3384,
+            0.6802,
+            0.386,
+            0.6916
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "GIMCO (formerly known as Shri Matai Ashapura Ports",
+      "bbox": [
+        0.2192,
+        0.7144,
+        0.884,
+        0.7343
+      ],
+      "confidence": 0.9487,
+      "words": [
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.2192,
+            0.7195,
+            0.3006,
+            0.732
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(formerly",
+          "bbox": [
+            0.3175,
+            0.7184,
+            0.4182,
+            0.7343
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "known",
+          "bbox": [
+            0.4311,
+            0.7178,
+            0.5077,
+            0.7298
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.5222,
+            0.7206,
+            0.5463,
+            0.7292
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Shri",
+          "bbox": [
+            0.5616,
+            0.7161,
+            0.6084,
+            0.7286
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Matai",
+          "bbox": [
+            0.6229,
+            0.7155,
+            0.6865,
+            0.7281
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ashapura",
+          "bbox": [
+            0.7002,
+            0.7149,
+            0.8122,
+            0.7303
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ports",
+          "bbox": [
+            0.8259,
+            0.7144,
+            0.884,
+            0.7263
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Private Limited) was incorporated on March 27, 1996",
+      "bbox": [
+        0.2184,
+        0.7526,
+        0.8832,
+        0.7725
+      ],
+      "confidence": 0.9587,
+      "words": [
+        {
+          "text": "Private",
+          "bbox": [
+            0.2184,
+            0.7583,
+            0.2957,
+            0.7702
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited)",
+          "bbox": [
+            0.3127,
+            0.7571,
+            0.4037,
+            0.7725
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.4206,
+            0.7605,
+            0.4641,
+            0.7685
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "incorporated",
+          "bbox": [
+            0.4803,
+            0.7548,
+            0.6253,
+            0.7714
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.6422,
+            0.7583,
+            0.6696,
+            0.7668
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "March",
+          "bbox": [
+            0.6857,
+            0.7537,
+            0.7583,
+            0.7662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "27,",
+          "bbox": [
+            0.7752,
+            0.7537,
+            0.809,
+            0.768
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1996",
+          "bbox": [
+            0.83,
+            0.7526,
+            0.8832,
+            0.7651
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "with a special purpose to promote, acquire, develop and",
+      "bbox": [
+        0.2184,
+        0.7913,
+        0.8848,
+        0.8124
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "with",
+          "bbox": [
+            0.2184,
+            0.797,
+            0.2675,
+            0.809
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.2796,
+            0.8005,
+            0.2925,
+            0.809
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "special",
+          "bbox": [
+            0.3038,
+            0.7959,
+            0.382,
+            0.8124
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "purpose",
+          "bbox": [
+            0.3932,
+            0.7987,
+            0.4843,
+            0.8113
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.4964,
+            0.7959,
+            0.5173,
+            0.8067
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "promote,",
+          "bbox": [
+            0.5286,
+            0.7953,
+            0.6293,
+            0.8101
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "acquire,",
+          "bbox": [
+            0.6422,
+            0.793,
+            0.7325,
+            0.809
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "develop",
+          "bbox": [
+            0.7454,
+            0.7919,
+            0.83,
+            0.8073
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8421,
+            0.7913,
+            0.8848,
+            0.8039
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "start transportation, tourism and make all amenities for",
+      "bbox": [
+        0.22,
+        0.8301,
+        0.8856,
+        0.8506
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "start",
+          "bbox": [
+            0.22,
+            0.8369,
+            0.2724,
+            0.8478
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "transportation,",
+          "bbox": [
+            0.2836,
+            0.8341,
+            0.4545,
+            0.8506
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tourism",
+          "bbox": [
+            0.4674,
+            0.8335,
+            0.5568,
+            0.8455
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5681,
+            0.8324,
+            0.6108,
+            0.8449
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "make",
+          "bbox": [
+            0.6213,
+            0.8318,
+            0.6833,
+            0.8444
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "all",
+          "bbox": [
+            0.6954,
+            0.8312,
+            0.722,
+            0.8438
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amenities",
+          "bbox": [
+            0.7341,
+            0.8307,
+            0.8429,
+            0.8432
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.855,
+            0.8301,
+            0.8856,
+            0.8421
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "this purpose. GIMCO is presently jointly held by IMICL",
+      "bbox": [
+        0.2192,
+        0.8689,
+        0.8856,
+        0.89
+      ],
+      "confidence": 0.9422,
+      "words": [
+        {
+          "text": "this",
+          "bbox": [
+            0.2192,
+            0.8746,
+            0.2619,
+            0.8871
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "purpose.",
+          "bbox": [
+            0.2748,
+            0.8774,
+            0.3731,
+            0.89
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GIMCO",
+          "bbox": [
+            0.3884,
+            0.8729,
+            0.4698,
+            0.8854
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.4835,
+            0.8723,
+            0.502,
+            0.8848
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "presently",
+          "bbox": [
+            0.5149,
+            0.8712,
+            0.6205,
+            0.8877
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "jointly",
+          "bbox": [
+            0.6301,
+            0.8706,
+            0.7043,
+            0.8865
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "held",
+          "bbox": [
+            0.7164,
+            0.87,
+            0.7655,
+            0.8826
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.7776,
+            0.8694,
+            0.805,
+            0.8854
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IMICL",
+          "bbox": [
+            0.8171,
+            0.8689,
+            0.8856,
+            0.8814
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ie",
+      "bbox": [
+        0.6664,
+        0.8985,
+        0.7502,
+        0.9236
+      ],
+      "confidence": 0.4,
+      "words": [
+        {
+          "text": "ie",
+          "bbox": [
+            0.6664,
+            0.8985,
+            0.7502,
+            0.9236
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "]\u2014 Sy - & Page 4 of 17",
+      "bbox": [
+        0.2885,
+        0.9236,
+        0.8872,
+        0.9458
+      ],
+      "confidence": 0.5837,
+      "words": [
+        {
+          "text": "]\u2014",
+          "bbox": [
+            0.2885,
+            0.9379,
+            0.3151,
+            0.9418
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sy",
+          "bbox": [
+            0.3239,
+            0.9304,
+            0.3747,
+            0.9458
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        },
+        {
+          "text": "-",
+          "bbox": [
+            0.3836,
+            0.9356,
+            0.3981,
+            0.9379
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        },
+        {
+          "text": "&",
+          "bbox": [
+            0.4255,
+            0.9316,
+            0.4335,
+            0.939
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7945,
+            0.9282,
+            0.8856,
+            0.9401
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4",
+          "bbox": [
+            0.834,
+            0.9236,
+            0.8445,
+            0.943
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8477,
+            0.9236,
+            0.8646,
+            0.943
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17",
+          "bbox": [
+            0.8711,
+            0.9236,
+            0.8872,
+            0.943
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9339,
+  "latency_ms": 471,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "iv.\nCP (IB) 374 OF 2025\nFramework\") for the resolution of the IL&FS Group, which\nprovides that the distributable amounts to the creditors\nof the IL&FS Group entities would be distributed in\naccordance with the procedure set out under the Revised\nDistribution Framework.\nThe Applicant submits that it is a \"Red List\" classified\nentity, which is the internal classification of IL&FS Group\ncompanies that were determined to be financially\ndistressed or non-viable. GIMCO, due to its inability to\nmeet its financial obligations and lack of substantial on\ngoing business operations, was placed on this Red List.\nIn order to protect stakeholder interests and stop\nadditional liability accumulation, entities listed on the\nRed List were usually given consideration for resolution,\nrestructuring, or the start of insolvency proceedings\nunder the IBC.\nGIMCO (formerly known as Shri Matai Ashapura Ports\nPrivate Limited) was incorporated on March 27, 1996\nwith a special purpose to promote, acquire, develop and\nstart transportation, tourism and make all amenities for\nthis purpose. GIMCO is presently jointly held by IMICL\nie\n]\u2014 Sy - & Page 4 of 17"
+}

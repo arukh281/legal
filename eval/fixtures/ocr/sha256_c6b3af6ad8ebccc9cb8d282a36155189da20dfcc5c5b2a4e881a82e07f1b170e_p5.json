@@ -1,0 +1,832 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 5,
+  "lines": [
+    {
+      "text": "NCLY. Amaravati Bench",
+      "bbox": [
+        0.7606,
+        0.0681,
+        0.8661,
+        0.0861
+      ],
+      "confidence": 0.7733,
+      "words": [
+        {
+          "text": "NCLY.",
+          "bbox": [
+            0.7606,
+            0.0681,
+            0.7883,
+            0.0833
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Amaravati",
+          "bbox": [
+            0.7904,
+            0.0715,
+            0.8355,
+            0.0861
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bench",
+          "bbox": [
+            0.8397,
+            0.0777,
+            0.8661,
+            0.0861
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "report on the Constitution of the Committee Of Creditors (hereinafter",
+      "bbox": [
+        0.372,
+        0.1655,
+        0.8515,
+        0.2151
+      ],
+      "confidence": 0.851,
+      "words": [
+        {
+          "text": "report",
+          "bbox": [
+            0.372,
+            0.1655,
+            0.4136,
+            0.1762
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.4178,
+            0.1695,
+            0.4344,
+            0.1774
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.44,
+            0.1689,
+            0.4615,
+            0.1796
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Constitution",
+          "bbox": [
+            0.4663,
+            0.1734,
+            0.5475,
+            0.1875
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5524,
+            0.1791,
+            0.5677,
+            0.1886
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5711,
+            0.1802,
+            0.5926,
+            0.1909
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Committee",
+          "bbox": [
+            0.5982,
+            0.1802,
+            0.6745,
+            0.2005
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Of",
+          "bbox": [
+            0.6801,
+            0.1898,
+            0.6947,
+            0.1999
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditors",
+          "bbox": [
+            0.6981,
+            0.1914,
+            0.7627,
+            0.2055
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(hereinafter",
+          "bbox": [
+            0.7689,
+            0.1943,
+            0.8515,
+            0.2151
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "referred to as the \u201cCoc\u201d) under Regulation 17(1) of the CIRP",
+      "bbox": [
+        0.3678,
+        0.1943,
+        0.8473,
+        0.2432
+      ],
+      "confidence": 0.9145,
+      "words": [
+        {
+          "text": "referred",
+          "bbox": [
+            0.3678,
+            0.1943,
+            0.4233,
+            0.2072
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.433,
+            0.1993,
+            0.4448,
+            0.2089
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4545,
+            0.2038,
+            0.4698,
+            0.2117
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4788,
+            0.2033,
+            0.501,
+            0.2145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cCoc\u201d)",
+          "bbox": [
+            0.5115,
+            0.2055,
+            0.5649,
+            0.2218
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.5746,
+            0.2128,
+            0.6155,
+            0.2235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Regulation",
+          "bbox": [
+            0.6246,
+            0.2128,
+            0.7002,
+            0.2337
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "17(1)",
+          "bbox": [
+            0.7113,
+            0.223,
+            0.7467,
+            0.2382
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7557,
+            0.2275,
+            0.7703,
+            0.2376
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7779,
+            0.2286,
+            0.7994,
+            0.2399
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CIRP",
+          "bbox": [
+            0.8085,
+            0.2314,
+            0.8473,
+            0.2432
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Vv) Jn the 1 meetin Of the CoC, the Applicant Was confirmed as the",
+      "bbox": [
+        0.3185,
+        0.3181,
+        0.83,
+        0.3722
+      ],
+      "confidence": 0.7843,
+      "words": [
+        {
+          "text": "Vv)",
+          "bbox": [
+            0.3185,
+            0.3181,
+            0.3317,
+            0.3305
+          ],
+          "confidence": 0.26,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Jn",
+          "bbox": [
+            0.3518,
+            0.3209,
+            0.3636,
+            0.3316
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3706,
+            0.3226,
+            0.3921,
+            0.3339
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1",
+          "bbox": [
+            0.3997,
+            0.3249,
+            0.415,
+            0.335
+          ],
+          "confidence": 0.33,
+          "text_type": "unknown"
+        },
+        {
+          "text": "meetin",
+          "bbox": [
+            0.4212,
+            0.3294,
+            0.4677,
+            0.3401
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Of",
+          "bbox": [
+            0.4844,
+            0.3333,
+            0.4983,
+            0.3429
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5031,
+            0.3345,
+            0.5246,
+            0.3457
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CoC,",
+          "bbox": [
+            0.5316,
+            0.3367,
+            0.567,
+            0.3502
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5746,
+            0.3407,
+            0.5961,
+            0.3519
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Applicant",
+          "bbox": [
+            0.6017,
+            0.3412,
+            0.669,
+            0.3609
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Was",
+          "bbox": [
+            0.6745,
+            0.3514,
+            0.7023,
+            0.3609
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        },
+        {
+          "text": "confirmed",
+          "bbox": [
+            0.7085,
+            0.3542,
+            0.7786,
+            0.3677
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.7856,
+            0.3609,
+            0.8022,
+            0.3699
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8092,
+            0.3609,
+            0.83,
+            0.3722
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ig",
+      "bbox": [
+        0.4691,
+        0.3333,
+        0.4774,
+        0.344
+      ],
+      "confidence": 0.66,
+      "words": [
+        {
+          "text": "ig",
+          "bbox": [
+            0.4691,
+            0.3333,
+            0.4774,
+            0.344
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(Vi) The Corporate Debtor is a Limited Liability Partnership (hereinafter",
+      "bbox": [
+        0.304,
+        0.3851,
+        0.823,
+        0.442
+      ],
+      "confidence": 0.778,
+      "words": [
+        {
+          "text": "(Vi)",
+          "bbox": [
+            0.304,
+            0.3851,
+            0.3262,
+            0.3986
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.3428,
+            0.3885,
+            0.3692,
+            0.3998
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.3754,
+            0.3891,
+            0.4455,
+            0.4093
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor",
+          "bbox": [
+            0.4518,
+            0.3981,
+            0.501,
+            0.4116
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.5052,
+            0.4026,
+            0.5156,
+            0.4127
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.5212,
+            0.4071,
+            0.5295,
+            0.4139
+          ],
+          "confidence": 0.72,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Limited",
+          "bbox": [
+            0.5357,
+            0.4054,
+            0.5871,
+            0.4195
+          ],
+          "confidence": 0.22,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Liability",
+          "bbox": [
+            0.5933,
+            0.4082,
+            0.6461,
+            0.4291
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Partnership",
+          "bbox": [
+            0.6516,
+            0.4133,
+            0.7335,
+            0.4364
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(hereinafter",
+          "bbox": [
+            0.7398,
+            0.4212,
+            0.823,
+            0.442
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(Vil) tn View of the Continued RON-coaperation and failure to furnish the",
+      "bbox": [
+        0.2672,
+        0.6639,
+        0.7856,
+        0.7207
+      ],
+      "confidence": 0.7525,
+      "words": [
+        {
+          "text": "(Vil)",
+          "bbox": [
+            0.2672,
+            0.6639,
+            0.2929,
+            0.6785
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tn",
+          "bbox": [
+            0.306,
+            0.6678,
+            0.3185,
+            0.6785
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        },
+        {
+          "text": "View",
+          "bbox": [
+            0.3248,
+            0.67,
+            0.3567,
+            0.6819
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3622,
+            0.6734,
+            0.3768,
+            0.6836
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.381,
+            0.6745,
+            0.4025,
+            0.6864
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Continued",
+          "bbox": [
+            0.4087,
+            0.6768,
+            0.4788,
+            0.6954
+          ],
+          "confidence": 0.64,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RON-coaperation",
+          "bbox": [
+            0.4851,
+            0.6841,
+            0.6024,
+            0.7061
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.6086,
+            0.6971,
+            0.6343,
+            0.7072
+          ],
+          "confidence": 0.75,
+          "text_type": "unknown"
+        },
+        {
+          "text": "failure",
+          "bbox": [
+            0.6412,
+            0.6976,
+            0.6842,
+            0.7111
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6912,
+            0.7027,
+            0.7037,
+            0.7128
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "furnish",
+          "bbox": [
+            0.7092,
+            0.7038,
+            0.7571,
+            0.7179
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7641,
+            0.7089,
+            0.7856,
+            0.7207
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Page 4 of 19",
+      "bbox": [
+        0.6988,
+        0.9578,
+        0.7557,
+        0.9758
+      ],
+      "confidence": 0.825,
+      "words": [
+        {
+          "text": "Page",
+          "bbox": [
+            0.6988,
+            0.9611,
+            0.7529,
+            0.9718
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4",
+          "bbox": [
+            0.7238,
+            0.9578,
+            0.728,
+            0.9758
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7307,
+            0.9578,
+            0.7425,
+            0.9758
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        },
+        {
+          "text": "19",
+          "bbox": [
+            0.7439,
+            0.9578,
+            0.7557,
+            0.9758
+          ],
+          "confidence": 0.77,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.8098,
+  "latency_ms": 260,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "NCLY. Amaravati Bench\nreport on the Constitution of the Committee Of Creditors (hereinafter\nreferred to as the \u201cCoc\u201d) under Regulation 17(1) of the CIRP\nVv) Jn the 1 meetin Of the CoC, the Applicant Was confirmed as the\nig\n(Vi) The Corporate Debtor is a Limited Liability Partnership (hereinafter\n(Vil) tn View of the Continued RON-coaperation and failure to furnish the\nPage 4 of 19"
+}

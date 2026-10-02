@@ -1,0 +1,2250 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 5,
+  "lines": [
+    {
+      "text": "N",
+      "bbox": [
+        0.1483,
+        0.6368,
+        0.1604,
+        0.6477
+      ],
+      "confidence": 0.67,
+      "words": [
+        {
+          "text": "N",
+          "bbox": [
+            0.1483,
+            0.6368,
+            0.1604,
+            0.6477
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB)86(AHM)2026",
+      "bbox": [
+        0.7172,
+        0.0502,
+        0.8912,
+        0.0599
+      ],
+      "confidence": 0.6,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7172,
+            0.0502,
+            0.7397,
+            0.0582
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)86(AHM)2026",
+          "bbox": [
+            0.747,
+            0.0502,
+            0.8912,
+            0.0599
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "which is governed by the provisions of the Indian Contract Act,",
+      "bbox": [
+        0.2119,
+        0.0849,
+        0.8904,
+        0.0998
+      ],
+      "confidence": 0.9564,
+      "words": [
+        {
+          "text": "which",
+          "bbox": [
+            0.2119,
+            0.0855,
+            0.2748,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.2836,
+            0.0855,
+            0.3006,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "governed",
+          "bbox": [
+            0.3094,
+            0.0855,
+            0.4037,
+            0.0998
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.4126,
+            0.0855,
+            0.4376,
+            0.0998
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4456,
+            0.0855,
+            0.4786,
+            0.0964
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "provisions",
+          "bbox": [
+            0.4875,
+            0.0855,
+            0.5955,
+            0.0998
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6052,
+            0.0849,
+            0.6253,
+            0.0964
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6309,
+            0.0855,
+            0.664,
+            0.0964
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Indian",
+          "bbox": [
+            0.6728,
+            0.0855,
+            0.7413,
+            0.0964
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Contract",
+          "bbox": [
+            0.7502,
+            0.0855,
+            0.8429,
+            0.0964
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Act,",
+          "bbox": [
+            0.8501,
+            0.0855,
+            0.8904,
+            0.0986
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1872, the Sales Goods Act, 1930 and other applicable laws. It",
+      "bbox": [
+        0.2151,
+        0.1214,
+        0.892,
+        0.1351
+      ],
+      "confidence": 0.9573,
+      "words": [
+        {
+          "text": "1872,",
+          "bbox": [
+            0.2151,
+            0.122,
+            0.2707,
+            0.1345
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.282,
+            0.1214,
+            0.3151,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sales",
+          "bbox": [
+            0.3263,
+            0.1214,
+            0.3803,
+            0.1323
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Goods",
+          "bbox": [
+            0.3916,
+            0.1214,
+            0.4561,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Act,",
+          "bbox": [
+            0.4658,
+            0.122,
+            0.5052,
+            0.1345
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1930",
+          "bbox": [
+            0.5197,
+            0.1214,
+            0.5689,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5802,
+            0.1214,
+            0.6197,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "other",
+          "bbox": [
+            0.6301,
+            0.1214,
+            0.6857,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "applicable",
+          "bbox": [
+            0.6954,
+            0.1214,
+            0.8026,
+            0.1351
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "laws.",
+          "bbox": [
+            0.8131,
+            0.1214,
+            0.8654,
+            0.1323
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "It",
+          "bbox": [
+            0.8775,
+            0.1214,
+            0.892,
+            0.1323
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "is apparent that the Respondent is delaying the payment",
+      "bbox": [
+        0.2119,
+        0.1408,
+        0.892,
+        0.1739
+      ],
+      "confidence": 0.9556,
+      "words": [
+        {
+          "text": "is",
+          "bbox": [
+            0.2119,
+            0.1574,
+            0.2288,
+            0.1682
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "apparent",
+          "bbox": [
+            0.2458,
+            0.1585,
+            0.3417,
+            0.1716
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "that",
+          "bbox": [
+            0.3546,
+            0.1408,
+            0.4005,
+            0.1739
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4174,
+            0.1568,
+            0.4504,
+            0.1676
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Respondent",
+          "bbox": [
+            0.4682,
+            0.1568,
+            0.5939,
+            0.171
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.61,
+            0.1568,
+            0.6269,
+            0.1676
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "delaying",
+          "bbox": [
+            0.6446,
+            0.1568,
+            0.7325,
+            0.171
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7486,
+            0.1568,
+            0.7824,
+            0.1676
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "payment",
+          "bbox": [
+            0.7994,
+            0.1579,
+            0.892,
+            0.171
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "which is payable by the Corporate Debtor, herice is not in a",
+      "bbox": [
+        0.2111,
+        0.1927,
+        0.892,
+        0.2075
+      ],
+      "confidence": 0.9525,
+      "words": [
+        {
+          "text": "which",
+          "bbox": [
+            0.2111,
+            0.1933,
+            0.274,
+            0.2041
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.2861,
+            0.1933,
+            0.303,
+            0.2041
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "payable",
+          "bbox": [
+            0.3151,
+            0.1933,
+            0.3965,
+            0.2075
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.4085,
+            0.1933,
+            0.4335,
+            0.2075
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4448,
+            0.1933,
+            0.4778,
+            0.2041
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.4907,
+            0.1933,
+            0.5947,
+            0.2075
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor,",
+          "bbox": [
+            0.6076,
+            0.1927,
+            0.6841,
+            0.2064
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "herice",
+          "bbox": [
+            0.6978,
+            0.1927,
+            0.7599,
+            0.2041
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.7728,
+            0.1927,
+            0.7889,
+            0.2041
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "not",
+          "bbox": [
+            0.801,
+            0.1944,
+            0.8356,
+            0.2035
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.8469,
+            0.1927,
+            0.867,
+            0.2035
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8799,
+            0.1961,
+            0.892,
+            0.2035
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "position to discharge the operational debt obligation of the said",
+      "bbox": [
+        0.2111,
+        0.2286,
+        0.8904,
+        0.2434
+      ],
+      "confidence": 0.961,
+      "words": [
+        {
+          "text": "position",
+          "bbox": [
+            0.2111,
+            0.2292,
+            0.2957,
+            0.2434
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.3046,
+            0.2303,
+            0.3231,
+            0.24
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "discharge",
+          "bbox": [
+            0.3328,
+            0.2292,
+            0.4335,
+            0.2434
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4424,
+            0.2292,
+            0.4754,
+            0.24
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "operational",
+          "bbox": [
+            0.4851,
+            0.2286,
+            0.6035,
+            0.2434
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "debt",
+          "bbox": [
+            0.6124,
+            0.2286,
+            0.6583,
+            0.24
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "obligation",
+          "bbox": [
+            0.6672,
+            0.2286,
+            0.7703,
+            0.2434
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7792,
+            0.2286,
+            0.7994,
+            0.24
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8058,
+            0.2292,
+            0.8388,
+            0.24
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "said",
+          "bbox": [
+            0.8485,
+            0.2286,
+            0.8904,
+            0.24
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "outstanding amount.",
+      "bbox": [
+        0.2119,
+        0.2651,
+        0.4343,
+        0.2799
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "outstanding",
+          "bbox": [
+            0.2119,
+            0.2651,
+            0.3392,
+            0.2799
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount.",
+          "bbox": [
+            0.3473,
+            0.2662,
+            0.4343,
+            0.2765
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The Operational Creditor issued demand notice via Form-3 &",
+      "bbox": [
+        0.2103,
+        0.3062,
+        0.8904,
+        0.321
+      ],
+      "confidence": 0.9444,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2103,
+            0.3067,
+            0.249,
+            0.3181
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Operational",
+          "bbox": [
+            0.2611,
+            0.3067,
+            0.3852,
+            0.321
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.3965,
+            0.3067,
+            0.4827,
+            0.3176
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issued",
+          "bbox": [
+            0.4932,
+            0.3067,
+            0.5624,
+            0.3176
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "demand",
+          "bbox": [
+            0.5737,
+            0.3067,
+            0.6575,
+            0.3176
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "notice",
+          "bbox": [
+            0.6688,
+            0.3067,
+            0.7325,
+            0.3176
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "via",
+          "bbox": [
+            0.7438,
+            0.3062,
+            0.7744,
+            0.3176
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Form-3",
+          "bbox": [
+            0.7849,
+            0.3067,
+            0.8614,
+            0.3176
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "&",
+          "bbox": [
+            0.8743,
+            0.3067,
+            0.8904,
+            0.3176
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Form-4 \u2018dated 12.01.2026 under the IBC, 2016 to the",
+      "bbox": [
+        0.2111,
+        0.3335,
+        0.8896,
+        0.3563
+      ],
+      "confidence": 0.93,
+      "words": [
+        {
+          "text": "Form-4",
+          "bbox": [
+            0.2111,
+            0.3432,
+            0.2877,
+            0.354
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018dated",
+          "bbox": [
+            0.303,
+            0.3335,
+            0.3691,
+            0.354
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "12.01.2026",
+          "bbox": [
+            0.3932,
+            0.3335,
+            0.5109,
+            0.3535
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.5334,
+            0.3426,
+            0.5971,
+            0.3535
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.618,
+            0.3426,
+            0.6511,
+            0.3535
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IBC,",
+          "bbox": [
+            0.6728,
+            0.3426,
+            0.7172,
+            0.3563
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2016",
+          "bbox": [
+            0.7405,
+            0.3426,
+            0.7929,
+            0.3535
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8155,
+            0.3455,
+            0.8348,
+            0.3535
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8582,
+            0.3426,
+            0.8896,
+            0.3535
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Respondent demanding unpaid Operational debt at the",
+      "bbox": [
+        0.2111,
+        0.3632,
+        0.8896,
+        0.3957
+      ],
+      "confidence": 0.9471,
+      "words": [
+        {
+          "text": "Respondent",
+          "bbox": [
+            0.2111,
+            0.3786,
+            0.336,
+            0.3934
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "demanding",
+          "bbox": [
+            0.3594,
+            0.3649,
+            0.477,
+            0.3957
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "unpaid",
+          "bbox": [
+            0.4988,
+            0.3632,
+            0.5737,
+            0.3957
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Operational",
+          "bbox": [
+            0.5979,
+            0.3786,
+            0.7212,
+            0.3928
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "debt",
+          "bbox": [
+            0.7454,
+            0.3786,
+            0.7913,
+            0.3894
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "at",
+          "bbox": [
+            0.8147,
+            0.3797,
+            0.834,
+            0.3894
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.8566,
+            0.3786,
+            0.8896,
+            0.3894
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "registered address of the Corporate Debtor\u2019s Company. The",
+      "bbox": [
+        0.2103,
+        0.4145,
+        0.8896,
+        0.4293
+      ],
+      "confidence": 0.9475,
+      "words": [
+        {
+          "text": "registered",
+          "bbox": [
+            0.2103,
+            0.4151,
+            0.3143,
+            0.4293
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "address",
+          "bbox": [
+            0.3296,
+            0.4145,
+            0.4118,
+            0.4259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4263,
+            0.4145,
+            0.4464,
+            0.4259
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4585,
+            0.4145,
+            0.4915,
+            0.4259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.5077,
+            0.4151,
+            0.6108,
+            0.4293
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor\u2019s",
+          "bbox": [
+            0.6261,
+            0.4145,
+            0.7139,
+            0.4259
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Company.",
+          "bbox": [
+            0.7293,
+            0.4145,
+            0.8348,
+            0.4293
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.8509,
+            0.4145,
+            0.8896,
+            0.4259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "proof of service is attached. The Corporate Debtor has",
+      "bbox": [
+        0.2095,
+        0.4504,
+        0.8888,
+        0.4652
+      ],
+      "confidence": 0.9578,
+      "words": [
+        {
+          "text": "proof",
+          "bbox": [
+            0.2095,
+            0.4504,
+            0.2659,
+            0.4652
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2853,
+            0.4504,
+            0.3054,
+            0.4618
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "service",
+          "bbox": [
+            0.3247,
+            0.4504,
+            0.3956,
+            0.4618
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.4166,
+            0.4504,
+            0.4327,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "attached.",
+          "bbox": [
+            0.4545,
+            0.4504,
+            0.5512,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.5729,
+            0.4504,
+            0.6116,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Corporate",
+          "bbox": [
+            0.6334,
+            0.4504,
+            0.7381,
+            0.4652
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Debtor",
+          "bbox": [
+            0.7591,
+            0.4504,
+            0.8316,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.8517,
+            0.4504,
+            0.8888,
+            0.4618
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "committed default in making the payment of unpaid",
+      "bbox": [
+        0.2103,
+        0.4869,
+        0.8888,
+        0.5017
+      ],
+      "confidence": 0.9537,
+      "words": [
+        {
+          "text": "committed",
+          "bbox": [
+            0.2103,
+            0.4869,
+            0.3215,
+            0.4983
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "default",
+          "bbox": [
+            0.3481,
+            0.4869,
+            0.4206,
+            0.4983
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.4456,
+            0.4869,
+            0.4658,
+            0.4983
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "making",
+          "bbox": [
+            0.4907,
+            0.4869,
+            0.5705,
+            0.5017
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5947,
+            0.4869,
+            0.6277,
+            0.4983
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "payment",
+          "bbox": [
+            0.6535,
+            0.4886,
+            0.7462,
+            0.5017
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7712,
+            0.4869,
+            0.7913,
+            0.4983
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "unpaid",
+          "bbox": [
+            0.8155,
+            0.4869,
+            0.8888,
+            0.5017
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "operational debt as stated hereinabove, therefore, the said",
+      "bbox": [
+        0.2103,
+        0.5234,
+        0.8888,
+        0.5376
+      ],
+      "confidence": 0.9537,
+      "words": [
+        {
+          "text": "operational",
+          "bbox": [
+            0.2103,
+            0.5234,
+            0.3288,
+            0.5376
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "debt",
+          "bbox": [
+            0.3457,
+            0.5234,
+            0.3916,
+            0.5348
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4077,
+            0.5268,
+            0.4303,
+            0.5348
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "stated",
+          "bbox": [
+            0.4472,
+            0.5234,
+            0.5117,
+            0.5348
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "hereinabove,",
+          "bbox": [
+            0.527,
+            0.5234,
+            0.6608,
+            0.5371
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "therefore,",
+          "bbox": [
+            0.6873,
+            0.5234,
+            0.7792,
+            0.5371
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7969,
+            0.5234,
+            0.83,
+            0.5348
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "said",
+          "bbox": [
+            0.8469,
+            0.5239,
+            0.8888,
+            0.5348
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "petition of the Operational Creditor be admitted for initiation of",
+      "bbox": [
+        0.2095,
+        0.5593,
+        0.8912,
+        0.5735
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "petition",
+          "bbox": [
+            0.2095,
+            0.5593,
+            0.2901,
+            0.5735
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.299,
+            0.5593,
+            0.3191,
+            0.5701
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3247,
+            0.5593,
+            0.3578,
+            0.5701
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Operational",
+          "bbox": [
+            0.3674,
+            0.5593,
+            0.4915,
+            0.5735
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.5004,
+            0.5593,
+            0.5866,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "be",
+          "bbox": [
+            0.5947,
+            0.5593,
+            0.6189,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "admitted",
+          "bbox": [
+            0.6277,
+            0.5593,
+            0.7212,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.7293,
+            0.5593,
+            0.7583,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "initiation",
+          "bbox": [
+            0.7663,
+            0.5593,
+            0.8622,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8711,
+            0.5593,
+            0.8912,
+            0.5707
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CIRP.",
+      "bbox": [
+        0.2103,
+        0.5952,
+        0.2667,
+        0.606
+      ],
+      "confidence": 0.91,
+      "words": [
+        {
+          "text": "CIRP.",
+          "bbox": [
+            0.2103,
+            0.5952,
+            0.2667,
+            0.606
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "The Petitioner/Operational Creditor on 28.01.2026 filed Record",
+      "bbox": [
+        0.2079,
+        0.6368,
+        0.888,
+        0.6511
+      ],
+      "confidence": 0.9471,
+      "words": [
+        {
+          "text": "The",
+          "bbox": [
+            0.2079,
+            0.6368,
+            0.2474,
+            0.6477
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Petitioner/Operational",
+          "bbox": [
+            0.2562,
+            0.6368,
+            0.4956,
+            0.6511
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.5044,
+            0.6368,
+            0.5907,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.5995,
+            0.6403,
+            0.6221,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "28.01.2026",
+          "bbox": [
+            0.6326,
+            0.6368,
+            0.7534,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "filed",
+          "bbox": [
+            0.7623,
+            0.6368,
+            0.8066,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Record",
+          "bbox": [
+            0.8155,
+            0.6374,
+            0.888,
+            0.6482
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "of financial information Form C issued by the NeSL. It shows",
+      "bbox": [
+        0.2095,
+        0.6727,
+        0.888,
+        0.6876
+      ],
+      "confidence": 0.9473,
+      "words": [
+        {
+          "text": "of",
+          "bbox": [
+            0.2095,
+            0.6727,
+            0.2288,
+            0.6842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "financial",
+          "bbox": [
+            0.2377,
+            0.6727,
+            0.3296,
+            0.6842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "information",
+          "bbox": [
+            0.3392,
+            0.6727,
+            0.4633,
+            0.6842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Form",
+          "bbox": [
+            0.4746,
+            0.6733,
+            0.5294,
+            0.6842
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "C",
+          "bbox": [
+            0.5407,
+            0.6733,
+            0.5552,
+            0.6842
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "issued",
+          "bbox": [
+            0.5665,
+            0.6733,
+            0.6342,
+            0.6842
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.6454,
+            0.6733,
+            0.6704,
+            0.6876
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.689,
+            0.6733,
+            0.7131,
+            0.6842
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NeSL.",
+          "bbox": [
+            0.7252,
+            0.6733,
+            0.784,
+            0.6842
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "It",
+          "bbox": [
+            0.7969,
+            0.6733,
+            0.8122,
+            0.6842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "shows",
+          "bbox": [
+            0.8227,
+            0.6733,
+            0.888,
+            0.6847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "status \u201cAuthenticated\u201d confirming the date of default as",
+      "bbox": [
+        0.2087,
+        0.7087,
+        0.8872,
+        0.7235
+      ],
+      "confidence": 0.9525,
+      "words": [
+        {
+          "text": "status",
+          "bbox": [
+            0.2087,
+            0.7098,
+            0.274,
+            0.7195
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u201cAuthenticated\u201d",
+          "bbox": [
+            0.3086,
+            0.7087,
+            0.4754,
+            0.7201
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "confirming",
+          "bbox": [
+            0.4932,
+            0.7087,
+            0.6068,
+            0.7235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6237,
+            0.7092,
+            0.6567,
+            0.7201
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "date",
+          "bbox": [
+            0.6753,
+            0.7104,
+            0.7196,
+            0.7201
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7381,
+            0.7092,
+            0.7583,
+            0.7201
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "default",
+          "bbox": [
+            0.7736,
+            0.7092,
+            0.8469,
+            0.7206
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.8646,
+            0.7127,
+            0.8872,
+            0.7206
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "15.12.2025.",
+      "bbox": [
+        0.2111,
+        0.7446,
+        0.3352,
+        0.7554
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "15.12.2025.",
+          "bbox": [
+            0.2111,
+            0.7446,
+            0.3352,
+            0.7554
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "In support of its claim, the Petitioner/Operational Creditor",
+      "bbox": [
+        0.2071,
+        0.7856,
+        0.8872,
+        0.8005
+      ],
+      "confidence": 0.9463,
+      "words": [
+        {
+          "text": "In",
+          "bbox": [
+            0.2071,
+            0.7862,
+            0.228,
+            0.7965
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "support",
+          "bbox": [
+            0.2442,
+            0.7873,
+            0.3263,
+            0.7999
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3425,
+            0.7856,
+            0.3626,
+            0.797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "its",
+          "bbox": [
+            0.3755,
+            0.7856,
+            0.4005,
+            0.797
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "claim,",
+          "bbox": [
+            0.4166,
+            0.7856,
+            0.4778,
+            0.7993
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4956,
+            0.7862,
+            0.5286,
+            0.797
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Petitioner/Operational",
+          "bbox": [
+            0.5447,
+            0.7862,
+            0.7849,
+            0.8005
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.801,
+            0.7868,
+            0.8872,
+            0.7976
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "has produced on record copies of the documents tabled below:",
+      "bbox": [
+        0.2071,
+        0.8216,
+        0.8743,
+        0.8364
+      ],
+      "confidence": 0.959,
+      "words": [
+        {
+          "text": "has",
+          "bbox": [
+            0.2071,
+            0.8216,
+            0.2442,
+            0.833
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "produced",
+          "bbox": [
+            0.2522,
+            0.8216,
+            0.3521,
+            0.8358
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "on",
+          "bbox": [
+            0.361,
+            0.825,
+            0.3852,
+            0.833
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "record",
+          "bbox": [
+            0.3932,
+            0.8221,
+            0.4609,
+            0.833
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "copies",
+          "bbox": [
+            0.4698,
+            0.8221,
+            0.5342,
+            0.8364
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5431,
+            0.8221,
+            0.5624,
+            0.833
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5689,
+            0.8221,
+            0.6011,
+            0.833
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "documents",
+          "bbox": [
+            0.61,
+            0.8221,
+            0.7268,
+            0.8335
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tabled",
+          "bbox": [
+            0.7349,
+            0.8227,
+            0.801,
+            0.8335
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "below:",
+          "bbox": [
+            0.809,
+            0.8227,
+            0.8743,
+            0.8335
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201c= Sq/- 4[Page",
+      "bbox": [
+        0.282,
+        0.8814,
+        0.8799,
+        0.9282
+      ],
+      "confidence": 0.36,
+      "words": [
+        {
+          "text": "\u201c=",
+          "bbox": [
+            0.282,
+            0.8814,
+            0.3747,
+            0.9282
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sq/-",
+          "bbox": [
+            0.6728,
+            0.89,
+            0.7413,
+            0.9242
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        },
+        {
+          "text": "4[Page",
+          "bbox": [
+            0.8042,
+            0.9014,
+            0.8799,
+            0.9128
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.936,
+  "latency_ms": 488,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "N\nCP (IB)86(AHM)2026\nwhich is governed by the provisions of the Indian Contract Act,\n1872, the Sales Goods Act, 1930 and other applicable laws. It\nis apparent that the Respondent is delaying the payment\nwhich is payable by the Corporate Debtor, herice is not in a\nposition to discharge the operational debt obligation of the said\noutstanding amount.\nThe Operational Creditor issued demand notice via Form-3 &\nForm-4 \u2018dated 12.01.2026 under the IBC, 2016 to the\nRespondent demanding unpaid Operational debt at the\nregistered address of the Corporate Debtor\u2019s Company. The\nproof of service is attached. The Corporate Debtor has\ncommitted default in making the payment of unpaid\noperational debt as stated hereinabove, therefore, the said\npetition of the Operational Creditor be admitted for initiation of\nCIRP.\nThe Petitioner/Operational Creditor on 28.01.2026 filed Record\nof financial information Form C issued by the NeSL. It shows\nstatus \u201cAuthenticated\u201d confirming the date of default as\n15.12.2025.\nIn support of its claim, the Petitioner/Operational Creditor\nhas produced on record copies of the documents tabled below:\n\u201c= Sq/- 4[Page"
+}

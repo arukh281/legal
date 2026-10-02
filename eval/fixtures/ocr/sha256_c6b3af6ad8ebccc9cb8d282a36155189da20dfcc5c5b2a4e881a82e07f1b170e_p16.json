@@ -1,0 +1,1456 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 16,
+  "lines": [
+    {
+      "text": "ati Bened",
+      "bbox": [
+        0.6839,
+        0.0298,
+        0.7234,
+        0.0403
+      ],
+      "confidence": 0.65,
+      "words": [
+        {
+          "text": "ati",
+          "bbox": [
+            0.6839,
+            0.0331,
+            0.6939,
+            0.0403
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bened",
+          "bbox": [
+            0.6966,
+            0.0298,
+            0.7234,
+            0.0386
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CLT Amarav!",
+      "bbox": [
+        0.6196,
+        0.0364,
+        0.6832,
+        0.0475
+      ],
+      "confidence": 0.305,
+      "words": [
+        {
+          "text": "CLT",
+          "bbox": [
+            0.6196,
+            0.0381,
+            0.647,
+            0.0475
+          ],
+          "confidence": 0.27,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Amarav!",
+          "bbox": [
+            0.651,
+            0.0364,
+            0.6832,
+            0.0442
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "rece of CREMEOFS nereny deciase |",
+      "bbox": [
+        0.3563,
+        0.2318,
+        0.5224,
+        0.2544
+      ],
+      "confidence": 0.2017,
+      "words": [
+        {
+          "text": "rece",
+          "bbox": [
+            0.3563,
+            0.2494,
+            0.3737,
+            0.2544
+          ],
+          "confidence": 0.26,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3784,
+            0.2461,
+            0.3871,
+            0.2522
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CREMEOFS",
+          "bbox": [
+            0.3905,
+            0.2423,
+            0.436,
+            0.2506
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nereny",
+          "bbox": [
+            0.4401,
+            0.2379,
+            0.4735,
+            0.2456
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "deciase",
+          "bbox": [
+            0.4776,
+            0.2334,
+            0.5144,
+            0.2412
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "|",
+          "bbox": [
+            0.5191,
+            0.2318,
+            0.5224,
+            0.2362
+          ],
+          "confidence": 0.05,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "qaiance of tHE corpora!",
+      "bbox": [
+        0.4568,
+        0.2334,
+        0.5814,
+        0.2572
+      ],
+      "confidence": 0.4975,
+      "words": [
+        {
+          "text": "qaiance",
+          "bbox": [
+            0.4568,
+            0.2472,
+            0.4956,
+            0.255
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5023,
+            0.2406,
+            0.5131,
+            0.2572
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tHE",
+          "bbox": [
+            0.5191,
+            0.2428,
+            0.5345,
+            0.2478
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "corpora!",
+          "bbox": [
+            0.5419,
+            0.2334,
+            0.5814,
+            0.2494
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "able cash",
+      "bbox": [
+        0.4012,
+        0.2511,
+        0.4508,
+        0.2616
+      ],
+      "confidence": 0.62,
+      "words": [
+        {
+          "text": "able",
+          "bbox": [
+            0.4012,
+            0.2544,
+            0.4206,
+            0.2616
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cash",
+          "bbox": [
+            0.428,
+            0.2511,
+            0.4508,
+            0.2583
+          ],
+          "confidence": 0.76,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "subs",
+      "bbox": [
+        0.4896,
+        0.2561,
+        0.5111,
+        0.2632
+      ],
+      "confidence": 0.41,
+      "words": [
+        {
+          "text": "subs",
+          "bbox": [
+            0.4896,
+            0.2561,
+            0.5111,
+            0.2632
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "rae Commit",
+      "bbox": [
+        0.2987,
+        0.25,
+        0.3557,
+        0.261
+      ],
+      "confidence": 0.28,
+      "words": [
+        {
+          "text": "rae",
+          "bbox": [
+            0.2987,
+            0.2555,
+            0.3168,
+            0.261
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Commit",
+          "bbox": [
+            0.3208,
+            0.25,
+            0.3557,
+            0.2583
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1 creditor",
+      "bbox": [
+        0.436,
+        0.261,
+        0.4843,
+        0.2693
+      ],
+      "confidence": 0.26,
+      "words": [
+        {
+          "text": "1",
+          "bbox": [
+            0.436,
+            0.2643,
+            0.4387,
+            0.2693
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "creditor",
+          "bbox": [
+            0.4434,
+            0.261,
+            0.4843,
+            0.2682
+          ],
+          "confidence": 0.42,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "get from she avail",
+      "bbox": [
+        0.2994,
+        0.2533,
+        0.3999,
+        0.2726
+      ],
+      "confidence": 0.4925,
+      "words": [
+        {
+          "text": "get",
+          "bbox": [
+            0.2994,
+            0.2666,
+            0.3195,
+            0.2726
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "from",
+          "bbox": [
+            0.3262,
+            0.2638,
+            0.3483,
+            0.2699
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "she",
+          "bbox": [
+            0.355,
+            0.261,
+            0.3704,
+            0.2671
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        },
+        {
+          "text": "avail",
+          "bbox": [
+            0.3771,
+            0.2533,
+            0.3999,
+            0.2688
+          ],
+          "confidence": 0.55,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ontstontion FO fi",
+      "bbox": [
+        0.3027,
+        0.2638,
+        0.4012,
+        0.2842
+      ],
+      "confidence": 0.38,
+      "words": [
+        {
+          "text": "ontstontion",
+          "bbox": [
+            0.3027,
+            0.2737,
+            0.3637,
+            0.2842
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FO",
+          "bbox": [
+            0.3684,
+            0.271,
+            0.3905,
+            0.2765
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "fi",
+          "bbox": [
+            0.3938,
+            0.2638,
+            0.4012,
+            0.2792
+          ],
+          "confidence": 0.75,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "squidation-",
+      "bbox": [
+        0.3436,
+        0.282,
+        0.3958,
+        0.2903
+      ],
+      "confidence": 0.5,
+      "words": [
+        {
+          "text": "squidation-",
+          "bbox": [
+            0.3436,
+            0.282,
+            0.3958,
+            0.2903
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "panciol",
+      "bbox": [
+        0.4032,
+        0.2655,
+        0.4354,
+        0.2732
+      ],
+      "confidence": 0.18,
+      "words": [
+        {
+          "text": "panciol",
+          "bbox": [
+            0.4032,
+            0.2655,
+            0.4354,
+            0.2732
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "of caraproris\u00ae t arrangement",
+      "bbox": [
+        0.5184,
+        0.3488,
+        0.7046,
+        0.3769
+      ],
+      "confidence": 0.1725,
+      "words": [
+        {
+          "text": "of",
+          "bbox": [
+            0.5184,
+            0.3703,
+            0.5298,
+            0.3769
+          ],
+          "confidence": 0.6,
+          "text_type": "unknown"
+        },
+        {
+          "text": "caraproris\u00ae",
+          "bbox": [
+            0.5405,
+            0.3631,
+            0.6068,
+            0.3742
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "t",
+          "bbox": [
+            0.6196,
+            0.3598,
+            0.6229,
+            0.3664
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "arrangement",
+          "bbox": [
+            0.635,
+            0.3488,
+            0.7046,
+            0.3653
+          ],
+          "confidence": 0.09,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "sibility oF oo",
+      "bbox": [
+        0.5854,
+        0.3869,
+        0.6544,
+        0.3979
+      ],
+      "confidence": 0.33,
+      "words": [
+        {
+          "text": "sibility",
+          "bbox": [
+            0.5854,
+            0.3913,
+            0.6182,
+            0.3979
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "oF",
+          "bbox": [
+            0.6216,
+            0.3885,
+            0.6316,
+            0.394
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "oo",
+          "bbox": [
+            0.6343,
+            0.3869,
+            0.6544,
+            0.3929
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "2013, the",
+      "bbox": [
+        0.6048,
+        0.3985,
+        0.653,
+        0.4073
+      ],
+      "confidence": 0.77,
+      "words": [
+        {
+          "text": "2013,",
+          "bbox": [
+            0.6048,
+            0.4001,
+            0.6336,
+            0.4073
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6376,
+            0.3985,
+            0.653,
+            0.4034
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "arrangement AS be",
+      "bbox": [
+        0.6035,
+        0.4029,
+        0.7133,
+        0.4194
+      ],
+      "confidence": 0.5067,
+      "words": [
+        {
+          "text": "arrangement",
+          "bbox": [
+            0.6035,
+            0.4078,
+            0.6671,
+            0.4194
+          ],
+          "confidence": 0.34,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AS",
+          "bbox": [
+            0.6738,
+            0.4056,
+            0.6946,
+            0.4117
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        },
+        {
+          "text": "be",
+          "bbox": [
+            0.7019,
+            0.4029,
+            0.7133,
+            0.4084
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ered the PO",
+      "bbox": [
+        0.5218,
+        0.3951,
+        0.5847,
+        0.4051
+      ],
+      "confidence": 0.7167,
+      "words": [
+        {
+          "text": "ered",
+          "bbox": [
+            0.5218,
+            0.3985,
+            0.5432,
+            0.4051
+          ],
+          "confidence": 0.55,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5472,
+            0.3968,
+            0.5633,
+            0.4023
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PO",
+          "bbox": [
+            0.568,
+            0.3951,
+            0.5847,
+            0.4018
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Componies ACH",
+      "bbox": [
+        0.5224,
+        0.404,
+        0.6015,
+        0.4167
+      ],
+      "confidence": 0.375,
+      "words": [
+        {
+          "text": "Componies",
+          "bbox": [
+            0.5224,
+            0.4067,
+            0.5787,
+            0.4167
+          ],
+          "confidence": 0.31,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ACH",
+          "bbox": [
+            0.5827,
+            0.404,
+            0.6015,
+            0.41
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "er",
+      "bbox": [
+        0.4133,
+        0.4249,
+        0.4233,
+        0.4288
+      ],
+      "confidence": 0.5,
+      "words": [
+        {
+          "text": "er",
+          "bbox": [
+            0.4133,
+            0.4249,
+            0.4233,
+            0.4288
+          ],
+          "confidence": 0.5,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "faye opinion OE gornpromize OF",
+      "bbox": [
+        0.4166,
+        0.4167,
+        0.5968,
+        0.4404
+      ],
+      "confidence": 0.56,
+      "words": [
+        {
+          "text": "faye",
+          "bbox": [
+            0.4166,
+            0.4338,
+            0.4414,
+            0.4404
+          ],
+          "confidence": 0.15,
+          "text_type": "unknown"
+        },
+        {
+          "text": "opinion",
+          "bbox": [
+            0.4481,
+            0.4294,
+            0.4849,
+            0.4371
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OE",
+          "bbox": [
+            0.4923,
+            0.4255,
+            0.5117,
+            0.4316
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "gornpromize",
+          "bbox": [
+            0.5191,
+            0.4183,
+            0.5807,
+            0.4288
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.5874,
+            0.4167,
+            0.5968,
+            0.4211
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Teaancce wien Fas",
+      "bbox": [
+        0.5044,
+        0.4299,
+        0.5867,
+        0.4421
+      ],
+      "confidence": 0.2433,
+      "words": [
+        {
+          "text": "Teaancce",
+          "bbox": [
+            0.5044,
+            0.4349,
+            0.5385,
+            0.4421
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "wien",
+          "bbox": [
+            0.5419,
+            0.431,
+            0.564,
+            0.4376
+          ],
+          "confidence": 0.52,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Fas",
+          "bbox": [
+            0.5673,
+            0.4299,
+            0.5867,
+            0.4354
+          ],
+          "confidence": 0.21,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2018or Greanrors f\u00b0",
+      "bbox": [
+        0.3275,
+        0.4371,
+        0.4153,
+        0.4498
+      ],
+      "confidence": 0.2567,
+      "words": [
+        {
+          "text": "\u2018or",
+          "bbox": [
+            0.3275,
+            0.4443,
+            0.3369,
+            0.4498
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Greanrors",
+          "bbox": [
+            0.3429,
+            0.4398,
+            0.3885,
+            0.4481
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "f\u00b0",
+          "bbox": [
+            0.3952,
+            0.4371,
+            0.4153,
+            0.4426
+          ],
+          "confidence": 0.08,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "exmored dot iquidarion in 8600)",
+      "bbox": [
+        0.3295,
+        0.4393,
+        0.503,
+        0.4619
+      ],
+      "confidence": 0.368,
+      "words": [
+        {
+          "text": "exmored",
+          "bbox": [
+            0.3295,
+            0.452,
+            0.3711,
+            0.4619
+          ],
+          "confidence": 0.55,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dot",
+          "bbox": [
+            0.3932,
+            0.4492,
+            0.3945,
+            0.4503
+          ],
+          "confidence": 0.27,
+          "text_type": "unknown"
+        },
+        {
+          "text": "iquidarion",
+          "bbox": [
+            0.4119,
+            0.4432,
+            0.4642,
+            0.4525
+          ],
+          "confidence": 0.24,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.4682,
+            0.4409,
+            0.4776,
+            0.4459
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        },
+        {
+          "text": "8600)",
+          "bbox": [
+            0.4816,
+            0.4393,
+            0.503,
+            0.4448
+          ],
+          "confidence": 0.35,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "= has consid",
+      "bbox": [
+        0.4581,
+        0.4007,
+        0.5211,
+        0.4128
+      ],
+      "confidence": 0.58,
+      "words": [
+        {
+          "text": "=",
+          "bbox": [
+            0.4581,
+            0.4089,
+            0.4628,
+            0.4128
+          ],
+          "confidence": 0.48,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.4668,
+            0.4062,
+            0.4849,
+            0.4117
+          ],
+          "confidence": 0.6,
+          "text_type": "unknown"
+        },
+        {
+          "text": "consid",
+          "bbox": [
+            0.4889,
+            0.4007,
+            0.5211,
+            0.4089
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "330 of me",
+      "bbox": [
+        0.4668,
+        0.4139,
+        0.5184,
+        0.4227
+      ],
+      "confidence": 0.62,
+      "words": [
+        {
+          "text": "330",
+          "bbox": [
+            0.4668,
+            0.4161,
+            0.4856,
+            0.4227
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4896,
+            0.4145,
+            0.4997,
+            0.42
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "me",
+          "bbox": [
+            0.503,
+            0.4139,
+            0.5184,
+            0.4189
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "fe of Creditor",
+      "bbox": [
+        0.3952,
+        0.4095,
+        0.4575,
+        0.4194
+      ],
+      "confidence": 0.5867,
+      "words": [
+        {
+          "text": "fe",
+          "bbox": [
+            0.3952,
+            0.4161,
+            0.3999,
+            0.4194
+          ],
+          "confidence": 0.1,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4039,
+            0.4128,
+            0.4133,
+            0.4183
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditor",
+          "bbox": [
+            0.4173,
+            0.4095,
+            0.4575,
+            0.4167
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "section",
+      "bbox": [
+        0.4273,
+        0.42,
+        0.4628,
+        0.4272
+      ],
+      "confidence": 0.82,
+      "words": [
+        {
+          "text": "section",
+          "bbox": [
+            0.4273,
+            0.42,
+            0.4628,
+            0.4272
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "yearn e",
+      "bbox": [
+        0.3597,
+        0.4117,
+        0.3965,
+        0.4272
+      ],
+      "confidence": 0.12,
+      "words": [
+        {
+          "text": "yearn",
+          "bbox": [
+            0.3597,
+            0.4161,
+            0.3945,
+            0.4233
+          ],
+          "confidence": 0.24,
+          "text_type": "unknown"
+        },
+        {
+          "text": "e",
+          "bbox": [
+            0.3865,
+            0.4117,
+            0.3965,
+            0.4272
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "oghe C2}",
+      "bbox": [
+        0.3235,
+        0.4194,
+        0.359,
+        0.4272
+      ],
+      "confidence": 0.195,
+      "words": [
+        {
+          "text": "oghe",
+          "bbox": [
+            0.3235,
+            0.4216,
+            0.3423,
+            0.4272
+          ],
+          "confidence": 0.03,
+          "text_type": "unknown"
+        },
+        {
+          "text": "C2}",
+          "bbox": [
+            0.3463,
+            0.4194,
+            0.359,
+            0.4249
+          ],
+          "confidence": 0.36,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ment une",
+      "bbox": [
+        0.365,
+        0.4244,
+        0.4126,
+        0.4349
+      ],
+      "confidence": 0.7,
+      "words": [
+        {
+          "text": "ment",
+          "bbox": [
+            0.365,
+            0.4277,
+            0.3885,
+            0.4349
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "une",
+          "bbox": [
+            0.3932,
+            0.4244,
+            0.4126,
+            0.4316
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "pre Coramittes of Creditors:",
+      "bbox": [
+        0.353,
+        0.5624,
+        0.491,
+        0.58
+      ],
+      "confidence": 0.49,
+      "words": [
+        {
+          "text": "pre",
+          "bbox": [
+            0.353,
+            0.574,
+            0.3717,
+            0.58
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Coramittes",
+          "bbox": [
+            0.3751,
+            0.5684,
+            0.4273,
+            0.5778
+          ],
+          "confidence": 0.19,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.4313,
+            0.5657,
+            0.4407,
+            0.5717
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Creditors:",
+          "bbox": [
+            0.4434,
+            0.5624,
+            0.491,
+            0.5706
+          ],
+          "confidence": 0.44,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ovation",
+      "bbox": [
+        0.4019,
+        0.5795,
+        0.4401,
+        0.5877
+      ],
+      "confidence": 0.14,
+      "words": [
+        {
+          "text": "ovation",
+          "bbox": [
+            0.4019,
+            0.5795,
+            0.4401,
+            0.5877
+          ],
+          "confidence": 0.14,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "viable Re!",
+      "bbox": [
+        0.355,
+        0.5828,
+        0.4012,
+        0.5922
+      ],
+      "confidence": 0.825,
+      "words": [
+        {
+          "text": "viable",
+          "bbox": [
+            0.355,
+            0.5844,
+            0.3838,
+            0.5922
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Re!",
+          "bbox": [
+            0.3891,
+            0.5828,
+            0.4012,
+            0.5883
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "page 15 of 9",
+      "bbox": [
+        0.8131,
+        0.8929,
+        0.8714,
+        0.9062
+      ],
+      "confidence": 0.7825,
+      "words": [
+        {
+          "text": "page",
+          "bbox": [
+            0.8131,
+            0.8985,
+            0.8339,
+            0.9062
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15",
+          "bbox": [
+            0.8372,
+            0.8957,
+            0.8466,
+            0.9029
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.852,
+            0.894,
+            0.8593,
+            0.9018
+          ],
+          "confidence": 0.63,
+          "text_type": "unknown"
+        },
+        {
+          "text": "9",
+          "bbox": [
+            0.8634,
+            0.8929,
+            0.8714,
+            0.9001
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.4505,
+  "latency_ms": 379,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "ati Bened\nCLT Amarav!\nrece of CREMEOFS nereny deciase |\nqaiance of tHE corpora!\nable cash\nsubs\nrae Commit\n1 creditor\nget from she avail\nontstontion FO fi\nsquidation-\npanciol\nof caraproris\u00ae t arrangement\nsibility oF oo\n2013, the\narrangement AS be\nered the PO\nComponies ACH\ner\nfaye opinion OE gornpromize OF\nTeaancce wien Fas\n\u2018or Greanrors f\u00b0\nexmored dot iquidarion in 8600)\n= has consid\n330 of me\nfe of Creditor\nsection\nyearn e\noghe C2}\nment une\npre Coramittes of Creditors:\novation\nviable Re!\npage 15 of 9"
+}

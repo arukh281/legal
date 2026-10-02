@@ -1,0 +1,732 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 21,
+  "lines": [
+    {
+      "text": "NATIONAL COMPANY LAW TRIBUNAL",
+      "bbox": [
+        0.1065,
+        0.1145,
+        0.4381,
+        0.1482
+      ],
+      "confidence": 0.895,
+      "words": [
+        {
+          "text": "NATIONAL",
+          "bbox": [
+            0.1065,
+            0.1275,
+            0.1995,
+            0.1482
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANY",
+          "bbox": [
+            0.2048,
+            0.1246,
+            0.2941,
+            0.1393
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAW",
+          "bbox": [
+            0.3008,
+            0.1222,
+            0.3398,
+            0.1346
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "TRIBUNAL",
+          "bbox": [
+            0.3451,
+            0.1145,
+            0.4381,
+            0.1364
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "[AMARA VAT! Bewes)",
+      "bbox": [
+        0.1875,
+        0.1364,
+        0.3593,
+        0.16
+      ],
+      "confidence": 0.6133,
+      "words": [
+        {
+          "text": "[AMARA",
+          "bbox": [
+            0.1875,
+            0.1393,
+            0.2536,
+            0.16
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "VAT!",
+          "bbox": [
+            0.2566,
+            0.1399,
+            0.2956,
+            0.1499
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Bewes)",
+          "bbox": [
+            0.3023,
+            0.1364,
+            0.3593,
+            0.1488
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "FREE OF COST cory {FIED TO BE",
+      "bbox": [
+        0.1035,
+        0.1505,
+        0.4449,
+        0.1777
+      ],
+      "confidence": 0.8357,
+      "words": [
+        {
+          "text": "FREE",
+          "bbox": [
+            0.1035,
+            0.1665,
+            0.15,
+            0.1777
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.156,
+            0.1647,
+            0.1793,
+            0.1747
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COST",
+          "bbox": [
+            0.1853,
+            0.1617,
+            0.2318,
+            0.1736
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "cory",
+          "bbox": [
+            0.2378,
+            0.16,
+            0.2843,
+            0.1712
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "{FIED",
+          "bbox": [
+            0.3278,
+            0.1547,
+            0.3871,
+            0.1659
+          ],
+          "confidence": 0.76,
+          "text_type": "unknown"
+        },
+        {
+          "text": "TO",
+          "bbox": [
+            0.3923,
+            0.1529,
+            0.4156,
+            0.1629
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BE",
+          "bbox": [
+            0.4216,
+            0.1505,
+            0.4449,
+            0.1612
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "TRUE COPY OF Wsih ORICINAL",
+      "bbox": [
+        0.144,
+        0.1659,
+        0.4096,
+        0.1913
+      ],
+      "confidence": 0.644,
+      "words": [
+        {
+          "text": "TRUE",
+          "bbox": [
+            0.144,
+            0.1795,
+            0.192,
+            0.1913
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COPY",
+          "bbox": [
+            0.1973,
+            0.1771,
+            0.2446,
+            0.1883
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.2498,
+            0.1747,
+            0.2738,
+            0.1854
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Wsih",
+          "bbox": [
+            0.2798,
+            0.173,
+            0.3158,
+            0.1842
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ORICINAL",
+          "bbox": [
+            0.3218,
+            0.1659,
+            0.4096,
+            0.1854
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Diary No. 1B! _",
+      "bbox": [
+        0.1043,
+        0.1936,
+        0.2746,
+        0.2184
+      ],
+      "confidence": 0.4525,
+      "words": [
+        {
+          "text": "Diary",
+          "bbox": [
+            0.1043,
+            0.2019,
+            0.1395,
+            0.2184
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.144,
+            0.2031,
+            0.1658,
+            0.2119
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1B!",
+          "bbox": [
+            0.171,
+            0.1936,
+            0.2108,
+            0.2155
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "_",
+          "bbox": [
+            0.2603,
+            0.2031,
+            0.2746,
+            0.206
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Date of Application 94.09:902.6...",
+      "bbox": [
+        0.1095,
+        0.2054,
+        0.3451,
+        0.2332
+      ],
+      "confidence": 0.6275,
+      "words": [
+        {
+          "text": "Date",
+          "bbox": [
+            0.1095,
+            0.2196,
+            0.153,
+            0.2308
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.1433,
+            0.2137,
+            0.1545,
+            0.2332
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Application",
+          "bbox": [
+            0.1575,
+            0.2166,
+            0.2251,
+            0.2296
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "94.09:902.6...",
+          "bbox": [
+            0.2416,
+            0.2054,
+            0.3451,
+            0.2285
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Date Copy Ready 99.09.9096.",
+      "bbox": [
+        0.111,
+        0.2231,
+        0.3451,
+        0.2479
+      ],
+      "confidence": 0.8275,
+      "words": [
+        {
+          "text": "Date",
+          "bbox": [
+            0.111,
+            0.2385,
+            0.141,
+            0.2479
+          ],
+          "confidence": 0.86,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Copy",
+          "bbox": [
+            0.144,
+            0.2373,
+            0.177,
+            0.2473
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ready",
+          "bbox": [
+            0.1808,
+            0.2344,
+            0.2221,
+            0.245
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "99.09.9096.",
+          "bbox": [
+            0.2423,
+            0.2231,
+            0.3451,
+            0.2438
+          ],
+          "confidence": 0.57,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Date of Delivery 92099096...",
+      "bbox": [
+        0.1125,
+        0.2403,
+        0.3451,
+        0.2651
+      ],
+      "confidence": 0.6125,
+      "words": [
+        {
+          "text": "Date",
+          "bbox": [
+            0.1125,
+            0.2556,
+            0.1418,
+            0.2651
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.1448,
+            0.2538,
+            0.156,
+            0.2633
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Delivery",
+          "bbox": [
+            0.1598,
+            0.2532,
+            0.2108,
+            0.2621
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "92099096...",
+          "bbox": [
+            0.2401,
+            0.2403,
+            0.3451,
+            0.2621
+          ],
+          "confidence": 0.13,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ae",
+      "bbox": [
+        0.6242,
+        0.1966,
+        0.6894,
+        0.2237
+      ],
+      "confidence": 0.56,
+      "words": [
+        {
+          "text": "ae",
+          "bbox": [
+            0.6242,
+            0.1966,
+            0.6894,
+            0.2237
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Deputy B\u00e9vistrar / Assistant Registrar /",
+      "bbox": [
+        0.5334,
+        0.222,
+        0.7892,
+        0.2468
+      ],
+      "confidence": 0.8117,
+      "words": [
+        {
+          "text": "Deputy",
+          "bbox": [
+            0.5334,
+            0.2344,
+            0.5776,
+            0.2468
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "B\u00e9vistrar",
+          "bbox": [
+            0.6002,
+            0.2308,
+            0.6437,
+            0.2444
+          ],
+          "confidence": 0.54,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/",
+          "bbox": [
+            0.6474,
+            0.2296,
+            0.6527,
+            0.2409
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Assistant",
+          "bbox": [
+            0.6557,
+            0.2267,
+            0.7164,
+            0.2391
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Registrar",
+          "bbox": [
+            0.7194,
+            0.2237,
+            0.7802,
+            0.2373
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "/",
+          "bbox": [
+            0.7839,
+            0.222,
+            0.7892,
+            0.2338
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Court piticer",
+      "bbox": [
+        0.6204,
+        0.2373,
+        0.7037,
+        0.2615
+      ],
+      "confidence": 0.78,
+      "words": [
+        {
+          "text": "Court",
+          "bbox": [
+            0.6204,
+            0.2373,
+            0.6534,
+            0.2615
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "piticer",
+          "bbox": [
+            0.6609,
+            0.2373,
+            0.7037,
+            0.2615
+          ],
+          "confidence": 0.66,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "HATIONAL COMPANY LAW TRIBUNAL",
+      "bbox": [
+        0.5401,
+        0.255,
+        0.7862,
+        0.2774
+      ],
+      "confidence": 0.9125,
+      "words": [
+        {
+          "text": "HATIONAL",
+          "bbox": [
+            0.5401,
+            0.2639,
+            0.6092,
+            0.2774
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANY",
+          "bbox": [
+            0.6122,
+            0.2597,
+            0.6797,
+            0.2733
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAW",
+          "bbox": [
+            0.6842,
+            0.258,
+            0.7142,
+            0.2698
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "TRIBUNAL",
+          "bbox": [
+            0.7179,
+            0.255,
+            0.7862,
+            0.268
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "AMARAVATI BENCH",
+      "bbox": [
+        0.5979,
+        0.2727,
+        0.7292,
+        0.2934
+      ],
+      "confidence": 0.665,
+      "words": [
+        {
+          "text": "AMARAVATI",
+          "bbox": [
+            0.5979,
+            0.2733,
+            0.6797,
+            0.2934
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BENCH",
+          "bbox": [
+            0.6842,
+            0.2727,
+            0.7292,
+            0.2851
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.7308,
+  "latency_ms": 221,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "NATIONAL COMPANY LAW TRIBUNAL\n[AMARA VAT! Bewes)\nFREE OF COST cory {FIED TO BE\nTRUE COPY OF Wsih ORICINAL\nDiary No. 1B! _\nDate of Application 94.09:902.6...\nDate Copy Ready 99.09.9096.\nDate of Delivery 92099096...\nae\nDeputy B\u00e9vistrar / Assistant Registrar /\nCourt piticer\nHATIONAL COMPANY LAW TRIBUNAL\nAMARAVATI BENCH"
+}

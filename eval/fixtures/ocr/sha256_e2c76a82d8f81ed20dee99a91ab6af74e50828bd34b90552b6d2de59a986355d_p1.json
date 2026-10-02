@@ -1,0 +1,2796 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 1,
+  "lines": [
+    {
+      "text": "(D Wak K",
+      "bbox": [
+        0.6581,
+        0.0091,
+        0.8871,
+        0.0416
+      ],
+      "confidence": 0.5033,
+      "words": [
+        {
+          "text": "(D",
+          "bbox": [
+            0.6581,
+            0.0091,
+            0.7,
+            0.0416
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Wak",
+          "bbox": [
+            0.7573,
+            0.0177,
+            0.8484,
+            0.0353
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "K",
+          "bbox": [
+            0.875,
+            0.0154,
+            0.8871,
+            0.0365
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Lamesh [Lfaanp",
+      "bbox": [
+        0.7347,
+        0.0559,
+        0.971,
+        0.077
+      ],
+      "confidence": 0.485,
+      "words": [
+        {
+          "text": "Lamesh",
+          "bbox": [
+            0.7347,
+            0.0559,
+            0.8452,
+            0.0741
+          ],
+          "confidence": 0.81,
+          "text_type": "unknown"
+        },
+        {
+          "text": "[Lfaanp",
+          "bbox": [
+            0.8702,
+            0.0582,
+            0.971,
+            0.077
+          ],
+          "confidence": 0.16,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "NC: 2026:KHC:32077",
+      "bbox": [
+        0.6395,
+        0.122,
+        0.8089,
+        0.13
+      ],
+      "confidence": 0.92,
+      "words": [
+        {
+          "text": "NC:",
+          "bbox": [
+            0.6395,
+            0.122,
+            0.6653,
+            0.13
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026:KHC:32077",
+          "bbox": [
+            0.6726,
+            0.122,
+            0.8089,
+            0.13
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "WP No. 20601 of 2024",
+      "bbox": [
+        0.6089,
+        0.1345,
+        0.8097,
+        0.1431
+      ],
+      "confidence": 0.956,
+      "words": [
+        {
+          "text": "WP",
+          "bbox": [
+            0.6089,
+            0.1351,
+            0.6379,
+            0.1431
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.6452,
+            0.1345,
+            0.6734,
+            0.1431
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "20601",
+          "bbox": [
+            0.6806,
+            0.1345,
+            0.7347,
+            0.1431
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7419,
+            0.1345,
+            0.7597,
+            0.1431
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2024",
+          "bbox": [
+            0.7653,
+            0.1345,
+            0.8097,
+            0.1431
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "IN THE HIGH COURT OF KARNATAKA AT BENGALURU",
+      "bbox": [
+        0.2516,
+        0.2138,
+        0.8105,
+        0.2246
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "IN",
+          "bbox": [
+            0.2516,
+            0.2144,
+            0.275,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.2831,
+            0.2144,
+            0.3234,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HIGH",
+          "bbox": [
+            0.3323,
+            0.2144,
+            0.3871,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COURT",
+          "bbox": [
+            0.396,
+            0.2144,
+            0.4677,
+            0.2246
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.475,
+            0.2144,
+            0.5024,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "KARNATAKA",
+          "bbox": [
+            0.5105,
+            0.2138,
+            0.6403,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AT",
+          "bbox": [
+            0.6476,
+            0.2138,
+            0.675,
+            0.2235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BENGALURU",
+          "bbox": [
+            0.6831,
+            0.2138,
+            0.8105,
+            0.2241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "DATED THIS THE 2574 DAY OF JUNE, 2026",
+      "bbox": [
+        0.3105,
+        0.2434,
+        0.7524,
+        0.2566
+      ],
+      "confidence": 0.895,
+      "words": [
+        {
+          "text": "DATED",
+          "bbox": [
+            0.3105,
+            0.2452,
+            0.3798,
+            0.2548
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THIS",
+          "bbox": [
+            0.3871,
+            0.2446,
+            0.4395,
+            0.2548
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.446,
+            0.2446,
+            0.4863,
+            0.2543
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2574",
+          "bbox": [
+            0.4952,
+            0.2434,
+            0.5387,
+            0.2548
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        },
+        {
+          "text": "DAY",
+          "bbox": [
+            0.5476,
+            0.2446,
+            0.5903,
+            0.2543
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.5984,
+            0.2446,
+            0.625,
+            0.2543
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JUNE,",
+          "bbox": [
+            0.6323,
+            0.2446,
+            0.6919,
+            0.2566
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.7016,
+            0.244,
+            0.7524,
+            0.2543
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "BEFORE",
+      "bbox": [
+        0.4911,
+        0.2748,
+        0.5718,
+        0.2851
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "BEFORE",
+          "bbox": [
+            0.4911,
+            0.2748,
+            0.5718,
+            0.2851
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "THE HON'BLE MR. JUSTICE SURAJ GOVINDARAJ",
+      "bbox": [
+        0.2774,
+        0.2987,
+        0.7831,
+        0.3096
+      ],
+      "confidence": 0.9217,
+      "words": [
+        {
+          "text": "THE",
+          "bbox": [
+            0.2774,
+            0.2999,
+            0.3185,
+            0.3096
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "HON'BLE",
+          "bbox": [
+            0.3274,
+            0.2993,
+            0.4185,
+            0.3096
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MR.",
+          "bbox": [
+            0.4274,
+            0.2993,
+            0.4645,
+            0.3096
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "JUSTICE",
+          "bbox": [
+            0.4718,
+            0.2993,
+            0.5597,
+            0.3096
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SURAJ",
+          "bbox": [
+            0.5677,
+            0.2993,
+            0.6347,
+            0.309
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GOVINDARAJ",
+          "bbox": [
+            0.6435,
+            0.2987,
+            0.7831,
+            0.309
+          ],
+          "confidence": 0.85,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "0. 2060 (a",
+      "bbox": [
+        0.4782,
+        0.3238,
+        0.7274,
+        0.3341
+      ],
+      "confidence": 0.49,
+      "words": [
+        {
+          "text": "0.",
+          "bbox": [
+            0.4782,
+            0.3244,
+            0.4919,
+            0.3341
+          ],
+          "confidence": 0.51,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2060",
+          "bbox": [
+            0.5073,
+            0.3238,
+            0.5589,
+            0.3341
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(a",
+          "bbox": [
+            0.7194,
+            0.3284,
+            0.7274,
+            0.3307
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "BETWEEN:",
+      "bbox": [
+        0.2508,
+        0.3478,
+        0.3411,
+        0.3563
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "BETWEEN:",
+          "bbox": [
+            0.2508,
+            0.3478,
+            0.3411,
+            0.3563
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1, M/S. G. M. INFINITE (DWELLING) INDIA PVT. LTD.,",
+      "bbox": [
+        0.2508,
+        0.3746,
+        0.7048,
+        0.386
+      ],
+      "confidence": 0.8756,
+      "words": [
+        {
+          "text": "1,",
+          "bbox": [
+            0.2508,
+            0.3751,
+            0.2637,
+            0.3848
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M/S.",
+          "bbox": [
+            0.2903,
+            0.3751,
+            0.325,
+            0.3854
+          ],
+          "confidence": 0.72,
+          "text_type": "unknown"
+        },
+        {
+          "text": "G.",
+          "bbox": [
+            0.3331,
+            0.3751,
+            0.3492,
+            0.3843
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M.",
+          "bbox": [
+            0.3573,
+            0.3751,
+            0.3742,
+            0.3843
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INFINITE",
+          "bbox": [
+            0.3823,
+            0.3751,
+            0.454,
+            0.3843
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(DWELLING)",
+          "bbox": [
+            0.4613,
+            0.3746,
+            0.5605,
+            0.386
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INDIA",
+          "bbox": [
+            0.5677,
+            0.3746,
+            0.6161,
+            0.3837
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PVT.",
+          "bbox": [
+            0.6234,
+            0.3746,
+            0.6573,
+            0.3837
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LTD.,",
+          "bbox": [
+            0.6653,
+            0.3746,
+            0.7048,
+            0.3854
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "A COMPANY INCORPORATED UNDER",
+      "bbox": [
+        0.2887,
+        0.3888,
+        0.5847,
+        0.3979
+      ],
+      "confidence": 0.9425,
+      "words": [
+        {
+          "text": "A",
+          "bbox": [
+            0.2887,
+            0.3894,
+            0.3,
+            0.3979
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANY",
+          "bbox": [
+            0.3065,
+            0.3894,
+            0.3855,
+            0.3979
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INCORPORATED",
+          "bbox": [
+            0.3919,
+            0.3888,
+            0.521,
+            0.3979
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "UNDER",
+          "bbox": [
+            0.5282,
+            0.3888,
+            0.5847,
+            0.3974
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "THE PROVISION OF THE COMPANIES ACT, 1956,",
+      "bbox": [
+        0.2887,
+        0.4025,
+        0.6831,
+        0.4133
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "THE",
+          "bbox": [
+            0.2887,
+            0.4036,
+            0.321,
+            0.4122
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PROVISION",
+          "bbox": [
+            0.3282,
+            0.4031,
+            0.4194,
+            0.4122
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.4266,
+            0.4031,
+            0.4476,
+            0.4122
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "THE",
+          "bbox": [
+            0.4532,
+            0.4031,
+            0.4847,
+            0.4122
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPANIES",
+          "bbox": [
+            0.4911,
+            0.4031,
+            0.5879,
+            0.4116
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ACT,",
+          "bbox": [
+            0.5944,
+            0.4031,
+            0.6306,
+            0.4133
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1956,",
+          "bbox": [
+            0.6395,
+            0.4025,
+            0.6831,
+            0.4133
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "HAVING REGISTERED OFFICE AT:",
+      "bbox": [
+        0.2903,
+        0.4168,
+        0.5605,
+        0.4259
+      ],
+      "confidence": 0.955,
+      "words": [
+        {
+          "text": "HAVING",
+          "bbox": [
+            0.2903,
+            0.4168,
+            0.3532,
+            0.4259
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "REGISTERED",
+          "bbox": [
+            0.3613,
+            0.4168,
+            0.4637,
+            0.4259
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OFFICE",
+          "bbox": [
+            0.471,
+            0.4168,
+            0.529,
+            0.4259
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AT:",
+          "bbox": [
+            0.5347,
+            0.4168,
+            0.5605,
+            0.4253
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "G. M. PEARL, NO. 06, B.T.M. LAYOUT,",
+      "bbox": [
+        0.2895,
+        0.4287,
+        0.5935,
+        0.4418
+      ],
+      "confidence": 0.9171,
+      "words": [
+        {
+          "text": "G.",
+          "bbox": [
+            0.2895,
+            0.431,
+            0.3056,
+            0.4401
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M.",
+          "bbox": [
+            0.3145,
+            0.431,
+            0.3306,
+            0.4401
+          ],
+          "confidence": 0.8,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PEARL,",
+          "bbox": [
+            0.3387,
+            0.431,
+            0.3935,
+            0.4418
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NO.",
+          "bbox": [
+            0.4016,
+            0.4287,
+            0.429,
+            0.4401
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "06,",
+          "bbox": [
+            0.4371,
+            0.431,
+            0.4613,
+            0.4418
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "B.T.M.",
+          "bbox": [
+            0.4694,
+            0.431,
+            0.5177,
+            0.4401
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LAYOUT,",
+          "bbox": [
+            0.5266,
+            0.4304,
+            0.5935,
+            0.4413
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "15\" STAGE, 15\" PHASE,",
+      "bbox": [
+        0.2911,
+        0.4436,
+        0.471,
+        0.4555
+      ],
+      "confidence": 0.725,
+      "words": [
+        {
+          "text": "15\"",
+          "bbox": [
+            0.2911,
+            0.4436,
+            0.3129,
+            0.4538
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "STAGE,",
+          "bbox": [
+            0.3185,
+            0.4447,
+            0.3774,
+            0.4555
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15\"",
+          "bbox": [
+            0.3855,
+            0.4436,
+            0.4081,
+            0.4538
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PHASE,",
+          "bbox": [
+            0.4145,
+            0.4447,
+            0.471,
+            0.4555
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "BANGALORE-560 068,",
+      "bbox": [
+        0.2903,
+        0.4584,
+        0.4677,
+        0.4692
+      ],
+      "confidence": 0.935,
+      "words": [
+        {
+          "text": "BANGALORE-560",
+          "bbox": [
+            0.2903,
+            0.4584,
+            0.4266,
+            0.4675
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "068,",
+          "bbox": [
+            0.4339,
+            0.4584,
+            0.4677,
+            0.4692
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "REPRESENTED BY ITS DIRECTOR AND",
+      "bbox": [
+        0.2903,
+        0.4721,
+        0.5976,
+        0.4812
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "REPRESENTED",
+          "bbox": [
+            0.2903,
+            0.4721,
+            0.4065,
+            0.4812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BY",
+          "bbox": [
+            0.4137,
+            0.4721,
+            0.4331,
+            0.4812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ITS",
+          "bbox": [
+            0.4395,
+            0.4721,
+            0.4653,
+            0.4812
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "DIRECTOR",
+          "bbox": [
+            0.4734,
+            0.4721,
+            0.5573,
+            0.4806
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AND",
+          "bbox": [
+            0.5629,
+            0.4721,
+            0.5976,
+            0.4806
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "AUTHORIZED SIGNATORY,",
+      "bbox": [
+        0.2895,
+        0.4863,
+        0.504,
+        0.4971
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "AUTHORIZED",
+          "bbox": [
+            0.2895,
+            0.4863,
+            0.3968,
+            0.4954
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SIGNATORY,",
+          "bbox": [
+            0.404,
+            0.4863,
+            0.504,
+            0.4971
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SRI. GULAM MUSTAFA.",
+      "bbox": [
+        0.2895,
+        0.5,
+        0.4742,
+        0.5091
+      ],
+      "confidence": 0.8967,
+      "words": [
+        {
+          "text": "SRI.",
+          "bbox": [
+            0.2895,
+            0.5006,
+            0.3218,
+            0.5091
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "GULAM",
+          "bbox": [
+            0.3298,
+            0.5,
+            0.3863,
+            0.5091
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MUSTAFA.",
+          "bbox": [
+            0.3944,
+            0.5,
+            0.4742,
+            0.5091
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": ".. PETITIONER",
+      "bbox": [
+        0.6984,
+        0.5137,
+        0.8137,
+        0.5234
+      ],
+      "confidence": 0.48,
+      "words": [
+        {
+          "text": "..",
+          "bbox": [
+            0.6984,
+            0.5211,
+            0.7089,
+            0.5234
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "PETITIONER",
+          "bbox": [
+            0.7161,
+            0.5137,
+            0.8137,
+            0.5222
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(BY SRI. D.R. RAVISHANKAR, SENIOR ADVOCATE FOR",
+      "bbox": [
+        0.25,
+        0.5274,
+        0.6911,
+        0.5393
+      ],
+      "confidence": 0.8986,
+      "words": [
+        {
+          "text": "(BY",
+          "bbox": [
+            0.25,
+            0.5279,
+            0.2774,
+            0.5393
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SRI.",
+          "bbox": [
+            0.2839,
+            0.5285,
+            0.3161,
+            0.5371
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "D.R.",
+          "bbox": [
+            0.3242,
+            0.5285,
+            0.3565,
+            0.5371
+          ],
+          "confidence": 0.6,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RAVISHANKAR,",
+          "bbox": [
+            0.3653,
+            0.5279,
+            0.4871,
+            0.5388
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SENIOR",
+          "bbox": [
+            0.4944,
+            0.5279,
+            0.5573,
+            0.5365
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE",
+          "bbox": [
+            0.5629,
+            0.5274,
+            0.6516,
+            0.5365
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FOR",
+          "bbox": [
+            0.6597,
+            0.5274,
+            0.6911,
+            0.5359
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SRI RAKESH B BHATT., ADVOCATE)",
+      "bbox": [
+        0.2831,
+        0.541,
+        0.5718,
+        0.5519
+      ],
+      "confidence": 0.928,
+      "words": [
+        {
+          "text": "SRI",
+          "bbox": [
+            0.2831,
+            0.5416,
+            0.3105,
+            0.5507
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RAKESH",
+          "bbox": [
+            0.3185,
+            0.5416,
+            0.3831,
+            0.5507
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "B",
+          "bbox": [
+            0.3903,
+            0.5416,
+            0.4,
+            0.5502
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BHATT.,",
+          "bbox": [
+            0.4073,
+            0.5416,
+            0.4702,
+            0.5519
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE)",
+          "bbox": [
+            0.4766,
+            0.541,
+            0.5718,
+            0.5519
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "AND:",
+      "bbox": [
+        0.2492,
+        0.5696,
+        0.2935,
+        0.5781
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "AND:",
+          "bbox": [
+            0.2492,
+            0.5696,
+            0.2935,
+            0.5781
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "1. STATE BANK OF INDIA LIMITED ARR",
+      "bbox": [
+        0.2508,
+        0.5912,
+        0.7839,
+        0.606
+      ],
+      "confidence": 0.7829,
+      "words": [
+        {
+          "text": "1.",
+          "bbox": [
+            0.2508,
+            0.5969,
+            0.2637,
+            0.6055
+          ],
+          "confidence": 0.71,
+          "text_type": "unknown"
+        },
+        {
+          "text": "STATE",
+          "bbox": [
+            0.2895,
+            0.5975,
+            0.3403,
+            0.606
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BANK",
+          "bbox": [
+            0.3476,
+            0.5969,
+            0.3911,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.3976,
+            0.5969,
+            0.4194,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INDIA",
+          "bbox": [
+            0.4258,
+            0.5969,
+            0.4734,
+            0.6055
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LIMITED",
+          "bbox": [
+            0.4798,
+            0.5969,
+            0.5468,
+            0.6055
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ARR",
+          "bbox": [
+            0.7532,
+            0.5912,
+            0.7839,
+            0.606
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Digitally signed STATE BANK BHAWAN, M.C. ROAD,",
+      "bbox": [
+        0.0903,
+        0.6106,
+        0.575,
+        0.6306
+      ],
+      "confidence": 0.8457,
+      "words": [
+        {
+          "text": "Digitally",
+          "bbox": [
+            0.0903,
+            0.6106,
+            0.1492,
+            0.6306
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "signed",
+          "bbox": [
+            0.1556,
+            0.6106,
+            0.2145,
+            0.6306
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "STATE",
+          "bbox": [
+            0.2895,
+            0.6112,
+            0.3403,
+            0.6197
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BANK",
+          "bbox": [
+            0.3476,
+            0.6112,
+            0.3911,
+            0.6192
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BHAWAN,",
+          "bbox": [
+            0.3984,
+            0.6112,
+            0.4742,
+            0.6214
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "M.C.",
+          "bbox": [
+            0.4823,
+            0.6106,
+            0.5161,
+            0.6192
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ROAD,",
+          "bbox": [
+            0.525,
+            0.6106,
+            0.575,
+            0.6209
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "by\u2019 Sie Ha NARIMAN POINT, MUMBAI-400 021, \u2018",
+      "bbox": [
+        0.0879,
+        0.6129,
+        0.779,
+        0.6437
+      ],
+      "confidence": 0.6088,
+      "words": [
+        {
+          "text": "by\u2019",
+          "bbox": [
+            0.0879,
+            0.6169,
+            0.1169,
+            0.6437
+          ],
+          "confidence": 0.53,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Sie",
+          "bbox": [
+            0.1145,
+            0.6129,
+            0.1734,
+            0.6431
+          ],
+          "confidence": 0.2,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Ha",
+          "bbox": [
+            0.1742,
+            0.6328,
+            0.2234,
+            0.6414
+          ],
+          "confidence": 0.39,
+          "text_type": "unknown"
+        },
+        {
+          "text": "NARIMAN",
+          "bbox": [
+            0.2903,
+            0.6249,
+            0.3653,
+            0.6328
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "POINT,",
+          "bbox": [
+            0.3734,
+            0.6249,
+            0.4274,
+            0.6351
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MUMBAI-400",
+          "bbox": [
+            0.4355,
+            0.6243,
+            0.5387,
+            0.6328
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "021,",
+          "bbox": [
+            0.546,
+            0.6243,
+            0.5798,
+            0.6334
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "\u2018",
+          "bbox": [
+            0.7702,
+            0.6391,
+            0.779,
+            0.6414
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Poeenda IGH BRANCH OFFICE AT _ :",
+      "bbox": [
+        0.0911,
+        0.6448,
+        0.7661,
+        0.6693
+      ],
+      "confidence": 0.5186,
+      "words": [
+        {
+          "text": "Poeenda",
+          "bbox": [
+            0.0911,
+            0.6448,
+            0.1581,
+            0.6693
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "IGH",
+          "bbox": [
+            0.1774,
+            0.6471,
+            0.2145,
+            0.667
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BRANCH",
+          "bbox": [
+            0.2903,
+            0.6522,
+            0.3565,
+            0.6608
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OFFICE",
+          "bbox": [
+            0.3637,
+            0.6517,
+            0.4218,
+            0.6608
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "AT",
+          "bbox": [
+            0.4282,
+            0.6522,
+            0.4492,
+            0.6608
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "_",
+          "bbox": [
+            0.6669,
+            0.6477,
+            0.6935,
+            0.6608
+          ],
+          "confidence": 0.26,
+          "text_type": "unknown"
+        },
+        {
+          "text": ":",
+          "bbox": [
+            0.7629,
+            0.6517,
+            0.7661,
+            0.6528
+          ],
+          "confidence": 0.49,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "KARNATAKA STRESSED ASSETS MANAGEMENT BRANCH,",
+      "bbox": [
+        0.0911,
+        0.6591,
+        0.6444,
+        0.6807
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "KARNATAKA",
+          "bbox": [
+            0.0911,
+            0.6591,
+            0.1952,
+            0.6807
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "STRESSED",
+          "bbox": [
+            0.2895,
+            0.6665,
+            0.375,
+            0.675
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ASSETS",
+          "bbox": [
+            0.3815,
+            0.6659,
+            0.4444,
+            0.675
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MANAGEMENT",
+          "bbox": [
+            0.4524,
+            0.6659,
+            0.5661,
+            0.6745
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BRANCH,",
+          "bbox": [
+            0.5734,
+            0.6659,
+            0.6444,
+            0.6762
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "STATE BANK OF INDIA,",
+      "bbox": [
+        0.2895,
+        0.6796,
+        0.4774,
+        0.6904
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "STATE",
+          "bbox": [
+            0.2895,
+            0.6802,
+            0.3403,
+            0.6887
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BANK",
+          "bbox": [
+            0.3476,
+            0.6802,
+            0.3911,
+            0.6881
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OF",
+          "bbox": [
+            0.3976,
+            0.6796,
+            0.4194,
+            0.6887
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "INDIA,",
+          "bbox": [
+            0.4258,
+            0.6796,
+            0.4774,
+            0.6904
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "28\u00b0 FLOOR, OFFICE COMPLEX BUILDING,",
+      "bbox": [
+        0.2903,
+        0.6927,
+        0.6202,
+        0.7041
+      ],
+      "confidence": 0.904,
+      "words": [
+        {
+          "text": "28\u00b0",
+          "bbox": [
+            0.2903,
+            0.6927,
+            0.3145,
+            0.7024
+          ],
+          "confidence": 0.68,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FLOOR,",
+          "bbox": [
+            0.321,
+            0.6933,
+            0.3798,
+            0.7041
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "OFFICE",
+          "bbox": [
+            0.3871,
+            0.6933,
+            0.4452,
+            0.7024
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "COMPLEX",
+          "bbox": [
+            0.4524,
+            0.6933,
+            0.5274,
+            0.7018
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BUILDING,",
+          "bbox": [
+            0.5347,
+            0.6933,
+            0.6202,
+            0.7035
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "LHO CAMPUS, ;",
+      "bbox": [
+        0.2903,
+        0.707,
+        0.4927,
+        0.7178
+      ],
+      "confidence": 0.77,
+      "words": [
+        {
+          "text": "LHO",
+          "bbox": [
+            0.2903,
+            0.7075,
+            0.3218,
+            0.7161
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "CAMPUS,",
+          "bbox": [
+            0.329,
+            0.707,
+            0.4008,
+            0.7178
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": ";",
+          "bbox": [
+            0.4911,
+            0.7161,
+            0.4927,
+            0.7172
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "NO, 65, ST MARKS ROAD,",
+      "bbox": [
+        0.2903,
+        0.7212,
+        0.4984,
+        0.7315
+      ],
+      "confidence": 0.906,
+      "words": [
+        {
+          "text": "NO,",
+          "bbox": [
+            0.2903,
+            0.7212,
+            0.3177,
+            0.7298
+          ],
+          "confidence": 0.69,
+          "text_type": "unknown"
+        },
+        {
+          "text": "65,",
+          "bbox": [
+            0.3258,
+            0.7212,
+            0.35,
+            0.7315
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ST",
+          "bbox": [
+            0.3573,
+            0.7212,
+            0.3782,
+            0.7298
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "MARKS",
+          "bbox": [
+            0.3847,
+            0.7212,
+            0.4411,
+            0.7298
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ROAD,",
+          "bbox": [
+            0.4484,
+            0.7212,
+            0.4984,
+            0.7315
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "BENGALURU-560 001,",
+      "bbox": [
+        0.2903,
+        0.7349,
+        0.4677,
+        0.7452
+      ],
+      "confidence": 0.94,
+      "words": [
+        {
+          "text": "BENGALURU-560",
+          "bbox": [
+            0.2903,
+            0.7349,
+            0.4266,
+            0.7434
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "001,",
+          "bbox": [
+            0.4339,
+            0.7349,
+            0.4677,
+            0.7452
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "REPRESENTED BY ITS DIRECTOR.",
+      "bbox": [
+        0.2903,
+        0.748,
+        0.5613,
+        0.7571
+      ],
+      "confidence": 0.9625,
+      "words": [
+        {
+          "text": "REPRESENTED",
+          "bbox": [
+            0.2903,
+            0.7486,
+            0.4065,
+            0.7571
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "BY",
+          "bbox": [
+            0.4137,
+            0.7486,
+            0.4339,
+            0.7571
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ITS",
+          "bbox": [
+            0.4395,
+            0.7486,
+            0.4661,
+            0.7571
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "DIRECTOR.",
+          "bbox": [
+            0.4734,
+            0.748,
+            0.5613,
+            0.7571
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "w. RESPONDENT",
+      "bbox": [
+        0.6863,
+        0.7617,
+        0.8145,
+        0.7708
+      ],
+      "confidence": 0.48,
+      "words": [
+        {
+          "text": "w.",
+          "bbox": [
+            0.6863,
+            0.7691,
+            0.6976,
+            0.7708
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RESPONDENT",
+          "bbox": [
+            0.7048,
+            0.7617,
+            0.8145,
+            0.7708
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(BY SRI. V. SRINIVASA RAGHAVAN, SENIOR ADVOCATE FOR",
+      "bbox": [
+        0.25,
+        0.7759,
+        0.7427,
+        0.7879
+      ],
+      "confidence": 0.9337,
+      "words": [
+        {
+          "text": "(BY",
+          "bbox": [
+            0.25,
+            0.7765,
+            0.2774,
+            0.7879
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SRI.",
+          "bbox": [
+            0.2839,
+            0.7765,
+            0.3161,
+            0.7856
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "V.",
+          "bbox": [
+            0.3234,
+            0.7765,
+            0.3379,
+            0.7856
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SRINIVASA",
+          "bbox": [
+            0.346,
+            0.7765,
+            0.4371,
+            0.7851
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "RAGHAVAN,",
+          "bbox": [
+            0.4444,
+            0.7765,
+            0.5379,
+            0.7868
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SENIOR",
+          "bbox": [
+            0.546,
+            0.7759,
+            0.6097,
+            0.7851
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE",
+          "bbox": [
+            0.6145,
+            0.7759,
+            0.7032,
+            0.7845
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "FOR",
+          "bbox": [
+            0.7105,
+            0.7759,
+            0.7427,
+            0.7845
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SRI SHARAN A. KUKREJA, ADVOCATE,",
+      "bbox": [
+        0.2831,
+        0.7896,
+        0.5919,
+        0.801
+      ],
+      "confidence": 0.942,
+      "words": [
+        {
+          "text": "SRI",
+          "bbox": [
+            0.2831,
+            0.7902,
+            0.3105,
+            0.7987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SHARAN",
+          "bbox": [
+            0.3177,
+            0.7902,
+            0.3847,
+            0.7987
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "A.",
+          "bbox": [
+            0.3919,
+            0.7902,
+            0.4065,
+            0.7987
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "KUKREJA,",
+          "bbox": [
+            0.4153,
+            0.7902,
+            0.4911,
+            0.801
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE,",
+          "bbox": [
+            0.4984,
+            0.7896,
+            0.5919,
+            0.8005
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SRI LOMESH KIRAN N., ADVOCATE",
+      "bbox": [
+        0.2831,
+        0.8033,
+        0.5669,
+        0.8141
+      ],
+      "confidence": 0.912,
+      "words": [
+        {
+          "text": "SRI",
+          "bbox": [
+            0.2831,
+            0.8039,
+            0.3105,
+            0.813
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "LOMESH",
+          "bbox": [
+            0.3185,
+            0.8039,
+            0.3847,
+            0.813
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "KIRAN",
+          "bbox": [
+            0.3927,
+            0.8039,
+            0.4427,
+            0.8124
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "N.,",
+          "bbox": [
+            0.4508,
+            0.8039,
+            0.471,
+            0.8141
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE",
+          "bbox": [
+            0.4782,
+            0.8033,
+            0.5669,
+            0.8124
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "SMT. ABHIJINA SOMASHEKARA, ADVOCATE)",
+      "bbox": [
+        0.2831,
+        0.817,
+        0.6379,
+        0.8278
+      ],
+      "confidence": 0.845,
+      "words": [
+        {
+          "text": "SMT.",
+          "bbox": [
+            0.2831,
+            0.8176,
+            0.321,
+            0.8267
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ABHIJINA",
+          "bbox": [
+            0.3282,
+            0.8176,
+            0.4,
+            0.8261
+          ],
+          "confidence": 0.58,
+          "text_type": "unknown"
+        },
+        {
+          "text": "SOMASHEKARA,",
+          "bbox": [
+            0.4065,
+            0.8176,
+            0.5347,
+            0.8278
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ADVOCATE)",
+          "bbox": [
+            0.5419,
+            0.817,
+            0.6379,
+            0.8278
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\\",
+      "bbox": [
+        0.2903,
+        0.8729,
+        0.2944,
+        0.8791
+      ],
+      "confidence": 0.91,
+      "words": [
+        {
+          "text": "\\",
+          "bbox": [
+            0.2903,
+            0.8729,
+            0.2944,
+            0.8791
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\\s Uhis Certfied copy contauns..... 3 pager",
+      "bbox": [
+        0.2653,
+        0.8723,
+        0.7718,
+        0.9082
+      ],
+      "confidence": 0.6571,
+      "words": [
+        {
+          "text": "\\s",
+          "bbox": [
+            0.2653,
+            0.8723,
+            0.2919,
+            0.9071
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Uhis",
+          "bbox": [
+            0.4185,
+            0.8865,
+            0.45,
+            0.8962
+          ],
+          "confidence": 0.59,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Certfied",
+          "bbox": [
+            0.4565,
+            0.8865,
+            0.5202,
+            0.8979
+          ],
+          "confidence": 0.9,
+          "text_type": "unknown"
+        },
+        {
+          "text": "copy",
+          "bbox": [
+            0.5258,
+            0.8917,
+            0.5629,
+            0.9019
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "contauns.....",
+          "bbox": [
+            0.5685,
+            0.8917,
+            0.6653,
+            0.9025
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "3",
+          "bbox": [
+            0.6935,
+            0.8911,
+            0.704,
+            0.9042
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "pager",
+          "bbox": [
+            0.7266,
+            0.8974,
+            0.7718,
+            0.9082
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "And Copying charges with of &,, Us a",
+      "bbox": [
+        0.4177,
+        0.9048,
+        0.7702,
+        0.9253
+      ],
+      "confidence": 0.82,
+      "words": [
+        {
+          "text": "And",
+          "bbox": [
+            0.4177,
+            0.9048,
+            0.45,
+            0.9145
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Copying",
+          "bbox": [
+            0.4556,
+            0.9054,
+            0.5226,
+            0.9196
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "charges",
+          "bbox": [
+            0.5274,
+            0.9088,
+            0.5903,
+            0.9213
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.5968,
+            0.9111,
+            0.6306,
+            0.9202
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6363,
+            0.9116,
+            0.6532,
+            0.9208
+          ],
+          "confidence": 0.83,
+          "text_type": "unknown"
+        },
+        {
+          "text": "&,,",
+          "bbox": [
+            0.6565,
+            0.9122,
+            0.6742,
+            0.9219
+          ],
+          "confidence": 0.15,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Us",
+          "bbox": [
+            0.696,
+            0.9048,
+            0.7161,
+            0.9242
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.7565,
+            0.9179,
+            0.7702,
+            0.9253
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "* Received ~",
+      "bbox": [
+        0.2726,
+        0.9208,
+        0.7476,
+        0.939
+      ],
+      "confidence": 0.6133,
+      "words": [
+        {
+          "text": "*",
+          "bbox": [
+            0.2726,
+            0.9242,
+            0.2879,
+            0.9361
+          ],
+          "confidence": 0.88,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Received",
+          "bbox": [
+            0.4194,
+            0.9208,
+            0.4927,
+            0.939
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "~",
+          "bbox": [
+            0.7073,
+            0.9213,
+            0.7476,
+            0.9253
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.8413,
+  "latency_ms": 504,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "(D Wak K\nLamesh [Lfaanp\nNC: 2026:KHC:32077\nWP No. 20601 of 2024\nIN THE HIGH COURT OF KARNATAKA AT BENGALURU\nDATED THIS THE 2574 DAY OF JUNE, 2026\nBEFORE\nTHE HON'BLE MR. JUSTICE SURAJ GOVINDARAJ\n0. 2060 (a\nBETWEEN:\n1, M/S. G. M. INFINITE (DWELLING) INDIA PVT. LTD.,\nA COMPANY INCORPORATED UNDER\nTHE PROVISION OF THE COMPANIES ACT, 1956,\nHAVING REGISTERED OFFICE AT:\nG. M. PEARL, NO. 06, B.T.M. LAYOUT,\n15\" STAGE, 15\" PHASE,\nBANGALORE-560 068,\nREPRESENTED BY ITS DIRECTOR AND\nAUTHORIZED SIGNATORY,\nSRI. GULAM MUSTAFA.\n.. PETITIONER\n(BY SRI. D.R. RAVISHANKAR, SENIOR ADVOCATE FOR\nSRI RAKESH B BHATT., ADVOCATE)\nAND:\n1. STATE BANK OF INDIA LIMITED ARR\nDigitally signed STATE BANK BHAWAN, M.C. ROAD,\nby\u2019 Sie Ha NARIMAN POINT, MUMBAI-400 021, \u2018\nPoeenda IGH BRANCH OFFICE AT _ :\nKARNATAKA STRESSED ASSETS MANAGEMENT BRANCH,\nSTATE BANK OF INDIA,\n28\u00b0 FLOOR, OFFICE COMPLEX BUILDING,\nLHO CAMPUS, ;\nNO, 65, ST MARKS ROAD,\nBENGALURU-560 001,\nREPRESENTED BY ITS DIRECTOR.\nw. RESPONDENT\n(BY SRI. V. SRINIVASA RAGHAVAN, SENIOR ADVOCATE FOR\nSRI SHARAN A. KUKREJA, ADVOCATE,\nSRI LOMESH KIRAN N., ADVOCATE\nSMT. ABHIJINA SOMASHEKARA, ADVOCATE)\n\\\n\\s Uhis Certfied copy contauns..... 3 pager\nAnd Copying charges with of &,, Us a\n* Received ~"
+}

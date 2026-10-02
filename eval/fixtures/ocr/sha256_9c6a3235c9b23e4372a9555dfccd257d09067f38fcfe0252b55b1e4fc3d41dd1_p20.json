@@ -1,0 +1,661 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 20,
+  "lines": [
+    {
+      "text": "20",
+      "bbox": [
+        0.425,
+        0.0818,
+        0.4409,
+        0.0908
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "20",
+          "bbox": [
+            0.425,
+            0.0818,
+            0.4409,
+            0.0908
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u201cros state rast",
+      "bbox": [
+        0.1596,
+        0.1843,
+        0.2294,
+        0.199
+      ],
+      "confidence": 0.3167,
+      "words": [
+        {
+          "text": "\u201cros",
+          "bbox": [
+            0.1596,
+            0.1843,
+            0.1762,
+            0.199
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "state",
+          "bbox": [
+            0.179,
+            0.1843,
+            0.2018,
+            0.199
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "rast",
+          "bbox": [
+            0.2046,
+            0.1843,
+            0.2294,
+            0.199
+          ],
+          "confidence": 0.07,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "+ opens raat phates agin ore tnd rem",
+      "bbox": [
+        0.152,
+        0.1721,
+        0.4672,
+        0.2086
+      ],
+      "confidence": 0.3025,
+      "words": [
+        {
+          "text": "+",
+          "bbox": [
+            0.152,
+            0.2033,
+            0.1576,
+            0.2075
+          ],
+          "confidence": 0.43,
+          "text_type": "unknown"
+        },
+        {
+          "text": "opens",
+          "bbox": [
+            0.1652,
+            0.1843,
+            0.2156,
+            0.2086
+          ],
+          "confidence": 0.27,
+          "text_type": "unknown"
+        },
+        {
+          "text": "raat",
+          "bbox": [
+            0.2205,
+            0.1843,
+            0.2419,
+            0.2086
+          ],
+          "confidence": 0.18,
+          "text_type": "unknown"
+        },
+        {
+          "text": "phates",
+          "bbox": [
+            0.2681,
+            0.1843,
+            0.3324,
+            0.2086
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agin",
+          "bbox": [
+            0.3393,
+            0.1721,
+            0.3787,
+            0.1922
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ore",
+          "bbox": [
+            0.3822,
+            0.1721,
+            0.396,
+            0.1922
+          ],
+          "confidence": 0.56,
+          "text_type": "unknown"
+        },
+        {
+          "text": "tnd",
+          "bbox": [
+            0.3974,
+            0.1721,
+            0.4223,
+            0.1922
+          ],
+          "confidence": 0.4,
+          "text_type": "unknown"
+        },
+        {
+          "text": "rem",
+          "bbox": [
+            0.4257,
+            0.1721,
+            0.4672,
+            0.1922
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ae ea rn hae se nce 1 aon 6 Oe",
+      "bbox": [
+        0.1631,
+        0.1806,
+        0.4713,
+        0.2196
+      ],
+      "confidence": 0.275,
+      "words": [
+        {
+          "text": "ae",
+          "bbox": [
+            0.1631,
+            0.2049,
+            0.1797,
+            0.2196
+          ],
+          "confidence": 0.41,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ea",
+          "bbox": [
+            0.1887,
+            0.2049,
+            0.2066,
+            0.2196
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        },
+        {
+          "text": "rn",
+          "bbox": [
+            0.2308,
+            0.1917,
+            0.2571,
+            0.2117
+          ],
+          "confidence": 0.09,
+          "text_type": "unknown"
+        },
+        {
+          "text": "hae",
+          "bbox": [
+            0.2633,
+            0.1917,
+            0.2813,
+            0.2117
+          ],
+          "confidence": 0.27,
+          "text_type": "unknown"
+        },
+        {
+          "text": "se",
+          "bbox": [
+            0.2875,
+            0.1917,
+            0.3075,
+            0.2117
+          ],
+          "confidence": 0.19,
+          "text_type": "unknown"
+        },
+        {
+          "text": "nce",
+          "bbox": [
+            0.3621,
+            0.1864,
+            0.3815,
+            0.2012
+          ],
+          "confidence": 0.32,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1",
+          "bbox": [
+            0.3877,
+            0.1901,
+            0.4022,
+            0.1954
+          ],
+          "confidence": 0.47,
+          "text_type": "unknown"
+        },
+        {
+          "text": "aon",
+          "bbox": [
+            0.4133,
+            0.1806,
+            0.4361,
+            0.1954
+          ],
+          "confidence": 0.38,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6",
+          "bbox": [
+            0.4499,
+            0.1848,
+            0.454,
+            0.1895
+          ],
+          "confidence": 0.29,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Oe",
+          "bbox": [
+            0.4582,
+            0.1806,
+            0.4713,
+            0.1954
+          ],
+          "confidence": 0.16,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "i",
+      "bbox": [
+        0.1714,
+        0.3231,
+        0.199,
+        0.3295
+      ],
+      "confidence": 0.82,
+      "words": [
+        {
+          "text": "i",
+          "bbox": [
+            0.1714,
+            0.3231,
+            0.199,
+            0.3295
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "i",
+      "bbox": [
+        0.199,
+        0.32,
+        0.2218,
+        0.3268
+      ],
+      "confidence": 0.84,
+      "words": [
+        {
+          "text": "i",
+          "bbox": [
+            0.199,
+            0.32,
+            0.2218,
+            0.3268
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "a",
+      "bbox": [
+        0.2225,
+        0.3189,
+        0.2398,
+        0.3263
+      ],
+      "confidence": 0.17,
+      "words": [
+        {
+          "text": "a",
+          "bbox": [
+            0.2225,
+            0.3189,
+            0.2398,
+            0.3263
+          ],
+          "confidence": 0.17,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "'",
+      "bbox": [
+        0.2405,
+        0.3157,
+        0.264,
+        0.3231
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "'",
+          "bbox": [
+            0.2405,
+            0.3157,
+            0.264,
+            0.3231
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\u2018",
+      "bbox": [
+        0.2647,
+        0.3147,
+        0.2882,
+        0.321
+      ],
+      "confidence": 0.6,
+      "words": [
+        {
+          "text": "\u2018",
+          "bbox": [
+            0.2647,
+            0.3147,
+            0.2882,
+            0.321
+          ],
+          "confidence": 0.6,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\\",
+      "bbox": [
+        0.2896,
+        0.311,
+        0.3269,
+        0.3184
+      ],
+      "confidence": 0.87,
+      "words": [
+        {
+          "text": "\\",
+          "bbox": [
+            0.2896,
+            0.311,
+            0.3269,
+            0.3184
+          ],
+          "confidence": 0.87,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "\\",
+      "bbox": [
+        0.3283,
+        0.3078,
+        0.3614,
+        0.3152
+      ],
+      "confidence": 0.84,
+      "words": [
+        {
+          "text": "\\",
+          "bbox": [
+            0.3283,
+            0.3078,
+            0.3614,
+            0.3152
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "H",
+      "bbox": [
+        0.3953,
+        0.302,
+        0.4223,
+        0.3083
+      ],
+      "confidence": 0.46,
+      "words": [
+        {
+          "text": "H",
+          "bbox": [
+            0.3953,
+            0.302,
+            0.4223,
+            0.3083
+          ],
+          "confidence": 0.46,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "{",
+      "bbox": [
+        0.4236,
+        0.2983,
+        0.452,
+        0.3062
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "{",
+          "bbox": [
+            0.4236,
+            0.2983,
+            0.452,
+            0.3062
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "c3",
+      "bbox": [
+        0.4527,
+        0.2983,
+        0.4637,
+        0.3036
+      ],
+      "confidence": 0.0,
+      "words": [
+        {
+          "text": "c3",
+          "bbox": [
+            0.4527,
+            0.2983,
+            0.4637,
+            0.3036
+          ],
+          "confidence": 0.0,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "i",
+      "bbox": [
+        0.4651,
+        0.2957,
+        0.4865,
+        0.3031
+      ],
+      "confidence": 0.65,
+      "words": [
+        {
+          "text": "i",
+          "bbox": [
+            0.4651,
+            0.2957,
+            0.4865,
+            0.3031
+          ],
+          "confidence": 0.65,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CA {AT) {ins} No. 1217 of 2026",
+      "bbox": [
+        0.2391,
+        0.8875,
+        0.4257,
+        0.9118
+      ],
+      "confidence": 0.8743,
+      "words": [
+        {
+          "text": "CA",
+          "bbox": [
+            0.2391,
+            0.9034,
+            0.2571,
+            0.9118
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "{AT)",
+          "bbox": [
+            0.2612,
+            0.9007,
+            0.2847,
+            0.9118
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "{ins}",
+          "bbox": [
+            0.2896,
+            0.8981,
+            0.3151,
+            0.9092
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.3186,
+            0.8965,
+            0.3379,
+            0.9044
+          ],
+          "confidence": 0.72,
+          "text_type": "unknown"
+        },
+        {
+          "text": "1217",
+          "bbox": [
+            0.3442,
+            0.8923,
+            0.3746,
+            0.9018
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3787,
+            0.8902,
+            0.3912,
+            0.9007
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.3939,
+            0.8875,
+            0.4257,
+            0.897
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.461,
+  "latency_ms": 213,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "20\n\u201cros state rast\n+ opens raat phates agin ore tnd rem\nae ea rn hae se nce 1 aon 6 Oe\ni\ni\na\n'\n\u2018\n\\\n\\\nH\n{\nc3\ni\nCA {AT) {ins} No. 1217 of 2026"
+}

@@ -1,0 +1,12 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 5,
+  "lines": [],
+  "mean_confidence": 0.0,
+  "latency_ms": 198,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": ""
+}

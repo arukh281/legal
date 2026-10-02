@@ -277,4 +277,37 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** S04 Closure Directive #3; Non-negotiable #5; `02_P0 §5.8`. Disabling TLS verification creates critical security vulnerabilities and breaks legal acquisition compliance. The AST test prevents any commit with disabled TLS verification.
 - **Doc Reference:** Session S04 Closure Directive #3; `docs/02_P0_source_acquisition.md` §5.8.
 
+---
+
+### 2026-10-02 — Tesseract Local OCR Engine with Pinned Version Reporting
+- **Decision:** Configured `TesseractOcrEngine` (via `pytesseract` and local binary installed with `brew install tesseract` locally and `sudo apt-get install -y tesseract-ocr` in CI) as the local OCR engine, pinned and recording engine name and exact version (e.g. `tesseract 5.5.3`) in the OCR adapter's page output. Tests fail loudly if the binary is missing or unusable. Migration to AWS Textract (Mumbai ap-south-1) is scheduled behind the same `OcrEngine` contract for production deployment in S15.
+- **Reason:** User Request; stack adaptation for local dev and CI execution without AWS billing or egress, while strictly maintaining the immutable OCR abstraction contract (`OcrEngine`, `OcrPageResult`).
+- **Doc Reference:** User Request; `docs/mvp/04_stack_and_infra.md` §2.7; `docs/03_P1_ingestion_parsing.md` §5.3.
+
+---
+
+### 2026-10-02 — Quality Gate Thresholds and Tier-1 Claim Safety Constraints
+- **Decision:** Document-level quality gating produces 3 mutually exclusive gate classifications: `PASS` (structure_conf ≥ 0.65, ocr_conf ≥ 0.90, decision date resolved, no hidden text), `FLAGGED` (routed to Django Admin review queue with visible badge: missing date, unresolved case number, low structure confidence, or detected hidden text), and `QUARANTINED` (excluded from index and claims: mean ocr_conf < 0.80 or unsupported language). In addition, per-anchor `ocr_conf < 0.80` strictly excludes the anchor from backing Tier-1 claims even if the overall document passes.
+- **Reason:** Non-negotiable #4 (Honest status) & Requirement 8. Ensures degraded or machine-hallucinated OCR text never backs legal assertions without human lawyer verification.
+- **Doc Reference:** `docs/03_P1_ingestion_parsing.md` §5.11; `docs/mvp/00_mvp_spec.md` §2; `docs/mvp/04_stack_and_infra.md` §2.7.
+
+---
+
+### 2026-10-02 — ParsedDocument S3 Storage and Database Transaction Separation
+- **Decision:** Pipeline writes gzip-compressed `ParsedDocument` JSON artifacts to S3/MinIO first (content-addressed at `parsed/{work_id}/{expression_key}/{parse_id}.json.gz`), hashes with SHA-256, and only upon successful storage upload initiates `transaction.atomic()` to commit domain rows (`work`, `manifestation`, `parse_run`, `anchor`, `anchor_alias`) and emit `doc.parsed.v1` outbox event in the same transaction.
+- **Reason:** User Directive #5. S3 and Postgres do not share a two-phase commit. An orphaned S3 object is harmless; a database row pointing to a missing S3 object is a catastrophic integrity failure.
+- **Doc Reference:** User Directive #5; `docs/mvp/03_data_model_and_contracts.md` §3.4; `docs/01_master_architecture.md` §7.1.
+
+---
+
+### 2026-10-02 — Anchor Assignment Stability Enum Restriction and Tombstone Encoding
+- **Decision:** `anchor_alias.method` strictly restricted to the 03 §3.4 enum values (`NUM_EQ`, `HASH_EQ`, `NW_ALIGN`, `SPLIT`, `MERGE`, `RENUMBER`, `GRAMMAR_V11`). Paragraph deletions are recorded on `anchor.state = 'TOMBSTONED'` and `forward_to = <new_anchor_id>`, rather than creating synthetic methods. Minor text amendments on preserved paragraphs record `method = 'NW_ALIGN'` with confidence score.
+- **Reason:** User Directive #2; `docs/mvp/03_data_model_and_contracts.md` §3.4.
+
+---
+
+### 2026-10-02 — Court Numbering Fidelity for Unmatched Paragraphs
+- **Decision:** Newly introduced numbered paragraphs in court orders keep their printed numbers `p{n}` (`numbering = "EXPLICIT"`), satisfying Constraint A1. Only unnumbered blocks are minted synthetic locators `u{n}` (`numbering = "SYNTHETIC"`).
+- **Reason:** User Directive #3; Constraint A1 (`docs/01_master_architecture.md` §5.3).
+
 
