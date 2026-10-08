@@ -506,3 +506,61 @@ def test_split_work_when_canonical_has_active_alias_does_not_raise() -> None:
     dup_work.refresh_from_db()
     assert dup_work.status == "ACTIVE"
     assert dup_work.merged_into is None
+
+
+@pytest.mark.django_db
+def test_split_work_leaves_preexisting_superseded_alias_when_details_lists_empty() -> None:
+    """A SUPERSEDED alias on from_work that existed before the merge stays SUPERSEDED after split when details has empty lists."""
+    from parse.citations.dedupe import split_work
+
+    from_work = Work.objects.create(
+        work_id=mint_id("wrk"), work_type="FINAL_ORDER", status="ACTIVE"
+    )
+    to_work = Work.objects.create(work_id=mint_id("wrk"), work_type="FINAL_ORDER", status="ACTIVE")
+
+    # A pre-existing SUPERSEDED alias on from_work (e.g. older superseded alias)
+    old_alias = IdentifierAlias.objects.create(
+        scheme="SCC",
+        value_normalized="2010:scc:999",
+        target_id=from_work.work_id,
+        confidence=0.5,
+        trust_tier="T4",
+        source="citation_mention",
+        status="SUPERSEDED",
+        first_seen=datetime.now(UTC),
+    )
+
+    # Merge ledger recorded with explicit empty lists in details
+    event_id = mint_id("evr")
+    IdentityMergeLedger.objects.create(
+        event_id=event_id,
+        kind="WORK",
+        op="MERGE",
+        from_id=from_work.work_id,
+        to_id=to_work.work_id,
+        reason="REPARSE_DUPLICATE_RAW_BLOB",
+        confidence=1.0,
+        recorded_at=datetime.now(UTC),
+        details={
+            "prior_status": "ACTIVE",
+            "superseded_alias_ids": [],
+            "retargeted_alias_ids": [],
+            "repointed_mention_ids": [],
+        },
+    )
+    from_work.status = "MERGED"
+    from_work.merged_into = to_work
+    from_work.save(update_fields=["status", "merged_into"])
+
+    # Execute split
+    split_event_id = split_work(event_id, reason="TEST_REVERSAL")
+    assert split_event_id.startswith("evr_")
+
+    # The pre-existing superseded alias MUST REMAIN SUPERSEDED (not reactivated)
+    old_alias.refresh_from_db()
+    assert old_alias.status == "SUPERSEDED"
+
+    # Work status restored
+    from_work.refresh_from_db()
+    assert from_work.status == "ACTIVE"
+    assert from_work.merged_into is None

@@ -295,8 +295,8 @@ def split_work(
 
         # 3. Revert alias modifications
         # 3a. Supersede only the aliases this merge created or re-activated on to_id
-        retargeted_aliases: list[dict[str, str]] = details.get("retargeted_alias_ids", [])
-        if retargeted_aliases:
+        if "retargeted_alias_ids" in details:
+            retargeted_aliases: list[dict[str, str]] = details.get("retargeted_alias_ids") or []
             for item in retargeted_aliases:
                 IdentifierAlias.objects.filter(
                     scheme=item["scheme"],
@@ -313,8 +313,8 @@ def split_work(
             ).update(status="SUPERSEDED")
 
         # 3b. Re-activate only the aliases this merge superseded, and ONLY when no other ACTIVE alias exists for that scheme+value
-        superseded_aliases: list[dict[str, str]] = details.get("superseded_alias_ids", [])
-        if superseded_aliases:
+        if "superseded_alias_ids" in details:
+            superseded_aliases: list[dict[str, str]] = details.get("superseded_alias_ids") or []
             for item in superseded_aliases:
                 scheme = item["scheme"]
                 val = item["value_normalized"]
@@ -346,12 +346,13 @@ def split_work(
                     alias.save(update_fields=["status"])
 
         # 4. Move re-pointed citation mentions back
-        repointed_mentions: list[str] = details.get("repointed_mention_ids", [])
-        if repointed_mentions:
-            CitationMention.objects.filter(
-                mention_id__in=repointed_mentions,
-                resolved_target_id=merge_entry.to_id,
-            ).update(resolved_target_id=merge_entry.from_id)
+        if "repointed_mention_ids" in details:
+            repointed_mentions: list[str] = details.get("repointed_mention_ids") or []
+            if repointed_mentions:
+                CitationMention.objects.filter(
+                    mention_id__in=repointed_mentions,
+                    resolved_target_id=merge_entry.to_id,
+                ).update(resolved_target_id=merge_entry.from_id)
 
         # 5. Record SPLIT in identity_merge_ledger
         split_event_id = mint_id("evr")
