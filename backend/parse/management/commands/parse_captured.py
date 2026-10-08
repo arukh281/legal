@@ -33,6 +33,18 @@ class Command(BaseCommand):
             help="Limit the number of captured documents to parse.",
         )
         parser.add_argument(
+            "--capture-id",
+            type=str,
+            default=None,
+            help="Parse a specific capture by capture_id.",
+        )
+        parser.add_argument(
+            "--source-record-key",
+            type=str,
+            default=None,
+            help="Filter by specific source_record_key.",
+        )
+        parser.add_argument(
             "--section",
             type=str,
             default=None,
@@ -53,12 +65,18 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         limit = options.get("limit")
         section = options.get("section")
+        capture_id = options.get("capture_id")
+        source_record_key = options.get("source_record_key")
         show_samples = options.get("show_samples", 3)
 
         qs = Capture.objects.filter(change_kind__in=["NEW", "CHANGED"])
+        if capture_id:
+            qs = qs.filter(capture_id=capture_id)
+        if source_record_key:
+            qs = qs.filter(source_record_key=source_record_key)
         if section:
             qs = qs.filter(source_record_key__startswith=f"{section}:")
-        else:
+        elif not capture_id and not source_record_key:
             # Exclude non-PDF policies
             qs = qs.exclude(source_record_key__startswith="policy:")
 
@@ -123,6 +141,39 @@ class Command(BaseCommand):
                 )
                 if manifestation:
                     existing_work_id = manifestation.work_id
+
+            # When no ParseRun/Manifestation matches cap.raw_id, look up the latest work
+            # for the same source_record_key (e.g. CHANGED captures where the raw blob changed)
+            if not existing_work_id:
+                prior_raw_ids = list(
+                    Capture.objects.filter(
+                        source_id=cap.source_id,
+                        source_record_key=cap.source_record_key,
+                    )
+                    .exclude(raw_id=cap.raw_id)
+                    .order_by("-fetched_at")
+                    .values_list("raw_id", flat=True)
+                )
+                if cap.prior_raw_id and cap.prior_raw_id not in prior_raw_ids:
+                    prior_raw_ids.append(cap.prior_raw_id)
+
+                if prior_raw_ids:
+                    prior_run = (
+                        ParseRun.objects.filter(raw_ids__overlap=prior_raw_ids)
+                        .order_by("-created_at")
+                        .first()
+                    )
+                    if prior_run:
+                        existing_work_id = prior_run.work_id
+                        supersedes_parse_id = prior_run.parse_id
+                    else:
+                        prior_man = (
+                            Manifestation.objects.filter(raw_ids__overlap=prior_raw_ids)
+                            .order_by("-first_seen")
+                            .first()
+                        )
+                        if prior_man:
+                            existing_work_id = prior_man.work_id
 
             try:
                 raw_bytes = storage.get_blob(cap.raw_id, content_type="application/pdf")

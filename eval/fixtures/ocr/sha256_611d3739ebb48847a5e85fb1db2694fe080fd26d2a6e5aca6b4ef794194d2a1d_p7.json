@@ -1,0 +1,2637 @@
+{
+  "engine": "tesseract",
+  "engine_version": "5.5.3",
+  "page_number": 7,
+  "lines": [
+    {
+      "text": "CP (IB) No. 188 of 2026,",
+      "bbox": [
+        0.6994,
+        0.0559,
+        0.8961,
+        0.0667
+      ],
+      "confidence": 0.9633,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.6994,
+            0.0559,
+            0.7212,
+            0.0644
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7276,
+            0.0559,
+            0.7526,
+            0.0667
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.7607,
+            0.0564,
+            0.7849,
+            0.0644
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "188",
+          "bbox": [
+            0.7953,
+            0.0559,
+            0.8227,
+            0.0644
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8292,
+            0.0559,
+            0.8453,
+            0.0644
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026,",
+          "bbox": [
+            0.8501,
+            0.0559,
+            0.8961,
+            0.0661
+          ],
+          "confidence": 0.97,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB) No. 190 of 2026 and",
+      "bbox": [
+        0.668,
+        0.0718,
+        0.8961,
+        0.0832
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.668,
+            0.0718,
+            0.6898,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.6962,
+            0.0718,
+            0.722,
+            0.0832
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.7301,
+            0.0724,
+            0.7534,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "190",
+          "bbox": [
+            0.7639,
+            0.0718,
+            0.7913,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.7977,
+            0.0718,
+            0.8139,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.8187,
+            0.0718,
+            0.859,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8662,
+            0.0718,
+            0.8961,
+            0.0804
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "CP (IB) No. 192 of 2026",
+      "bbox": [
+        0.7043,
+        0.0884,
+        0.8961,
+        0.0992
+      ],
+      "confidence": 0.9533,
+      "words": [
+        {
+          "text": "CP",
+          "bbox": [
+            0.7043,
+            0.0884,
+            0.726,
+            0.0969
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "(IB)",
+          "bbox": [
+            0.7317,
+            0.0884,
+            0.7575,
+            0.0992
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "No.",
+          "bbox": [
+            0.7655,
+            0.0884,
+            0.7897,
+            0.0969
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "192",
+          "bbox": [
+            0.8002,
+            0.0884,
+            0.8268,
+            0.0969
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8348,
+            0.0884,
+            0.8501,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2026",
+          "bbox": [
+            0.855,
+            0.0884,
+            0.8961,
+            0.0969
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "amount and accordingly a sum of Rs.5,23,00,000 is now",
+      "bbox": [
+        0.2087,
+        0.1231,
+        0.8969,
+        0.1391
+      ],
+      "confidence": 0.9511,
+      "words": [
+        {
+          "text": "amount",
+          "bbox": [
+            0.2087,
+            0.1249,
+            0.299,
+            0.1351
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3118,
+            0.1231,
+            0.3546,
+            0.1357
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "accordingly",
+          "bbox": [
+            0.3674,
+            0.1231,
+            0.4972,
+            0.1391
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.5101,
+            0.1271,
+            0.523,
+            0.1357
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sum",
+          "bbox": [
+            0.5359,
+            0.1271,
+            0.5842,
+            0.1357
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5979,
+            0.1231,
+            0.6197,
+            0.1357
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.5,23,00,000",
+          "bbox": [
+            0.6301,
+            0.1237,
+            0.8042,
+            0.138
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.8179,
+            0.1231,
+            0.8356,
+            0.1357
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "now",
+          "bbox": [
+            0.8493,
+            0.1271,
+            0.8969,
+            0.1357
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "outstanding towards principal loan amount and sought a",
+      "bbox": [
+        0.2079,
+        0.1625,
+        0.8961,
+        0.1779
+      ],
+      "confidence": 0.9525,
+      "words": [
+        {
+          "text": "outstanding",
+          "bbox": [
+            0.2079,
+            0.1625,
+            0.3473,
+            0.1779
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "towards",
+          "bbox": [
+            0.3594,
+            0.1625,
+            0.448,
+            0.1745
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "principal",
+          "bbox": [
+            0.4609,
+            0.1625,
+            0.5624,
+            0.1779
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.5745,
+            0.1625,
+            0.6229,
+            0.1745
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.6358,
+            0.1642,
+            0.7244,
+            0.1745
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.7365,
+            0.1625,
+            0.7784,
+            0.1745
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sought",
+          "bbox": [
+            0.7921,
+            0.1625,
+            0.8703,
+            0.1779
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8832,
+            0.1665,
+            0.8961,
+            0.1745
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "renewal of the said loan amount outstanding of",
+      "bbox": [
+        0.2071,
+        0.2013,
+        0.8969,
+        0.2172
+      ],
+      "confidence": 0.955,
+      "words": [
+        {
+          "text": "renewal",
+          "bbox": [
+            0.2071,
+            0.2013,
+            0.2965,
+            0.2138
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.3263,
+            0.2013,
+            0.3481,
+            0.2138
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3747,
+            0.2013,
+            0.4093,
+            0.2138
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "said",
+          "bbox": [
+            0.4384,
+            0.2013,
+            0.4835,
+            0.2138
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.5133,
+            0.2013,
+            0.5616,
+            0.2138
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.5907,
+            0.203,
+            0.6793,
+            0.2138
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "outstanding",
+          "bbox": [
+            0.7083,
+            0.2013,
+            0.8453,
+            0.2172
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8751,
+            0.2013,
+            0.8969,
+            0.2138
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Rs.5,23,00,000 for the period from 16 March 2025 to 15",
+      "bbox": [
+        0.2063,
+        0.2406,
+        0.8928,
+        0.2566
+      ],
+      "confidence": 0.887,
+      "words": [
+        {
+          "text": "Rs.5,23,00,000",
+          "bbox": [
+            0.2063,
+            0.2412,
+            0.382,
+            0.2554
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "for",
+          "bbox": [
+            0.3932,
+            0.2406,
+            0.4239,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.4343,
+            0.2406,
+            0.469,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "period",
+          "bbox": [
+            0.4803,
+            0.2406,
+            0.5512,
+            0.2566
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "from",
+          "bbox": [
+            0.5624,
+            0.2406,
+            0.6148,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "16",
+          "bbox": [
+            0.6293,
+            0.2412,
+            0.6696,
+            0.2531
+          ],
+          "confidence": 0.28,
+          "text_type": "unknown"
+        },
+        {
+          "text": "March",
+          "bbox": [
+            0.6817,
+            0.2406,
+            0.7526,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025",
+          "bbox": [
+            0.7639,
+            0.2406,
+            0.8211,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.8332,
+            0.2423,
+            0.8533,
+            0.2531
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15",
+          "bbox": [
+            0.8687,
+            0.2412,
+            0.8928,
+            0.2531
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "May 2025. The respondent also sought to draw up a",
+      "bbox": [
+        0.2055,
+        0.2799,
+        0.8936,
+        0.2959
+      ],
+      "confidence": 0.959,
+      "words": [
+        {
+          "text": "May",
+          "bbox": [
+            0.2055,
+            0.2805,
+            0.253,
+            0.2959
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2025.",
+          "bbox": [
+            0.2716,
+            0.2805,
+            0.3344,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.3537,
+            0.2799,
+            0.3956,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "respondent",
+          "bbox": [
+            0.4134,
+            0.2805,
+            0.5423,
+            0.2959
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "also",
+          "bbox": [
+            0.56,
+            0.2805,
+            0.6044,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sought",
+          "bbox": [
+            0.6237,
+            0.2805,
+            0.701,
+            0.2959
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.7188,
+            0.2816,
+            0.7389,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "draw",
+          "bbox": [
+            0.7575,
+            0.2799,
+            0.8139,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "up",
+          "bbox": [
+            0.8316,
+            0.2839,
+            0.8614,
+            0.2959
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.8807,
+            0.2839,
+            0.8936,
+            0.2925
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "supplemental loan agreement and other incidental",
+      "bbox": [
+        0.2047,
+        0.3193,
+        0.892,
+        0.3352
+      ],
+      "confidence": 0.8467,
+      "words": [
+        {
+          "text": "supplemental",
+          "bbox": [
+            0.2047,
+            0.3193,
+            0.361,
+            0.3347
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.3908,
+            0.3193,
+            0.4384,
+            0.3318
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement",
+          "bbox": [
+            0.4682,
+            0.321,
+            0.5874,
+            0.3352
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.6172,
+            0.3193,
+            0.66,
+            0.3318
+          ],
+          "confidence": 0.74,
+          "text_type": "unknown"
+        },
+        {
+          "text": "other",
+          "bbox": [
+            0.6898,
+            0.3193,
+            0.7486,
+            0.3318
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        },
+        {
+          "text": "incidental",
+          "bbox": [
+            0.7784,
+            0.3193,
+            0.892,
+            0.3318
+          ],
+          "confidence": 0.73,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "documents. This was consented and a supplemental loan",
+      "bbox": [
+        0.2031,
+        0.358,
+        0.8912,
+        0.3746
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "documents.",
+          "bbox": [
+            0.2031,
+            0.358,
+            0.336,
+            0.3706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "This",
+          "bbox": [
+            0.3505,
+            0.358,
+            0.3989,
+            0.3706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.411,
+            0.362,
+            0.4529,
+            0.3706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "consented",
+          "bbox": [
+            0.4658,
+            0.3586,
+            0.5818,
+            0.3712
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.5947,
+            0.3586,
+            0.6374,
+            0.3712
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.6503,
+            0.3626,
+            0.6632,
+            0.3712
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "supplemental",
+          "bbox": [
+            0.6753,
+            0.3586,
+            0.8292,
+            0.3746
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.8421,
+            0.3586,
+            0.8912,
+            0.3706
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "agreement was signed between the parties, duly",
+      "bbox": [
+        0.2023,
+        0.3974,
+        0.8912,
+        0.4133
+      ],
+      "confidence": 0.8243,
+      "words": [
+        {
+          "text": "agreement",
+          "bbox": [
+            0.2023,
+            0.3985,
+            0.3231,
+            0.4128
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.3537,
+            0.4014,
+            0.3965,
+            0.4099
+          ],
+          "confidence": 0.25,
+          "text_type": "unknown"
+        },
+        {
+          "text": "signed",
+          "bbox": [
+            0.4287,
+            0.3974,
+            0.5004,
+            0.4133
+          ],
+          "confidence": 0.82,
+          "text_type": "unknown"
+        },
+        {
+          "text": "between",
+          "bbox": [
+            0.5326,
+            0.3974,
+            0.6261,
+            0.4099
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6575,
+            0.3979,
+            0.6922,
+            0.4099
+          ],
+          "confidence": 0.94,
+          "text_type": "unknown"
+        },
+        {
+          "text": "parties,",
+          "bbox": [
+            0.7236,
+            0.3979,
+            0.8074,
+            0.4133
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "duly",
+          "bbox": [
+            0.8405,
+            0.3979,
+            0.8912,
+            0.4133
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "mentioning the loan agreement dated 26 March 2024",
+      "bbox": [
+        0.2015,
+        0.4361,
+        0.8888,
+        0.4527
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "mentioning",
+          "bbox": [
+            0.2015,
+            0.4361,
+            0.3328,
+            0.4521
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3513,
+            0.4367,
+            0.386,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.4053,
+            0.4367,
+            0.4529,
+            0.4487
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement",
+          "bbox": [
+            0.4722,
+            0.4379,
+            0.5923,
+            0.4527
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "dated",
+          "bbox": [
+            0.6116,
+            0.4367,
+            0.6737,
+            0.4493
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "26",
+          "bbox": [
+            0.6938,
+            0.4373,
+            0.7204,
+            0.4493
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "March",
+          "bbox": [
+            0.7405,
+            0.4367,
+            0.8122,
+            0.4493
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "2024",
+          "bbox": [
+            0.8316,
+            0.4373,
+            0.8888,
+            0.4493
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "(mortgage deed)duly acknowledging an amount of",
+      "bbox": [
+        0.2015,
+        0.4755,
+        0.8912,
+        0.492
+      ],
+      "confidence": 0.8533,
+      "words": [
+        {
+          "text": "(mortgage",
+          "bbox": [
+            0.2015,
+            0.4755,
+            0.3135,
+            0.4914
+          ],
+          "confidence": 0.89,
+          "text_type": "unknown"
+        },
+        {
+          "text": "deed)duly",
+          "bbox": [
+            0.3465,
+            0.4755,
+            0.4553,
+            0.4914
+          ],
+          "confidence": 0.67,
+          "text_type": "unknown"
+        },
+        {
+          "text": "acknowledging",
+          "bbox": [
+            0.4875,
+            0.4761,
+            0.6567,
+            0.492
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "an",
+          "bbox": [
+            0.6882,
+            0.48,
+            0.7156,
+            0.488
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.7478,
+            0.4772,
+            0.8372,
+            0.488
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8695,
+            0.4761,
+            0.8912,
+            0.488
+          ],
+          "confidence": 0.84,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "Rs.11,94,52,010 being due under the original amount",
+      "bbox": [
+        0.1998,
+        0.5148,
+        0.8888,
+        0.5314
+      ],
+      "confidence": 0.9529,
+      "words": [
+        {
+          "text": "Rs.11,94,52,010",
+          "bbox": [
+            0.1998,
+            0.5148,
+            0.39,
+            0.5302
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "being",
+          "bbox": [
+            0.4102,
+            0.5148,
+            0.4706,
+            0.5308
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "due",
+          "bbox": [
+            0.4899,
+            0.5154,
+            0.5318,
+            0.5274
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "under",
+          "bbox": [
+            0.5512,
+            0.5154,
+            0.6205,
+            0.5274
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6398,
+            0.5154,
+            0.6745,
+            0.5274
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "original",
+          "bbox": [
+            0.6946,
+            0.5154,
+            0.7792,
+            0.5314
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.7985,
+            0.5171,
+            0.8888,
+            0.5279
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "advanced and a repayment of a sum of Rs.6,71,52,010 was",
+      "bbox": [
+        0.1982,
+        0.5536,
+        0.8864,
+        0.5701
+      ],
+      "confidence": 0.952,
+      "words": [
+        {
+          "text": "advanced",
+          "bbox": [
+            0.1982,
+            0.5536,
+            0.307,
+            0.5661
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3175,
+            0.5542,
+            0.3602,
+            0.5661
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.3699,
+            0.5582,
+            0.382,
+            0.5661
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "repayment",
+          "bbox": [
+            0.3908,
+            0.5559,
+            0.5117,
+            0.5701
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5214,
+            0.5542,
+            0.5431,
+            0.5667
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "a",
+          "bbox": [
+            0.5504,
+            0.5582,
+            0.5633,
+            0.5667
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "sum",
+          "bbox": [
+            0.5721,
+            0.5582,
+            0.6213,
+            0.5667
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.6309,
+            0.5542,
+            0.6527,
+            0.5667
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.6,71,52,010",
+          "bbox": [
+            0.66,
+            0.5547,
+            0.834,
+            0.5696
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.8437,
+            0.5587,
+            0.8864,
+            0.5667
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "made towards part repayment of the principal amount of",
+      "bbox": [
+        0.1974,
+        0.5929,
+        0.8888,
+        0.6095
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "made",
+          "bbox": [
+            0.1974,
+            0.5929,
+            0.2595,
+            0.6049
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "towards",
+          "bbox": [
+            0.2732,
+            0.5935,
+            0.3634,
+            0.6055
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "part",
+          "bbox": [
+            0.3763,
+            0.5952,
+            0.423,
+            0.6089
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "repayment",
+          "bbox": [
+            0.4351,
+            0.5952,
+            0.5576,
+            0.6089
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5705,
+            0.5935,
+            0.5923,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.6027,
+            0.5935,
+            0.6382,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "principal",
+          "bbox": [
+            0.6511,
+            0.5935,
+            0.7518,
+            0.6095
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.7647,
+            0.5952,
+            0.8541,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.867,
+            0.5941,
+            0.8888,
+            0.606
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "the said loan and Rs.94,52,010 was paid towards interest",
+      "bbox": [
+        0.1966,
+        0.6317,
+        0.8856,
+        0.6488
+      ],
+      "confidence": 0.9511,
+      "words": [
+        {
+          "text": "the",
+          "bbox": [
+            0.1966,
+            0.6317,
+            0.2321,
+            0.6442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "said",
+          "bbox": [
+            0.245,
+            0.6317,
+            0.2909,
+            0.6442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.303,
+            0.6323,
+            0.3521,
+            0.6442
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.3634,
+            0.6323,
+            0.4053,
+            0.6448
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.94,52,010",
+          "bbox": [
+            0.4174,
+            0.6328,
+            0.5697,
+            0.6477
+          ],
+          "confidence": 0.91,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.581,
+            0.6368,
+            0.6245,
+            0.6454
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "paid",
+          "bbox": [
+            0.6366,
+            0.6328,
+            0.6849,
+            0.6488
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "towards",
+          "bbox": [
+            0.697,
+            0.6328,
+            0.7865,
+            0.6454
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "interest",
+          "bbox": [
+            0.7977,
+            0.6328,
+            0.8856,
+            0.6454
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "and accordingly an amount of Rs.5,23,00,000 was due and",
+      "bbox": [
+        0.1958,
+        0.6705,
+        0.8848,
+        0.687
+      ],
+      "confidence": 0.95,
+      "words": [
+        {
+          "text": "and",
+          "bbox": [
+            0.1958,
+            0.6705,
+            0.2385,
+            0.683
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "accordingly",
+          "bbox": [
+            0.2482,
+            0.671,
+            0.3803,
+            0.687
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "an",
+          "bbox": [
+            0.3892,
+            0.675,
+            0.4166,
+            0.6836
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.4263,
+            0.6727,
+            0.5149,
+            0.6842
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.5238,
+            0.6716,
+            0.5463,
+            0.6842
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.5,23,00,000",
+          "bbox": [
+            0.5536,
+            0.6722,
+            0.7276,
+            0.687
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.7365,
+            0.6756,
+            0.78,
+            0.6842
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "due",
+          "bbox": [
+            0.7897,
+            0.6722,
+            0.8316,
+            0.6847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "and",
+          "bbox": [
+            0.8421,
+            0.6722,
+            0.8848,
+            0.6847
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "payable as per the revised loan agreement. The said revised",
+      "bbox": [
+        0.1942,
+        0.7104,
+        0.884,
+        0.7269
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "payable",
+          "bbox": [
+            0.1942,
+            0.7104,
+            0.2828,
+            0.7258
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.2925,
+            0.7144,
+            0.3175,
+            0.7229
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "per",
+          "bbox": [
+            0.3263,
+            0.7144,
+            0.3634,
+            0.7263
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3723,
+            0.7104,
+            0.4069,
+            0.7229
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "revised",
+          "bbox": [
+            0.4158,
+            0.7109,
+            0.4956,
+            0.7235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "loan",
+          "bbox": [
+            0.5044,
+            0.7109,
+            0.5528,
+            0.7235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement.",
+          "bbox": [
+            0.5624,
+            0.7127,
+            0.6873,
+            0.7269
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "The",
+          "bbox": [
+            0.697,
+            0.7115,
+            0.7381,
+            0.7235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "said",
+          "bbox": [
+            0.7478,
+            0.7115,
+            0.7937,
+            0.7235
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "revised",
+          "bbox": [
+            0.8034,
+            0.7115,
+            0.884,
+            0.7241
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "loan agreement was renewed by applicant up to 15 May",
+      "bbox": [
+        0.1934,
+        0.7491,
+        0.8832,
+        0.7668
+      ],
+      "confidence": 0.958,
+      "words": [
+        {
+          "text": "loan",
+          "bbox": [
+            0.1934,
+            0.7491,
+            0.2425,
+            0.7611
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "agreement",
+          "bbox": [
+            0.2562,
+            0.7509,
+            0.3771,
+            0.7651
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "was",
+          "bbox": [
+            0.39,
+            0.7537,
+            0.4327,
+            0.7623
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "renewed",
+          "bbox": [
+            0.4464,
+            0.7503,
+            0.5415,
+            0.7623
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "by",
+          "bbox": [
+            0.5552,
+            0.7503,
+            0.5818,
+            0.7662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "applicant",
+          "bbox": [
+            0.5955,
+            0.7503,
+            0.7027,
+            0.7662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "up",
+          "bbox": [
+            0.7156,
+            0.7543,
+            0.7446,
+            0.7662
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.7591,
+            0.752,
+            0.7792,
+            0.7628
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15",
+          "bbox": [
+            0.7961,
+            0.7509,
+            0.8211,
+            0.7628
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "May",
+          "bbox": [
+            0.8356,
+            0.7514,
+            0.8832,
+            0.7668
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "2025 as the final due date along with stated amount of",
+      "bbox": [
+        0.1926,
+        0.7885,
+        0.8848,
+        0.805
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "2025",
+          "bbox": [
+            0.1926,
+            0.7885,
+            0.2498,
+            0.8005
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.2651,
+            0.7925,
+            0.2901,
+            0.801
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.3054,
+            0.7885,
+            0.34,
+            0.801
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "final",
+          "bbox": [
+            0.3554,
+            0.7885,
+            0.4045,
+            0.801
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "due",
+          "bbox": [
+            0.419,
+            0.7891,
+            0.4593,
+            0.801
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "date",
+          "bbox": [
+            0.4738,
+            0.7891,
+            0.523,
+            0.8016
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "along",
+          "bbox": [
+            0.5367,
+            0.7896,
+            0.5995,
+            0.805
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.6124,
+            0.7896,
+            0.6616,
+            0.8016
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "stated",
+          "bbox": [
+            0.6769,
+            0.7896,
+            0.7446,
+            0.8022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "amount",
+          "bbox": [
+            0.7591,
+            0.7913,
+            0.8485,
+            0.8022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.863,
+            0.7902,
+            0.8848,
+            0.8022
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "interest of Rs.21,26,867 as interest. It is also mentioned",
+      "bbox": [
+        0.191,
+        0.8273,
+        0.8807,
+        0.8432
+      ],
+      "confidence": 0.9522,
+      "words": [
+        {
+          "text": "interest",
+          "bbox": [
+            0.191,
+            0.8273,
+            0.2796,
+            0.8398
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.2925,
+            0.8278,
+            0.3151,
+            0.8398
+          ],
+          "confidence": 0.93,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Rs.21,26,867",
+          "bbox": [
+            0.3247,
+            0.8284,
+            0.4762,
+            0.8432
+          ],
+          "confidence": 0.92,
+          "text_type": "unknown"
+        },
+        {
+          "text": "as",
+          "bbox": [
+            0.4891,
+            0.8324,
+            0.5141,
+            0.8409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "interest.",
+          "bbox": [
+            0.5262,
+            0.8284,
+            0.6189,
+            0.8409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "It",
+          "bbox": [
+            0.6446,
+            0.8295,
+            0.6608,
+            0.8409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "is",
+          "bbox": [
+            0.6728,
+            0.829,
+            0.6906,
+            0.8409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "also",
+          "bbox": [
+            0.7035,
+            0.829,
+            0.7478,
+            0.8409
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "mentioned",
+          "bbox": [
+            0.7599,
+            0.829,
+            0.8807,
+            0.8415
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "that the applicant lender has the right to increase the rate",
+      "bbox": [
+        0.191,
+        0.8666,
+        0.8807,
+        0.8837
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "that",
+          "bbox": [
+            0.191,
+            0.8666,
+            0.2377,
+            0.8786
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.2482,
+            0.8666,
+            0.2836,
+            0.8791
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "applicant",
+          "bbox": [
+            0.2949,
+            0.8672,
+            0.4021,
+            0.8826
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "lender",
+          "bbox": [
+            0.4118,
+            0.8672,
+            0.4827,
+            0.8797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "has",
+          "bbox": [
+            0.4932,
+            0.8677,
+            0.5334,
+            0.8797
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.5439,
+            0.8677,
+            0.5794,
+            0.8803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "right",
+          "bbox": [
+            0.5898,
+            0.8677,
+            0.6438,
+            0.8837
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "to",
+          "bbox": [
+            0.6543,
+            0.8694,
+            0.6745,
+            0.8803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "increase",
+          "bbox": [
+            0.6857,
+            0.8683,
+            0.7792,
+            0.8803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "the",
+          "bbox": [
+            0.7905,
+            0.8683,
+            0.8251,
+            0.8803
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "rate",
+          "bbox": [
+            0.8364,
+            0.87,
+            0.8807,
+            0.8808
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "of interest in accordance with any directions or guidelines",
+      "bbox": [
+        0.1902,
+        0.9054,
+        0.8799,
+        0.923
+      ],
+      "confidence": 0.96,
+      "words": [
+        {
+          "text": "of",
+          "bbox": [
+            0.1902,
+            0.9054,
+            0.2127,
+            0.9173
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "interest",
+          "bbox": [
+            0.2216,
+            0.9054,
+            0.3102,
+            0.9179
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "in",
+          "bbox": [
+            0.3207,
+            0.9059,
+            0.3425,
+            0.9179
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "accordance",
+          "bbox": [
+            0.3537,
+            0.9065,
+            0.4819,
+            0.9185
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "with",
+          "bbox": [
+            0.4932,
+            0.9071,
+            0.5423,
+            0.919
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "any",
+          "bbox": [
+            0.5544,
+            0.9111,
+            0.5955,
+            0.9225
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "directions",
+          "bbox": [
+            0.6068,
+            0.9071,
+            0.7188,
+            0.9196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "or",
+          "bbox": [
+            0.7301,
+            0.9111,
+            0.7534,
+            0.9196
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "guidelines",
+          "bbox": [
+            0.7631,
+            0.9076,
+            0.8799,
+            0.923
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    },
+    {
+      "text": "ad\\\u2014 ed{- Page 6 of 15",
+      "bbox": [
+        0.3594,
+        0.9436,
+        0.8791,
+        0.9629
+      ],
+      "confidence": 0.8817,
+      "words": [
+        {
+          "text": "ad\\\u2014",
+          "bbox": [
+            0.3594,
+            0.9441,
+            0.4118,
+            0.9612
+          ],
+          "confidence": 0.7,
+          "text_type": "unknown"
+        },
+        {
+          "text": "ed{-",
+          "bbox": [
+            0.6898,
+            0.947,
+            0.7341,
+            0.9629
+          ],
+          "confidence": 0.78,
+          "text_type": "unknown"
+        },
+        {
+          "text": "Page",
+          "bbox": [
+            0.7881,
+            0.9447,
+            0.8219,
+            0.9555
+          ],
+          "confidence": 0.96,
+          "text_type": "unknown"
+        },
+        {
+          "text": "6",
+          "bbox": [
+            0.83,
+            0.9441,
+            0.8364,
+            0.9527
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "of",
+          "bbox": [
+            0.8445,
+            0.9436,
+            0.8574,
+            0.9527
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        },
+        {
+          "text": "15",
+          "bbox": [
+            0.8638,
+            0.9447,
+            0.8791,
+            0.9532
+          ],
+          "confidence": 0.95,
+          "text_type": "unknown"
+        }
+      ],
+      "text_type": "unknown"
+    }
+  ],
+  "mean_confidence": 0.9405,
+  "latency_ms": 523,
+  "cost_usd": 0.0,
+  "has_handwriting": false,
+  "is_lang_unsupported": false,
+  "raw_text": "CP (IB) No. 188 of 2026,\nCP (IB) No. 190 of 2026 and\nCP (IB) No. 192 of 2026\namount and accordingly a sum of Rs.5,23,00,000 is now\noutstanding towards principal loan amount and sought a\nrenewal of the said loan amount outstanding of\nRs.5,23,00,000 for the period from 16 March 2025 to 15\nMay 2025. The respondent also sought to draw up a\nsupplemental loan agreement and other incidental\ndocuments. This was consented and a supplemental loan\nagreement was signed between the parties, duly\nmentioning the loan agreement dated 26 March 2024\n(mortgage deed)duly acknowledging an amount of\nRs.11,94,52,010 being due under the original amount\nadvanced and a repayment of a sum of Rs.6,71,52,010 was\nmade towards part repayment of the principal amount of\nthe said loan and Rs.94,52,010 was paid towards interest\nand accordingly an amount of Rs.5,23,00,000 was due and\npayable as per the revised loan agreement. The said revised\nloan agreement was renewed by applicant up to 15 May\n2025 as the final due date along with stated amount of\ninterest of Rs.21,26,867 as interest. It is also mentioned\nthat the applicant lender has the right to increase the rate\nof interest in accordance with any directions or guidelines\nad\\\u2014 ed{- Page 6 of 15"
+}

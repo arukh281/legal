@@ -54,7 +54,7 @@
     - `UNRESOLVED` (court unstated on bare case number): 124
   - Statute mentions found: 4,990 (100% resolved as "not in MVP corpus")
   - Degraded citations flagged: 3 (due to `ocr_conf < 0.80` or hidden text)
-- Root cause of duplicate works resolved: `parse_captured` now looks up existing work for the same raw blob and passes `existing_work_id` and `supersedes_parse_id`. Idempotency verified by `backend/parse/tests/test_parse_captured_idempotency.py`.
+- Root cause of duplicate works resolved: `parse_captured` now looks up existing work for the same raw blob and passes `existing_work_id` and `supersedes_parse_id`. For `CHANGED` captures where the raw blob changed, it looks up earlier captures by `source_record_key` and aligns against the existing work, preserving surviving anchors and marking deleted paragraphs as `TOMBSTONED`. Idempotency and tombstoning verified by `backend/parse/tests/test_parse_captured_idempotency.py`.
 - 346 duplicate works identified across the 156 unique PDFs. Full audit report generated at `eval/reports/s05b_orphan_works_report.txt`. Retirement proposal (marking `status='MERGED'`, `merged_into=canonical_work_id`, recording in `plc.identity_merge_ledger`) prepared and awaiting user approval before modifying data.
 - Reproducible real corpus citation tests: 6 public fixture PDFs added to `eval/fixtures/ibbi/` (plus existing `nclat_born_digital_del.pdf`). `test_real_corpus_citations.py` parses fixture PDFs live through `ParsingPipeline`, locates anchors, asserts snippets within anchor text, and verifies extraction against hand-written expectations.
 

@@ -376,5 +376,13 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Session S05b Blocker #2; Non-negotiable #1. Preserving historical parse runs and ledgering merges maintains full bitemporal auditability and adheres strictly to the spine decision record.
 - **Doc Reference:** Session S05b Blocker #2; `docs/03_data_model_and_contracts.md` §3.3; `docs/01_master_architecture.md` §2.4, §5.4.
 
+---
+
+### 2026-10-08 — Idempotent Re-Parsing of CHANGED Captures via source_record_key Lookup
+- **Decision:** In `parse_captured`, when no `ParseRun` or `Manifestation` matches the capture's `raw_id`, the command also queries previous captures for the same `source_record_key` (including `prior_raw_id`) to find the latest active `Work` and `ParseRun`. It passes `existing_work_id` and `supersedes_parse_id` to `pipeline.process()`. A unit test (`test_changed_capture_reuses_work_and_tombstones_deleted_anchors`) parses an original order followed by `sample_order_changed.pdf` and verifies that exactly 1 work is maintained, surviving anchors remain live or aliased, and anchors for deleted paragraphs are marked `state = 'TOMBSTONED'`.
+- **Reason:** S05b Follow-up. When a court order is amended or replaced on a portal, the new PDF produces a distinct `raw_id`. Looking up by `source_record_key` ensures the amended document aligns against the existing work rather than minting an unlinked duplicate work.
+- **Doc Reference:** S05b Follow-up; `docs/01_master_architecture.md` §5.5 (stability rules); `docs/03_P1_ingestion_parsing.md` §5.4.
+
+
 
 
