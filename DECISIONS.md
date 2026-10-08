@@ -383,6 +383,35 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** S05b Follow-up. When a court order is amended or replaced on a portal, the new PDF produces a distinct `raw_id`. Looking up by `source_record_key` ensures the amended document aligns against the existing work rather than minting an unlinked duplicate work.
 - **Doc Reference:** S05b Follow-up; `docs/01_master_architecture.md` §5.5 (stability rules); `docs/03_P1_ingestion_parsing.md` §5.4.
 
+---
+
+### 2026-10-08 — Separation of Crawl Fixture and Truncated Order Test Fixture
+- **Decision:** Restored `eval/fixtures/ibbi/sample_order_changed.pdf` to its original S04 state (`568c8d9`) so that S04 ingestion/crawl tests preserve their exact reference fixture. Moved the 10-page truncated order to `eval/fixtures/ibbi/sample_order_truncated.pdf` with its cached OCR results (`eval/fixtures/ocr/sha256_611d3739ebb48847a5e85fb1db2694fe080fd26d2a6e5aca6b4ef794194d2a1d_p*.json`), pointing the anchor revision and tombstone test at it.
+- **Reason:** Decouples ingestion crawler test fixtures from parser anchor modification fixtures. S04 crawler tests expect the original fixture without truncation, while anchor revision tests explicitly require truncated pages to verify anchor tombstones and forwarding pointers.
+- **Doc Reference:** S05b Follow-up Directive #1; `docs/01_master_architecture.md` §5.5.
+
+---
+
+### 2026-10-08 — Canonical Work Resolution Following `merged_into` in `parse_captured`
+- **Decision:** In `parse_captured`, whenever an existing work is picked (whether by `raw_id`, `source_record_key`, or `prior_raw_id`), if the work's status is `MERGED`, `parse_captured` traverses `merged_into` to resolve to the canonical work (`resolve_canonical_work_id`), ensuring a new parse run is never attached to a `MERGED` duplicate. A dedicated unit test (`test_merged_work_resolution_attaches_to_canonical_work`) enforces this constraint.
+- **Reason:** S05b Follow-up Directive #2. Ensures that once a duplicate work is retired and marked `MERGED`, subsequent parses for any capture or source record key pointing to it attach cleanly to the canonical work rather than reviving the duplicate.
+- **Doc Reference:** S05b Follow-up Directive #2; `docs/01_master_architecture.md` §2.4, §5.4; `docs/03_data_model_and_contracts.md` §3.3.
+
+---
+
+### 2026-10-08 — Tombstone `forward_to` Assertion Matching Similarity Rule
+- **Decision:** Asserted `forward_to` on tombstoned anchors during capture revisions. Paragraphs removed between revisions with text similarity below 0.50 threshold receive `forward_to = None` (e.g. `#p10`, `#ord` when pages 11–13 are truncated). Any non-null `forward_to` must point to an active anchor on the canonical work.
+- **Reason:** S05b Follow-up Directive #3; `docs/01_master_architecture.md` §5.5 anchor stability protocol.
+- **Doc Reference:** S05b Follow-up Directive #3; `docs/01_master_architecture.md` §5.5.
+
+---
+
+### 2026-10-08 — Retirement of 346 Duplicate Works via Single Atomic Transaction
+- **Decision:** Executed retirement of 346 historical duplicate works via management command `retire_duplicate_works` in a single atomic transaction (`transaction.atomic()`). Updated all 346 works to `status = 'MERGED'` and `merged_into = canonical_work_id`, created 346 audit records in `plc.identity_merge_ledger` (`op='MERGE'`, `kind='WORK'`, `confidence=1.0`, `reason='REPARSE_DUPLICATE_RAW_BLOB'`), re-pointed manifestations and citations, marked active aliases as `SUPERSEDED`, and emitted `identity.merged.v1` CloudEvents to `ops.event_outbox`. Zero rows were deleted.
+- **Reason:** S05b Follow-up Directive #4; AGENTS.md §4 & §5 non-negotiables. Preserves complete bitemporal audit history with zero deletions while resolving all duplicate works into their canonical entities.
+- **Doc Reference:** S05b Follow-up Directive #4; `docs/mvp/03_data_model_and_contracts.md` §3.3; `docs/01_master_architecture.md` §2.4, §5.4.
+
+
 
 
 

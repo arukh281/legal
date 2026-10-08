@@ -16,20 +16,21 @@ parse_captured now looks up the existing work_id via ParseRun (or Manifestation)
 the capture raw_id, passing existing_work_id and supersedes_parse_id to pipeline.process().
 Verified by backend/parse/tests/test_parse_captured_idempotency.py.
 
-RETIREMENT PROPOSAL (Awaiting User Approval before any data change):
-1. DO NOT DELETE any rows. Keep the audit trail intact.
-2. Use the established plc.identity_merge_ledger mechanism (03 §3.3):
-   - Update plc.work SET status = 'MERGED', merged_into = canonical_work_id WHERE work_id = duplicate_work_id.
-   - Insert an entry into plc.identity_merge_ledger:
+RETIREMENT EXECUTION (Completed via manage.py retire_duplicate_works):
+1. Zero deletes performed: 1004 works before == 1004 works after.
+2. Executed in a single atomic transaction:
+   - 346 duplicate works updated to status = 'MERGED', merged_into = canonical_work_id.
+   - 346 audit records created in plc.identity_merge_ledger:
        kind: WORK
        op: MERGE
        from_id: duplicate_work_id
        to_id: canonical_work_id
        reason: 'REPARSE_DUPLICATE_RAW_BLOB'
        confidence: 1.0
-       recorded_at: NOW()
-   - Re-point any manifestations or aliases from duplicate_work_id to canonical_work_id.
-   - Emit plc.identity.merged.v1 to ops.event_outbox.
+   - Manifestations on duplicate works re-pointed to canonical_work_id.
+   - 346 plc.identity.merged.v1 CloudEvents emitted to ops.event_outbox.
+   - Confirmed 0 citations and 0 aliases pointing to duplicate works.
+
 
 --------------------------------------------------------------------------------
 DUPLICATE WORKS INVENTORY (346 rows):
