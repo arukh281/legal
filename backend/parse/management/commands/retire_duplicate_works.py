@@ -85,6 +85,25 @@ class Command(BaseCommand):
             return
 
         with transaction.atomic():
+            canonical_ids = set(canonical_by_raw.values())
+            duplicate_ids = set(dupe_map.keys())
+
+            # 1. Assert inside transaction that no duplicate is also canonical for another raw_id
+            overlap = duplicate_ids & canonical_ids
+            assert not overlap, (
+                f"Integrity violation: duplicate work(s) {overlap} cannot also be canonical for another raw_id! Aborting."
+            )
+
+            # 2. Assert inside transaction that no canonical work is MERGED
+            merged_canonicals = list(
+                Work.objects.filter(work_id__in=canonical_ids, status="MERGED").values_list(
+                    "work_id", flat=True
+                )
+            )
+            assert not merged_canonicals, (
+                f"Integrity violation: canonical work(s) {merged_canonicals} are in MERGED status! Aborting."
+            )
+
             # BEFORE AUDIT COUNTS
             before_work_total = Work.objects.count()
             before_work_active = Work.objects.filter(status="ACTIVE").count()
@@ -102,6 +121,9 @@ class Command(BaseCommand):
             dup_ids = list(dupe_map.keys())
             before_cites_on_dupes = CitationMention.objects.filter(
                 resolved_target_id__in=dup_ids
+            ).count()
+            before_cites_with_citing_dupe = CitationMention.objects.filter(
+                citing_work_id__in=dup_ids
             ).count()
             before_aliases_on_dupes = IdentifierAlias.objects.filter(
                 target_id__in=dup_ids, status="ACTIVE"
@@ -122,16 +144,20 @@ class Command(BaseCommand):
             self.stdout.write(f"  Total Citation Mentions:         {before_citation_total}")
             self.stdout.write(f"  Total Identifier Aliases:        {before_alias_total}")
             self.stdout.write(f"  Citations Pointing to Dupes:     {before_cites_on_dupes}")
+            self.stdout.write(f"  Citations with citing_work_id:   {before_cites_with_citing_dupe}")
             self.stdout.write(f"  Aliases Pointing to Dupes:       {before_aliases_on_dupes}")
 
             # RETIREMENT EXECUTION
             merges_performed = 0
             for dup_id, can_id in dupe_map.items():
+                dup_work = Work.objects.select_for_update().get(work_id=dup_id)
+                prior_status = dup_work.status
+                record_reason = f"REPARSE_DUPLICATE_RAW_BLOB|prior_status={prior_status}"
+
                 # 1. Update Work status to MERGED and set merged_into
-                Work.objects.filter(work_id=dup_id).update(
-                    status="MERGED",
-                    merged_into_id=can_id,
-                )
+                dup_work.status = "MERGED"
+                dup_work.merged_into_id = can_id
+                dup_work.save(update_fields=["status", "merged_into"])
 
                 # 2. Re-point Manifestations to canonical work
                 Manifestation.objects.filter(work_id=dup_id).update(work_id=can_id)
@@ -141,20 +167,48 @@ class Command(BaseCommand):
                     resolved_target_id=can_id
                 )
 
-                # 4. Re-point active aliases if any
-                IdentifierAlias.objects.filter(target_id=dup_id, status="ACTIVE").update(
-                    status="SUPERSEDED"
-                )
-
-                # 5. Insert audit row into plc.identity_merge_ledger
+                # 4. Re-target ACTIVE aliases to canonical work (new ACTIVE alias on can_id + old SUPERSEDED on dup_id)
                 event_id = mint_id("evr")
+                active_aliases = list(
+                    IdentifierAlias.objects.filter(target_id=dup_id, status="ACTIVE")
+                )
+                for alias in active_aliases:
+                    alias.status = "SUPERSEDED"
+                    alias.save(update_fields=["status"])
+
+                    target_alias = IdentifierAlias.objects.filter(
+                        scheme=alias.scheme,
+                        value_normalized=alias.value_normalized,
+                        target_id=can_id,
+                    ).first()
+                    if not target_alias:
+                        IdentifierAlias.objects.create(
+                            scheme=alias.scheme,
+                            value_normalized=alias.value_normalized,
+                            target_id=can_id,
+                            confidence=alias.confidence,
+                            source=alias.source,
+                            trust_tier=alias.trust_tier,
+                            status="ACTIVE",
+                            first_seen=now,
+                            evidence={
+                                **alias.evidence,
+                                "retargeted_from": dup_id,
+                                "merge_event_id": event_id,
+                            },
+                        )
+                    elif target_alias.status != "ACTIVE":
+                        target_alias.status = "ACTIVE"
+                        target_alias.save(update_fields=["status"])
+
+                # 5. Insert audit row into plc.identity_merge_ledger with prior_status
                 IdentityMergeLedger.objects.create(
                     event_id=event_id,
                     kind="WORK",
                     op="MERGE",
                     from_id=dup_id,
                     to_id=can_id,
-                    reason="REPARSE_DUPLICATE_RAW_BLOB",
+                    reason=record_reason,
                     confidence=1.0,
                     reversible_until=None,
                     recorded_at=now,
@@ -173,7 +227,7 @@ class Command(BaseCommand):
                         "kind": "WORK",
                         "from_id": dup_id,
                         "to_id": can_id,
-                        "reason": "REPARSE_DUPLICATE_RAW_BLOB",
+                        "reason": record_reason,
                         "confidence": 1.0,
                     },
                     topic="plc.identity.merged.v1",
@@ -200,6 +254,9 @@ class Command(BaseCommand):
             after_cites_on_dupes = CitationMention.objects.filter(
                 resolved_target_id__in=dup_ids
             ).count()
+            after_cites_with_citing_dupe = CitationMention.objects.filter(
+                citing_work_id__in=dup_ids
+            ).count()
             after_aliases_on_dupes = IdentifierAlias.objects.filter(
                 target_id__in=dup_ids, status="ACTIVE"
             ).count()
@@ -219,6 +276,7 @@ class Command(BaseCommand):
             self.stdout.write(f"  Total Citation Mentions:         {after_citation_total}")
             self.stdout.write(f"  Total Identifier Aliases:        {after_alias_total}")
             self.stdout.write(f"  Citations Pointing to Dupes:     {after_cites_on_dupes}")
+            self.stdout.write(f"  Citations with citing_work_id:   {after_cites_with_citing_dupe}")
             self.stdout.write(f"  Aliases Pointing to Dupes:       {after_aliases_on_dupes}")
 
             # ZERO DELETION & INTEGRITY ASSERTIONS
@@ -239,6 +297,9 @@ class Command(BaseCommand):
             )
             assert after_cites_on_dupes == 0, (
                 f"Found {after_cites_on_dupes} citations pointing to duplicate works!"
+            )
+            assert after_cites_with_citing_dupe == 0, (
+                f"Found {after_cites_with_citing_dupe} citations with citing_work_id in duplicate works!"
             )
             assert after_aliases_on_dupes == 0, (
                 f"Found {after_aliases_on_dupes} aliases pointing to duplicate works!"

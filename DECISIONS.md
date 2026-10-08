@@ -408,8 +408,14 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ### 2026-10-08 — Retirement of 346 Duplicate Works via Single Atomic Transaction
 - **Decision:** Executed retirement of 346 historical duplicate works via management command `retire_duplicate_works` in a single atomic transaction (`transaction.atomic()`). Updated all 346 works to `status = 'MERGED'` and `merged_into = canonical_work_id`, created 346 audit records in `plc.identity_merge_ledger` (`op='MERGE'`, `kind='WORK'`, `confidence=1.0`, `reason='REPARSE_DUPLICATE_RAW_BLOB'`), re-pointed manifestations and citations, marked active aliases as `SUPERSEDED`, and emitted `identity.merged.v1` CloudEvents to `ops.event_outbox`. Zero rows were deleted.
-- **Reason:** S05b Follow-up Directive #4; AGENTS.md §4 & §5 non-negotiables. Preserves complete bitemporal audit history with zero deletions while resolving all duplicate works into their canonical entities.
 - **Doc Reference:** S05b Follow-up Directive #4; `docs/mvp/03_data_model_and_contracts.md` §3.3; `docs/01_master_architecture.md` §2.4, §5.4.
+
+---
+
+### 2026-10-08 — Anchor Read API Must Follow `merged_into` for Anchors on MERGED Works
+- **Decision:** When the Anchor Read API resolves or serves anchors requested against a work whose status is `MERGED`, it must follow `merged_into` to resolve to the canonical work and return the canonical anchor (via `anchor_alias` mapping or tombstone pointers).
+- **Reason:** S05b Follow-up Directive #5; `docs/01_master_architecture.md` §2.4 & §5.5. Works retired via `plc.identity_merge_ledger` retain their anchors in `plc.anchor` for historical provenance, but legal references, citations, and client queries requesting anchors on merged works must resolve transparently to canonical anchors on the surviving work.
+- **Doc Reference:** S05b Follow-up Directive #5; `docs/01_master_architecture.md` §2.4, §5.4, §5.5; `docs/mvp/03_data_model_and_contracts.md` §3.3.
 
 
 

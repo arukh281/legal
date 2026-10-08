@@ -178,7 +178,7 @@ def test_retire_duplicate_works_command() -> None:
         mention_id=mint_id("cm"),
         parse=run_older,
         anchor_id=f"{dup_work.work_id}/en#p1",
-        citing_work=dup_work,
+        citing_work=can_work,
         mention_kind="CASE",
         scheme="SCC",
         raw_text="2020 SCC 100",
@@ -240,15 +240,19 @@ def test_retire_duplicate_works_command() -> None:
     assert CitationMention.objects.filter(resolved_target_id=dup_work.work_id).count() == 0
     assert CitationMention.objects.filter(resolved_target_id=can_work.work_id).count() == 1
 
-    # 6. Assert IdentifierAlias marked SUPERSEDED
+    # 6. Assert IdentifierAlias re-targeted (old on dup_work SUPERSEDED, new on can_work ACTIVE)
     alias = IdentifierAlias.objects.get(target_id=dup_work.work_id)
     assert alias.status == "SUPERSEDED"
+    can_alias = IdentifierAlias.objects.get(
+        target_id=can_work.work_id, scheme="SCC", value_normalized="2020:scc:100"
+    )
+    assert can_alias.status == "ACTIVE"
 
     # 7. Assert IdentityMergeLedger row recorded
     ledger = IdentityMergeLedger.objects.get(from_id=dup_work.work_id, to_id=can_work.work_id)
     assert ledger.op == "MERGE"
     assert ledger.kind == "WORK"
-    assert ledger.reason == "REPARSE_DUPLICATE_RAW_BLOB"
+    assert ledger.reason == "REPARSE_DUPLICATE_RAW_BLOB|prior_status=ACTIVE"
     assert ledger.confidence == 1.0
 
     # 8. Assert CloudEvent emitted to outbox
@@ -264,3 +268,155 @@ def test_retire_duplicate_works_command() -> None:
     out_idempotent = io.StringIO()
     call_command("retire_duplicate_works", stdout=out_idempotent)
     assert "No duplicate works found. Nothing to retire." in out_idempotent.getvalue()
+
+
+@pytest.mark.django_db
+def test_retire_then_split_round_trip() -> None:
+    """Retire then split restores prior status (e.g. PROVISIONAL), merged_into, and manifestation.work_id exactly."""
+    from parse.citations.dedupe import split_work
+
+    Source.objects.get_or_create(
+        source_id="src_ibbi",
+        defaults={
+            "name": "IBBI Orders Portal",
+            "provenance_tier": "OFFICIAL_PORTAL",
+            "default_rights_class": "PUBLIC_DOMAIN",
+        },
+    )
+
+    raw_id = "sha256:" + "b" * 64
+    RawBlob.objects.create(
+        raw_id=raw_id,
+        storage_uri=f"s3://test-bucket/{raw_id}",
+        byte_size=2048,
+        content_type="application/pdf",
+        first_seen_at=datetime.now(UTC),
+    )
+
+    Capture.objects.create(
+        capture_id=mint_id("cap"),
+        raw_id=raw_id,
+        source_id="src_ibbi",
+        source_record_key="nclt:test-retire-roundtrip",
+        change_kind="NEW",
+        fetched_at=datetime.now(UTC),
+        rights_class="PUBLIC_DOMAIN",
+        provenance_tier="OFFICIAL_PORTAL",
+    )
+
+    # 1. Canonical Work (ACTIVE)
+    can_work = Work.objects.create(
+        work_id=mint_id("wrk"),
+        work_type="FINAL_ORDER",
+        status="ACTIVE",
+    )
+    Expression.objects.create(
+        work=can_work,
+        expression_key="en",
+        lang="en",
+        authoritative=True,
+    )
+    man_can = Manifestation.objects.create(
+        manifestation_id=mint_id("man"),
+        work=can_work,
+        expression_key="en",
+        raw_ids=[raw_id],
+        rights_class="PUBLIC_DOMAIN",
+        provenance_tier="OFFICIAL_PORTAL",
+    )
+    run_latest = ParseRun.objects.create(
+        parse_id=mint_id("par"),
+        raw_ids=[raw_id],
+        work=can_work,
+        manifestation=man_can,
+        expression_key="en",
+        doc_type="FINAL_ORDER",
+        parsed_doc_uri="s3://fake-latest",
+        parsed_doc_sha256="fake-hash-latest",
+        quality={},
+        gate="PASS",
+        anchor_changes={},
+        pipeline_version_id="p1.parser@0.1.0|det_v1",
+    )
+
+    # 2. Duplicate Work (PROVISIONAL prior status, not ACTIVE)
+    dup_work = Work.objects.create(
+        work_id=mint_id("wrk"),
+        work_type="FINAL_ORDER",
+        status="PROVISIONAL",
+    )
+    Expression.objects.create(
+        work=dup_work,
+        expression_key="en",
+        lang="en",
+        authoritative=True,
+    )
+    man_dup = Manifestation.objects.create(
+        manifestation_id=mint_id("man"),
+        work=dup_work,
+        expression_key="en",
+        raw_ids=[raw_id],
+        rights_class="PUBLIC_DOMAIN",
+        provenance_tier="OFFICIAL_PORTAL",
+    )
+    run_older = ParseRun.objects.create(
+        parse_id=mint_id("par"),
+        raw_ids=[raw_id],
+        work=dup_work,
+        manifestation=man_dup,
+        expression_key="en",
+        doc_type="FINAL_ORDER",
+        parsed_doc_uri="s3://fake-older",
+        parsed_doc_sha256="fake-hash-older",
+        quality={},
+        gate="PASS",
+        anchor_changes={},
+        pipeline_version_id="p1.parser@0.1.0|det_v1",
+    )
+
+    # Force timestamps so run_older is older than run_latest
+    ParseRun.objects.filter(parse_id=run_older.parse_id).update(
+        created_at=datetime(2026, 10, 2, 8, 0, tzinfo=UTC)
+    )
+    ParseRun.objects.filter(parse_id=run_latest.parse_id).update(
+        created_at=datetime(2026, 10, 2, 12, 0, tzinfo=UTC)
+    )
+
+    # 3. Execute retirement
+    out = io.StringIO()
+    call_command("retire_duplicate_works", stdout=out)
+    assert "Successfully retired 1 duplicate works" in out.getvalue()
+
+    # Verify retired state
+    dup_work.refresh_from_db()
+    assert dup_work.status == "MERGED"
+    assert dup_work.merged_into_id == can_work.work_id
+
+    man_dup.refresh_from_db()
+    assert man_dup.work_id == can_work.work_id
+
+    # 4. Execute split_work to revert the retirement
+    merge_ledger = IdentityMergeLedger.objects.get(
+        from_id=dup_work.work_id, to_id=can_work.work_id, op="MERGE"
+    )
+    assert merge_ledger.reason is not None and "prior_status=PROVISIONAL" in merge_ledger.reason
+
+    split_event_id = split_work(merge_ledger.event_id, reason="TEST_REVERSAL")
+    assert split_event_id.startswith("evr_")
+
+    # 5. Assert: prior status restored (PROVISIONAL, not hardcoded ACTIVE!)
+    dup_work.refresh_from_db()
+    assert dup_work.status == "PROVISIONAL"
+    assert dup_work.merged_into is None
+
+    # 6. Assert: manifestation.work_id restored exactly
+    man_dup.refresh_from_db()
+    assert man_dup.work_id == dup_work.work_id
+
+    # 7. Assert canonical work remains intact
+    can_work.refresh_from_db()
+    assert can_work.status == "ACTIVE"
+    assert can_work.merged_into is None
+
+    man_can.refresh_from_db()
+    assert man_can.work_id == can_work.work_id
