@@ -252,8 +252,13 @@ def test_retire_duplicate_works_command() -> None:
     ledger = IdentityMergeLedger.objects.get(from_id=dup_work.work_id, to_id=can_work.work_id)
     assert ledger.op == "MERGE"
     assert ledger.kind == "WORK"
-    assert ledger.reason == "REPARSE_DUPLICATE_RAW_BLOB|prior_status=ACTIVE"
+    assert ledger.reason == "REPARSE_DUPLICATE_RAW_BLOB"
     assert ledger.confidence == 1.0
+    assert ledger.details is not None
+    assert ledger.details["prior_status"] == "ACTIVE"
+    assert len(ledger.details["superseded_alias_ids"]) == 1
+    assert len(ledger.details["retargeted_alias_ids"]) == 1
+    assert len(ledger.details["repointed_mention_ids"]) == 1
 
     # 8. Assert CloudEvent emitted to outbox
     event = EventOutbox.objects.filter(
@@ -399,7 +404,10 @@ def test_retire_then_split_round_trip() -> None:
     merge_ledger = IdentityMergeLedger.objects.get(
         from_id=dup_work.work_id, to_id=can_work.work_id, op="MERGE"
     )
-    assert merge_ledger.reason is not None and "prior_status=PROVISIONAL" in merge_ledger.reason
+    assert merge_ledger.reason == "REPARSE_DUPLICATE_RAW_BLOB"
+    assert (
+        merge_ledger.details is not None and merge_ledger.details["prior_status"] == "PROVISIONAL"
+    )
 
     split_event_id = split_work(merge_ledger.event_id, reason="TEST_REVERSAL")
     assert split_event_id.startswith("evr_")
@@ -420,3 +428,81 @@ def test_retire_then_split_round_trip() -> None:
 
     man_can.refresh_from_db()
     assert man_can.work_id == can_work.work_id
+
+
+@pytest.mark.django_db
+def test_split_work_when_canonical_has_active_alias_does_not_raise() -> None:
+    """When canonical already has an ACTIVE alias for the same scheme+value, split_work must not raise."""
+    from parse.citations.dedupe import split_work
+
+    can_work = Work.objects.create(work_id=mint_id("wrk"), work_type="FINAL_ORDER", status="ACTIVE")
+    dup_work = Work.objects.create(work_id=mint_id("wrk"), work_type="FINAL_ORDER", status="ACTIVE")
+
+    # Canonical already has an ACTIVE alias for SCC 2021:scc:500
+    can_alias = IdentifierAlias.objects.create(
+        scheme="SCC",
+        value_normalized="2021:scc:500",
+        target_id=can_work.work_id,
+        confidence=1.0,
+        trust_tier="T1",
+        source="court_order",
+        status="ACTIVE",
+        first_seen=datetime.now(UTC),
+    )
+
+    # Duplicate had a superseded alias for the same value
+    dup_alias = IdentifierAlias.objects.create(
+        scheme="SCC",
+        value_normalized="2021:scc:500",
+        target_id=dup_work.work_id,
+        confidence=0.8,
+        trust_tier="T4",
+        source="citation_mention",
+        status="SUPERSEDED",
+        first_seen=datetime.now(UTC),
+    )
+
+    # Recorded merge with details where dup_alias was superseded, but can_alias was NOT created/activated by merge
+    event_id = mint_id("evr")
+    IdentityMergeLedger.objects.create(
+        event_id=event_id,
+        kind="WORK",
+        op="MERGE",
+        from_id=dup_work.work_id,
+        to_id=can_work.work_id,
+        reason="IBBI_OFFICIAL_DEDUPE",
+        confidence=1.0,
+        recorded_at=datetime.now(UTC),
+        details={
+            "prior_status": "ACTIVE",
+            "superseded_alias_ids": [
+                {
+                    "scheme": dup_alias.scheme,
+                    "value_normalized": dup_alias.value_normalized,
+                    "target_id": dup_work.work_id,
+                }
+            ],
+            "retargeted_alias_ids": [],
+            "repointed_mention_ids": [],
+        },
+    )
+    dup_work.status = "MERGED"
+    dup_work.merged_into = can_work
+    dup_work.save(update_fields=["status", "merged_into"])
+
+    # split_work must reverse the merge without raising an alias_one_active integrity error
+    split_event_id = split_work(event_id, reason="TEST_SPLIT_COLLISION")
+    assert split_event_id.startswith("evr_")
+
+    # Canonical alias remains ACTIVE
+    can_alias.refresh_from_db()
+    assert can_alias.status == "ACTIVE"
+
+    # Duplicate alias remains SUPERSEDED because another active alias exists
+    dup_alias.refresh_from_db()
+    assert dup_alias.status == "SUPERSEDED"
+
+    # Duplicate work status restored
+    dup_work.refresh_from_db()
+    assert dup_work.status == "ACTIVE"
+    assert dup_work.merged_into is None

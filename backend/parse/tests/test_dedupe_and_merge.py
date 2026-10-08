@@ -278,6 +278,9 @@ def test_execute_merge_and_split(courts: dict[str, Court]) -> None:
     assert work_from.status == "ACTIVE"
     assert work_from.merged_into is None
 
+    mention.refresh_from_db()
+    assert mention.resolved_target_id == work_from.work_id
+
     split_ledger = IdentityMergeLedger.objects.get(event_id=split_event_id)
     assert split_ledger.op == "SPLIT"
     assert split_ledger.from_id == work_from.work_id

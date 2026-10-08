@@ -12,7 +12,6 @@ Normative sources:
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from django.db import transaction
@@ -29,21 +28,6 @@ from parse.models import (
     Work,
     WorkCase,
 )
-
-
-def _lookup_prior_status_from_inventory(work_id: str) -> str | None:
-    """Look up original status of a duplicate work from s05b_orphan_works_report.txt inventory."""
-    for base in [
-        Path("eval/reports/s05b_orphan_works_report.txt"),
-        Path("../eval/reports/s05b_orphan_works_report.txt"),
-    ]:
-        if base.exists():
-            for line in base.read_text().splitlines():
-                if work_id in line and "|" in line:
-                    parts = [p.strip() for p in line.split("|")]
-                    if len(parts) == 6 and parts[2] == work_id:
-                        return parts[5]
-    return None
 
 
 def _get_work_case_info(work: Work) -> list[tuple[str | None, str | None, int | None]]:
@@ -151,30 +135,24 @@ def dedupe_and_merge(
         from_work.merged_into = to_work
         from_work.save(update_fields=["status", "merged_into"])
 
-        # 2. Record in plc.identity_merge_ledger with prior_status
+        # 2. Re-target ACTIVE aliases to canonical work
         event_id = mint_id("evr")
-        record_reason = (
-            reason if "prior_status=" in reason else f"{reason}|prior_status={prior_status}"
-        )
-        IdentityMergeLedger.objects.create(
-            event_id=event_id,
-            kind="WORK",
-            op="MERGE",
-            from_id=from_work_id,
-            to_id=to_work_id,
-            reason=record_reason,
-            confidence=1.0,
-            reversible_until=None,
-            recorded_at=now,
-        )
+        superseded_alias_ids: list[dict[str, str]] = []
+        retargeted_alias_ids: list[dict[str, str]] = []
 
-        # 3. Re-target ACTIVE aliases to canonical work (new ACTIVE alias on to_work + old SUPERSEDED on from_work)
         active_aliases = list(
             IdentifierAlias.objects.filter(target_id=from_work_id, status="ACTIVE")
         )
         for alias in active_aliases:
             alias.status = "SUPERSEDED"
             alias.save(update_fields=["status"])
+            superseded_alias_ids.append(
+                {
+                    "scheme": alias.scheme,
+                    "value_normalized": alias.value_normalized,
+                    "target_id": from_work_id,
+                }
+            )
 
             target_alias = IdentifierAlias.objects.filter(
                 scheme=alias.scheme,
@@ -197,17 +175,57 @@ def dedupe_and_merge(
                         "merge_event_id": event_id,
                     },
                 )
+                retargeted_alias_ids.append(
+                    {
+                        "scheme": alias.scheme,
+                        "value_normalized": alias.value_normalized,
+                        "target_id": to_work_id,
+                    }
+                )
             elif target_alias.status != "ACTIVE":
                 target_alias.status = "ACTIVE"
                 target_alias.save(update_fields=["status"])
+                retargeted_alias_ids.append(
+                    {
+                        "scheme": target_alias.scheme,
+                        "value_normalized": target_alias.value_normalized,
+                        "target_id": to_work_id,
+                    }
+                )
 
-        # 4. Re-point citation mentions
-        CitationMention.objects.filter(resolved_target_id=from_work_id).update(
-            resolved_target_id=to_work_id
+        # 3. Re-point citation mentions
+        repointed_mention_ids = list(
+            CitationMention.objects.filter(resolved_target_id=from_work_id).values_list(
+                "mention_id", flat=True
+            )
         )
+        if repointed_mention_ids:
+            CitationMention.objects.filter(mention_id__in=repointed_mention_ids).update(
+                resolved_target_id=to_work_id
+            )
 
-        # 5. Move manifestations to to_work
+        # 4. Move manifestations to to_work
         Manifestation.objects.filter(work_id=from_work_id).update(work_id=to_work_id)
+
+        # 5. Record in plc.identity_merge_ledger with details
+        details = {
+            "prior_status": prior_status,
+            "superseded_alias_ids": superseded_alias_ids,
+            "retargeted_alias_ids": retargeted_alias_ids,
+            "repointed_mention_ids": repointed_mention_ids,
+        }
+        IdentityMergeLedger.objects.create(
+            event_id=event_id,
+            kind="WORK",
+            op="MERGE",
+            from_id=from_work_id,
+            to_id=to_work_id,
+            reason=reason,
+            confidence=1.0,
+            reversible_until=None,
+            recorded_at=now,
+            details=details,
+        )
 
         # 6. Emit plc.identity.merged.v1 outbox event
         publish_event(
@@ -222,7 +240,7 @@ def dedupe_and_merge(
                 "kind": "WORK",
                 "from_id": from_work_id,
                 "to_id": to_work_id,
-                "reason": record_reason,
+                "reason": reason,
                 "confidence": 1.0,
             },
             topic="plc.identity.merged.v1",
@@ -233,12 +251,18 @@ def dedupe_and_merge(
         return event_id
 
 
-def split_work(merge_event_id: str, reason: str = "MERGE_REVERSAL") -> str:
+def split_work(
+    merge_event_id: str,
+    reason: str = "MERGE_REVERSAL",
+    prior_status: str | None = None,
+) -> str:
     """Reverse a previous merge operation.
 
-    Restores work's prior status (from ledger reason or s05b report inventory),
+    Restores work's prior status (from explicit argument or merge details, defaulting to ACTIVE),
     clears merged_into, moves manifestations back via ParseRun.manifestation_id,
-    records in identity_merge_ledger, and emits identity.split.v1 to ops.event_outbox.
+    reverses alias modifications safely (superseding only aliases created/activated by this merge,
+    and re-activating superseded aliases only if no other ACTIVE alias exists for that scheme+value),
+    moves re-pointed citation mentions back, records in identity_merge_ledger, and emits identity.split.v1.
     """
     now = datetime.now(UTC)
 
@@ -249,20 +273,12 @@ def split_work(merge_event_id: str, reason: str = "MERGE_REVERSAL") -> str:
         )
         from_work = Work.objects.select_for_update().get(work_id=merge_entry.from_id)
 
-        # Determine prior status: from merge_entry.reason, or report inventory, or default ACTIVE
-        prior_status = "ACTIVE"
-        if merge_entry.reason:
-            for part in merge_entry.reason.split("|"):
-                if part.startswith("prior_status="):
-                    prior_status = part.split("=", 1)[1]
-                    break
-        if prior_status == "ACTIVE":
-            inv_status = _lookup_prior_status_from_inventory(merge_entry.from_id)
-            if inv_status:
-                prior_status = inv_status
+        # Determine prior status: explicit argument > details['prior_status'] > default ACTIVE
+        details = merge_entry.details or {}
+        resolved_prior_status = prior_status or details.get("prior_status") or "ACTIVE"
 
         # 1. Revert from_work to prior status and clear merged_into
-        from_work.status = prior_status
+        from_work.status = resolved_prior_status
         from_work.merged_into = None
         from_work.save(update_fields=["status", "merged_into"])
 
@@ -277,23 +293,67 @@ def split_work(merge_event_id: str, reason: str = "MERGE_REVERSAL") -> str:
                 work_id=from_work.work_id
             )
 
-        # 3. Revert alias retargeting: supersede retargeted aliases on to_work, restore on from_work
-        retargeted_aliases = list(
+        # 3. Revert alias modifications
+        # 3a. Supersede only the aliases this merge created or re-activated on to_id
+        retargeted_aliases: list[dict[str, str]] = details.get("retargeted_alias_ids", [])
+        if retargeted_aliases:
+            for item in retargeted_aliases:
+                IdentifierAlias.objects.filter(
+                    scheme=item["scheme"],
+                    value_normalized=item["value_normalized"],
+                    target_id=item["target_id"],
+                    status="ACTIVE",
+                ).update(status="SUPERSEDED")
+        else:
+            # Fallback for legacy rows without details: check evidence
             IdentifierAlias.objects.filter(
                 target_id=merge_entry.to_id,
                 evidence__retargeted_from=from_work.work_id,
                 status="ACTIVE",
-            )
-        )
-        for retargeted in retargeted_aliases:
-            retargeted.status = "SUPERSEDED"
-            retargeted.save(update_fields=["status"])
+            ).update(status="SUPERSEDED")
 
-        IdentifierAlias.objects.filter(target_id=from_work.work_id, status="SUPERSEDED").update(
-            status="ACTIVE"
-        )
+        # 3b. Re-activate only the aliases this merge superseded, and ONLY when no other ACTIVE alias exists for that scheme+value
+        superseded_aliases: list[dict[str, str]] = details.get("superseded_alias_ids", [])
+        if superseded_aliases:
+            for item in superseded_aliases:
+                scheme = item["scheme"]
+                val = item["value_normalized"]
+                tgt = item["target_id"]
+                active_exists = IdentifierAlias.objects.filter(
+                    scheme=scheme,
+                    value_normalized=val,
+                    status="ACTIVE",
+                ).exists()
+                if not active_exists:
+                    IdentifierAlias.objects.filter(
+                        scheme=scheme,
+                        value_normalized=val,
+                        target_id=tgt,
+                        status="SUPERSEDED",
+                    ).update(status="ACTIVE")
+        else:
+            # Fallback for legacy rows without details
+            for alias in IdentifierAlias.objects.filter(
+                target_id=from_work.work_id, status="SUPERSEDED"
+            ):
+                active_exists = IdentifierAlias.objects.filter(
+                    scheme=alias.scheme,
+                    value_normalized=alias.value_normalized,
+                    status="ACTIVE",
+                ).exists()
+                if not active_exists:
+                    alias.status = "ACTIVE"
+                    alias.save(update_fields=["status"])
 
-        # 4. Record SPLIT in identity_merge_ledger
+        # 4. Move re-pointed citation mentions back
+        repointed_mentions: list[str] = details.get("repointed_mention_ids", [])
+        if repointed_mentions:
+            CitationMention.objects.filter(
+                mention_id__in=repointed_mentions,
+                resolved_target_id=merge_entry.to_id,
+            ).update(resolved_target_id=merge_entry.from_id)
+
+        # 5. Record SPLIT in identity_merge_ledger
         split_event_id = mint_id("evr")
         IdentityMergeLedger.objects.create(
             event_id=split_event_id,
@@ -305,9 +365,13 @@ def split_work(merge_event_id: str, reason: str = "MERGE_REVERSAL") -> str:
             confidence=1.0,
             reversible_until=None,
             recorded_at=now,
+            details={
+                "reverted_merge_event_id": merge_event_id,
+                "restored_status": resolved_prior_status,
+            },
         )
 
-        # 3. Emit plc.identity.split.v1 event
+        # 6. Emit plc.identity.split.v1 event
         publish_event(
             event_type="identity.split.v1",
             source="p1/dedupe",

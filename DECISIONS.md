@@ -407,7 +407,8 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 ---
 
 ### 2026-10-08 — Retirement of 346 Duplicate Works via Single Atomic Transaction
-- **Decision:** Executed retirement of 346 historical duplicate works via management command `retire_duplicate_works` in a single atomic transaction (`transaction.atomic()`). Updated all 346 works to `status = 'MERGED'` and `merged_into = canonical_work_id`, created 346 audit records in `plc.identity_merge_ledger` (`op='MERGE'`, `kind='WORK'`, `confidence=1.0`, `reason='REPARSE_DUPLICATE_RAW_BLOB'`), re-pointed manifestations and citations, marked active aliases as `SUPERSEDED`, and emitted `identity.merged.v1` CloudEvents to `ops.event_outbox`. Zero rows were deleted.
+- **Decision:** Executed retirement of 346 historical duplicate works via management command `retire_duplicate_works` in a single atomic transaction (`transaction.atomic()`). Updated all 346 works to `status = 'MERGED'` and `merged_into = canonical_work_id`, created 346 audit records in `plc.identity_merge_ledger` (`op='MERGE'`, `kind='WORK'`, `confidence=1.0`, `reason='REPARSE_DUPLICATE_RAW_BLOB'`), re-pointed manifestations and citations, re-targeted active aliases to the canonical work (new active alias on canonical, superseded on duplicate), and emitted `identity.merged.v1` CloudEvents to `ops.event_outbox`. Zero rows were deleted.
+- **Reason:** S05b Follow-up Directive #4; AGENTS.md §4 & §5 non-negotiables. Preserves complete bitemporal audit history with zero deletions while resolving all duplicate works into their canonical entities.
 - **Doc Reference:** S05b Follow-up Directive #4; `docs/mvp/03_data_model_and_contracts.md` §3.3; `docs/01_master_architecture.md` §2.4, §5.4.
 
 ---
@@ -416,6 +417,13 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Decision:** When the Anchor Read API resolves or serves anchors requested against a work whose status is `MERGED`, it must follow `merged_into` to resolve to the canonical work and return the canonical anchor (via `anchor_alias` mapping or tombstone pointers).
 - **Reason:** S05b Follow-up Directive #5; `docs/01_master_architecture.md` §2.4 & §5.5. Works retired via `plc.identity_merge_ledger` retain their anchors in `plc.anchor` for historical provenance, but legal references, citations, and client queries requesting anchors on merged works must resolve transparently to canonical anchors on the surviving work.
 - **Doc Reference:** S05b Follow-up Directive #5; `docs/01_master_architecture.md` §2.4, §5.4, §5.5; `docs/mvp/03_data_model_and_contracts.md` §3.3.
+
+---
+
+### 2026-10-08 — Nullable JSONB `details` Column on `plc.identity_merge_ledger`
+- **Decision:** Added a nullable `details` `jsonb` column to `plc.identity_merge_ledger` storing operational merge audit metadata: `prior_status` (e.g. `ACTIVE` or `PROVISIONAL`), `superseded_alias_ids` (composite keys of aliases superseded on duplicate), `retargeted_alias_ids` (composite keys of aliases created or activated on canonical), and `repointed_mention_ids` (mention IDs moved to canonical). Migration `0003_identity_merge_ledger_details.py`.
+- **Reason:** S05b Follow-up. `docs/mvp/03_data_model_and_contracts.md` §3.3 defines `plc.identity_merge_ledger` without a payload column, leaving `reason` as the only free-text field. Encoding operational metadata inside `reason` violates the CloudEvent and ledger `reason` contract (which must remain a standard enum-like string such as `'REPARSE_DUPLICATE_RAW_BLOB'` or `'IBBI_OFFICIAL_DEDUPE'`). Adding a structured `details` jsonb column records exact mutation provenance and enables reversible, high-fidelity unretire/split operations without ad-hoc string parsing or disk report dependencies.
+- **Doc Reference:** S05b Follow-up; `docs/mvp/03_data_model_and_contracts.md` §3.3 (noted deviation); `docs/01_master_architecture.md` §5.4, §6.3.
 
 
 

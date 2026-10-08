@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from anchor_lib.ids import mint_id
@@ -90,9 +90,10 @@ class Command(BaseCommand):
 
             # 1. Assert inside transaction that no duplicate is also canonical for another raw_id
             overlap = duplicate_ids & canonical_ids
-            assert not overlap, (
-                f"Integrity violation: duplicate work(s) {overlap} cannot also be canonical for another raw_id! Aborting."
-            )
+            if overlap:
+                raise CommandError(
+                    f"Integrity violation: duplicate work(s) {overlap} cannot also be canonical for another raw_id! Aborting."
+                )
 
             # 2. Assert inside transaction that no canonical work is MERGED
             merged_canonicals = list(
@@ -100,9 +101,10 @@ class Command(BaseCommand):
                     "work_id", flat=True
                 )
             )
-            assert not merged_canonicals, (
-                f"Integrity violation: canonical work(s) {merged_canonicals} are in MERGED status! Aborting."
-            )
+            if merged_canonicals:
+                raise CommandError(
+                    f"Integrity violation: canonical work(s) {merged_canonicals} are in MERGED status! Aborting."
+                )
 
             # BEFORE AUDIT COUNTS
             before_work_total = Work.objects.count()
@@ -152,7 +154,7 @@ class Command(BaseCommand):
             for dup_id, can_id in dupe_map.items():
                 dup_work = Work.objects.select_for_update().get(work_id=dup_id)
                 prior_status = dup_work.status
-                record_reason = f"REPARSE_DUPLICATE_RAW_BLOB|prior_status={prior_status}"
+                record_reason = "REPARSE_DUPLICATE_RAW_BLOB"
 
                 # 1. Update Work status to MERGED and set merged_into
                 dup_work.status = "MERGED"
@@ -163,18 +165,34 @@ class Command(BaseCommand):
                 Manifestation.objects.filter(work_id=dup_id).update(work_id=can_id)
 
                 # 3. Re-point CitationMentions if any
-                CitationMention.objects.filter(resolved_target_id=dup_id).update(
-                    resolved_target_id=can_id
+                repointed_mention_ids = list(
+                    CitationMention.objects.filter(resolved_target_id=dup_id).values_list(
+                        "mention_id", flat=True
+                    )
                 )
+                if repointed_mention_ids:
+                    CitationMention.objects.filter(mention_id__in=repointed_mention_ids).update(
+                        resolved_target_id=can_id
+                    )
 
                 # 4. Re-target ACTIVE aliases to canonical work (new ACTIVE alias on can_id + old SUPERSEDED on dup_id)
                 event_id = mint_id("evr")
+                superseded_alias_ids: list[dict[str, str]] = []
+                retargeted_alias_ids: list[dict[str, str]] = []
+
                 active_aliases = list(
                     IdentifierAlias.objects.filter(target_id=dup_id, status="ACTIVE")
                 )
                 for alias in active_aliases:
                     alias.status = "SUPERSEDED"
                     alias.save(update_fields=["status"])
+                    superseded_alias_ids.append(
+                        {
+                            "scheme": alias.scheme,
+                            "value_normalized": alias.value_normalized,
+                            "target_id": dup_id,
+                        }
+                    )
 
                     target_alias = IdentifierAlias.objects.filter(
                         scheme=alias.scheme,
@@ -197,11 +215,31 @@ class Command(BaseCommand):
                                 "merge_event_id": event_id,
                             },
                         )
+                        retargeted_alias_ids.append(
+                            {
+                                "scheme": alias.scheme,
+                                "value_normalized": alias.value_normalized,
+                                "target_id": can_id,
+                            }
+                        )
                     elif target_alias.status != "ACTIVE":
                         target_alias.status = "ACTIVE"
                         target_alias.save(update_fields=["status"])
+                        retargeted_alias_ids.append(
+                            {
+                                "scheme": target_alias.scheme,
+                                "value_normalized": target_alias.value_normalized,
+                                "target_id": can_id,
+                            }
+                        )
 
-                # 5. Insert audit row into plc.identity_merge_ledger with prior_status
+                # 5. Insert audit row into plc.identity_merge_ledger with details
+                details = {
+                    "prior_status": prior_status,
+                    "superseded_alias_ids": superseded_alias_ids,
+                    "retargeted_alias_ids": retargeted_alias_ids,
+                    "repointed_mention_ids": repointed_mention_ids,
+                }
                 IdentityMergeLedger.objects.create(
                     event_id=event_id,
                     kind="WORK",
@@ -212,6 +250,7 @@ class Command(BaseCommand):
                     confidence=1.0,
                     reversible_until=None,
                     recorded_at=now,
+                    details=details,
                 )
 
                 # 6. Emit plc.identity.merged.v1 CloudEvent
@@ -279,31 +318,31 @@ class Command(BaseCommand):
             self.stdout.write(f"  Citations with citing_work_id:   {after_cites_with_citing_dupe}")
             self.stdout.write(f"  Aliases Pointing to Dupes:       {after_aliases_on_dupes}")
 
-            # ZERO DELETION & INTEGRITY ASSERTIONS
-            assert after_work_total == before_work_total, (
-                f"Work count changed: {before_work_total} -> {after_work_total}. Deletes forbidden!"
-            )
-            assert after_parserun_total == before_parserun_total, (
-                "ParseRun count changed! Deletes forbidden!"
-            )
-            assert after_anchor_total == before_anchor_total, (
-                "Anchor count changed! Deletes forbidden!"
-            )
-            assert after_manifestation_total == before_manifestation_total, (
-                "Manifestation count changed! Deletes forbidden!"
-            )
-            assert after_merge_ledger_total == before_merge_ledger_total + merges_performed, (
-                f"Merge ledger entries mismatch: expected +{merges_performed}"
-            )
-            assert after_cites_on_dupes == 0, (
-                f"Found {after_cites_on_dupes} citations pointing to duplicate works!"
-            )
-            assert after_cites_with_citing_dupe == 0, (
-                f"Found {after_cites_with_citing_dupe} citations with citing_work_id in duplicate works!"
-            )
-            assert after_aliases_on_dupes == 0, (
-                f"Found {after_aliases_on_dupes} aliases pointing to duplicate works!"
-            )
+            # ZERO DELETION & INTEGRITY AUDITS
+            if after_work_total != before_work_total:
+                raise CommandError(
+                    f"Work count changed: {before_work_total} -> {after_work_total}. Deletes forbidden!"
+                )
+            if after_parserun_total != before_parserun_total:
+                raise CommandError("ParseRun count changed! Deletes forbidden!")
+            if after_anchor_total != before_anchor_total:
+                raise CommandError("Anchor count changed! Deletes forbidden!")
+            if after_manifestation_total != before_manifestation_total:
+                raise CommandError("Manifestation count changed! Deletes forbidden!")
+            if after_merge_ledger_total != before_merge_ledger_total + merges_performed:
+                raise CommandError(f"Merge ledger entries mismatch: expected +{merges_performed}")
+            if after_cites_on_dupes != 0:
+                raise CommandError(
+                    f"Found {after_cites_on_dupes} citations pointing to duplicate works!"
+                )
+            if after_cites_with_citing_dupe != 0:
+                raise CommandError(
+                    f"Found {after_cites_with_citing_dupe} citations with citing_work_id in duplicate works!"
+                )
+            if after_aliases_on_dupes != 0:
+                raise CommandError(
+                    f"Found {after_aliases_on_dupes} aliases pointing to duplicate works!"
+                )
 
             if dry_run:
                 transaction.set_rollback(True)

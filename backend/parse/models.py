@@ -317,6 +317,7 @@ class IdentityMergeLedger(models.Model):
     confidence = models.FloatField(null=True, blank=True)
     reversible_until = models.DateTimeField(null=True, blank=True)
     recorded_at = models.DateTimeField()
+    details = models.JSONField(null=True, blank=True)
 
     class Meta:
         managed = False
