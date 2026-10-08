@@ -135,7 +135,7 @@ def test_changed_capture_reuses_work_and_tombstones_deleted_anchors() -> None:
         fixture_dir = Path("eval/fixtures/ibbi")
 
     orig_pdf_path = fixture_dir / "sample_order_1.pdf"
-    changed_pdf_path = fixture_dir / "sample_order_changed.pdf"
+    changed_pdf_path = fixture_dir / "sample_order_truncated.pdf"
 
     orig_bytes = orig_pdf_path.read_bytes()
     changed_bytes = changed_pdf_path.read_bytes()
@@ -212,7 +212,7 @@ def test_changed_capture_reuses_work_and_tombstones_deleted_anchors() -> None:
     for frag in ["hdr", "u1", "p1", "p2", "p8"]:
         assert frag in live_anchors_run2, f"Surviving anchor #{frag} must remain LIVE"
 
-    # 3. Assert tombstones where text was removed
+    # 3. Assert tombstones where text was removed and forward_to matching similarity rule
     tombstoned_run2 = set(
         Anchor.objects.filter(work_id=work_id, state="TOMBSTONED").values_list(
             "fragment", flat=True
@@ -221,3 +221,97 @@ def test_changed_capture_reuses_work_and_tombstones_deleted_anchors() -> None:
     assert len(tombstoned_run2) > 0, "Deleted text must produce tombstones"
     assert "p10" in tombstoned_run2, "Anchor #p10 must be TOMBSTONED where text was removed"
     assert "ord" in tombstoned_run2, "Anchor #ord must be TOMBSTONED where text was removed"
+
+    tomb_p10 = Anchor.objects.get(work_id=work_id, fragment="p10", state="TOMBSTONED")
+    tomb_ord = Anchor.objects.get(work_id=work_id, fragment="ord", state="TOMBSTONED")
+    assert tomb_p10.forward_to is None, "Similarity < 0.50 threshold yields forward_to=None"
+    assert tomb_ord.forward_to is None, "Similarity < 0.50 threshold yields forward_to=None"
+
+    for tomb in Anchor.objects.filter(work_id=work_id, state="TOMBSTONED"):
+        assert tomb.forward_to is None or (
+            tomb.forward_to.startswith(f"{work_id}/")
+            and Anchor.objects.filter(anchor_id=tomb.forward_to, state="LIVE").exists()
+        )
+
+
+@pytest.mark.django_db
+def test_merged_work_resolution_attaches_to_canonical_work() -> None:
+    """When a capture points to a work whose status is MERGED,
+
+    parse_captured must follow merged_into, resolve to the canonical work,
+    and attach the new parse run to the canonical work (never to the MERGED duplicate).
+    """
+    storage = BlobStorage()
+
+    Source.objects.get_or_create(
+        source_id="src_ibbi",
+        defaults={
+            "name": "IBBI Orders Portal",
+            "provenance_tier": "OFFICIAL_PORTAL",
+            "default_rights_class": "PUBLIC_DOMAIN",
+        },
+    )
+
+    fixture_dir = Path("../eval/fixtures/ibbi")
+    if not fixture_dir.exists():
+        fixture_dir = Path("eval/fixtures/ibbi")
+
+    pdf_bytes = (fixture_dir / "nclt_born_digital_chd.pdf").read_bytes()
+    raw_id, _, _ = storage.store_blob(pdf_bytes, content_type="application/pdf")
+
+    canon_work = Work.objects.create(
+        work_id=mint_id("wrk"),
+        work_type="JUDGMENT",
+        status="ACTIVE",
+    )
+    dupe_work = Work.objects.create(
+        work_id=mint_id("wrk"),
+        work_type="JUDGMENT",
+        status="MERGED",
+        merged_into=canon_work,
+    )
+
+    # Pre-existing ParseRun pointing to the duplicate work
+    old_dupe_run = ParseRun.objects.create(
+        parse_id=mint_id("par"),
+        raw_ids=[raw_id],
+        work=dupe_work,
+        expression_key="en",
+        doc_type="JUDGMENT",
+        parsed_doc_uri="s3://fake-legacy",
+        parsed_doc_sha256="fake-legacy-hash",
+        quality={},
+        gate="PASS",
+        anchor_changes={},
+        pipeline_version_id="p1.parser@0.1.0|det_v1",
+    )
+
+    cap = Capture.objects.create(
+        capture_id=mint_id("cap"),
+        raw_id=raw_id,
+        source_id="src_ibbi",
+        source_record_key=f"nclt:merged-test-{mint_id('cap')}",
+        change_kind="NEW",
+        fetched_at=datetime.now(UTC),
+        rights_class="PUBLIC_DOMAIN",
+        provenance_tier="OFFICIAL_PORTAL",
+    )
+
+    initial_canon_runs = ParseRun.objects.filter(work_id=canon_work.work_id).count()
+    initial_dupe_runs = ParseRun.objects.filter(work_id=dupe_work.work_id).count()
+
+    call_command("parse_captured", capture_id=cap.capture_id)
+
+    after_canon_runs = ParseRun.objects.filter(work_id=canon_work.work_id).count()
+    after_dupe_runs = ParseRun.objects.filter(work_id=dupe_work.work_id).count()
+
+    # 1. Assert new parse run attaches to canonical work
+    assert after_canon_runs == initial_canon_runs + 1, "New parse must attach to canonical work"
+
+    # 2. Assert zero new parses attach to the MERGED work
+    assert after_dupe_runs == initial_dupe_runs, "Never attach a new parse to a MERGED work"
+
+    new_run = ParseRun.objects.filter(raw_ids__contains=[raw_id]).order_by("-created_at").first()
+    assert new_run is not None
+    assert new_run.work_id == canon_work.work_id
+    assert new_run.supersedes_parse_id == old_dupe_run.parse_id

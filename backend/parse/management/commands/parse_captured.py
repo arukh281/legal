@@ -18,8 +18,26 @@ from django.core.management.base import BaseCommand
 from ingest.models import Capture
 from ingest.storage import BlobStorage
 from parse.consumer import persist_pipeline_result
-from parse.models import Manifestation, ParseRun
+from parse.models import Manifestation, ParseRun, Work
 from parse.pipeline import ParsingPipeline
+
+
+def resolve_canonical_work_id(work_id: str | None) -> str | None:
+    """Follow merged_into chain if work status is MERGED, never attaching to a MERGED work."""
+    if not work_id:
+        return None
+    visited: set[str] = set()
+    current_id: str | None = work_id
+    while current_id and current_id not in visited:
+        visited.add(current_id)
+        work = Work.objects.filter(work_id=current_id).first()
+        if not work:
+            break
+        if work.status == "MERGED" and work.merged_into_id:
+            current_id = work.merged_into_id
+        else:
+            break
+    return current_id
 
 
 class Command(BaseCommand):
@@ -174,6 +192,20 @@ class Command(BaseCommand):
                         )
                         if prior_man:
                             existing_work_id = prior_man.work_id
+
+            # Whenever an existing work is picked, follow merged_into if status is MERGED,
+            # ensuring a new parse run is never attached to a MERGED work.
+            if existing_work_id:
+                canonical_work_id = resolve_canonical_work_id(existing_work_id)
+                if canonical_work_id != existing_work_id:
+                    existing_work_id = canonical_work_id
+                    latest_canonical_run = (
+                        ParseRun.objects.filter(work_id=canonical_work_id)
+                        .order_by("-created_at")
+                        .first()
+                    )
+                    if latest_canonical_run:
+                        supersedes_parse_id = latest_canonical_run.parse_id
 
             try:
                 raw_bytes = storage.get_blob(cap.raw_id, content_type="application/pdf")
