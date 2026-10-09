@@ -16,6 +16,7 @@ FORBIDDEN_MODULES: frozenset[str] = frozenset(
         "openai",
         "google.genai",
         "google.generativeai",
+        "voyageai",
     }
 )
 
@@ -45,12 +46,12 @@ def test_no_direct_sdk_imports_outside_gateway() -> None:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     name = alias.name.split(".")[0]
-                    if alias.name in FORBIDDEN_MODULES or name in ("anthropic", "openai"):
+                    if alias.name in FORBIDDEN_MODULES or name in ("anthropic", "openai", "voyageai"):
                         violations.append(f"{rel_path}:{node.lineno} imports '{alias.name}'")
             elif isinstance(node, ast.ImportFrom):
                 if node.module:
                     mod_root = node.module.split(".")[0]
-                    if node.module in FORBIDDEN_MODULES or mod_root in ("anthropic", "openai"):
+                    if node.module in FORBIDDEN_MODULES or mod_root in ("anthropic", "openai", "voyageai"):
                         violations.append(f"{rel_path}:{node.lineno} imports from '{node.module}'")
 
     assert not violations, (

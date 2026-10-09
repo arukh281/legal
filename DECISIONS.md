@@ -425,6 +425,42 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** S05b Follow-up. `docs/mvp/03_data_model_and_contracts.md` §3.3 defines `plc.identity_merge_ledger` without a payload column, leaving `reason` as the only free-text field. Encoding operational metadata inside `reason` violates the CloudEvent and ledger `reason` contract (which must remain a standard enum-like string such as `'REPARSE_DUPLICATE_RAW_BLOB'` or `'IBBI_OFFICIAL_DEDUPE'`). Adding a structured `details` jsonb column records exact mutation provenance and enables reversible, high-fidelity unretire/split operations without ad-hoc string parsing or disk report dependencies.
 - **Doc Reference:** S05b Follow-up; `docs/mvp/03_data_model_and_contracts.md` §3.3 (noted deviation); `docs/01_master_architecture.md` §5.4, §6.3.
 
+---
+
+### 2026-10-09 — Model Gateway Embedding Task Exception: Model Pinning Without Heterogeneous Failover
+- **Decision:** For embedding tasks (`p2.embed.v1`), routing is strictly pinned to qualified endpoints serving the generation's designated model (`voyage-4-large` @ 1024 dims). Heterogeneous model failover is prohibited; failures retry with exponential backoff and fail loudly if retries are exhausted.
+- **Reason:** Exception to AGENTS.md §6 approved by aru today. Vector search requires geometric consistency within an index generation. Failing over to a different model family or dimensionality would write vectors into pgvector that cannot be compared with existing vectors.
+- **Doc Reference:** AGENTS.md §6; `docs/04_P2_enrichment_indexing.md` §5.6.1; Session S06 Directive.
+
+---
+
+### 2026-10-09 — Provisional `g1` Generation with `voyage-4-large`
+- **Decision:** Generation `g1` is initialized in state `BUILDING` with `voyage-4-large` (1024 dims) as the default embedder prior to the S08 gold set bake-off. Upon completion of initial indexing, `g1` is promoted to `LIVE`. If the S08 bake-off selects a different model, that model will become `g2` through a normal promotion.
+- **Reason:** Decision approved by aru today per `docs/mvp/04_stack_and_infra.md` §2.5. No gold set exists until S08, so `voyage-4-large` serves as the provisional baseline.
+- **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §2.5; `docs/04_P2_enrichment_indexing.md` §5.6.1; Session S06 Directive.
+
+---
+
+### 2026-10-09 — Long Paragraph Splitting via `body.part` under Parent Anchor
+- **Decision:** `JUDG_LONG_PARA_PART` chunks carry the parent paragraph anchor (`anchor_ids = [parent_anchor]`) and character offsets in `body.part = {"k": k, "n": n, "char_start": start, "char_end": end}`, rather than synthetic sentence anchors `p45.s1...`.
+- **Reason:** P1 does not mint sentence anchors, and P2 must never mint anchors. Invariant I5 verifies that parts joined in order equal the parent anchor text exactly.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §5.2A; Session S06 Directive #3.
+
+---
+
+### 2026-10-09 — P2-Owned Addition: `plc.index_expression_state` Table
+- **Decision:** Created table `plc.index_expression_state` (`serial_key`, `accepted_parse_id`, `doc_seq`, `content_digest`, `enrichment_level`, `status`, `last_quarantined_parse_id`, `quarantine_reasons`, `pipeline_version`, `updated_at`).
+- **Reason:** Provides state tracking for monotonic `doc_seq` assignment, enforces ULID timestamp monotonicity to drop stale/out-of-order parse events, and retains previous live chunks if a subsequent re-parse fails quality invariants I1–I6.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §2.7; Session S06 Directive #5, #6.
+
+---
+
+### 2026-10-09 — Deterministic Approximate Token Counter in `pipeline_version`
+- **Decision:** Used a deterministic approximate token counter (`approx_tok_v1`) stamped into `pipeline_version` (`p2.embedder@0.1.0|approx_tok_v1|voyage-4-large|1024`).
+- **Reason:** Absence of a local Voyage tokenizer in Python environment. A deterministic counter provides stable, reproducible token bounds and estimates without network calls.
+- **Doc Reference:** Session S06 Directive #7.
+
+
 
 
 

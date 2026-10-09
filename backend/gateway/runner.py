@@ -25,6 +25,7 @@ from gateway.adapters.anthropic_adapter import AnthropicAdapter
 from gateway.adapters.base import BaseModelAdapter, LLMResponse
 from gateway.adapters.google_adapter import GoogleAdapter
 from gateway.adapters.openai_adapter import OpenAIAdapter
+from gateway.adapters.voyage_adapter import VoyageAdapter
 from gateway.exceptions import (
     BudgetExhaustedError,
     ContractNotFoundError,
@@ -53,11 +54,21 @@ class GatewayResult:
     attempts: int
 
 
+@dataclass(frozen=True, slots=True)
+class GatewayEmbeddingResult:
+    """Result returned by a successful gateway embedding execution."""
+
+    embeddings: list[list[float]]
+    call_record: LLMCallRecord
+    tokens_in: int
+
+
 # Default provider adapter registry
 DEFAULT_ADAPTERS: dict[str, BaseModelAdapter] = {
     "anthropic": AnthropicAdapter(),
     "openai": OpenAIAdapter(),
     "google": GoogleAdapter(),
+    "voyage": VoyageAdapter(),
 }
 
 # Override registry for testing
@@ -300,6 +311,141 @@ def run(
     raise SchemaValidationError(
         f"Model output schema validation failed after repair: {repair_error}"
     )
+
+
+def embed(
+    texts: list[str],
+    ctx: ExecutionContext | None = None,
+    task_id: str = "p2.embed.v1",
+    model_id: str = "voyage-4-large",
+    dims: int = 1024,
+    input_type: str = "document",
+    dataclass: str = "PUBLIC",
+    pipeline_version: str = "p2.embedder@0.1.0|approx_tok_v1|voyage-4-large|1024",
+) -> GatewayEmbeddingResult:
+    """Execute vector embedding through the Model Gateway.
+
+    Rules (Session S06 Directive #7):
+    - Strict model pinning: endpoint model_id must match requested model_id and dims.
+    - No heterogeneous failover: retry with exponential backoff on transient errors, then fail loudly.
+    - If called from a tenant context (ctx.tenant_id is not None), dataclass is escalated to
+      TENANT_CONFIDENTIAL so residency rules apply.
+    - Records an LLMCallRecord with cost, tokens, and hashes (never privileged bodies).
+    """
+    import hashlib
+
+    if not texts:
+        raise ValueError("Cannot embed empty list of texts.")
+
+    # Directive #7: embed_query from tenant context must send TENANT_CONFIDENTIAL
+    tenant_id = ctx.tenant_id if ctx else None
+    matter_id = ctx.matter_id if ctx else None
+    effective_dataclass = "TENANT_CONFIDENTIAL" if tenant_id else dataclass
+    req_dataclass_level = DATACLASS_HIERARCHY.get(effective_dataclass, 1)
+
+    # 1. Look up endpoint matching the generation's model_id
+    endpoints = list(
+        ModelEndpoint.objects.filter(
+            health__in=["UP", "DEGRADED"],
+            model_id=model_id,
+        )
+    )
+
+    qualified: list[ModelEndpoint] = []
+    for ep in endpoints:
+        ep_dataclass_level = DATACLASS_HIERARCHY.get(ep.data_class_max, 0)
+        if ep_dataclass_level < req_dataclass_level:
+            continue
+        # Verify residency fail-closed
+        residency_policy = ctx.residency_policy if ctx else "ANY"
+        if residency_policy == "IN_ONLY" and ep.processing_geo != "IN":
+            continue
+        qualified.append(ep)
+
+    if not qualified:
+        raise NoQualifiedEndpointError(
+            f"No qualified endpoint for model '{model_id}' (dims={dims}) matching dataclass '{effective_dataclass}'."
+        )
+
+    endpoint = qualified[0]
+    adapter = _get_adapter(endpoint.provider)
+
+    # 2. Retry with backoff (Directive #7: retry with backoff and then fail loudly)
+    max_retries = 3
+    last_exc: Exception | None = None
+    start_time = time.monotonic()
+    resp = None
+
+    for attempt in range(max_retries):
+        try:
+            resp = adapter.embed(
+                endpoint=endpoint,
+                texts=texts,
+                dims=dims,
+                input_type=input_type,
+            )
+            break
+        except Exception as exc:
+            last_exc = exc
+            if attempt < max_retries - 1:
+                time.sleep(0.05 * (2**attempt))
+
+    if resp is None:
+        raise RuntimeError(
+            f"Embedding task failed after {max_retries} attempts: {last_exc}"
+        ) from last_exc
+
+    latency_ms = int((time.monotonic() - start_time) * 1000)
+
+    # Calculate cost
+    price = endpoint.price or {}
+    in_per_mtok = decimal.Decimal(str(price.get("in_per_mtok", 0.12)))
+    usd = ((decimal.Decimal(resp.tokens_in) * in_per_mtok) / decimal.Decimal(1_000_000)).quantize(
+        decimal.Decimal("0.000001")
+    )
+
+    # 3. Write LLMCallRecord
+    call_id = mint_ulid()
+    if effective_dataclass in ("TENANT_CONFIDENTIAL", "PRIVILEGED"):
+        inputs_ref = f"sha256:{hashlib.sha256(json.dumps(texts).encode()).hexdigest()}"
+        outputs_ref = f"count:{len(resp.embeddings)}"
+    else:
+        inputs_ref = f"count:{len(texts)}"
+        outputs_ref = f"count:{len(resp.embeddings)}"
+
+    call_record = LLMCallRecord.objects.create(
+        call_id=call_id,
+        trace_id=f"trc_{call_id}",
+        task_id=task_id,
+        endpoint_id=endpoint.endpoint_id,
+        pipeline_version=pipeline_version,
+        tenant_id=tenant_id,
+        matter_id=matter_id,
+        dataclass=effective_dataclass,
+        residency=endpoint.processing_geo,
+        processing_geo=endpoint.processing_geo,
+        purpose=f"embedding:{input_type}",
+        input_chars=sum(len(t) for t in texts),
+        output_chars=len(resp.embeddings) * dims * 4,
+        tokens_in=resp.tokens_in,
+        tokens_out=0,
+        cache_read_tokens=0,
+        usd=usd,
+        latency_ms=latency_ms,
+        schema_valid=True,
+        repaired=False,
+        inputs_ref=inputs_ref,
+        outputs_ref=outputs_ref,
+    )
+
+    log_gateway_call(call_record, effective_dataclass)
+
+    return GatewayEmbeddingResult(
+        embeddings=resp.embeddings,
+        call_record=call_record,
+        tokens_in=resp.tokens_in,
+    )
+
 
 
 def validate_json(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from typing import Any
 
-from gateway.adapters.base import BaseModelAdapter, LLMResponse
+from gateway.adapters.base import BaseModelAdapter, EmbeddingResponse, LLMResponse
 from gateway.models import ModelEndpoint
 
 
@@ -65,3 +65,39 @@ class FakeModelAdapter(BaseModelAdapter):
             tokens_out=50,
             cache_read_tokens=0,
         )
+
+    def embed(
+        self,
+        endpoint: ModelEndpoint,
+        texts: list[str],
+        dims: int = 1024,
+        input_type: str = "document",
+    ) -> EmbeddingResponse:
+        """Deterministically generate unit vectors for given texts based on sha256 hash."""
+        import hashlib
+        import random
+
+        self.calls.append(
+            {
+                "action": "embed",
+                "endpoint_id": endpoint.endpoint_id,
+                "texts_count": len(texts),
+                "dims": dims,
+                "input_type": input_type,
+            }
+        )
+
+        results: list[list[float]] = []
+        total_tokens = 0
+        for text in texts:
+            # Deterministic pseudo-random seed from sha256
+            seed = hashlib.sha256(text.encode("utf-8")).digest()
+            rng = random.Random(seed)
+            raw = [rng.gauss(0.0, 1.0) for _ in range(dims)]
+            norm = sum(x * x for x in raw) ** 0.5
+            unit = [x / norm for x in raw] if norm > 0 else [0.0] * dims
+            results.append(unit)
+            total_tokens += max(1, len(text.split()))
+
+        return EmbeddingResponse(embeddings=results, tokens_in=total_tokens)
+
