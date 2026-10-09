@@ -31,9 +31,16 @@ US_RE = re.compile(r"\bu/s\b", re.IGNORECASE)
 RW_RE = re.compile(r"\br/w\b", re.IGNORECASE)
 
 # NCLT / NCLAT case numbers
-# e.g. CP(IB) No. 1234/MB/2019, CP (IB) 188 of 2026, CP(IB)/66/7/AMR/2024, CP(IB)/247(MB)/2026, RCP (IB) 6/MB/2023
+# e.g. CP(IB) No. 1234/MB/2019, CP (IB) 188 of 2026, CP(IB)/66/7/AMR/2024, CP(IB)/247(MB)/2026
 CPIB_RE = re.compile(
-    r"\b(?:R?\.?C\.?P\.?|Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(\d+)(?:[/\s]+(\d+))?(?:[/\s(]*([A-Za-z]+)[/\s)]*)?[\s/of]*(\d{4})\b",
+    r"\b(?:C\.?P\.?|Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(\d+)(?:[/\s]+(\d+))?(?:[/\s(]*([A-Za-z]+)[/\s)]*)?[\s/of]*(\d{4})\b",
+    re.IGNORECASE,
+)
+
+# Restoration Company Petitions: RCP (IB)
+# e.g. RCP (IB) 6/MB/2023, RCP(IB) No. 12/2022
+RCPIB_RE = re.compile(
+    r"\b(?:R\.?C\.?P\.?|Restoration\s+Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(\d+)(?:[/\s]+(\d+))?(?:[/\s(]*([A-Za-z]+)[/\s)]*)?[\s/of]*(\d{4})\b",
     re.IGNORECASE,
 )
 COMP_APP_RE = re.compile(
@@ -123,6 +130,14 @@ def extract_legal_lexemes(text: str) -> list[str]:
             lexemes.add(f"cp_ib_{num}_{bench.lower()}_{yr}")
         lexemes.add(f"cp_ib_{num}_{yr}")
 
+    for m in RCPIB_RE.finditer(text):
+        num, bench, yr = m.group(1), m.group(3), m.group(4)
+        if bench and bench.lower() == "of":
+            bench = None
+        if bench:
+            lexemes.add(f"rcp_ib_{num}_{bench.lower()}_{yr}")
+        lexemes.add(f"rcp_ib_{num}_{yr}")
+
     for m in COMP_APP_RE.finditer(text):
         num, yr = m.group(1), m.group(2)
         lexemes.add(f"comp_app_at_{num}_{yr}")
@@ -153,6 +168,7 @@ def extract_query_lexemes(query_text: str) -> tuple[list[str], str]:
     remaining = SECTION_RE.sub(" ", remaining)
     remaining = PENAL_COMBO_RE.sub(" ", remaining)
     remaining = ARTICLE_RE.sub(" ", remaining)
+    remaining = RCPIB_RE.sub(" ", remaining)
     remaining = CPIB_RE.sub(" ", remaining)
     remaining = COMP_APP_RE.sub(" ", remaining)
     remaining = SCC_RE.sub(" ", remaining)

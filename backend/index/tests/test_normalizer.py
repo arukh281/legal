@@ -81,15 +81,35 @@ def test_extract_cpib_case_numbers() -> None:
     assert "cp_ib_247_mb_2026" in lex4
     assert "cp_ib_247_2026" in lex4
 
-    # Restoration Company Petition: RCP (IB) 6/MB/2023 (Exit check case)
-    lex5 = extract_legal_lexemes("In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored.")
-    assert "cp_ib_6_mb_2023" in lex5
-    assert "cp_ib_6_2023" in lex5
+    # Restoration Company Petition: RCP (IB) 6/MB/2023 emits rcp_ib_ lexemes, NOT cp_ib_
+    lex_rcp = extract_legal_lexemes("In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored.")
+    assert "rcp_ib_6_mb_2023" in lex_rcp
+    assert "rcp_ib_6_2023" in lex_rcp
+    assert "cp_ib_6_mb_2023" not in lex_rcp
+    assert "cp_ib_6_2023" not in lex_rcp
 
-    # Query extraction for CP (IB) 6/MB/2023 generates exact matching lexemes
-    q_lex, _ = extract_query_lexemes("CP (IB) 6/MB/2023")
-    assert "cp_ib_6_mb_2023" in q_lex
-    assert "cp_ib_6_2023" in q_lex
+    # Standard Company Petition: CP (IB) 6/MB/2023 emits cp_ib_ lexemes, NOT rcp_ib_
+    lex_cp = extract_legal_lexemes("Disposing of Company Petition CP (IB) 6/MB/2023.")
+    assert "cp_ib_6_mb_2023" in lex_cp
+    assert "cp_ib_6_2023" in lex_cp
+    assert "rcp_ib_6_mb_2023" not in lex_cp
+    assert "rcp_ib_6_2023" not in lex_cp
+
+    # Query extraction for CP (IB) 6/MB/2023 must NOT emit rcp_ib_ lexemes
+    q_cp, rem_cp = extract_query_lexemes("CP (IB) 6/MB/2023")
+    assert "cp_ib_6_mb_2023" in q_cp
+    assert "cp_ib_6_2023" in q_cp
+    assert "rcp_ib_6_mb_2023" not in q_cp
+    assert "rcp_ib_6_2023" not in q_cp
+    assert rem_cp == ""
+
+    # Query extraction for RCP (IB) 6/MB/2023 must NOT emit cp_ib_ lexemes
+    q_rcp, rem_rcp = extract_query_lexemes("RCP (IB) 6/MB/2023")
+    assert "rcp_ib_6_mb_2023" in q_rcp
+    assert "rcp_ib_6_2023" in q_rcp
+    assert "cp_ib_6_mb_2023" not in q_rcp
+    assert "cp_ib_6_2023" not in q_rcp
+    assert rem_rcp == ""
 
 
 def test_extract_query_lexemes_and_remaining() -> None:
@@ -180,3 +200,87 @@ def test_real_sql_roundtrip_directive_1() -> None:
             [chunk_header, chunk_text, lexemes],
         )
         assert cur.fetchone()[0] is True
+
+
+@pytest.mark.django_db
+def test_cpib_rcpib_mutual_exclusion_sql_roundtrip() -> None:
+    """Verify in real Postgres SQL that CP (IB) does NOT match RCP (IB), and vice versa."""
+    rcp_header = "NCLT Mumbai Bench | Restoration Order"
+    rcp_text = "The Section 7 application, RCP (IB) 6/MB/2023, is restored to its original number."
+    rcp_lexemes = extract_legal_lexemes(f"{rcp_header} {rcp_text}")
+    assert "rcp_ib_6_mb_2023" in rcp_lexemes
+    assert "cp_ib_6_mb_2023" not in rcp_lexemes
+
+    cp_header = "NCLT Mumbai Bench | Admission Order"
+    cp_text = "The Company Petition, CP (IB) 6/MB/2023, is admitted under Section 7."
+    cp_lexemes = extract_legal_lexemes(f"{cp_header} {cp_text}")
+    assert "cp_ib_6_mb_2023" in cp_lexemes
+    assert "rcp_ib_6_mb_2023" not in cp_lexemes
+
+    with connection.cursor() as cur:
+        # Build tsvector for RCP document
+        cur.execute(
+            """
+            SELECT (
+                setweight(to_tsvector('public.legal_en', %s), 'A') ||
+                setweight(to_tsvector('public.legal_en', %s), 'B') ||
+                setweight(array_to_tsvector(%s::text[]), 'C')
+            );
+            """,
+            [rcp_header, rcp_text, rcp_lexemes],
+        )
+        rcp_tsv = cur.fetchone()[0]
+
+        # Build tsvector for CP document
+        cur.execute(
+            """
+            SELECT (
+                setweight(to_tsvector('public.legal_en', %s), 'A') ||
+                setweight(to_tsvector('public.legal_en', %s), 'B') ||
+                setweight(array_to_tsvector(%s::text[]), 'C')
+            );
+            """,
+            [cp_header, cp_text, cp_lexemes],
+        )
+        cp_tsv = cur.fetchone()[0]
+
+        # Query CP (IB) 6/MB/2023:
+        # Must NOT match RCP document
+        cur.execute(
+            """
+            SELECT %s::tsvector @@ ('''cp_ib_6_mb_2023'''::tsquery || websearch_to_tsquery('public.legal_en', 'CP (IB) 6/MB/2023'));
+            """,
+            [rcp_tsv],
+        )
+        assert cur.fetchone()[0] is False, "Query for CP (IB) must NOT match RCP (IB) document"
+
+        # Query CP (IB) 6/MB/2023:
+        # MUST match CP document
+        cur.execute(
+            """
+            SELECT %s::tsvector @@ ('''cp_ib_6_mb_2023'''::tsquery || websearch_to_tsquery('public.legal_en', 'CP (IB) 6/MB/2023'));
+            """,
+            [cp_tsv],
+        )
+        assert cur.fetchone()[0] is True, "Query for CP (IB) must match CP (IB) document"
+
+        # Query RCP (IB) 6/MB/2023:
+        # MUST match RCP document
+        cur.execute(
+            """
+            SELECT %s::tsvector @@ ('''rcp_ib_6_mb_2023'''::tsquery || websearch_to_tsquery('public.legal_en', 'RCP (IB) 6/MB/2023'));
+            """,
+            [rcp_tsv],
+        )
+        assert cur.fetchone()[0] is True, "Query for RCP (IB) must match RCP (IB) document"
+
+        # Query RCP (IB) 6/MB/2023:
+        # Must NOT match CP document
+        cur.execute(
+            """
+            SELECT %s::tsvector @@ ('''rcp_ib_6_mb_2023'''::tsquery || websearch_to_tsquery('public.legal_en', 'RCP (IB) 6/MB/2023'));
+            """,
+            [cp_tsv],
+        )
+        assert cur.fetchone()[0] is False, "Query for RCP (IB) must NOT match CP (IB) document"
+

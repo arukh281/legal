@@ -502,10 +502,10 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ---
 
-### 2026-10-09 — Normalization Support for Restoration Company Petitions (`RCP (IB)`)
-- **Decision:** Extended `CPIB_RE` in `index/normalizer.py` to match `RCP (IB)` (Restoration Company Petition) case numbers in addition to `CP(IB)`.
-- **Reason:** Real NCLT/NCLAT orders refer to restoration petitions such as `RCP (IB) 6/MB/2023`. Normalizing these to canonical lexemes `cp_ib_6_mb_2023` and `cp_ib_6_2023` allows standard `CP (IB)` searches to resolve restoration proceedings reliably.
-- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §5.1; S06 Final Directive #3.
+### 2026-10-09 — Normalization Support for Restoration Company Petitions (`RCP (IB)`) Kept Distinct from `CP (IB)`
+- **Decision:** Matched `RCP (IB)` (Restoration Company Petition) case numbers separately via `RCPIB_RE` in `index/normalizer.py`, emitting dedicated `rcp_ib_<num>[_<bench>]_<yr>` lexemes rather than folding them into `cp_ib_` lexemes. A query for `CP (IB) 6/MB/2023` strictly does NOT match `RCP (IB) 6/MB/2023`, and a query for `RCP (IB) 6/MB/2023` strictly matches only restoration petitions.
+- **Reason:** A restoration application is legally and procedurally distinct from the original company petition. Preserving separate `rcp_ib_` lexemes prevents cross-contamination of citator treatment and case history between original petitions and restoration applications, maintaining precise lexical boundaries.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §5.1; S06 Follow-up Directive.
 
 ---
 

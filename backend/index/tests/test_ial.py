@@ -234,6 +234,38 @@ def test_search_lexical_more_relevant_ranks_first_and_tiebreak() -> None:
     assert tie_results[1].chunk_id == "chk_test_tie_z"
 
 
+def test_search_lexical_cpib_rcpib_mutual_exclusion() -> None:
+    """A query for 'CP (IB) 6/MB/2023' must NOT match 'RCP (IB) 6/MB/2023', and vice versa."""
+    _insert_chunk(
+        chunk_id="chk_test_cp_6",
+        work_id="wrk_test_cp_6",
+        context_header="NCLT Mumbai Bench Admission Order",
+        text="Company Petition CP (IB) 6/MB/2023 is admitted under Section 7 of the Code.",
+        anchor_ids=["wrk_test_cp_6/en#p1"],
+    )
+    _insert_chunk(
+        chunk_id="chk_test_rcp_6",
+        work_id="wrk_test_rcp_6",
+        context_header="NCLT Mumbai Bench Restoration Order",
+        text="The Section 7 application, RCP (IB) 6/MB/2023, is restored to its original number.",
+        anchor_ids=["wrk_test_rcp_6/en#p1"],
+    )
+
+    ial = IndexAccessLayer()
+
+    # Direction 1: Search for CP (IB) 6/MB/2023
+    cp_hits = ial.search(IndexQuery(mode="LEXICAL", text="CP (IB) 6/MB/2023", k=10))
+    cp_hit_ids = {h.chunk_id for h in cp_hits}
+    assert "chk_test_cp_6" in cp_hit_ids, "CP query must match CP chunk"
+    assert "chk_test_rcp_6" not in cp_hit_ids, "CP query must NOT match RCP chunk"
+
+    # Direction 2: Search for RCP (IB) 6/MB/2023
+    rcp_hits = ial.search(IndexQuery(mode="LEXICAL", text="RCP (IB) 6/MB/2023", k=10))
+    rcp_hit_ids = {h.chunk_id for h in rcp_hits}
+    assert "chk_test_rcp_6" in rcp_hit_ids, "RCP query must match RCP chunk"
+    assert "chk_test_cp_6" not in rcp_hit_ids, "RCP query must NOT match CP chunk"
+
+
 def test_search_lexical_filters() -> None:
     """Lexical search filters apply strictly to court_ids, doc_types, dates, and tags."""
     _insert_chunk(

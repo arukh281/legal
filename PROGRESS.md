@@ -461,8 +461,9 @@ uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 
   - Active index expression states: 154
   - Chunks with duplicate or out-of-order anchors: 0 (verified 100% clean across all 2,706 rows)
 - **Exit Check Queries (IAL against promoted `g1`):**
-  - **Query `CP (IB) 6/MB/2023`:**
-    - Hit 1: `chk_5K88NHJWQMZ4WM29YAMZY0T28S` (`wrk_01M3Y2TKNSKABZEC0BKMN4ZBDM/en#p16–p18`, score=0.1216)
+  - **Query `CP (IB) 6/MB/2023`:** 0 hits (strictly does not match restoration petition `RCP (IB)`).
+  - **Query `RCP (IB) 6/MB/2023`:**
+    - Hit 1: `chk_5K88NHJWQMZ4WM29YAMZY0T28S` (`wrk_01M3Y2TKNSKABZEC0BKMN4ZBDM/en#p16–p18`, score=0.4000)
       - Text: *"18. In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored to its original number."*
   - **Query `section 7` (differentiated scores & tiebreak):**
     - Hit 1: `chk_8BDQDH199ZKMX084BSMJGCMH6F` (`wrk_01M3Y2VEG8THQJKN5YB145XX06/en#p129`, score=3.3422)
