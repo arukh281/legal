@@ -50,8 +50,13 @@ ON CONFLICT (endpoint_id) DO NOTHING;
 """
 
 SQL_REVERSE = """
+DELETE FROM plc.chunk;
+DELETE FROM tpl.private_chunk;
+DELETE FROM plc.summary;
+DELETE FROM plc.index_expression_state;
 DELETE FROM ops.model_endpoint WHERE endpoint_id = 'ep_voyage_4_large';
 DELETE FROM ops.event_subscription WHERE consumer = 'index_pipeline';
+DELETE FROM ops.index_alias WHERE generation = 'g1';
 DELETE FROM ops.index_generation WHERE generation = 'g1';
 DELETE FROM ops.pipeline_version WHERE pipeline_version IN (
   'p2.chunker@0.1.0|det_v1',

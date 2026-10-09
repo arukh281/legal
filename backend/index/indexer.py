@@ -150,10 +150,10 @@ class IndexPipeline:
             if parse_id:
                 cur.execute(
                     """
-                    SELECT p.parse_id, p.parsed_doc_uri, p.quality_gate,
-                           m.court_id, m.decision_date, m.doc_type, m.title
+                    SELECT p.parse_id, p.parsed_doc_uri, p.gate,
+                           w.court_id, w.decision_date, p.doc_type, w.title
                     FROM plc.parse_run p
-                    JOIN plc.manifestation m ON m.work_id = p.work_id AND m.expression_key = p.expression_key
+                    JOIN plc.work w ON w.work_id = p.work_id
                     WHERE p.work_id = %s AND p.expression_key = %s AND p.parse_id = %s
                     LIMIT 1;
                     """,
@@ -162,11 +162,11 @@ class IndexPipeline:
             else:
                 cur.execute(
                     """
-                    SELECT p.parse_id, p.parsed_doc_uri, p.quality_gate,
-                           m.court_id, m.decision_date, m.doc_type, m.title
+                    SELECT p.parse_id, p.parsed_doc_uri, p.gate,
+                           w.court_id, w.decision_date, p.doc_type, w.title
                     FROM plc.parse_run p
-                    JOIN plc.manifestation m ON m.work_id = p.work_id AND m.expression_key = p.expression_key
-                    WHERE p.work_id = %s AND p.expression_key = %s AND p.superseded_by IS NULL
+                    JOIN plc.work w ON w.work_id = p.work_id
+                    WHERE p.work_id = %s AND p.expression_key = %s
                     ORDER BY p.parse_id DESC
                     LIMIT 1;
                     """,

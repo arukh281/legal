@@ -217,11 +217,12 @@ class IndexAccessLayer:
         combined_where.append(f"tsv @@ {tsquery_sql}")
 
         where_str = " AND ".join(combined_where)
-        all_params = list(params) + sql_params + [k]
+        all_params = (sql_params * 2) + list(params) + sql_params + [k]
 
         sql = f"""
         SELECT chunk_id, work_id, expression_key, anchor_ids, anchor_first, anchor_last,
-               chunk_kind, context_header, text, ts_rank_cd(tsv, {tsquery_sql}) AS score,
+               chunk_kind, context_header, text,
+               GREATEST(ts_rank_cd(tsv, {tsquery_sql}), ts_rank(tsv, {tsquery_sql})) AS score,
                court_id, decision_date, doc_type, binding_scope_tags, body
         FROM plc.{table_name}
         WHERE {where_str}
@@ -294,11 +295,11 @@ class IndexAccessLayer:
                 f"""
                 SELECT chunk_id, work_id, expression_key, anchor_ids, anchor_first, anchor_last,
                        chunk_kind, context_header, text,
-                       (1.0 - (embedding <=> %s::halfvec(1024))) AS score,
+                       (1.0 - ((embedding::halfvec(1024)) <=> %s::halfvec(1024))) AS score,
                        court_id, decision_date, doc_type, binding_scope_tags, body
                 FROM plc.{table_name}
                 {where_str}
-                ORDER BY embedding <=> %s::halfvec(1024)
+                ORDER BY (embedding::halfvec(1024)) <=> %s::halfvec(1024)
                 LIMIT %s;
                 """,
                 [vec_str] + list(params) + [vec_str, k],
@@ -335,8 +336,17 @@ class IndexAccessLayer:
             index_family=self.index_family, generation=gen
         ).first()
         if gen_record and gen_record.state in ("RETIRED", "ROLLED_BACK"):
-            # Resolve anchor_ids if possible
-            raise GenerationGone(generation=gen, anchor_ids=[])
+            anchors: list[str] = []
+            try:
+                with connection.cursor() as cur:
+                    cur.execute(
+                        f"SELECT unnest(anchor_ids) FROM plc.chunk_{gen} WHERE chunk_id = ANY(%s);",
+                        [ids],
+                    )
+                    anchors = [r[0] for r in cur.fetchall()]
+            except Exception:
+                pass
+            raise GenerationGone(generation=gen, anchor_ids=anchors)
 
         table_name = f"chunk_{gen}"
         if not ids:

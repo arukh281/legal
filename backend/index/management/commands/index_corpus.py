@@ -43,14 +43,12 @@ class Command(BaseCommand):
 
         # Query all candidate canonical works with accepted parses
         sql = """
-        SELECT DISTINCT ON (w.work_id, m.expression_key)
-               w.work_id, m.expression_key, p.parse_id
+        SELECT DISTINCT ON (w.work_id, p.expression_key)
+               w.work_id, p.expression_key, p.parse_id
         FROM plc.work w
-        JOIN plc.manifestation m ON m.work_id = w.work_id
-        JOIN plc.parse_run p ON p.work_id = w.work_id AND p.expression_key = m.expression_key
+        JOIN plc.parse_run p ON p.work_id = w.work_id
         WHERE w.status NOT IN ('MERGED', 'STUB')
-          AND p.superseded_by IS NULL
-        ORDER BY w.work_id, m.expression_key, p.parse_id DESC
+        ORDER BY w.work_id, p.expression_key, p.parse_id DESC
         """
         if limit > 0:
             sql += f" LIMIT {limit};"
