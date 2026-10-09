@@ -70,9 +70,7 @@ def create_generation_partition(
             """,
             [generation],
         )
-        cur.execute(
-            f"ALTER TABLE plc.{table_name} ALTER COLUMN embedding SET STORAGE PLAIN;"
-        )
+        cur.execute(f"ALTER TABLE plc.{table_name} ALTER COLUMN embedding SET STORAGE PLAIN;")
         cur.execute(
             f"""
             CREATE INDEX IF NOT EXISTS {table_name}_embedding_hnsw
@@ -150,7 +148,13 @@ def promote_generation(
     target_gen.eval_report_uri = eval_report_uri
     target_gen.gate_decision_id = gate_decision_id
     target_gen.save(
-        update_fields=["state", "promoted_at", "rollback_deadline", "eval_report_uri", "gate_decision_id"]
+        update_fields=[
+            "state",
+            "promoted_at",
+            "rollback_deadline",
+            "eval_report_uri",
+            "gate_decision_id",
+        ]
     )
 
     # 3. Upsert ops.index_alias
@@ -205,7 +209,9 @@ def rollback_generation(index_family: str) -> IndexAlias:
     """Atomically rollback alias to previous generation and emit promotion event."""
     alias = IndexAlias.objects.select_for_update().filter(index_family=index_family).first()
     if not alias or not alias.previous_generation:
-        raise RuntimeError(f"No previous generation available to rollback to for family '{index_family}'.")
+        raise RuntimeError(
+            f"No previous generation available to rollback to for family '{index_family}'."
+        )
 
     target_gen_id = alias.previous_generation
     current_gen_id = alias.generation
@@ -213,14 +219,14 @@ def rollback_generation(index_family: str) -> IndexAlias:
     now = timezone.now()
 
     # Mark current generation as ROLLED_BACK
-    IndexGeneration.objects.filter(
-        index_family=index_family, generation=current_gen_id
-    ).update(state="ROLLED_BACK")
+    IndexGeneration.objects.filter(index_family=index_family, generation=current_gen_id).update(
+        state="ROLLED_BACK"
+    )
 
     # Mark restored generation as LIVE
-    IndexGeneration.objects.filter(
-        index_family=index_family, generation=target_gen_id
-    ).update(state="LIVE", promoted_at=now)
+    IndexGeneration.objects.filter(index_family=index_family, generation=target_gen_id).update(
+        state="LIVE", promoted_at=now
+    )
 
     # Swap alias
     alias.generation = target_gen_id

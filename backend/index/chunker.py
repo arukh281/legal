@@ -150,7 +150,12 @@ class StructureChunker:
             hdr_anchor = hdr_node.get("anchor_id", f"{work_id}/{expr_key}#hdr")
             hdr_text = hdr_node.get("text", "").strip()
             cid = mint_deterministic_chunk_id(
-                tenant_id, expression_ref, "JUDG_HEADER", hdr_anchor, hdr_anchor, self.chunker_version
+                tenant_id,
+                expression_ref,
+                "JUDG_HEADER",
+                hdr_anchor,
+                hdr_anchor,
+                self.chunker_version,
             )
             chunks.append(
                 RawChunk(
@@ -178,7 +183,9 @@ class StructureChunker:
 
             raw_anchors = [n["anchor_id"] for n in combined_nodes if n.get("anchor_id")]
             order_anchors = dedupe_and_order_anchors(raw_anchors, order_map)
-            order_text = "\n\n".join(n.get("text", "").strip() for n in combined_nodes if n.get("text"))
+            order_text = "\n\n".join(
+                n.get("text", "").strip() for n in combined_nodes if n.get("text")
+            )
             cid = mint_deterministic_chunk_id(
                 tenant_id,
                 expression_ref,
@@ -214,7 +221,9 @@ class StructureChunker:
                 if n_tokens > HARD_MAX:
                     # Flush current group first if any
                     if current_nodes:
-                        chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
+                        chunks.append(
+                            self._close_group(current_nodes, tenant_id, expression_ref, order_map)
+                        )
                         current_nodes = []
                         current_tokens = 0
 
@@ -225,7 +234,9 @@ class StructureChunker:
 
                 # Grouping boundary: token count exceeds soft max
                 if current_tokens + n_tokens > SOFT_MAX and current_tokens >= SOFT_MIN:
-                    chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
+                    chunks.append(
+                        self._close_group(current_nodes, tenant_id, expression_ref, order_map)
+                    )
                     current_nodes = [node]
                     current_tokens = n_tokens
                 else:
@@ -233,7 +244,9 @@ class StructureChunker:
                     current_tokens += n_tokens
 
             if current_nodes:
-                chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
+                chunks.append(
+                    self._close_group(current_nodes, tenant_id, expression_ref, order_map)
+                )
 
             # 3. Operative order chunk (JUDG_OPERATIVE_ORDER)
             if ord_node:
@@ -423,13 +436,17 @@ class StructureChunker:
         # I1: Every input anchor must appear in at least one chunk
         for aid in all_input_anchors:
             if aid not in covered_anchors:
-                raise InvariantViolationError(f"Invariant I1 violated: Anchor '{aid}' is not covered.")
+                raise InvariantViolationError(
+                    f"Invariant I1 violated: Anchor '{aid}' is not covered."
+                )
 
         # I2: Anchors within each chunk must be non-empty, deduplicated, and in document order
         order_map = {a: i for i, a in enumerate(doc_anchor_order)} if doc_anchor_order else {}
         for ch in chunks:
             if not ch.anchor_ids:
-                raise InvariantViolationError(f"Invariant I2 violated: Chunk '{ch.chunk_id}' has no anchors.")
+                raise InvariantViolationError(
+                    f"Invariant I2 violated: Chunk '{ch.chunk_id}' has no anchors."
+                )
             if len(ch.anchor_ids) != len(set(ch.anchor_ids)):
                 raise InvariantViolationError(
                     f"Invariant I2 violated: Chunk '{ch.chunk_id}' has duplicate anchors: {ch.anchor_ids}"
@@ -458,4 +475,6 @@ class StructureChunker:
             for idx, p in enumerate(sorted_parts, 1):
                 part_k = p.body_extra.get("part", {}).get("k")
                 if part_k != idx:
-                    raise InvariantViolationError(f"Invariant I5 violated: Part numbering discontinuity for {aid}")
+                    raise InvariantViolationError(
+                        f"Invariant I5 violated: Part numbering discontinuity for {aid}"
+                    )

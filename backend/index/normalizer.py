@@ -50,7 +50,9 @@ COMP_APP_RE = re.compile(
 
 # Standard citations
 SCC_RE = re.compile(r"\((?P<year>\d{4})\)\s*(?P<vol>\d+)\s*SCC\s*(?P<page>\d+)", re.IGNORECASE)
-AIR_RE = re.compile(r"\bAIR\s+(?P<year>\d{4})\s+(?P<court>[A-Za-z]+)\s+(?P<page>\d+)\b", re.IGNORECASE)
+AIR_RE = re.compile(
+    r"\bAIR\s+(?P<year>\d{4})\s+(?P<court>[A-Za-z]+)\s+(?P<page>\d+)\b", re.IGNORECASE
+)
 INSC_RE = re.compile(r"\b(?P<year>\d{4})\s+INSC\s+(?P<num>\d+)\b", re.IGNORECASE)
 SCR_RE = re.compile(r"\[(?P<year>\d{4})\]\s*(?P<vol>\d+)\s*SCR\s*(?P<page>\d+)", re.IGNORECASE)
 

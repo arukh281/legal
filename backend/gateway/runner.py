@@ -447,7 +447,6 @@ def embed(
     )
 
 
-
 def validate_json(
     content: str, schema: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, bool, str | None]:

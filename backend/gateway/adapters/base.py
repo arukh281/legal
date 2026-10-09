@@ -52,4 +52,3 @@ class BaseModelAdapter(ABC):
         raise NotImplementedError(
             f"Embedding is not supported by adapter {self.__class__.__name__}"
         )
-

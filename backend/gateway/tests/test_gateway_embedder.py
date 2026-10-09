@@ -97,5 +97,3 @@ def test_private_chunk_embeddings_never_route_to_us_voyage_endpoint() -> None:
 
     with pytest.raises(NoQualifiedEndpointError, match="No qualified endpoint"):
         embed([private_chunk_text], ctx=ctx_tenant)
-
-

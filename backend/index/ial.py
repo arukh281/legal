@@ -116,9 +116,7 @@ class IndexAccessLayer:
         )
         return res.embeddings[0]
 
-    def _build_where_clause(
-        self, filters: dict[str, Any]
-    ) -> tuple[list[str], list[Any]]:
+    def _build_where_clause(self, filters: dict[str, Any]) -> tuple[list[str], list[Any]]:
         """Compile filters into SQL WHERE clauses and parameters."""
         clauses: list[str] = []
         params: list[Any] = []

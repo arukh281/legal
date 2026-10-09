@@ -45,12 +45,16 @@ class TestIndexAstGuards:
                     for alias in node.names:
                         root = alias.name.split(".")[0]
                         if root in FORBIDDEN_SDK_MODULES:
-                            violations.append(f"{py_file.name}:{node.lineno} imports '{alias.name}'")
+                            violations.append(
+                                f"{py_file.name}:{node.lineno} imports '{alias.name}'"
+                            )
                 elif isinstance(node, ast.ImportFrom):
                     if node.module:
                         root = node.module.split(".")[0]
                         if root in FORBIDDEN_SDK_MODULES:
-                            violations.append(f"{py_file.name}:{node.lineno} imports from '{node.module}'")
+                            violations.append(
+                                f"{py_file.name}:{node.lineno} imports from '{node.module}'"
+                            )
 
         assert not violations, f"Direct SDK imports forbidden in index: {violations}"
 

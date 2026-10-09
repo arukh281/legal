@@ -82,7 +82,9 @@ def test_extract_cpib_case_numbers() -> None:
     assert "cp_ib_247_2026" in lex4
 
     # Restoration Company Petition: RCP (IB) 6/MB/2023 emits rcp_ib_ lexemes, NOT cp_ib_
-    lex_rcp = extract_legal_lexemes("In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored.")
+    lex_rcp = extract_legal_lexemes(
+        "In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored."
+    )
     assert "rcp_ib_6_mb_2023" in lex_rcp
     assert "rcp_ib_6_2023" in lex_rcp
     assert "cp_ib_6_mb_2023" not in lex_rcp
@@ -283,4 +285,3 @@ def test_cpib_rcpib_mutual_exclusion_sql_roundtrip() -> None:
             [cp_tsv],
         )
         assert cur.fetchone()[0] is False, "Query for RCP (IB) must NOT match CP (IB) document"
-

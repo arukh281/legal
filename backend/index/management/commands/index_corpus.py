@@ -48,10 +48,14 @@ class Command(BaseCommand):
             from gateway.runner import set_adapter_override
 
             set_adapter_override("voyage", FakeModelAdapter())
-            self.stdout.write(self.style.WARNING("Using FakeModelAdapter (no external Voyage API calls)."))
+            self.stdout.write(
+                self.style.WARNING("Using FakeModelAdapter (no external Voyage API calls).")
+            )
 
         self.stdout.write(
-            self.style.NOTICE(f"=== Session S06: Indexing Corpus into Generation '{generation}' ===")
+            self.style.NOTICE(
+                f"=== Session S06: Indexing Corpus into Generation '{generation}' ==="
+            )
         )
 
         # Query all candidate canonical works with accepted parses

@@ -202,7 +202,9 @@ def test_search_lexical_more_relevant_ranks_first_and_tiebreak() -> None:
     ial = IndexAccessLayer()
     hits = ial.search(IndexQuery(mode="LEXICAL", text="Section 7", k=10))
 
-    sec7_hits = [h for h in hits if h.chunk_id in ("chk_test_sec7_primary", "chk_test_sec7_incidental")]
+    sec7_hits = [
+        h for h in hits if h.chunk_id in ("chk_test_sec7_primary", "chk_test_sec7_incidental")
+    ]
     assert len(sec7_hits) == 2
     # The more relevant chunk must rank FIRST with strictly higher score
     assert sec7_hits[0].chunk_id == "chk_test_sec7_primary"

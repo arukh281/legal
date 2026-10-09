@@ -100,4 +100,3 @@ class FakeModelAdapter(BaseModelAdapter):
             total_tokens += max(1, len(text.split()))
 
         return EmbeddingResponse(embeddings=results, tokens_in=total_tokens)
-

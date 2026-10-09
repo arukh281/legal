@@ -22,7 +22,11 @@ def test_structure_chunker_basic_narrative() -> None:
         "nodes": [
             {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 text."},
             {"anchor_id": "wrk_1/en#p2", "type": "paragraph", "text": "Paragraph 2 text."},
-            {"anchor_id": "wrk_1/en#ord", "type": "paragraph", "text": "Ordered that appeal is dismissed."},
+            {
+                "anchor_id": "wrk_1/en#ord",
+                "type": "paragraph",
+                "text": "Ordered that appeal is dismissed.",
+            },
         ],
         "doc_type": "JUDGMENT",
         "work_id": "wrk_1",
@@ -86,7 +90,11 @@ def test_short_order_whole() -> None:
     doc = {
         "nodes": [
             {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Short hearing held today."},
-            {"anchor_id": "wrk_1/en#ord", "type": "paragraph", "text": "Matter adjourned to 10th May."},
+            {
+                "anchor_id": "wrk_1/en#ord",
+                "type": "paragraph",
+                "text": "Matter adjourned to 10th May.",
+            },
         ],
         "doc_type": "ORDER",
         "work_id": "wrk_1",
@@ -140,9 +148,17 @@ def test_chunker_deduplicates_and_orders_anchor_ids() -> None:
     doc = {
         "nodes": [
             {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 first part."},
-            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 second part (same anchor)."},
+            {
+                "anchor_id": "wrk_1/en#p1",
+                "type": "paragraph",
+                "text": "Paragraph 1 second part (same anchor).",
+            },
             {"anchor_id": "wrk_1/en#p2", "type": "paragraph", "text": "Paragraph 2 text."},
-            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 duplicate trailing."},
+            {
+                "anchor_id": "wrk_1/en#p1",
+                "type": "paragraph",
+                "text": "Paragraph 1 duplicate trailing.",
+            },
             {"anchor_id": "wrk_1/en#ord", "type": "paragraph", "text": "Dismissed."},
         ],
         "doc_type": "JUDGMENT",
@@ -225,4 +241,3 @@ def test_invariant_i2_duplicate_or_out_of_order_raises() -> None:
             all_input_anchors=["wrk_1/en#p1", "wrk_1/en#p2"],
             doc_anchor_order=["wrk_1/en#p1", "wrk_1/en#p2"],
         )
-
