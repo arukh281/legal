@@ -25,7 +25,7 @@ class VoyageAdapter(BaseModelAdapter):
 
     def _get_client(self) -> Any:
         if self._client is None:
-            client_cls = getattr(voyageai, "Client")
+            client_cls = voyageai.Client  # type: ignore[attr-defined]
             self._client = client_cls(api_key=self.api_key)
         return self._client
 

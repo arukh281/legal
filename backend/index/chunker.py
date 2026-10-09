@@ -69,6 +69,18 @@ class RawChunk:
     body_extra: dict[str, Any] = field(default_factory=dict)
 
 
+def dedupe_and_order_anchors(raw_anchors: list[str], order_map: dict[str, int]) -> list[str]:
+    """Deduplicate anchor_ids and strictly preserve document order."""
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for a in raw_anchors:
+        if a and a not in seen:
+            seen.add(a)
+            deduped.append(a)
+    deduped.sort(key=lambda a: order_map.get(a, 999999))
+    return deduped
+
+
 class InvariantViolationError(Exception):
     """Raised when one of invariants I1-I6 is violated."""
 
@@ -102,6 +114,14 @@ class StructureChunker:
             raise InvariantViolationError(
                 f"Invariant I6 violated: Registry court '{court_id}' has no binding scope tags."
             )
+
+        # Collect unique document anchors in order of first appearance
+        doc_anchor_order: list[str] = []
+        for node in nodes:
+            aid = node.get("anchor_id")
+            if aid and aid not in doc_anchor_order:
+                doc_anchor_order.append(aid)
+        order_map = {a: i for i, a in enumerate(doc_anchor_order)}
 
         # Separate nodes into units: hdr, ord, and narrative body
         hdr_node: dict[str, Any] | None = None
@@ -153,12 +173,11 @@ class StructureChunker:
             total_tokens += approx_token_count(ord_node.get("text", ""))
 
         if total_tokens <= 700 and doc_type == "ORDER" and narrative_nodes:
-            # Emit SHORT_ORDER_WHOLE containing all narrative + ord nodes
-            combined_nodes = list(narrative_nodes)
-            if ord_node:
-                combined_nodes.append(ord_node)
+            # Emit SHORT_ORDER_WHOLE containing all non-header nodes in document order
+            combined_nodes = [n for n in nodes if n is not hdr_node]
 
-            order_anchors = [n["anchor_id"] for n in combined_nodes if n.get("anchor_id")]
+            raw_anchors = [n["anchor_id"] for n in combined_nodes if n.get("anchor_id")]
+            order_anchors = dedupe_and_order_anchors(raw_anchors, order_map)
             order_text = "\n\n".join(n.get("text", "").strip() for n in combined_nodes if n.get("text"))
             cid = mint_deterministic_chunk_id(
                 tenant_id,
@@ -190,13 +209,12 @@ class StructureChunker:
             for node in narrative_nodes:
                 text = node.get("text", "").strip()
                 n_tokens = approx_token_count(text)
-                aid = node.get("anchor_id", "")
 
                 # If single paragraph exceeds hard max (900 tokens), split into parts
                 if n_tokens > HARD_MAX:
                     # Flush current group first if any
                     if current_nodes:
-                        chunks.append(self._close_group(current_nodes, tenant_id, expression_ref))
+                        chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
                         current_nodes = []
                         current_tokens = 0
 
@@ -207,7 +225,7 @@ class StructureChunker:
 
                 # Grouping boundary: token count exceeds soft max
                 if current_tokens + n_tokens > SOFT_MAX and current_tokens >= SOFT_MIN:
-                    chunks.append(self._close_group(current_nodes, tenant_id, expression_ref))
+                    chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
                     current_nodes = [node]
                     current_tokens = n_tokens
                 else:
@@ -215,7 +233,7 @@ class StructureChunker:
                     current_tokens += n_tokens
 
             if current_nodes:
-                chunks.append(self._close_group(current_nodes, tenant_id, expression_ref))
+                chunks.append(self._close_group(current_nodes, tenant_id, expression_ref, order_map))
 
             # 3. Operative order chunk (JUDG_OPERATIVE_ORDER)
             if ord_node:
@@ -283,15 +301,20 @@ class StructureChunker:
         chunks = deduped_chunks
 
         # Invariant checks:
-        self._validate_invariants(chunks, all_input_anchors)
+        self._validate_invariants(chunks, all_input_anchors, doc_anchor_order)
 
         return chunks
 
     def _close_group(
-        self, nodes: list[dict[str, Any]], tenant_id: str | None, expression_ref: str
+        self,
+        nodes: list[dict[str, Any]],
+        tenant_id: str | None,
+        expression_ref: str,
+        order_map: dict[str, int],
     ) -> RawChunk:
         """Close an accumulated group into a JUDG_PARA_GROUP chunk."""
-        anchor_ids = [n["anchor_id"] for n in nodes if n.get("anchor_id")]
+        raw_anchors = [n["anchor_id"] for n in nodes if n.get("anchor_id")]
+        anchor_ids = dedupe_and_order_anchors(raw_anchors, order_map)
         text = "\n\n".join(n.get("text", "").strip() for n in nodes if n.get("text"))
         first_a = anchor_ids[0]
         last_a = anchor_ids[-1]
@@ -386,7 +409,10 @@ class StructureChunker:
         return parts
 
     def _validate_invariants(
-        self, chunks: list[RawChunk], all_input_anchors: list[str]
+        self,
+        chunks: list[RawChunk],
+        all_input_anchors: list[str],
+        doc_anchor_order: list[str] | None = None,
     ) -> None:
         """Validate invariants I1, I2, I5."""
         covered_anchors: set[str] = set()
@@ -399,10 +425,25 @@ class StructureChunker:
             if aid not in covered_anchors:
                 raise InvariantViolationError(f"Invariant I1 violated: Anchor '{aid}' is not covered.")
 
-        # I2: Anchors within each chunk must be non-empty and sequential
+        # I2: Anchors within each chunk must be non-empty, deduplicated, and in document order
+        order_map = {a: i for i, a in enumerate(doc_anchor_order)} if doc_anchor_order else {}
         for ch in chunks:
             if not ch.anchor_ids:
                 raise InvariantViolationError(f"Invariant I2 violated: Chunk '{ch.chunk_id}' has no anchors.")
+            if len(ch.anchor_ids) != len(set(ch.anchor_ids)):
+                raise InvariantViolationError(
+                    f"Invariant I2 violated: Chunk '{ch.chunk_id}' has duplicate anchors: {ch.anchor_ids}"
+                )
+            if order_map:
+                indices = [order_map.get(a, 999999) for a in ch.anchor_ids]
+                if indices != sorted(indices):
+                    raise InvariantViolationError(
+                        f"Invariant I2 violated: Chunk '{ch.chunk_id}' anchors are out of document order: {ch.anchor_ids}"
+                    )
+            if ch.anchor_first != ch.anchor_ids[0] or ch.anchor_last != ch.anchor_ids[-1]:
+                raise InvariantViolationError(
+                    f"Invariant I2 violated: Chunk '{ch.chunk_id}' anchor_first/last mismatch."
+                )
 
         # I5: Long paragraph parts joined in order equal the parent text exactly
         long_para_parts: dict[str, list[RawChunk]] = {}

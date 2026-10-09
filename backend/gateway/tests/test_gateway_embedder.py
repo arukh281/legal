@@ -8,9 +8,9 @@ Normative sources:
 
 from __future__ import annotations
 
-import pytest
-
 from collections.abc import Generator
+
+import pytest
 
 from gateway.adapters.fake import FakeModelAdapter
 from gateway.exceptions import NoQualifiedEndpointError
@@ -20,7 +20,7 @@ from workspace.authz import ExecutionContext
 
 
 @pytest.fixture(autouse=True)
-def fake_adapter() -> Generator[FakeModelAdapter, None, None]:
+def fake_adapter() -> Generator[FakeModelAdapter]:
     fake = FakeModelAdapter()
     set_adapter_override("voyage", fake)
     yield fake
@@ -68,3 +68,34 @@ def test_gateway_embed_tenant_residency_enforcement() -> None:
     # Fails closed because only US endpoint exists for voyage-4-large
     with pytest.raises(NoQualifiedEndpointError):
         embed(["Confidential matter query"], ctx)
+
+
+@pytest.mark.django_db
+def test_private_chunk_embeddings_never_route_to_us_voyage_endpoint() -> None:
+    """Item 4: Confirm private_chunk embeddings can never route to ep_voyage_4_large (US).
+
+    1. Seeded ep_voyage_4_large has processing_geo = 'US'.
+    2. Private chunks belong to tpl.private_chunk (tenant plane), where execution context
+       enforces residency_policy = 'IN_ONLY' (fail-closed, Non-negotiable #5 / 04 §2.11).
+    3. Model Gateway runner verifies residency fail-closed: since ep.processing_geo != 'IN',
+       no qualified endpoint is found and NoQualifiedEndpointError is raised.
+    """
+    endpoint = ModelEndpoint.objects.get(endpoint_id="ep_voyage_4_large")
+    assert endpoint.processing_geo == "US"
+    assert endpoint.model_id == "voyage-4-large"
+
+    private_chunk_text = "Privileged strategy memo discussing settlement offer of Rs 10 Crore."
+
+    # Standard tenant context for private_chunk indexing (default IN_ONLY residency)
+    ctx_tenant = ExecutionContext(
+        tenant_id="ten_01H00000000000000000000000",
+        user_id="usr_01H00000000000000000000000",
+        firm_role="ASSOCIATE",
+        dataclass="PUBLIC",
+        residency_policy="IN_ONLY",
+    )
+
+    with pytest.raises(NoQualifiedEndpointError, match="No qualified endpoint"):
+        embed([private_chunk_text], ctx=ctx_tenant)
+
+

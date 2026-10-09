@@ -17,7 +17,7 @@ pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=T
 
 
 @pytest.fixture(autouse=True)
-def ensure_migrated_state() -> Generator[None, None, None]:
+def ensure_migrated_state() -> Generator[None]:
     """Ensure database is at latest migration forward before and after the test."""
     yield
     call_command("migrate", "index", database="owner")

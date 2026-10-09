@@ -30,7 +30,7 @@ pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=T
 
 
 @pytest.fixture(autouse=True)
-def cleanup_test_partitions() -> Generator[None, None, None]:
+def cleanup_test_partitions() -> Generator[None]:
     """Teardown created test partitions and restore g1 state."""
     yield
     with connections["owner"].cursor() as cur:

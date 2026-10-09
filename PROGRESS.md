@@ -459,11 +459,17 @@ uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 
   - Total chunks inserted into `plc.chunk_g1`: 2,706
   - Quarantined: 2 (Invariant I1 anchor coverage violations)
   - Active index expression states: 154
+  - Chunks with duplicate or out-of-order anchors: 0 (verified 100% clean across all 2,706 rows)
 - **Exit Check Queries (IAL against promoted `g1`):**
-  - **Query `section 7`:**
-    - Hit 1: `chk_N1A9T1HKC6ZXN6KYRN09TM6Y8Z` (`wrk_01M3Y2VGNDRQ7RGW7K06S44HDZ/en#p47`, score=0.4000)
-    - Hit 2: `chk_Y2PYT2JR5X5GRNJWE8QRY9JSHJ` (`wrk_01M3Y2TKH1K2V4PSY1HN2CWAPQ/en#p5`, score=0.0608)
-    - Hit 3: `chk_9GSCKBRB58AAT7MQ5M6KCQY3PM` (`wrk_01M3Y2TJVW1MM4NAK2JKKMHN2X/en#p24`, score=0.0608)
+  - **Query `CP (IB) 6/MB/2023`:**
+    - Hit 1: `chk_5K88NHJWQMZ4WM29YAMZY0T28S` (`wrk_01M3Y2TKNSKABZEC0BKMN4ZBDM/en#p16–p18`, score=0.1216)
+      - Text: *"18. In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored to its original number."*
+  - **Query `section 7` (differentiated scores & tiebreak):**
+    - Hit 1: `chk_8BDQDH199ZKMX084BSMJGCMH6F` (`wrk_01M3Y2VEG8THQJKN5YB145XX06/en#p129`, score=3.3422)
+    - Hit 2: `chk_3R3AJ12902FZ2PY3AYN0E1ANHV` (`wrk_01M3Y2VC850YSD3QE4NY90FN3Q/en#p36–p38`, score=2.6392)
+    - Hit 3: `chk_EBC5DEE6GQQRPFMRZ581K3K8XK` (`wrk_01M3Y2VEG8THQJKN5YB145XX06/en#p32–p36`, score=2.4609)
+    - Hit 4: `chk_JEW20BQMQX9S647KN0ECDZG47M` (`wrk_01M3Y2VRR5268SKTX4GKDW97C7/en#p6`, score=2.1419)
+    - Hit 5: `chk_MSKKMFZ7P0JR0E2VX95RMFB3HH` (`wrk_01M3Y2VW60C8S73617APFN9PTV/en#p6`, score=2.1419)
   - **Query `CP(IB) 149 of 2023`:**
     - Hit 1: `chk_98A1XHY356M0BH2CJGD3PBWNZ4` (`wrk_01M3Y2TJ29AV6V8P7KZ33HNK33/en#p5–p8`, score=0.0608)
     - Hit 2: `chk_949FYB3EED6552JEZ7Y4XZP6QW` (`wrk_01M3Y2V5PEBHAYFF943QYGQ00M/en#p5–p7`, score=0.0608)
@@ -472,12 +478,17 @@ uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 
 ---
 
 ### 5. Stubs & Notes
-- **Hybrid RRF Fusion:** Deferred to P5 (S07); IAL exposes single-leg retrieval only.
-- **Model Gateway Real Voyage Embeddings:** Dev corpus was indexed with `FakeModelAdapter` (deterministic unit vectors) to avoid unapproved real Voyage API calls. Production/eval Voyage calls will run once approved in S08.
+- **Generation g1 Holds FAKE Embeddings (Dense Search Unusable):**
+  - Generation `g1` was indexed using `FakeModelAdapter` (deterministic unit vectors derived locally without external API calls) to comply with Non-negotiable #6 (no unapproved external API spend in dev).
+  - **Dense search is NOT usable for semantic retrieval** until a real-Voyage generation is built with partner approval in S08.
+  - Lexical search (FTS `public.legal_en` with weights A/B and legal lexemes at weight C) is 100% operational, authoritative, and deterministic.
+- **Hybrid RRF Fusion:** Deferred to P5 (S07); IAL exposes single-leg retrieval only (`LEXICAL` or `DENSE`).
+- **Private Chunk Data Residency:** Confirmed and tested that `tpl.private_chunk` embeddings under tenant `IN_ONLY` residency context fail closed (`NoQualifiedEndpointError`) and can never route to `ep_voyage_4_large` (US).
 - **Downstream Domain Phases (S07–S18):**
   - S07: Retrieval, Q&A with claims, source viewer (Demo 1)
-  - S08: Eval harness + gold store
+  - S08: Eval harness + gold store + real Voyage generation build
   - S09: Citator
+
 
 ---
 

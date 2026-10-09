@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import datetime
 import json
-
 from collections.abc import Generator
 
 import pytest
@@ -32,7 +31,7 @@ pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=T
 
 
 @pytest.fixture(autouse=True)
-def ensure_g1_and_cleanup() -> Generator[None, None, None]:
+def ensure_g1_and_cleanup() -> Generator[None]:
     """Ensure g1 partition and active alias exist, clean up test chunks afterwards."""
     # Ensure active alias points to g1
     with connections["owner"].cursor() as cur:
@@ -179,6 +178,60 @@ def test_search_lexical_basic_and_scoring() -> None:
     assert results[0].work_id == "wrk_test_1"
     assert results[0].score > 0.0
     assert "Section 7" in results[0].text
+
+
+def test_search_lexical_more_relevant_ranks_first_and_tiebreak() -> None:
+    """Item 2: Chunks with search terms in context header/body rank above incidental mentions, with tiebreak."""
+    # Chunk A: highly relevant to 'Section 7' (in header weight A and body weight B multiple times)
+    _insert_chunk(
+        chunk_id="chk_test_sec7_primary",
+        work_id="wrk_test_sec7_pri",
+        context_header="Supreme Court of India | Section 7 IBC Admission",
+        text="Application under Section 7 of the IBC filed by financial creditor. Section 7 default proved.",
+        anchor_ids=["wrk_test_sec7_pri/en#p1"],
+    )
+    # Chunk B: passing / incidental mention of 'section 7' (header has no mention, body has single mention)
+    _insert_chunk(
+        chunk_id="chk_test_sec7_incidental",
+        work_id="wrk_test_sec7_inc",
+        context_header="NCLT Procedural Adjournment Order",
+        text="Matter adjourned. Brief reference to notice under section 7 was noted.",
+        anchor_ids=["wrk_test_sec7_inc/en#p1"],
+    )
+
+    ial = IndexAccessLayer()
+    hits = ial.search(IndexQuery(mode="LEXICAL", text="Section 7", k=10))
+
+    sec7_hits = [h for h in hits if h.chunk_id in ("chk_test_sec7_primary", "chk_test_sec7_incidental")]
+    assert len(sec7_hits) == 2
+    # The more relevant chunk must rank FIRST with strictly higher score
+    assert sec7_hits[0].chunk_id == "chk_test_sec7_primary"
+    assert sec7_hits[1].chunk_id == "chk_test_sec7_incidental"
+    assert sec7_hits[0].score > sec7_hits[1].score
+
+    # Deterministic tiebreak: when score is identical, order by work_id ASC, anchor_first ASC
+    _insert_chunk(
+        chunk_id="chk_test_tie_z",
+        work_id="wrk_test_tie_z",
+        context_header="Identical Order Header",
+        text="Identical text body discussing specific section 999 terms.",
+        anchor_ids=["wrk_test_tie_z/en#p1"],
+    )
+    _insert_chunk(
+        chunk_id="chk_test_tie_a",
+        work_id="wrk_test_tie_a",
+        context_header="Identical Order Header",
+        text="Identical text body discussing specific section 999 terms.",
+        anchor_ids=["wrk_test_tie_a/en#p1"],
+    )
+
+    tie_hits = ial.search(IndexQuery(mode="LEXICAL", text="section 999", k=10))
+    tie_results = [h for h in tie_hits if h.chunk_id in ("chk_test_tie_a", "chk_test_tie_z")]
+    assert len(tie_results) == 2
+    # Equal scores break tie deterministically on work_id ASC
+    assert pytest.approx(tie_results[0].score, rel=1e-5) == tie_results[1].score
+    assert tie_results[0].chunk_id == "chk_test_tie_a"
+    assert tie_results[1].chunk_id == "chk_test_tie_z"
 
 
 def test_search_lexical_filters() -> None:

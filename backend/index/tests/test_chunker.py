@@ -133,3 +133,96 @@ def test_context_header_format() -> None:
     assert "¶¶ p45–p47" in header
     assert "Submissions" in header
     assert "cites: s. 7 IBC; (2021) 9 SCC 657" in header
+
+
+def test_chunker_deduplicates_and_orders_anchor_ids() -> None:
+    """Item 1: Chunker must deduplicate anchor_ids and strictly preserve document order."""
+    doc = {
+        "nodes": [
+            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 first part."},
+            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 second part (same anchor)."},
+            {"anchor_id": "wrk_1/en#p2", "type": "paragraph", "text": "Paragraph 2 text."},
+            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Paragraph 1 duplicate trailing."},
+            {"anchor_id": "wrk_1/en#ord", "type": "paragraph", "text": "Dismissed."},
+        ],
+        "doc_type": "JUDGMENT",
+        "work_id": "wrk_1",
+        "expression_key": "en",
+    }
+
+    chunker = StructureChunker()
+    chunks = chunker.chunk_document(doc)
+
+    # First chunk is narrative paragraph group
+    assert chunks[0].chunk_kind == "JUDG_PARA_GROUP"
+    # anchor_ids must be deduplicated and in document order [p1, p2], not [p1, p1, p2, p1]
+    assert chunks[0].anchor_ids == ["wrk_1/en#p1", "wrk_1/en#p2"]
+    assert chunks[0].anchor_first == "wrk_1/en#p1"
+    assert chunks[0].anchor_last == "wrk_1/en#p2"
+
+    # Short order with duplicate and out-of-order anchors
+    short_order_doc = {
+        "nodes": [
+            {"anchor_id": "wrk_1/en#hdr", "type": "header", "text": "NCLT Mumbai"},
+            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Hearing held."},
+            {"anchor_id": "wrk_1/en#p2", "type": "paragraph", "text": "Counsel heard."},
+            {"anchor_id": "wrk_1/en#p1", "type": "paragraph", "text": "Duplicate p1."},
+            {"anchor_id": "wrk_1/en#ord", "type": "paragraph", "text": "Adjourned."},
+        ],
+        "doc_type": "ORDER",
+        "work_id": "wrk_1",
+        "expression_key": "en",
+    }
+    order_chunks = chunker.chunk_document(short_order_doc)
+    short_order_chunk = [c for c in order_chunks if c.chunk_kind == "SHORT_ORDER_WHOLE"][0]
+    assert short_order_chunk.anchor_ids == ["wrk_1/en#p1", "wrk_1/en#p2", "wrk_1/en#ord"]
+    assert short_order_chunk.anchor_first == "wrk_1/en#p1"
+    assert short_order_chunk.anchor_last == "wrk_1/en#ord"
+
+
+def test_invariant_i2_duplicate_or_out_of_order_raises() -> None:
+    """I2: InvariantViolationError raised if a chunk has duplicate or out-of-order anchors."""
+    chunker = StructureChunker()
+
+    # Duplicate anchors raise
+    from index.chunker import RawChunk
+
+    dup_chunk = RawChunk(
+        chunk_id="chk_test1",
+        chunk_kind="JUDG_PARA_GROUP",
+        anchor_ids=["wrk_1/en#p1", "wrk_1/en#p1"],
+        anchor_first="wrk_1/en#p1",
+        anchor_last="wrk_1/en#p1",
+        text="text",
+        token_count=10,
+        rhetorical_role=None,
+        role_source="FALLBACK",
+        section_heading=None,
+    )
+    with pytest.raises(InvariantViolationError, match="duplicate anchors"):
+        chunker._validate_invariants(
+            chunks=[dup_chunk],
+            all_input_anchors=["wrk_1/en#p1"],
+            doc_anchor_order=["wrk_1/en#p1"],
+        )
+
+    # Out-of-order anchors raise
+    ooo_chunk = RawChunk(
+        chunk_id="chk_test2",
+        chunk_kind="JUDG_PARA_GROUP",
+        anchor_ids=["wrk_1/en#p2", "wrk_1/en#p1"],
+        anchor_first="wrk_1/en#p2",
+        anchor_last="wrk_1/en#p1",
+        text="text",
+        token_count=10,
+        rhetorical_role=None,
+        role_source="FALLBACK",
+        section_heading=None,
+    )
+    with pytest.raises(InvariantViolationError, match="out of document order"):
+        chunker._validate_invariants(
+            chunks=[ooo_chunk],
+            all_input_anchors=["wrk_1/en#p1", "wrk_1/en#p2"],
+            doc_anchor_order=["wrk_1/en#p1", "wrk_1/en#p2"],
+        )
+

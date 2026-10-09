@@ -81,6 +81,16 @@ def test_extract_cpib_case_numbers() -> None:
     assert "cp_ib_247_mb_2026" in lex4
     assert "cp_ib_247_2026" in lex4
 
+    # Restoration Company Petition: RCP (IB) 6/MB/2023 (Exit check case)
+    lex5 = extract_legal_lexemes("In view of the above, the Section 7 application, RCP (IB) 6/MB/2023, is restored.")
+    assert "cp_ib_6_mb_2023" in lex5
+    assert "cp_ib_6_2023" in lex5
+
+    # Query extraction for CP (IB) 6/MB/2023 generates exact matching lexemes
+    q_lex, _ = extract_query_lexemes("CP (IB) 6/MB/2023")
+    assert "cp_ib_6_mb_2023" in q_lex
+    assert "cp_ib_6_2023" in q_lex
+
 
 def test_extract_query_lexemes_and_remaining() -> None:
     """Verify separation of extracted lexemes and clean remaining search text."""

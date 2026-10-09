@@ -31,9 +31,9 @@ US_RE = re.compile(r"\bu/s\b", re.IGNORECASE)
 RW_RE = re.compile(r"\br/w\b", re.IGNORECASE)
 
 # NCLT / NCLAT case numbers
-# e.g. CP(IB) No. 1234/MB/2019, CP (IB) 188 of 2026, CP(IB)/66/7/AMR/2024, CP(IB)/247(MB)/2026
+# e.g. CP(IB) No. 1234/MB/2019, CP (IB) 188 of 2026, CP(IB)/66/7/AMR/2024, CP(IB)/247(MB)/2026, RCP (IB) 6/MB/2023
 CPIB_RE = re.compile(
-    r"\b(?:C\.?P\.?|Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(\d+)(?:[/\s]+(\d+))?(?:[/\s(]*([A-Za-z]+)[/\s)]*)?[\s/of]*(\d{4})\b",
+    r"\b(?:R?\.?C\.?P\.?|Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(\d+)(?:[/\s]+(\d+))?(?:[/\s(]*([A-Za-z]+)[/\s)]*)?[\s/of]*(\d{4})\b",
     re.IGNORECASE,
 )
 COMP_APP_RE = re.compile(

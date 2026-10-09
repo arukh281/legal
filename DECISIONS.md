@@ -481,12 +481,39 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** `ops.outbox.dispatch_pending_events` matches event types directly. Retaining both prefixed and unprefixed subscriptions caused each event to be processed twice by the index consumer.
 - **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §4; User Step 1.3 instruction.
 
----
-
 ### 2026-10-09 — Deterministic Disambiguation of Identical Paragraph Group Anchors
 - **Decision:** When a parsed document contains multiple paragraphs with identical anchor locators (e.g., duplicate "12." paragraph numbering in real tribunal orders), `StructureChunker` assigns sequential `part_k` counters to `mint_deterministic_chunk_id` for repeated tuples of `(chunk_kind, first_anchor, last_anchor)`.
 - **Reason:** Avoids primary key collisions on `plc.chunk(index_generation, chunk_id)` during batch corpus indexing while preserving 100% determinism, exact reconstruction, and invariants I1–I6.
 - **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §2.2, §5.2A.
+
+---
+
+### 2026-10-09 — Deduplication and Document Ordering of `anchor_ids` in Chunks
+- **Decision:** `StructureChunker` strictly deduplicates `anchor_ids` and sorts them according to their order of first appearance in the document (`doc_anchor_order`). Invariant I2 validates that no chunk carries duplicate or out-of-order anchors and that `anchor_first` and `anchor_last` match `anchor_ids[0]` and `anchor_ids[-1]`.
+- **Reason:** P1 parsed documents occasionally have repeated paragraph labels or multi-node blocks pointing to the same anchor. Retaining raw nodes caused 246 chunk rows to store duplicate and non-sequential anchor lists.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §5.2A; S06 Final Directive #1.
+
+---
+
+### 2026-10-09 — Lexical Search Deterministic Tiebreak and Query Scoring Enhancement
+- **Decision:** Lexical search in `IndexAccessLayer` orders results by `ORDER BY score DESC, work_id ASC, anchor_first ASC`. When legal lexemes are extracted from queries, the tsquery expression combines them with the full prose search query via `websearch_to_tsquery('public.legal_en', query.text)`.
+- **Reason:** `array_to_tsvector` stores lexemes at weight C without positional data, causing `ts_rank_cd` to evaluate to 0 and `ts_rank` to assign an identical 0.0608 score to all matching chunks when prose terms were stripped. Combining legal lexemes with full prose ensures weights A (header: 1.0) and B (body: 0.4) evaluate term frequency and cover density, properly ranking primary hits above incidental mentions, with deterministic tiebreaks on equal scores.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §2.5, §5.11a; S06 Final Directive #2.
+
+---
+
+### 2026-10-09 — Normalization Support for Restoration Company Petitions (`RCP (IB)`)
+- **Decision:** Extended `CPIB_RE` in `index/normalizer.py` to match `RCP (IB)` (Restoration Company Petition) case numbers in addition to `CP(IB)`.
+- **Reason:** Real NCLT/NCLAT orders refer to restoration petitions such as `RCP (IB) 6/MB/2023`. Normalizing these to canonical lexemes `cp_ib_6_mb_2023` and `cp_ib_6_2023` allows standard `CP (IB)` searches to resolve restoration proceedings reliably.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §5.1; S06 Final Directive #3.
+
+---
+
+### 2026-10-09 — Private Chunk Tenant Residency Fail-Closed Against US Endpoints
+- **Decision:** Private chunk embeddings (`tpl.private_chunk`) executed under tenant execution context with `residency_policy="IN_ONLY"` fail closed with `NoQualifiedEndpointError` when only US endpoints (`ep_voyage_4_large`) exist.
+- **Reason:** Prevents privileged or confidential tenant data from leaving Indian jurisdiction, strictly enforcing Non-negotiables §4 (#5) and §6.
+- **Doc Reference:** AGENTS.md §4 (#5), §6; `docs/mvp/04_stack_and_infra.md` §2.11; S06 Final Directive #4.
+
 
 
 

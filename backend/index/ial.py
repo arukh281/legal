@@ -190,28 +190,27 @@ class IndexAccessLayer:
         lexemes, remaining_text = extract_query_lexemes(query.text)
 
         # Build tsquery expression
-        tsquery_parts: list[str] = []
         sql_params: list[Any] = []
 
         if lexemes:
             # Combine lexemes with || (OR) so searching for s138 matches chunks having s138 or ancestors
             # Each lexeme is quoted and cast to tsquery: '''s138'''::tsquery
             lex_expr = " || ".join(f"'''{lex}'''::tsquery" for lex in lexemes)
-            tsquery_parts.append(f"({lex_expr})")
-
-        if remaining_text:
-            tsquery_parts.append("websearch_to_tsquery('public.legal_en', %s)")
-            sql_params.append(remaining_text)
-
-        if not tsquery_parts:
-            # Fallback if text was somehow stripped
+            if remaining_text:
+                # Both lexemes and remaining prose: match (lexemes OR full_query) AND remaining_prose
+                # This ensures weight C matches while weights A and B boost relevant chunks
+                tsquery_sql = f"((({lex_expr}) || websearch_to_tsquery('public.legal_en', %s)) && websearch_to_tsquery('public.legal_en', %s))"
+                sql_params.append(query.text)
+                sql_params.append(remaining_text)
+            else:
+                # Only legal lexeme(s) extracted (e.g. 'Section 7' or 'CP (IB) 6/MB/2023'):
+                # Match lexemes OR full prose so weights A and B are evaluated alongside weight C
+                tsquery_sql = f"(({lex_expr}) || websearch_to_tsquery('public.legal_en', %s))"
+                sql_params.append(query.text)
+        else:
+            # Plain prose query
             tsquery_sql = "websearch_to_tsquery('public.legal_en', %s)"
             sql_params.append(query.text)
-        elif len(tsquery_parts) == 1:
-            tsquery_sql = tsquery_parts[0]
-        else:
-            # AND combination: legal lexeme AND remaining query terms
-            tsquery_sql = f"({tsquery_parts[0]} && {tsquery_parts[1]})"
 
         combined_where = list(where_clauses)
         combined_where.append(f"tsv @@ {tsquery_sql}")
@@ -226,7 +225,7 @@ class IndexAccessLayer:
                court_id, decision_date, doc_type, binding_scope_tags, body
         FROM plc.{table_name}
         WHERE {where_str}
-        ORDER BY score DESC
+        ORDER BY score DESC, work_id ASC, anchor_first ASC
         LIMIT %s;
         """
 
