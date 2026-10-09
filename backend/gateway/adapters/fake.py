@@ -59,6 +59,43 @@ class FakeModelAdapter(BaseModelAdapter):
                 return item
             return LLMResponse(content=item, tokens_in=80, tokens_out=40)
 
+        if self.default_response == '{"status": "ok"}' and "evidence_chunks" in prompt:
+            import json
+            import re
+            try:
+                match = re.search(r'\{.*"evidence_chunks".*\}', prompt, re.DOTALL)
+                if match:
+                    payload = json.loads(match.group(0))
+                    chunks = payload.get("evidence_chunks", [])
+                    if chunks:
+                        first_chunk = chunks[0]
+                        anchor_id = first_chunk.get("anchor_id") or (
+                            first_chunk.get("anchor_ids", [""])[0] if first_chunk.get("anchor_ids") else ""
+                        )
+                        raw_text = first_chunk.get("text") or first_chunk.get("excerpt", "")
+                        sentences = [s.strip() for s in raw_text.split(".") if len(s.strip()) > 20]
+                        quote = sentences[0] if sentences else raw_text[:80].strip()
+                        canned = {
+                            "summary": f"Under primary authority ({anchor_id}), {quote}.",
+                            "in_corpus": True,
+                            "claims": [
+                                {
+                                    "text": f"Under established legal authority, {quote}.",
+                                    "claim_type": "LEGAL_PROPOSITION",
+                                    "anchor_id": anchor_id,
+                                    "quote": quote,
+                                    "support_type": "DIRECT",
+                                }
+                            ],
+                            "contrary_sweep": {
+                                "status": "LIMITED",
+                                "notes": "lexical only, no citator",
+                            },
+                        }
+                        return LLMResponse(content=json.dumps(canned), tokens_in=150, tokens_out=80)
+            except Exception:
+                pass
+
         return LLMResponse(
             content=self.default_response,
             tokens_in=100,

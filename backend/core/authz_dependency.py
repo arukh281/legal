@@ -26,6 +26,11 @@ User = get_user_model()
 class AuthzDependency(HttpBearer):
     """Ninja security dependency authenticating requests and binding ExecutionContext."""
 
+    def __call__(self, request: HttpRequest) -> Any:
+        if hasattr(request, "user") and request.user.is_authenticated:
+            return self.authenticate(request, "")
+        return super().__call__(request)
+
     def authenticate(self, request: HttpRequest, token: str) -> ExecutionContext | None:
         # 1. First check if request has Django session-authenticated user
         app_user: AppUser | None = None

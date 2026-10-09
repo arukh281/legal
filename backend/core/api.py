@@ -13,6 +13,7 @@ from ninja import NinjaAPI, Schema
 from ninja.errors import HttpError
 
 from core.authz_dependency import authz_required
+from surface.router_research import router as research_router
 from workspace.authz import ExecutionContext
 from workspace.models import AppUser
 
@@ -22,6 +23,8 @@ api = NinjaAPI(
     description="Corporate-law legal intelligence platform API",
     urls_namespace="api",
 )
+
+api.add_router("/research", research_router)
 
 
 class HealthResponse(Schema):

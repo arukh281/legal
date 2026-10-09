@@ -23,6 +23,7 @@ from django.utils import timezone
 from anchor_lib.ids import mint_ulid
 from gateway.adapters.anthropic_adapter import AnthropicAdapter
 from gateway.adapters.base import BaseModelAdapter, LLMResponse
+from gateway.adapters.fake import FakeModelAdapter
 from gateway.adapters.google_adapter import GoogleAdapter
 from gateway.adapters.openai_adapter import OpenAIAdapter
 from gateway.adapters.voyage_adapter import VoyageAdapter
@@ -69,6 +70,7 @@ DEFAULT_ADAPTERS: dict[str, BaseModelAdapter] = {
     "openai": OpenAIAdapter(),
     "google": GoogleAdapter(),
     "voyage": VoyageAdapter(),
+    "fake": FakeModelAdapter(),
 }
 
 # Override registry for testing

@@ -514,6 +514,22 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Prevents privileged or confidential tenant data from leaving Indian jurisdiction, strictly enforcing Non-negotiables §4 (#5) and §6.
 - **Doc Reference:** AGENTS.md §4 (#5), §6; `docs/mvp/04_stack_and_infra.md` §2.11; S06 Final Directive #4.
 
+---
+
+### 2026-10-10 — Session S07 Directives & Amendments (Research Q&A, Claims, Source Viewer)
+- **Decision:**
+  1. **Claim Verification Display Band:** Deterministic checks C0–C2 prove quote existence only; display band is labelled `"quote verified · uncalibrated preview"`, never plain `VERIFIED`. The exit check does not require all claims to be marked `VERIFIED`.
+  2. **Contrary Authority Sweep Status:** The contrary sweep reports status `LIMITED` (`"lexical only, no citator"`) instead of falsely attesting 0 adverse authorities.
+  3. **Closed-World Verifier Anchor Rejection:** The verifier strictly rejects any claim whose supporting anchor is not in the `EvidenceBundle` retrieved for that query (`OUT_OF_LEDGER` / `OUT_OF_BUNDLE`).
+  4. **Corpus-Verified Demo Questions:** The 3 demo IBC questions must be confirmed by querying the active corpus beforehand to guarantee exact anchor answers; the out-of-corpus question is retained.
+  5. **Synthesis Prompt Statute Grounding:** The prompt forbids stating statute content unless verbatim quoted from a retrieved anchor in the bundle.
+  6. **Untrusted Chunk Data & Prompt Injection Guard:** Chunks are passed as delimited untrusted data blocks (`<source_chunk>` tags); tested with a prompt-injection fixture.
+  7. **Dynamic Law Current To Date:** `law_current_to` is dynamically computed from the latest capture date in `plc.capture` across the corpus rather than hardcoded.
+  8. **Evaluation & Test Environment Separation:** Tests run strictly against `FakeModelAdapter`; exit check demonstration runs against real gateway endpoints (marked eval run).
+- **Reason:** User directives for Session S07 adhering to AGENTS.md §4 (Non-negotiables #3, #4, #6), docs/mvp/00_mvp_spec.md §2, and docs/10_P8_verification_evaluation.md §5.3.
+- **Doc Reference:** AGENTS.md §4; `docs/mvp/00_mvp_spec.md` §2; `docs/10_P8_verification_evaluation.md` §5.3; Session S07 Directives.
+
+
 
 
 

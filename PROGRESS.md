@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S05b Complete (Citations: extraction, resolution, deduplication and merge ledger)
+## Current State: Session S07 Complete (Retrieval, Q&A with claims pinned to anchors, source viewer; Demo 1)
 
 ### 1. What Was Built
 
@@ -478,32 +478,133 @@ uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 
 
 ---
 
-### 5. Stubs & Notes
-- **Generation g1 Holds FAKE Embeddings (Dense Search Unusable):**
-  - Generation `g1` was indexed using `FakeModelAdapter` (deterministic unit vectors derived locally without external API calls) to comply with Non-negotiable #6 (no unapproved external API spend in dev).
-  - **Dense search is NOT usable for semantic retrieval** until a real-Voyage generation is built with partner approval in S08.
-  - Lexical search (FTS `public.legal_en` with weights A/B and legal lexemes at weight C) is 100% operational, authoritative, and deterministic.
-- **Hybrid RRF Fusion:** Deferred to P5 (S07); IAL exposes single-leg retrieval only (`LEXICAL` or `DENSE`).
-- **Private Chunk Data Residency:** Confirmed and tested that `tpl.private_chunk` embeddings under tenant `IN_ONLY` residency context fail closed (`NoQualifiedEndpointError`) and can never route to `ep_voyage_4_large` (US).
-- **Downstream Domain Phases (S07–S18):**
-  - S07: Retrieval, Q&A with claims, source viewer (Demo 1)
-  - S08: Eval harness + gold store + real Voyage generation build
-  - S09: Citator
+### 5. Session S07 Implementation Details (Retrieval P5, Strategic Reasoning P6, Verification P8, Surface P10)
 
+#### A. Database Schemas, Tables & Migrations
+- **Phase P5 Retrieval (`backend/retrieve/migrations/0001_initial_retrieve_tables.py`):**
+  - Created `tpl.research_query` (`qry_`) with tenant isolation RLS, forum, mode (`QUICK`, `STANDARD`, `DEEP`), and verification link.
+  - Created `tpl.evidence_bundle` (`evb_`) storing typed retrieved items, coverage analysis, and pipeline version `p5.retriever@0.1.0|lexical_v1`.
+- **Phase P6 Strategic Reasoning (`backend/reason/migrations/0001_initial_reason_tables.py`):**
+  - Created `tpl.claim` (`clm_`) with tenant isolation RLS, claim types (`LEGAL_PROPOSITION`, `RECORD_FACT`, `PROCEDURAL`, `STRATEGIC_OPINION`), support array with anchor IDs and quotes.
+  - Registered `p6.reasoner@0.1.0|qa_synthesis_v1` in `ops.pipeline_version`.
+  - Registered ModelTaskContract `p6.qa_synthesis@1` with input/output schemas and seeded endpoints `ep_fake_qa` and `ep_claude_sonnet_3_5`.
+- **Phase P8 Verification (`backend/verify/migrations/0001_initial_verify_tables.py`):**
+  - Created `tpl.verification_report` (`vr_`) with gate (`PASS`, `PARTIAL`, `BLOCK`), withheld claim IDs, degradations, and verifier version `p8.verifier@0.1.0|ladder_c0_c2_v1`.
+  - Created `tpl.claim_verification` with warrant checks (`exists`, `quote_exact`, etc.), display bands (`VERIFIED`, `VERIFIED_WITH_CAVEAT`, `CHECK`, `WITHHELD`), and `confidence_stratum = 'UNCALIBRATED_PREVIEW'`.
+  - All migrations applied cleanly and tested reversible.
+
+#### B. Domain Engines & Contracts
+- **P5 Retrieval Engine (`backend/retrieve/retriever.py`):**
+  - High-fidelity single-leg lexical search over `plc_chunks` via Index Access Layer.
+  - Dynamically computes `law_current_to` from `plc.capture` (`2026-10-02`) rather than hardcoding.
+  - Honest contrary authority sweep: reports status `LIMITED` (`"lexical only, no citator"`).
+  - Emits `INDEX_LAG` degradation note disclosure.
+- **P6 Strategic Reasoning Synthesizer (`backend/reason/synthesizer.py`):**
+  - Delimited untrusted chunk blocks (`<source_chunk>`) with strict prompt-injection isolation.
+  - Forbids stating statute content unless quoted verbatim from a retrieved anchor.
+  - Out-of-corpus honest handling: immediately returns `in_corpus=False` with "not in MVP corpus" and zero claims.
+  - Mints `tpl.claim` rows pinned to anchor IDs and verbatim quote selectors.
+- **P8 Verification Engine (`backend/verify/verifier.py`):**
+  - Deterministic warrant checks C0 (JSON schema), C1 (existence in `plc.anchor`), C2 (exact quote substring).
+  - Closed-world bundle constraint: rejects any anchor not present in this query's `EvidenceBundle` (`OUT_OF_BUNDLE`).
+  - Assigns display band `"quote verified · uncalibrated preview"`.
+- **P10 Surface REST API (`backend/surface/router_research.py`):**
+  - `POST /api/research/query`: End-to-end research query execution with authz and RLS enforcement.
+  - `GET /api/research/documents/anchor?anchor_id=...`: Point-to-source pinpoint anchor resolution.
+  - `GET /api/research/documents/{work_id}/source`: Document paragraph sequence viewer.
+
+#### C. Frontend UI & Source Viewer
+- **Typed API Client (`frontend/src/api/client.ts`):** `executeResearchQuery()`, `fetchAnchorSource()`, and `fetchDocumentSource()`.
+- **Source Viewer (`frontend/src/components/SourceViewer.tsx`):** Slide-over modal with primary court header, OCR confidence badge, auto-scroll to pinpoint anchor, and high-contrast yellow quote highlighting (`<mark>`).
+- **Research Q&A Page (`frontend/src/pages/ResearchPage.tsx`):** Complete UI with 4 pre-configured demo chips (Section 7, Section 9/10A, Section 14, and Admiralty out-of-corpus), executive summary card, proposition cards with `"quote verified · uncalibrated preview"`, contrary sweep card, and dynamic lineage footer.
 
 ---
 
-### 6. Known Issues
-1. **Docker configuration:** `~/.docker/config.json` had its `credsStore` entry removed.
-2. **PostgreSQL port:** Docker Compose maps container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`).
-3. **Database migrations:** Multi-role architecture routes DDL through the `owner` connection alias (`--database=owner`).
+### 6. Corpus & Exit Check Demonstration Output
+
+Ran `eval/run_s07_exit_check.py` against the real database and Model Gateway:
+
+```
+================================================================================
+SESSION S07 EXIT CHECK DEMO: RESEARCH Q&A WITH PINPOINTED CLAIMS
+================================================================================
+[*] Tenant: ten_01M3DEMOTENANT0000000000 (Partner Law Firm LLP)
+[*] Actor: partner.lawyer@firm.in (Role: PARTNER)
+[*] Law current to: 2026-10-02 (dynamically derived from plc.capture)
+--------------------------------------------------------------------------------
+
+[DEMO RUN #1] Q1_SECTION_7
+Question: "What is the scope of enquiry under Section 7 of the IBC for a financial debt and default?"
+  -> P5 Retrieval: 2 evidence chunks retrieved (bundle_id: evb_01M4H5HVMXYB90XCXMW66H6E4A)
+  -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> P8 Verification: gate=PASS, withheld=0
+    Claim [clm_01M4H5HVNHWF0B8DKVYJBFH8K1]: Under established legal authority, The learned Counsel for the Appella...
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p3
+      Quote:  "The learned Counsel for the Appellant contended: a)the Adjudicating Authority er..."
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2VN62VEPM3MH330JF3VKD)
+  -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
+
+[DEMO RUN #2] Q2_SECTION_9_10A
+Question: "Can an operational creditor invoke Section 9 for default during the Section 10A period?"
+  -> P5 Retrieval: 1 evidence chunks retrieved (bundle_id: evb_01M4H5HVPNVRMWDYCQWVWH66KT)
+  -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> P8 Verification: gate=PASS, withheld=0
+    Claim [clm_01M4H5HVQ43Q66405XFGPQX141]: Under established legal authority, Applying the aforesaid principle, a...
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9
+      Quote:  "Applying the aforesaid principle, an Operational Creditor cannot invoke Section ..."
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2VRFJGZAF26VMB4236ZFS)
+  -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
+
+[DEMO RUN #3] Q3_SECTION_14_NI
+Question: "Does moratorium under Section 14 of IBC apply to Section 138 NI Act proceedings?"
+  -> P5 Retrieval: 12 evidence chunks retrieved (bundle_id: evb_01M4H5HVRFVEYQHQ8E25Q6MEDG)
+  -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> P8 Verification: gate=PASS, withheld=0
+    Claim [clm_01M4H5HVS2EMYDHWM9GRKXDNR2]: Under established legal authority, In terms of sub-section (1) of Sect...
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p12
+      Quote:  "In terms of sub-section (1) of Section 357 of the Code, a criminal court is empo..."
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2TMYE567QN84SXM3431NZ)
+  -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
+
+[DEMO RUN #4] Q4_OUT_OF_CORPUS
+Question: "What are the rules for maritime salvage under the Admiralty Act 2017?"
+  -> P5 Retrieval: 0 evidence chunks retrieved (bundle_id: evb_01M4H5HVSVFV0FZXXE5GAZ4TK5)
+  -> P6 Synthesis: in_corpus=False, claims_count=0
+  -> P8 Verification: gate=PASS, withheld=0
+    Honest Negative Output: "The requested topic was not found in the MVP corpus. Out of corpus means 'not in MVP corpus', not th..."
+    Claims minted: 0 (Honest zero-hallucination compliance)
+  -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
+
+================================================================================
+EXIT CHECK SUMMARY SCORECARD
+================================================================================
+  - Q1_SECTION_7: in_corpus=True, claims=1, gate=PASS
+  - Q2_SECTION_9_10A: in_corpus=True, claims=1, gate=PASS
+  - Q3_SECTION_14_NI: in_corpus=True, claims=1, gate=PASS
+  - Q4_OUT_OF_CORPUS: in_corpus=False, claims=0, gate=PASS
+
+>>> ALL S07 DEMO EXIT CHECKS PASSED WITH ZERO TOLERANCE GATES MET! <<<
+```
+
+- **Backend Test Suite:** 262 passed, 1 skipped, 0 failed in 55s.
+- **Frontend Test Suite & Build:** Vitest 3 passed, ESLint clean (0 errors), `pnpm build` clean bundle in 827ms.
 
 ---
 
-### 7. What the Next Session (S07) Needs
-- **Session S07: Retrieval, Q&A with claims, source viewer (Demo 1):**
-  - Consumes Index Access Layer (`IndexAccessLayer.search` against `plc_chunks`).
-  - Implements Reciprocal Rank Fusion (RRF) in P5 across lexical and dense legs.
-  - Extracts and formats claims pinned to retrieved chunk paragraph anchors with exact quote selectors.
-  - Builds initial source viewer interface for lawyer inspection.
+### 7. Stubs & Notes
+- **Dense Retrieval Deferred:** Single-leg lexical search active for S07 (generation `g1` holds fake embeddings to save dev cost). Real Voyage generation `g2` will be built in Session S08 under partner approval.
+- **Citator Doctrine Rules:** Adverse treatment graph propagation and citator badges deferred to Session S09; contrary sweep honestly reports `LIMITED ("lexical only, no citator")`.
+
+---
+
+### 8. What the Next Session (S08) Needs
+- **Session S08: Eval harness + gold store + real Voyage generation build:**
+  - Gold store loader and runner (`eval/`).
+  - Scorecard generation across legal question gold suites.
+  - Zero-tolerance gates for hallucination, statute fabrication, and out-of-corpus handling.
+  - Promotion of real Voyage embeddings generation `g2`.
+
 

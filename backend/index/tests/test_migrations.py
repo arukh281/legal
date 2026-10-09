@@ -133,3 +133,6 @@ def test_migrations_rollback_to_zero_and_forward() -> None:
         sub_types = {r[0] for r in cur.fetchall()}
 
     assert sub_types == {"doc.parsed.v1", "identity.merged.v1", "identity.split.v1"}
+
+    # Re-migrate all dependent apps to leave the test database fully migrated
+    call_command("migrate", database="owner")
