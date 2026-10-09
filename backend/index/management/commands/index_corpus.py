@@ -32,10 +32,23 @@ class Command(BaseCommand):
             default=0,
             help="Limit number of documents to index (0 = all).",
         )
+        parser.add_argument(
+            "--fake-embedder",
+            action="store_true",
+            default=True,
+            help="Use FakeModelAdapter to generate embeddings locally without external API calls.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         generation = options.get("generation", "g1")
         limit = options.get("limit", 0)
+
+        if options.get("fake_embedder", True):
+            from gateway.adapters.fake import FakeModelAdapter
+            from gateway.runner import set_adapter_override
+
+            set_adapter_override("voyage", FakeModelAdapter())
+            self.stdout.write(self.style.WARNING("Using FakeModelAdapter (no external Voyage API calls)."))
 
         self.stdout.write(
             self.style.NOTICE(f"=== Session S06: Indexing Corpus into Generation '{generation}' ===")

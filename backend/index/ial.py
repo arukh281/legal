@@ -275,20 +275,6 @@ class IndexAccessLayer:
         combined_where = list(where_clauses)
         where_str = f"WHERE {' AND '.join(combined_where)}" if combined_where else ""
 
-        all_params = [vec_str] + list(params) + [k]
-
-        sql = f"""
-        SET LOCAL hnsw.ef_search = 100;
-        SELECT chunk_id, work_id, expression_key, anchor_ids, anchor_first, anchor_last,
-               chunk_kind, context_header, text,
-               (1.0 - (embedding <=> %s::halfvec(1024))) AS score,
-               court_id, decision_date, doc_type, binding_scope_tags, body
-        FROM plc.{table_name}
-        {where_str}
-        ORDER BY embedding <=> %s::halfvec(1024)
-        LIMIT %s;
-        """
-
         with connection.cursor() as cur:
             cur.execute("SET LOCAL hnsw.ef_search = 100;")
             cur.execute(

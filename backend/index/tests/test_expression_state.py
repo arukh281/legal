@@ -11,14 +11,12 @@ Normative sources:
 
 from __future__ import annotations
 
-import datetime
-import json
 import pytest
 from django.db import connection
 
 from anchor_lib.ids import mint_id
 from index.indexer import IndexPipeline
-from index.models import Chunk, IndexExpressionState
+from index.models import IndexExpressionState
 
 pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
 

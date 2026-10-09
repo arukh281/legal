@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import datetime
 import json
-from typing import Any
+
+from collections.abc import Generator
 
 import pytest
 from django.db import connection, connections
@@ -24,14 +25,14 @@ from index.ial import (
     IndexQuery,
     UnsupportedFilterError,
 )
-from index.models import IndexAlias, IndexGeneration
+from index.models import IndexGeneration
 from index.normalizer import extract_legal_lexemes
 
 pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
 
 
 @pytest.fixture(autouse=True)
-def ensure_g1_and_cleanup():
+def ensure_g1_and_cleanup() -> Generator[None, None, None]:
     """Ensure g1 partition and active alias exist, clean up test chunks afterwards."""
     # Ensure active alias points to g1
     with connections["owner"].cursor() as cur:
@@ -275,14 +276,6 @@ def test_search_dense_explain_hnsw() -> None:
     """EXPLAIN query with enable_seqscan = off proves HNSW index scan is used."""
     query_vec = [0.0] * 1024
     vec_str = "[" + ",".join(str(x) for x in query_vec) + "]"
-
-    explain_sql = f"""
-    SET LOCAL enable_seqscan = off;
-    EXPLAIN SELECT chunk_id, (1.0 - ((embedding::halfvec(1024)) <=> %s::halfvec(1024))) AS score
-    FROM plc.chunk_g1
-    ORDER BY (embedding::halfvec(1024)) <=> %s::halfvec(1024)
-    LIMIT 5;
-    """
 
     with connection.cursor() as cur:
         cur.execute("SET LOCAL enable_seqscan = off;")

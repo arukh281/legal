@@ -244,6 +244,44 @@ class StructureChunker:
                     )
                 )
 
+        # Disambiguate any duplicate chunk_ids within the document deterministically
+        seen_ids: dict[str, int] = {}
+        deduped_chunks: list[RawChunk] = []
+        for ch in chunks:
+            count = seen_ids.get(ch.chunk_id, 0)
+            if count > 0:
+                new_cid = mint_deterministic_chunk_id(
+                    tenant_id,
+                    expression_ref,
+                    ch.chunk_kind,
+                    ch.anchor_first,
+                    ch.anchor_last,
+                    self.chunker_version,
+                    part_k=count + 1,
+                )
+                extra = dict(ch.body_extra)
+                extra["dup_k"] = count + 1
+                deduped_chunks.append(
+                    RawChunk(
+                        chunk_id=new_cid,
+                        chunk_kind=ch.chunk_kind,
+                        anchor_ids=ch.anchor_ids,
+                        anchor_first=ch.anchor_first,
+                        anchor_last=ch.anchor_last,
+                        text=ch.text,
+                        token_count=ch.token_count,
+                        rhetorical_role=ch.rhetorical_role,
+                        role_source=ch.role_source,
+                        section_heading=ch.section_heading,
+                        body_extra=extra,
+                    )
+                )
+            else:
+                deduped_chunks.append(ch)
+            seen_ids[ch.chunk_id] = count + 1
+
+        chunks = deduped_chunks
+
         # Invariant checks:
         self._validate_invariants(chunks, all_input_anchors)
 

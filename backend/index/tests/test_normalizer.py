@@ -127,7 +127,6 @@ def test_real_sql_roundtrip_directive_1() -> None:
         )
         vec_row = cur.fetchone()
         assert vec_row is not None
-        indexed_vec = vec_row[0]
 
         # 1. Exact query for 'section 138(1)(a)'
         q_lex, _ = extract_query_lexemes("section 138(1)(a)")

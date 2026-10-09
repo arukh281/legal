@@ -26,9 +26,9 @@ from django.utils import timezone
 
 from anchor_lib.ids import mint_id
 from gateway.runner import embed
-from index.chunker import InvariantViolationError, RawChunk, StructureChunker
+from index.chunker import InvariantViolationError, StructureChunker
 from index.headers import build_context_header
-from index.models import Chunk, IndexExpressionState
+from index.models import IndexExpressionState
 from index.normalizer import extract_legal_lexemes
 from index.storage import fetch_parsed_document
 from ops.models import EventOutbox
@@ -301,11 +301,11 @@ class IndexPipeline:
         for p_chunk in prepared_chunks:
             ch_raw = p_chunk["raw"]
             thash = p_chunk["text_hash"]
-            ch_bytes = hashlib.sha256(f"{ch_raw.chunk_id}|{thash}|{doc_seq}".encode("utf-8")).digest()
+            ch_bytes = hashlib.sha256(f"{ch_raw.chunk_id}|{thash}|{doc_seq}".encode()).digest()
             chunk_hashes.append(ch_bytes)
 
         xor_digest = functools.reduce(
-            lambda a, b: bytes(x ^ y for x, y in zip(a, b)), chunk_hashes, b"\x00" * 32
+            lambda a, b: bytes(x ^ y for x, y in zip(a, b, strict=True)), chunk_hashes, b"\x00" * 32
         )
 
         # 11. Atomic write to DB partition and event outbox
@@ -354,7 +354,7 @@ class IndexPipeline:
                 );
                 """
 
-                for p_chunk, emb in zip(prepared_chunks, embeddings):
+                for p_chunk, emb in zip(prepared_chunks, embeddings, strict=True):
                     c = p_chunk["raw"]
                     vec_str = "[" + ",".join(str(x) for x in emb) + "]"
                     body_json = json.dumps(c.body_extra)

@@ -10,14 +10,12 @@ Normative sources:
 
 from __future__ import annotations
 
-import datetime
 import pytest
 from django.db import connection
 
 from anchor_lib.ids import mint_id
 from index.consumer import handle_identity_merged, handle_identity_split
 from index.indexer import IndexPipeline
-from index.models import Chunk, IndexExpressionState
 from ops.models import EventOutbox
 
 pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
@@ -54,8 +52,6 @@ def test_stub_and_merged_works_are_skipped() -> None:
 
 def test_identity_merged_lifecycle() -> None:
     """Assert identity.merged.v1 deletes from_id chunks, sets status REKEYED, and emits removal event."""
-    pipeline = IndexPipeline()
-
     from_id = mint_id("wrk")
     to_id = mint_id("wrk")
 

@@ -8,6 +8,7 @@ Normative sources:
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import voyageai
 
@@ -20,11 +21,12 @@ class VoyageAdapter(BaseModelAdapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key or os.environ.get("VOYAGE_API_KEY", "")
-        self._client: voyageai.Client | None = None
+        self._client: Any = None
 
-    def _get_client(self) -> voyageai.Client:
+    def _get_client(self) -> Any:
         if self._client is None:
-            self._client = voyageai.Client(api_key=self.api_key)
+            client_cls = getattr(voyageai, "Client")
+            self._client = client_cls(api_key=self.api_key)
         return self._client
 
     def generate(

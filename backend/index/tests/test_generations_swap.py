@@ -10,6 +10,8 @@ Normative sources:
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import pytest
 from django.db import connection, connections
 
@@ -21,14 +23,14 @@ from index.generations import (
     promote_generation,
     rollback_generation,
 )
-from index.models import IndexAlias, IndexGeneration
+from index.models import IndexGeneration
 from ops.models import EventOutbox
 
 pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
 
 
 @pytest.fixture(autouse=True)
-def cleanup_test_partitions():
+def cleanup_test_partitions() -> Generator[None, None, None]:
     """Teardown created test partitions and restore g1 state."""
     yield
     with connections["owner"].cursor() as cur:

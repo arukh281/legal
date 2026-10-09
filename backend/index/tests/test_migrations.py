@@ -7,15 +7,17 @@ Normative sources:
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import pytest
 from django.core.management import call_command
-from django.db import connection, connections
+from django.db import connection
 
 pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
 
 
 @pytest.fixture(autouse=True)
-def ensure_migrated_state():
+def ensure_migrated_state() -> Generator[None, None, None]:
     """Ensure database is at latest migration forward before and after the test."""
     yield
     call_command("migrate", "index", database="owner")

@@ -94,9 +94,9 @@ def handle_event(event: dict[str, Any]) -> dict[str, Any]:
     """Generic dispatcher entrypoint matching ops.event_subscription."""
     event_type = event.get("type", "")
     if event_type == "doc.parsed.v1":
-        return handle_doc_parsed(event)
+        return dict(handle_doc_parsed(event))
     elif event_type == "identity.merged.v1":
-        return handle_identity_merged(event)
+        return dict(handle_identity_merged(event))
     elif event_type == "identity.split.v1":
-        return handle_identity_split(event)
+        return dict(handle_identity_split(event))
     return {"status": "SKIPPED", "reason": f"unhandled_event_type_{event_type}"}

@@ -9,7 +9,6 @@ Normative sources:
 from __future__ import annotations
 
 import datetime
-from typing import Any
 
 from django.db import connection, connections, transaction
 from django.utils import timezone

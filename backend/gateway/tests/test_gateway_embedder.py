@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import pytest
 
+from collections.abc import Generator
+
 from gateway.adapters.fake import FakeModelAdapter
 from gateway.exceptions import NoQualifiedEndpointError
 from gateway.models import LLMCallRecord, ModelEndpoint
@@ -18,7 +20,7 @@ from workspace.authz import ExecutionContext
 
 
 @pytest.fixture(autouse=True)
-def fake_adapter() -> FakeModelAdapter:
+def fake_adapter() -> Generator[FakeModelAdapter, None, None]:
     fake = FakeModelAdapter()
     set_adapter_override("voyage", fake)
     yield fake
