@@ -369,31 +369,129 @@ uv run python manage.py migrate parse --database=owner
 
 ---
 
-### 3. Stubs & Notes
-- **Downstream Domain Phases (S06–S18):**
-  - Indexing & Retrieval (`index`, `retrieve` / P2, P5): S06 will build chunks, FTS `legal_en`, embeddings (Voyage), pgvector generations + aliases, and Index Access Layer.
-  - Citator (`citator` / P3): S09.
-- **Model Gateway Real-API Smoke Test:**
-  - `test_real_llm_smoke` is marked `@pytest.mark.skipif` unless real API keys (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`) are present in the environment.
-- **OCR Engine Migration (S15):**
-  - Tesseract local engine configured for dev and CI; AWS Textract (ap-south-1) migration planned behind the same `OcrEngine` contract for production deployment in S15.
+### 2. Session S06 Implementation Details (Index: Chunks, FTS, pgvector, Generations & IAL)
+
+#### A. Database Schema & Migrations (`backend/index/migrations/`)
+- `0001_fts_legal_en.py`: text search configuration `public.legal_en` (copied from `english`).
+- `0002_ops_index_tables.py`: `ops.index_generation` and `ops.index_alias` with foreign keys and check constraints.
+- `0003_chunk_tables.py`: `plc.chunk` partitioned table by list (`index_generation`), with partition `plc.chunk_g1`, HNSW index on `((embedding::halfvec(1024)) halfvec_cosine_ops)`, GIN on `tsv`, GIN on `binding_scope_tags`, B-tree on `work_id`.
+- `0004_expression_state.py`: `plc.index_expression_state` table tracking `serial_key`, `accepted_parse_id`, `doc_seq`, `content_digest`, `enrichment_level`, `status` (`ACTIVE`, `QUARANTINED`, `SUPERSEDED_REV`, `REKEYED`), `last_quarantined_parse_id`, `quarantine_reasons`, `pipeline_version`, and `updated_at`.
+- `0005_summary_table.py`: `plc.summary` non-citable digest table.
+- `0006_private_chunk.py`: `tpl.private_chunk` table with forced RLS and tenant isolation policy (`current_setting('app.tenant_id')`), with partial HNSW index on `g1`.
+- `0007_seed_index_records.py`: seeds pipeline versions (`p2.chunker@0.1.0|det_v1`, `p2.embedder@0.1.0|approx_tok_v1|voyage-4-large|1024`, `p2.index@0.1.0|g1`), provisional `g1` in `ops.index_generation` (`state='BUILDING'`), model endpoint `ep_voyage_4_large`, and subscriptions.
+- `0008_grants.py`: grants on index tables to `app_rw`, `worker`, `plc_writer`.
+- `0009_fix_voyage_endpoint_and_subscriptions.py`: sets `ep_voyage_4_large` processing and storage geo to `US` to preserve tenant residency fail-closed checks; deduplicates index event subscriptions to canonical CloudEvent types (`doc.parsed.v1`, `identity.merged.v1`, `identity.split.v1`).
+
+#### B. Legal Normalizer & Lexeme Emission (`backend/index/normalizer.py`)
+- Regex-based extraction of legal entities:
+  - Section paths: `138(1)(a)`, `7(5)`, `s. 9`, `u/s 9` with ancestor emission (`s138`, `s138_1`, `s138_1_a`).
+  - Penal combos: `302/34`, `420/120B` (`s302`, `s34`, `s302_34`).
+  - Constitutional articles: `Art. 21A` (`art21`, `art21a`).
+  - Procedural abbreviations: `u/s` (`lex_u_s`), `r/w` (`lex_r_w`).
+  - Case numbers: `CP(IB) 149 of 2023`, `CP(IB) No. 1234/MB/2019`, `Company Appeal (AT)`.
+  - Neutral citations: `SCC`, `AIR`, `INSC`, `SCR`.
+- Indexed at weight C via `setweight(array_to_tsvector($lexemes::text[]), 'C')`.
+- Query parsing combines quoted tsquery terms for lexemes with `websearch_to_tsquery('public.legal_en', ...)` for remaining prose.
+
+#### C. Legal Chunker (`backend/index/chunker.py`)
+- `StructureChunker`:
+  - `JUDG_HEADER`: header chunk from title and court metadata.
+  - `SHORT_ORDER_WHOLE`: whole order if total tokens <= 700.
+  - `JUDG_PARA_GROUP`: paragraphs grouped along soft token boundaries (120–550 tokens).
+  - `JUDG_LONG_PARA_PART`: paragraphs exceeding hard max (900 tokens) split into parts under the parent paragraph anchor with `body.part = {"k": k, "n": n, "char_start": s, "char_end": e}` (Directive #3).
+  - `JUDG_OPERATIVE_ORDER`: operative order chunk.
+- Deterministic chunk ID minting (`mint_deterministic_chunk_id`) hashing `tenant_id|expression_ref|chunk_kind|first_anchor|last_anchor|chunker_version`.
+- Disambiguation: sequential `part_k` counters for identical `(chunk_kind, first_anchor, last_anchor)` tuples within a document to prevent PK collisions.
+- Strictly validates Invariants I1–I6 (coverage, contiguity, token bounds, part reconstruction, registry binding scope tags).
+
+#### D. Index Generations & Hot-Swapping (`backend/index/generations.py`)
+- `create_generation_partition(index_family, generation)`: dynamically creates partition table `plc.chunk_<gen>` with HNSW index, GIN indexes, and B-tree indexes.
+- `promote_generation(index_family, to_generation, reason)`: atomic promotion swap updating `ops.index_alias` and setting generation state to `LIVE`, emitting `index.generation.promoted.v1` to `ops.event_outbox`.
+- `rollback_generation(index_family)`: restores previous generation from alias history.
+
+#### E. Index Access Layer (`backend/index/ial.py`)
+- Single-leg retrieval only (`LEXICAL` or `DENSE`), returning raw, uncalibrated scores (`GREATEST(ts_rank_cd, ts_rank)` or cosine similarity `1 - distance`). Rejects hybrid mode with `ValueError` (fusion belongs to P5 / S07).
+- Supported filters: `court_ids`, `court_levels`, `doc_types`, `decided_on_or_before`, `decided_on_or_after`, `binding_scope_tags_any`, `work_ids`, `rights_classes`, `trust_labels`, `min_quality_gate`.
+- `get_chunks(ids, generation)`: raises `GenerationGone` carrying `anchor_ids` if generation is in state `RETIRED` or `ROLLED_BACK`.
+- `get_neighbours(anchor_id, before, after)`: retrieves contiguous surrounding chunks.
+- Dense search uses `SET LOCAL hnsw.ef_search = 100` and matches expression index `((embedding::halfvec(1024)) <=> %s::halfvec(1024))`.
+
+#### F. Ingestion & Event Consumer (`backend/index/consumer.py` & `backend/index/indexer.py`)
+- Subscribes to:
+  - `doc.parsed.v1`: triggers structural chunking, vector embedding, and atomic DB insertion.
+  - `identity.merged.v1`: tombstones chunks for duplicate work, updates `index_expression_state` to `REKEYED`, and emits `plc.chunk.removed.v1`.
+  - `identity.split.v1`: re-indexes survivor works and restores split targets.
+- Monotonic `doc_seq` assignment and ULID parse timestamp check to drop out-of-order/stale events.
 
 ---
 
-### 4. Known Issues
-1. **Docker configuration modification:** Recorded previously: `~/.docker/config.json` had its `credsStore` entry removed.
-2. **Host port 5432 conflict:** Docker Compose maps PostgreSQL container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`).
-3. **Host port 8000 conflict:** Python HTTP server on host port 8000; web port defaults to 8000 (configurable via `WEB_HOST_PORT`).
-4. **Procrastinate Django connector listen/notify:** Psycopg3 connection under Django connector runs with `--no-listen-notify`.
-5. **Database migrations require `--database=owner`:** Due to multi-role architecture, migration runner routes DDL through the `owner` connection alias.
+### 3. Verification & Commands
+```bash
+# Apply index migrations
+uv run python manage.py migrate index --database=owner
+
+# Test migration reversibility
+uv run python manage.py migrate index zero --database=owner
+uv run python manage.py migrate index --database=owner
+
+# Run index tests (31 tests)
+uv run pytest index/
+
+# Run full backend test suite (242 tests)
+uv run pytest
+
+# Check code formatting and typing
+uv run ruff check index gateway
+uv run mypy index gateway
+
+# Index corpus with local fake embedder (no real API calls)
+uv run python manage.py index_corpus --generation g1
+
+# Promote g1 to LIVE
+uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 --reason "S06_PROMOTION"
+```
 
 ---
 
-### 5. What the Next Session (S06) Needs
-- **Session S06: Index: chunks, FTS `legal_en`, embeddings, pgvector generations + aliases, Index Access Layer (IAL):**
-  - Consumes `doc.parsed.v1` events from `ops.event_outbox`.
-  - Chunking strategy rooted strictly in durable anchors (`anchor_id` + `quote_selector`).
-  - PostgreSQL 18 FTS config `legal_en` with custom stop words and legal stemmer.
-  - Vector embeddings (Voyage `halfvec` HNSW in pgvector).
-  - Dual generation index aliases with zero-downtime hot-swapping.
-  - Index Access Layer contract adhering to 01 §5.4.
+### 4. Corpus & Exit Check Output
+- **Corpus Indexing Results:**
+  - Canonical expressions indexed: 154
+  - Total chunks inserted into `plc.chunk_g1`: 2,706
+  - Quarantined: 2 (Invariant I1 anchor coverage violations)
+  - Active index expression states: 154
+- **Exit Check Queries (IAL against promoted `g1`):**
+  - **Query `section 7`:**
+    - Hit 1: `chk_N1A9T1HKC6ZXN6KYRN09TM6Y8Z` (`wrk_01M3Y2VGNDRQ7RGW7K06S44HDZ/en#p47`, score=0.4000)
+    - Hit 2: `chk_Y2PYT2JR5X5GRNJWE8QRY9JSHJ` (`wrk_01M3Y2TKH1K2V4PSY1HN2CWAPQ/en#p5`, score=0.0608)
+    - Hit 3: `chk_9GSCKBRB58AAT7MQ5M6KCQY3PM` (`wrk_01M3Y2TJVW1MM4NAK2JKKMHN2X/en#p24`, score=0.0608)
+  - **Query `CP(IB) 149 of 2023`:**
+    - Hit 1: `chk_98A1XHY356M0BH2CJGD3PBWNZ4` (`wrk_01M3Y2TJ29AV6V8P7KZ33HNK33/en#p5–p8`, score=0.0608)
+    - Hit 2: `chk_949FYB3EED6552JEZ7Y4XZP6QW` (`wrk_01M3Y2V5PEBHAYFF943QYGQ00M/en#p5–p7`, score=0.0608)
+    - Hit 3: `chk_E9RQC0D3573Y3EJH2ZH5SH5DAA` (`wrk_01M3Y2V5PEBHAYFF943QYGQ00M/en#p14–p16`, score=0.0608)
+
+---
+
+### 5. Stubs & Notes
+- **Hybrid RRF Fusion:** Deferred to P5 (S07); IAL exposes single-leg retrieval only.
+- **Model Gateway Real Voyage Embeddings:** Dev corpus was indexed with `FakeModelAdapter` (deterministic unit vectors) to avoid unapproved real Voyage API calls. Production/eval Voyage calls will run once approved in S08.
+- **Downstream Domain Phases (S07–S18):**
+  - S07: Retrieval, Q&A with claims, source viewer (Demo 1)
+  - S08: Eval harness + gold store
+  - S09: Citator
+
+---
+
+### 6. Known Issues
+1. **Docker configuration:** `~/.docker/config.json` had its `credsStore` entry removed.
+2. **PostgreSQL port:** Docker Compose maps container port 5432 to host port 5433 (`POSTGRES_HOST_PORT=5433`).
+3. **Database migrations:** Multi-role architecture routes DDL through the `owner` connection alias (`--database=owner`).
+
+---
+
+### 7. What the Next Session (S07) Needs
+- **Session S07: Retrieval, Q&A with claims, source viewer (Demo 1):**
+  - Consumes Index Access Layer (`IndexAccessLayer.search` against `plc_chunks`).
+  - Implements Reciprocal Rank Fusion (RRF) in P5 across lexical and dense legs.
+  - Extracts and formats claims pinned to retrieved chunk paragraph anchors with exact quote selectors.
+  - Builds initial source viewer interface for lawyer inspection.
+

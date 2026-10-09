@@ -460,6 +460,34 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Absence of a local Voyage tokenizer in Python environment. A deterministic counter provides stable, reproducible token bounds and estimates without network calls.
 - **Doc Reference:** Session S06 Directive #7.
 
+---
+
+### 2026-10-09 — IAL Single-Leg Retrieval and Deferral of Hybrid Fusion to P5 (S07)
+- **Decision:** The Index Access Layer (IAL) executes strictly single-leg queries (`LEXICAL` or `DENSE`), returning raw, uncalibrated scores per leg (`ts_rank_cd`/`ts_rank` or cosine distance `1 - distance`). Hybrid RRF and rank fusion are deleted from IAL and reserved strictly for P5 (S07). Any unsupported search mode raises `ValueError`.
+- **Reason:** Stack specification and `docs/mvp/03_data_model_and_contracts.md` §3.5 mandate that fusion belongs to retrieval orchestration (P5 in S07). Keeping IAL uncalibrated and single-leg prevents premature coupling and ensures raw score visibility.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.5; User Step 1.1 instruction.
+
+---
+
+### 2026-10-09 — Voyage AI Seeded Endpoint Processing and Storage Geo Set to `US`
+- **Decision:** Updated seeded `ep_voyage_4_large` endpoint in migration `0009_fix_voyage_endpoint_and_subscriptions.py` to set `processing_geo = 'US'` and `storage_geo = 'US'`.
+- **Reason:** Voyage AI processes and stores embedding requests in the United States without an in-India deployment. Accurately declaring `US` ensures the Model Gateway's tenant data residency policy (`IN_ONLY`) fails closed rather than silently breaching compliance boundaries.
+- **Doc Reference:** AGENTS.md §6; `docs/mvp/04_stack_and_infra.md` §2.5; User Step 1.2 instruction.
+
+---
+
+### 2026-10-09 — Index Event Subscriptions Deduplication
+- **Decision:** Removed redundant `plc.`-prefixed subscription rows (`plc.doc.parsed.v1`, `plc.identity.merged.v1`, `plc.identity.split.v1`) for consumer `index_pipeline` in migration `0009_fix_voyage_endpoint_and_subscriptions.py`, retaining only canonical unprefixed CloudEvent types (`doc.parsed.v1`, `identity.merged.v1`, `identity.split.v1`).
+- **Reason:** `ops.outbox.dispatch_pending_events` matches event types directly. Retaining both prefixed and unprefixed subscriptions caused each event to be processed twice by the index consumer.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §4; User Step 1.3 instruction.
+
+---
+
+### 2026-10-09 — Deterministic Disambiguation of Identical Paragraph Group Anchors
+- **Decision:** When a parsed document contains multiple paragraphs with identical anchor locators (e.g., duplicate "12." paragraph numbering in real tribunal orders), `StructureChunker` assigns sequential `part_k` counters to `mint_deterministic_chunk_id` for repeated tuples of `(chunk_kind, first_anchor, last_anchor)`.
+- **Reason:** Avoids primary key collisions on `plc.chunk(index_generation, chunk_id)` during batch corpus indexing while preserving 100% determinism, exact reconstruction, and invariants I1–I6.
+- **Doc Reference:** `docs/04_P2_enrichment_indexing.md` §2.2, §5.2A.
+
 
 
 
