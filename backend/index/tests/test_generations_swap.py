@@ -11,7 +11,7 @@ Normative sources:
 from __future__ import annotations
 
 import pytest
-from django.db import connection
+from django.db import connection, connections
 
 from index.generations import (
     GenerationNotFoundError,
@@ -24,10 +24,27 @@ from index.generations import (
 from index.models import IndexAlias, IndexGeneration
 from ops.models import EventOutbox
 
-pytestmark = pytest.mark.django_db(databases="__all__", transaction=True)
+pytestmark = pytest.mark.django_db(databases=["default", "owner"], transaction=True)
 
 
-@pytest.mark.django_db
+@pytest.fixture(autouse=True)
+def cleanup_test_partitions():
+    """Teardown created test partitions and restore g1 state."""
+    yield
+    with connections["owner"].cursor() as cur:
+        cur.execute("DROP TABLE IF EXISTS plc.chunk_g_test_1 CASCADE;")
+        cur.execute("DROP TABLE IF EXISTS plc.chunk_g2 CASCADE;")
+        cur.execute("DELETE FROM ops.index_alias WHERE index_family = 'plc_chunks';")
+        cur.execute("DELETE FROM ops.index_generation WHERE generation IN ('g_test_1', 'g2');")
+        cur.execute(
+            """
+            UPDATE ops.index_generation
+            SET state = 'BUILDING', promoted_at = NULL, rollback_deadline = NULL
+            WHERE generation = 'g1';
+            """
+        )
+
+
 def test_create_generation_partition() -> None:
     """Verify partition table creation with HNSW, GIN, and B-tree indexes."""
     gen = create_generation_partition(
@@ -53,7 +70,6 @@ def test_create_generation_partition() -> None:
     assert "chunk_g_test_1_work_id_idx" in index_names
 
 
-@pytest.mark.django_db
 def test_atomic_promotion_and_rollback() -> None:
     """Verify atomic promotion swap and subsequent rollback restoring previous generation."""
     # Ensure g1 and g2 partitions exist
@@ -111,14 +127,12 @@ def test_atomic_promotion_and_rollback() -> None:
     assert ev_rollback.data["reason"] == "ROLLBACK"
 
 
-@pytest.mark.django_db
 def test_index_not_ready_error_when_no_alias() -> None:
     """Verify IndexNotReadyError is raised when no active alias exists for family."""
     with pytest.raises(IndexNotReadyError):
         get_active_generation("nonexistent_family")
 
 
-@pytest.mark.django_db
 def test_promote_nonexistent_generation_raises() -> None:
     """Verify GenerationNotFoundError is raised when target generation does not exist."""
     with pytest.raises(GenerationNotFoundError):

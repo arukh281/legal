@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 @register_handler("index_pipeline", "doc.parsed.v1")
-@register_handler("index_pipeline", "plc.doc.parsed.v1")
 def handle_doc_parsed(event: dict[str, Any]) -> dict[str, Any]:
     """Handle doc.parsed.v1 event by indexing the parsed expression."""
     data = event.get("data", {})
@@ -49,7 +48,6 @@ def handle_doc_parsed(event: dict[str, Any]) -> dict[str, Any]:
 
 
 @register_handler("index_pipeline", "identity.merged.v1")
-@register_handler("index_pipeline", "plc.identity.merged.v1")
 def handle_identity_merged(event: dict[str, Any]) -> dict[str, Any]:
     """Handle identity.merged.v1: delete chunks of from_id, mark REKEYED, index to_id."""
     data = event.get("data", {})
@@ -72,7 +70,6 @@ def handle_identity_merged(event: dict[str, Any]) -> dict[str, Any]:
 
 
 @register_handler("index_pipeline", "identity.split.v1")
-@register_handler("index_pipeline", "plc.identity.split.v1")
 def handle_identity_split(event: dict[str, Any]) -> dict[str, Any]:
     """Handle identity.split.v1: re-index unmerged works with force=True."""
     data = event.get("data", {})
@@ -96,10 +93,10 @@ def handle_identity_split(event: dict[str, Any]) -> dict[str, Any]:
 def handle_event(event: dict[str, Any]) -> dict[str, Any]:
     """Generic dispatcher entrypoint matching ops.event_subscription."""
     event_type = event.get("type", "")
-    if event_type in ("doc.parsed.v1", "plc.doc.parsed.v1"):
+    if event_type == "doc.parsed.v1":
         return handle_doc_parsed(event)
-    elif event_type in ("identity.merged.v1", "plc.identity.merged.v1"):
+    elif event_type == "identity.merged.v1":
         return handle_identity_merged(event)
-    elif event_type in ("identity.split.v1", "plc.identity.split.v1"):
+    elif event_type == "identity.split.v1":
         return handle_identity_split(event)
     return {"status": "SKIPPED", "reason": f"unhandled_event_type_{event_type}"}

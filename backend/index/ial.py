@@ -58,7 +58,7 @@ class IndexQuery:
     query_id: str = "q_default"
     tenant_scope: dict[str, Any] = field(default_factory=lambda: {"plc": True})
     view: str = "CHUNK"
-    mode: str = "LEXICAL"  # LEXICAL, DENSE, HYBRID
+    mode: str = "LEXICAL"  # LEXICAL or DENSE
     text: str | None = None
     vector: list[float] | None = None
     query_instruction_id: str | None = None
@@ -89,7 +89,7 @@ class IndexHit:
 
 
 class IndexAccessLayer:
-    """Index Access Layer providing lexical, dense, and hybrid search across chunk partitions."""
+    """Index Access Layer providing single-leg (lexical or dense) search across chunk partitions."""
 
     def __init__(self, index_family: str = "plc_chunks") -> None:
         self.index_family = index_family
@@ -170,48 +170,10 @@ class IndexAccessLayer:
             return self._search_lexical(query, table_name, where_clauses, params, k)
         elif query.mode == "DENSE":
             return self._search_dense(query, table_name, where_clauses, params, k)
-        elif query.mode == "HYBRID":
-            # Reciprocal Rank Fusion (RRF k=60)
-            lexical_hits = self._search_lexical(query, table_name, where_clauses, params, k=min(k * 2, 200))
-            dense_hits = self._search_dense(query, table_name, where_clauses, params, k=min(k * 2, 200))
-
-            rrf_scores: dict[str, float] = {}
-            hits_by_id: dict[str, IndexHit] = {}
-
-            for rank, hit in enumerate(lexical_hits):
-                rrf_scores[hit.chunk_id] = rrf_scores.get(hit.chunk_id, 0.0) + (1.0 / (60 + rank + 1))
-                hits_by_id[hit.chunk_id] = hit
-
-            for rank, hit in enumerate(dense_hits):
-                rrf_scores[hit.chunk_id] = rrf_scores.get(hit.chunk_id, 0.0) + (1.0 / (60 + rank + 1))
-                hits_by_id[hit.chunk_id] = hit
-
-            sorted_chunk_ids = sorted(rrf_scores.keys(), key=lambda cid: rrf_scores[cid], reverse=True)[:k]
-            fused_hits: list[IndexHit] = []
-            for cid in sorted_chunk_ids:
-                orig = hits_by_id[cid]
-                fused_hits.append(
-                    IndexHit(
-                        chunk_id=orig.chunk_id,
-                        work_id=orig.work_id,
-                        expression_key=orig.expression_key,
-                        anchor_ids=orig.anchor_ids,
-                        anchor_first=orig.anchor_first,
-                        anchor_last=orig.anchor_last,
-                        chunk_kind=orig.chunk_kind,
-                        context_header=orig.context_header,
-                        text=orig.text,
-                        score=rrf_scores[cid],
-                        court_id=orig.court_id,
-                        decision_date=orig.decision_date,
-                        doc_type=orig.doc_type,
-                        binding_scope_tags=orig.binding_scope_tags,
-                        body=orig.body,
-                    )
-                )
-            return fused_hits
         else:
-            raise ValueError(f"Unknown search mode '{query.mode}'.")
+            raise ValueError(
+                f"Invalid search mode '{query.mode}'. Must be 'LEXICAL' or 'DENSE'. Fusion belongs to P5 (S07)."
+            )
 
     def _search_lexical(
         self,

@@ -3,6 +3,7 @@
 Normative sources:
 - Session S06 Directive #7: Embeddings through the Model Gateway with model pinning.
 - Directive #7: embed_query from tenant context must send TENANT_CONFIDENTIAL.
+- Step 1.2: Assert against real seeded ep_voyage_4_large endpoint.
 """
 
 from __future__ import annotations
@@ -10,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from gateway.adapters.fake import FakeModelAdapter
-from gateway.exceptions import NoQualifiedEndpointError, ResidencyFailClosedError
-from gateway.models import LLMCallRecord, ModelEndpoint, ModelTaskContract
+from gateway.exceptions import NoQualifiedEndpointError
+from gateway.models import LLMCallRecord, ModelEndpoint
 from gateway.runner import embed, set_adapter_override
 from workspace.authz import ExecutionContext
 
@@ -26,19 +27,10 @@ def fake_adapter() -> FakeModelAdapter:
 
 @pytest.mark.django_db
 def test_gateway_embed_deterministic(fake_adapter: FakeModelAdapter) -> None:
-    ModelEndpoint.objects.create(
-        endpoint_id="voyage-test",
-        provider="voyage",
-        model_id="voyage-4-large",
-        model_snapshot="2026-01-01",
-        processing_geo="IN",
-        zdr=True,
-        data_class_max="PRIVILEGED",
-        price={"in_per_mtok": 0.12, "out_per_mtok": 0.0},
-        limits={"dims": 1024},
-        health="UP",
-        qualified_tasks={"p2.embed.v1": {}},
-    )
+    # Assert seeded endpoint exists
+    endpoint = ModelEndpoint.objects.get(endpoint_id="ep_voyage_4_large")
+    assert endpoint.model_id == "voyage-4-large"
+    assert endpoint.processing_geo == "US"
 
     res1 = embed(["Section 138 of Negotiable Instruments Act"], ctx=None)
     assert len(res1.embeddings) == 1
@@ -52,30 +44,17 @@ def test_gateway_embed_deterministic(fake_adapter: FakeModelAdapter) -> None:
     res2 = embed(["Section 138 of Negotiable Instruments Act"], ctx=None)
     assert res1.embeddings[0] == res2.embeddings[0]
 
-    # Verify LLMCallRecord written
+    # Verify LLMCallRecord written with real seeded endpoint
     record = LLMCallRecord.objects.get(call_id=res1.call_record.call_id)
     assert record.task_id == "p2.embed.v1"
-    assert record.endpoint_id == "voyage-test"
+    assert record.endpoint_id == "ep_voyage_4_large"
     assert record.dataclass == "PUBLIC"
     assert record.schema_valid is True
 
 
 @pytest.mark.django_db
 def test_gateway_embed_tenant_residency_enforcement() -> None:
-    ModelEndpoint.objects.create(
-        endpoint_id="voyage-us",
-        provider="voyage",
-        model_id="voyage-4-large",
-        model_snapshot="2026-01-01",
-        processing_geo="US",
-        zdr=True,
-        data_class_max="PRIVILEGED",
-        price={"in_per_mtok": 0.12},
-        limits={"dims": 1024},
-        health="UP",
-        qualified_tasks={"p2.embed.v1": {}},
-    )
-
+    # Seeded endpoint ep_voyage_4_large has processing_geo="US"
     ctx = ExecutionContext(
         tenant_id="ten_01H00000000000000000000000",
         user_id="usr_01H00000000000000000000000",
@@ -84,6 +63,6 @@ def test_gateway_embed_tenant_residency_enforcement() -> None:
         residency_policy="IN_ONLY",
     )
 
-    # Fails closed because only US endpoint exists
+    # Fails closed because only US endpoint exists for voyage-4-large
     with pytest.raises(NoQualifiedEndpointError):
         embed(["Confidential matter query"], ctx)
