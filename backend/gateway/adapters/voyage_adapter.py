@@ -37,6 +37,7 @@ class VoyageAdapter(BaseModelAdapter):
         max_tokens: int = 1024,
         json_mode: bool = True,
         system_prompt: str | None = None,
+        response_schema: dict[str, Any] | None = None,
     ) -> LLMResponse:
         raise NotImplementedError("Voyage AI adapter does not support text generation.")
 

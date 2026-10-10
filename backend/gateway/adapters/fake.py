@@ -42,6 +42,7 @@ class FakeModelAdapter(BaseModelAdapter):
         max_tokens: int = 1024,
         json_mode: bool = True,
         system_prompt: str | None = None,
+        response_schema: dict[str, Any] | None = None,
     ) -> LLMResponse:
         self.calls.append(
             {
@@ -75,12 +76,23 @@ class FakeModelAdapter(BaseModelAdapter):
                         raw_text = first_chunk.get("text") or first_chunk.get("excerpt", "")
                         sentences = [s.strip() for s in raw_text.split(".") if len(s.strip()) > 20]
                         quote = sentences[0] if sentences else raw_text[:80].strip()
+
+                        # Check if paragraph records party submissions
+                        is_sub = any(
+                            m in raw_text.lower()
+                            for m in ["contended", "submitted", "argued", "learned counsel"]
+                        )
+                        if is_sub:
+                            claim_text = f"The appellant contended that {quote}."
+                        else:
+                            claim_text = f"The statutory record establishes that {quote}."
+
                         canned = {
-                            "summary": f"Under primary authority ({anchor_id}), {quote}.",
+                            "summary": f"In {anchor_id}, {claim_text}",
                             "in_corpus": True,
                             "claims": [
                                 {
-                                    "text": f"Under established legal authority, {quote}.",
+                                    "text": claim_text,
                                     "claim_type": "LEGAL_PROPOSITION",
                                     "anchor_id": anchor_id,
                                     "quote": quote,

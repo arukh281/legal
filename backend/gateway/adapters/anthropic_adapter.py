@@ -34,6 +34,7 @@ class AnthropicAdapter(BaseModelAdapter):
         max_tokens: int = 1024,
         json_mode: bool = True,
         system_prompt: str | None = None,
+        response_schema: dict[str, Any] | None = None,
     ) -> LLMResponse:
         client = self._get_client()
         messages = [{"role": "user", "content": prompt}]

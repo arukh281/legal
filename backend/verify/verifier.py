@@ -188,9 +188,56 @@ class VerificationEngine:
                 }
             )
 
+            # C2b: Role check - party submissions may not support LEGAL_PROPOSITION unless claim states it is a submission
+            c_role_pass = True
+            submission_markers = ["contended", "submitted", "argued", "learned counsel"]
+            supporting_corpus_text = ""
+            if target_anchor is not None:
+                supporting_corpus_text += target_anchor.text.lower()
+            if claim.support and isinstance(claim.support, list):
+                first_support = claim.support[0] if isinstance(claim.support[0], dict) else {}
+                supporting_corpus_text += " " + str(first_support.get("quote", "")).lower()
+
+            is_submission_para = any(marker in supporting_corpus_text for marker in submission_markers)
+            if is_submission_para and claim.claim_type == "LEGAL_PROPOSITION":
+                claim_lower = claim.text.lower()
+                claim_states_submission = any(
+                    w in claim_lower
+                    for w in [
+                        "contended",
+                        "contention",
+                        "contends",
+                        "submitted",
+                        "submission",
+                        "submits",
+                        "argued",
+                        "argument",
+                        "argues",
+                        "learned counsel",
+                        "counsel for",
+                        "pleaded",
+                        "pleading",
+                        "averred",
+                        "averment",
+                    ]
+                )
+                if not claim_states_submission:
+                    c_role_pass = False
+                    reasons.append("SUBMISSION_CANNOT_SUPPORT_PROPOSITION")
+                    warrant["role_ok"] = "FAIL"
+
+            checks.append(
+                {
+                    "check_id": "C2_role_submission",
+                    "version": "1.0",
+                    "verdict": "PASS" if c_role_pass else "FAIL",
+                    "latency_ms": 1,
+                }
+            )
+
             # Assign Status & Display Band (S07 Amendment #1)
             # Display band is labelled "quote verified · uncalibrated preview", never plain VERIFIED
-            if c0_pass and c_bundle_pass and c1_pass and c2_pass:
+            if c0_pass and c_bundle_pass and c1_pass and c2_pass and c_role_pass:
                 status = "VERIFIED"
                 display_band = "VERIFIED"
             else:

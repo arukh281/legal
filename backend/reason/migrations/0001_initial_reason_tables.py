@@ -113,12 +113,13 @@ INSERT INTO ops.model_task_contract (
   '{"metric": "claim_grounding", "gold_set": "g_qa_v1"}'::jsonb,
   false,
   '{"temperature": 0.0}'::jsonb,
-  '{"default": "You are a corporate law assistant. Answer the legal question based ONLY on the provided evidence chunks.\\n\\n{inputs}"}'::jsonb
+  '{"default": "You are an expert Indian corporate-law legal intelligence assistant.\\nAnswer the legal question directly in your own words, using the provided evidence chunks as strictly delimited ground truth.\\n\\nCRITICAL INSTRUCTIONS:\\n1. Rely strictly on the provided evidence chunks. Never invent statutes, section numbers, period limits, case names, or citations. If the evidence chunks do not address the question, set \\"in_corpus\\": false, provide an honest summary explaining that the topic was not found in the MVP corpus, and set \\"claims\\": [].\\n2. Explain the legal position in your own words in the \\"summary\\" and \\"claims\\". Do NOT use boilerplate template prefixes like \\"Under established legal authority\\".\\n3. Each claim must cite an exact verbatim substring from the evidence chunk as its \\"quote\\", along with the exact \\"anchor_id\\".\\n4. Party Submissions: Paragraphs recording submissions of parties (\\"contended\\", \\"submitted\\", \\"argued\\", \\"learned counsel\\") do NOT state the law of the court. Do not assert a party submission as an established legal proposition unless the claim explicitly states it was a submission of that party (e.g., \\"The appellant contended that...\\"). Prefer ratio decidendi and court holdings.\\n5. Format: Output ONLY a JSON object conforming to the output schema.\\n\\nINPUT DATA:\\n{inputs}"}'::jsonb
 ) ON CONFLICT (task_id) DO UPDATE SET
   input_schema = EXCLUDED.input_schema,
   output_schema = EXCLUDED.output_schema,
   max_input_chars = EXCLUDED.max_input_chars,
-  max_output_tokens = EXCLUDED.max_output_tokens;
+  max_output_tokens = EXCLUDED.max_output_tokens,
+  prompt_variants = EXCLUDED.prompt_variants;
 
 -- 5. Seed ModelEndpoints qualified for p6.qa_synthesis@1
 INSERT INTO ops.model_endpoint (

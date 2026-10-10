@@ -203,6 +203,7 @@ def run(
         temperature=contract.determinism.get("temperature", 0.0),
         max_tokens=contract.max_output_tokens,
         json_mode=True,
+        response_schema=contract.output_schema,
     )
     latency_ms = int((time.perf_counter() - t0) * 1000)
 
@@ -265,6 +266,7 @@ def run(
         temperature=0.0,
         max_tokens=contract.max_output_tokens,
         json_mode=True,
+        response_schema=contract.output_schema,
     )
     repair_latency_ms = int((time.perf_counter() - t0) * 1000)
     repair_cost_usd = calculate_cost(endpoint, repair_response)

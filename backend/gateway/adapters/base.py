@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 from gateway.models import ModelEndpoint
 
@@ -38,6 +39,7 @@ class BaseModelAdapter(ABC):
         max_tokens: int = 1024,
         json_mode: bool = True,
         system_prompt: str | None = None,
+        response_schema: dict[str, Any] | None = None,
     ) -> LLMResponse:
         """Execute a text generation call against the model provider."""
 

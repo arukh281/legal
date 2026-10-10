@@ -227,5 +227,5 @@ def test_prompt_injection_fixture_data_isolation(
     assert len(fake_adapter.calls) == 1
     call_prompt = fake_adapter.calls[0]["prompt"]
     # Prompt must contain the prompt instructions and the serialized JSON inputs
-    assert "You are a corporate law assistant" in call_prompt
+    assert "You are an expert Indian corporate-law legal intelligence assistant" in call_prompt
     assert "evidence_chunks" in call_prompt

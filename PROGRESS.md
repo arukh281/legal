@@ -581,15 +581,30 @@ Question: "What are the rules for maritime salvage under the Admiralty Act 2017?
 ================================================================================
 EXIT CHECK SUMMARY SCORECARD
 ================================================================================
-  - Q1_SECTION_7: in_corpus=True, claims=1, gate=PASS
-  - Q2_SECTION_9_10A: in_corpus=True, claims=1, gate=PASS
-  - Q3_SECTION_14_NI: in_corpus=True, claims=1, gate=PASS
+  - Q1_SECTION_7: in_corpus=True, claims=2, gate=PASS
+  - Q2_SECTION_9_10A: in_corpus=True, claims=2, gate=PASS
+  - Q3_SECTION_14_NI: in_corpus=True, claims=3, gate=PASS
   - Q4_OUT_OF_CORPUS: in_corpus=False, claims=0, gate=PASS
 
->>> ALL S07 DEMO EXIT CHECKS PASSED WITH ZERO TOLERANCE GATES MET! <<<
+================================================================================
+SESSION S07 EXIT CHECK COMPLETED SUCCESSFULLY
+================================================================================
+Verified Checks Executed:
+  ✓ Real Gateway Endpoint Execution (ep_gemini_3_8_flash / gemini-3.8-flash)
+  ✓ Audited LLMCallRecord Generation with Token Metering
+  ✓ P5 Lexical Retrieval with Dynamic Law Current Date (plc.capture)
+  ✓ In-Corpus vs Honest Out-of-Corpus Negative Grounding Gate
+  ✓ Verifier Ladder C0: Schema & Typing Integrity
+  ✓ Verifier Ladder C0: Closed-World EvidenceBundle Boundary (OUT_OF_BUNDLE rejection)
+  ✓ Verifier Ladder C1: Anchor Existence in Public Corpus (plc.anchor)
+  ✓ Verifier Ladder C2: Exact Quote Substring Match (NFC Normalized)
+  ✓ Verifier Ladder C2: Role Check for Party Submissions (C2_role_submission)
+  ✓ Contrary Authority Sweep Status (LIMITED: lexical only, no citator)
+================================================================================
 ```
 
-- **Backend Test Suite:** 262 passed, 1 skipped, 0 failed in 55s.
+- **Backend Test Suite:** 263 passed, 1 skipped, 0 failed in 32s.
+- **Lint & Types:** Ruff clean (0 errors), mypy clean (0 errors across 237 source files).
 - **Frontend Test Suite & Build:** Vitest 3 passed, ESLint clean (0 errors), `pnpm build` clean bundle in 827ms.
 
 ---

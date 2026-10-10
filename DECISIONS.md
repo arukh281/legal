@@ -529,6 +529,15 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** User directives for Session S07 adhering to AGENTS.md §4 (Non-negotiables #3, #4, #6), docs/mvp/00_mvp_spec.md §2, and docs/10_P8_verification_evaluation.md §5.3.
 - **Doc Reference:** AGENTS.md §4; `docs/mvp/00_mvp_spec.md` §2; `docs/10_P8_verification_evaluation.md` §5.3; Session S07 Directives.
 
+---
+
+### 2026-10-10 — Gemini Temporarily Primary for Q&A Synthesis Until Anthropic Key Is Available
+- **Decision:** Qualified Google Gemini endpoint (`ep_gemini_3_8_flash` using `gemini-3.8-flash`) for `p6.qa_synthesis@1` as the active primary evaluation endpoint, and deactivated retired `ep_claude_sonnet_3_5` (`health = 'DOWN'`) via migration `reason.0002_qualify_gemini_qa_endpoint`. Configured `ep_gemini_3_8_flash` with `data_class_max = 'PUBLIC'` (lowest public class, not PRIVILEGED) and price card `$0.75` input / `$3.75` output per Mtok per `docs/mvp/04_stack_and_infra.md §210`. In `google_adapter.py`, configured an explicit 60s request timeout with `AdapterInvocationError` on timeout, `thinking_config` with small thinking budget (512 tokens), raised `max_output_tokens` to 8192, per-call telemetry logging (latency, finish_reason, thinking tokens, output tokens, no prompt bodies), and fallback to active counterpart (`gemini-3.5-flash`) on 429 quota exhaustion. Gemini temporarily primary for Q&A synthesis until Anthropic key is available; 04 §194 primary is Claude Sonnet 5.5.
+- **Reason:** Model provider qualification update per user directive; Claude 3.5 Sonnet snapshot `20241022` retired by provider, and Anthropic API key currently unavailable. Google GenAI SDK adapter with active `GEMINI_API_KEY` satisfies the real Model Gateway endpoint requirement for Session S07 exit check with explicit timeouts, token protection, and exact spec pricing.
+- **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §194, §210; Session S07 Evaluation Directives.
+
+
+
 
 
 

@@ -285,3 +285,109 @@ def test_verifier_rejects_fabricated_anchor(
     assert claim_ver.status == "UNSUPPORTED"
     assert "FABRICATED_ANCHOR" in claim_ver.reason_codes
     assert claim_ver.warrant["exists"] == "FAIL"
+
+
+@pytest.mark.django_db
+def test_verifier_submission_cannot_support_unqualified_legal_proposition(
+    auth_ctx: ExecutionContext,
+    sample_work_and_anchor: tuple[Work, Anchor],
+) -> None:
+    """Item 3: Paragraphs recording submissions ('contended', 'submitted', 'argued', 'learned counsel')
+    cannot support a LEGAL_PROPOSITION unless the claim explicitly states it is a submission.
+    """
+    work, _ = sample_work_and_anchor
+
+    with connection.cursor() as cur:
+        cur.execute("SET LOCAL app.tenant_id = %s;", [auth_ctx.tenant_id])
+
+    # Anchor recording counsel submissions
+    submission_anchor = Anchor.objects.create(
+        anchor_id=f"{work.work_id}/en#p3",
+        work_id=work.work_id,
+        expression_key="en",
+        fragment="p3",
+        node_type="PARA",
+        text="3. The learned Counsel for the Appellant contended: a)the Adjudicating Authority erred in dismissing the Section 7 Application without examining the existence of financial debt and default.",
+        text_hash="hash_p3",
+        ocr_conf=1.0,
+        lang="en",
+        is_authoritative_expression=True,
+        state="LIVE",
+        first_parse_id="par_test",
+        last_parse_id="par_test",
+    )
+
+    query_id = mint_id("qry")
+    bundle = EvidenceBundle(
+        tenant_id=auth_ctx.tenant_id,
+        bundle_id=mint_id("evb"),
+        query_id=query_id,
+        as_of_legal_date=datetime.date(2026, 10, 1),
+        index_generation="g1",
+        pipeline_version=PipelineVersion.objects.first(),
+        items=[{"item_id": "item_sub", "anchor_ids": [submission_anchor.anchor_id]}],
+        coverage={},
+        trace_id="trace_test",
+    )
+
+    # Case A: Unqualified LEGAL_PROPOSITION asserts the contention as law -> REJECTED
+    unqualified_claim = Claim.objects.create(
+        tenant_id=auth_ctx.tenant_id,
+        claim_id=mint_id("clm"),
+        owner_kind="ANSWER",
+        owner_id=query_id,
+        text="The Adjudicating Authority is prohibited from dismissing a Section 7 Application without examining debt and default.",
+        claim_type="LEGAL_PROPOSITION",
+        support=[
+            {
+                "anchor_id": submission_anchor.anchor_id,
+                "quote": "Adjudicating Authority erred in dismissing the Section 7 Application without examining the existence of financial debt and default",
+                "span": [0, 120],
+                "support_type": "DIRECT",
+            }
+        ],
+    )
+
+    # Case B: Qualified claim explicitly states it is a submission -> ACCEPTED
+    qualified_claim = Claim.objects.create(
+        tenant_id=auth_ctx.tenant_id,
+        claim_id=mint_id("clm"),
+        owner_kind="ANSWER",
+        owner_id=query_id,
+        text="The appellant contended that the Adjudicating Authority erred in dismissing the Section 7 Application.",
+        claim_type="LEGAL_PROPOSITION",
+        support=[
+            {
+                "anchor_id": submission_anchor.anchor_id,
+                "quote": "Adjudicating Authority erred in dismissing the Section 7 Application without examining the existence of financial debt and default",
+                "span": [0, 120],
+                "support_type": "DIRECT",
+            }
+        ],
+    )
+
+    verifier = VerificationEngine()
+    report = verifier.verify(
+        query_id=query_id,
+        claims=[unqualified_claim, qualified_claim],
+        bundle=bundle,
+        ctx=auth_ctx,
+    )
+
+    # Check Case A (unqualified)
+    ver_a = ClaimVerification.objects.get(
+        tenant_id=auth_ctx.tenant_id, report_id=report.report_id, claim_id=unqualified_claim.claim_id
+    )
+    assert ver_a.status == "UNSUPPORTED"
+    assert ver_a.display_band == "WITHHELD"
+    assert "SUBMISSION_CANNOT_SUPPORT_PROPOSITION" in ver_a.reason_codes
+    assert ver_a.warrant["role_ok"] == "FAIL"
+
+    # Check Case B (qualified as submission)
+    ver_b = ClaimVerification.objects.get(
+        tenant_id=auth_ctx.tenant_id, report_id=report.report_id, claim_id=qualified_claim.claim_id
+    )
+    assert ver_b.status == "VERIFIED"
+    assert ver_b.display_band == "VERIFIED"
+    assert "SUBMISSION_CANNOT_SUPPORT_PROPOSITION" not in ver_b.reason_codes
+    assert ver_b.warrant["role_ok"] == "PASS"
