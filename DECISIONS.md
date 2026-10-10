@@ -538,10 +538,20 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 ### 2026-10-10 — Gateway Router 429 Failover, Judgment Paragraph Plausibility, and Unverified Summary Label
 - **Decision:**
   1. **Gateway Router 429 Failover:** Removed silent internal model fallbacks from `google_adapter.py`. Added qualified endpoint `ep_gemini_3_5_flash` (pricing: $0.075 in, $0.30 out per Mtok; data_class_max=PUBLIC; priority=2) via migration `reason.0003_qualify_gemini_3_5_flash`. Updated Gateway router (`gateway.runner`) to catch HTTP 429 (`RateLimitError`) on primary endpoints (`ep_gemini_3_8_flash`, priority=1) and fail over to next qualified endpoints (`ep_gemini_3_5_flash`), recording the exact endpoint and model actually called in `LLMCallRecord`. Tested via `test_router_429_failover.py`.
-  2. **Judgment Parser Plausibility & Year Rejection:** Updated `backend/parse/judgment.py` to enforce sequential and plausible court paragraph numbering: rejecting 4-digit years (`cand_main_int >= 1000` or `1900 <= cand_main_int <= 2099`), parenthesized numbers > 99, and numbers immediately followed by citation patterns (e.g. `SCC`, `AIR`, `SCR`, `]` etc.). Re-parsed `wrk_01M3Y2TMYE567QN84SXM3431NZ` (`DINESHCHAND SURANA v. UCO BANK`), tombstoning false anchors `#p2010`, `#p2012`, `#p2014`, `#p2018` into `#p39`, and re-indexed into generation `g1`.
+  2. **Judgment Parser Plausibility & Year Rejection:** Updated `backend/parse/judgment.py` to enforce sequential and plausible court paragraph numbering: rejecting 4-digit years (`cand_main_int >= 1000` or `1900 <= cand_main_int <= 2099`), parenthesized numbers > 99, and numbers immediately followed by citation patterns (e.g. `SCC`, `AIR`, `SCR`, `]` etc.). Re-parsed all 157 captures across the corpus, tombstoning 163 spurious anchors (such as `#p2012`, `#p2010`, `#p1954`, `#p2023`, `#p2014`, `#p2018`), and re-indexed into generation `g1`.
   3. **Executive Summary Verification Status:** Labeled the executive synthesis as `summary_status = "unverified summary"` in both API schema (`ResearchQueryResponse`) and Frontend UI (`ResearchPage.tsx`), tested via `test_api_research.py`.
 - **Reason:** S07 Closeout Directives #1–#3 ensuring full transparency, absence of silent adapter fallbacks, honest uncalibrated status disclosure, and structural integrity of court-printed numbering.
 - **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.1, §3.4, §3.12; `docs/mvp/04_stack_and_infra.md` §2.8, §2.10; AGENTS.md §4 (#1, #2, #4).
+
+---
+
+### 2026-10-10 — Synthesis Prompt Atomic Claims and Rule/Exception Splitting
+- **Decision:** Updated the synthesis prompt contract for `p6.qa_synthesis@1` via migration `reason.0004_update_qa_synthesis_prompt`:
+  1. Enforced exactly one legal proposition per claim.
+  2. Forbidden joining multiple quotes or propositions using causal or explanatory conjunctions ("as", "because", "therefore").
+  3. If evidence states both a general rule and an exception or qualification, both must be formulated as separate, distinct claims.
+- **Reason:** User directive ensuring claim atomicity, preventing multi-proposition conflation, and enabling granular verification and citator badge attachment.
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4.1; `docs/08_P6_strategic_reasoning.md` §2.3; Session S07 Closeout Directive #2.
 
 
 

@@ -528,7 +528,17 @@ Ran `eval/run_s07_exit_check.py` against the real database and Model Gateway (de
 > **Exit-Check Annotation & Router Failover:**
 > Earlier runs utilized an internal fallback loop in `google_adapter.py`. This was refactored: all silent adapter-level fallbacks were removed, and the Gateway Router (`backend/gateway/runner.py`) now explicitly handles failovers across qualified endpoints upon encountering HTTP 429 (`RateLimitError`). The exit check below demonstrates live 429 quota exhaustion on `ep_gemini_3_8_flash` (free tier daily quota) immediately triggering clean failover to `ep_gemini_3_5_flash`, with each `LLMCallRecord` recording the exact endpoint (`ep_gemini_3_5_flash`) and model (`gemini-3.5-flash`) actually invoked.
 >
-> Furthermore, anchor `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p2012` was investigated and diagnosed: a multi-page SCC citation `(2012) 3 SCC (Cri) 241]` was previously misparsed as a paragraph number. The judgment parser was upgraded with strict sequential/plausible numbering constraints (rejecting 4-digit years and citations). Work `wrk_01M3Y2TMYE567QN84SXM3431NZ` was re-parsed (tombstoning `#p2010`, `#p2012`, `#p2014`, `#p2018`) and re-indexed. The executive summary is now explicitly flagged `unverified summary` across the API and UI.
+> Furthermore, anchor `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p2012` was investigated and diagnosed: a multi-page SCC citation `(2012) 3 SCC (Cri) 241]` was previously misparsed as a paragraph number. The judgment parser was upgraded with strict sequential/plausible numbering constraints (rejecting 4-digit years and citations).
+>
+> **Full Corpus Re-parse & Tombstone Counts:**
+> Re-parsed all 157 captures across the corpus using the updated `judgment.py` rules:
+> - **Works Re-parsed:** 156 distinct works.
+> - **Anchors Tombstoned:** 163 spurious anchors eradicated (citation years like `#p2012`, `#p2010`, `#p1954`, `#p2023`, `#p2014`, `#p2018`, phone numbers, etc.).
+> - **Tombstones with `forward_to`:** 82 (e.g. `#p2012` forwarded to `#p39`, `#p2010` forwarded to `#p125`).
+> - **Tombstones without `forward_to`:** 81 (dissolved fragments/unmapped deleted numbers).
+> - **Corpus Indexing:** Re-indexed 154 works (2710 chunks) cleanly into index generation `g1`.
+> - **Executive Summary:** Flagged `unverified summary` across API and UI.
+> - **Synthesis Prompt:** Atomic claims enforced (one proposition per claim, no joining with "as/because/therefore", rules and exceptions split into separate claims).
 
 ```
 ================================================================================
@@ -583,17 +593,35 @@ Question: "Can an operational creditor invoke Section 9 for default during the S
 Question: "Does moratorium under Section 14 of IBC apply to Section 138 NI Act proceedings?"
   -> P5 Retrieval: 10 evidence chunks retrieved (bundle_id: evb_01M4KDK2QDWRQJX4FXGPTB4ZS6)
   -> Router Failover: ep_gemini_3_8_flash 429 RESOURCE_EXHAUSTED -> failed over to ep_gemini_3_5_flash
-  -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> P6 Synthesis: in_corpus=True, claims_count=4
   -> Gateway Call: Endpoint=ep_gemini_3_5_flash | Model=gemini-3.5-flash | Provider=google
-     LLMCallRecord ID: 01M4KDK6AM8RQK8V9FDJCHHX9Y (Tokens: in=3653, out=350)
+     LLMCallRecord ID: 01M4KHNWX5K51DSJC26HQB8TYZ (Tokens: in=3653, out=674)
   -> P8 Verification: gate=PASS, withheld=0
-  -> Executive Summary: Under the Insolvency and Bankruptcy Code (IBC), the moratorium under Section 14 applies to the corporate debtor. However, it does not extend to cover criminal proceedings or shield natural persons (such as directors) from their statutory criminal liability under the Negotiable Instruments Act, 1881.
-    Claim [clm_01M4KDK6ARG8FPBG9XDT4A68Z6]:
-      Text:   The moratorium under Section 14 of the IBC applies solely to the corporate debtor and does not extend to natural persons who remain statutorily liable under the NI Act, 1881, as the IBC's moratorium does not cover criminal proceedings.
+  -> Executive Summary: Under the Insolvency and Bankruptcy Code (IBC), the moratorium provision under Section 14 applies exclusively to the corporate debtor entity itself and does not cover criminal proceedings or shield natural persons (such as directors) from their personal statutory liability under Section 138 of the Negotiable Instruments Act, 1881.
+    Claim [clm_01M4KHNWXBVKHJC292JV8DG55X]:
+      Text:   The moratorium under Section 14 of the IBC applies solely to the corporate debtor.
       Status: VERIFIED | Band: "quote verified · uncalibrated preview"
       Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p27
-      Quote:  "concluded that the moratorium provision contained in Section 14 IBC would apply only to the corporate debtor, and the natural persons mentioned therein, continuing to be statutorily liable under the NI Act, 1881. In doing so, it was clarified that the moratorium under IBC does not extend to criminal proceedings."
+      Quote:  "the moratorium provision contained in Section 14 IBC would apply only to the corporate debtor"
       Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2TMYE567QN84SXM3431NZ)
+    Claim [clm_01M4KHNWXG3BNHGV11HM56GW98]:
+      Text:   Natural persons remain statutorily liable under the Negotiable Instruments Act, 1881, notwithstanding the corporate debtor's moratorium under Section 14 of the IBC.
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p27
+      Quote:  "the natural persons mentioned therein, continuing to be statutorily liable under the NI Act, 1881"
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2TMYE567QN84SXM3431NZ)
+    Claim [clm_01M4KHNWXKGSPDBFGAXY9MB75C]:
+      Text:   The moratorium provided under the IBC does not extend to criminal proceedings.
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p27
+      Quote:  "the moratorium under IBC does not extend to criminal proceedings"
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2TMYE567QN84SXM3431NZ)
+    Claim [clm_01M4KHNWXNTEAPXPPQXDNGET0F]:
+      Text:   Personal statutory liability under Section 138 of the Negotiable Instruments Act, 1881, continues to bind natural persons irrespective of any moratorium applicable to the corporate debtor.
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2V16518DGSHGHCARB4SH6/en#p13
+      Quote:  "The statutory liability against the directors under Section 138 of the N.I. Act, 1881, is personal and hence, continues to bind natural persons, irrespective of any moratorium applicable to the corporate debtor."
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2V16518DGSHGHCARB4SH6)
   -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
 
 [DEMO RUN #4] Q4_OUT_OF_CORPUS
@@ -612,7 +640,7 @@ EXIT CHECK SUMMARY SCORECARD
 ================================================================================
   - Q1_SECTION_7: in_corpus=True, claims=1, gate=PASS
   - Q2_SECTION_9_10A: in_corpus=True, claims=2, gate=PASS
-  - Q3_SECTION_14_NI: in_corpus=True, claims=1, gate=PASS
+  - Q3_SECTION_14_NI: in_corpus=True, claims=4, gate=PASS
   - Q4_OUT_OF_CORPUS: in_corpus=False, claims=0, gate=PASS
 
 ================================================================================
