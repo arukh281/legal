@@ -533,8 +533,15 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ### 2026-10-10 — Gemini Temporarily Primary for Q&A Synthesis Until Anthropic Key Is Available
 - **Decision:** Qualified Google Gemini endpoint (`ep_gemini_3_8_flash` using `gemini-3.8-flash`) for `p6.qa_synthesis@1` as the active primary evaluation endpoint, and deactivated retired `ep_claude_sonnet_3_5` (`health = 'DOWN'`) via migration `reason.0002_qualify_gemini_qa_endpoint`. Configured `ep_gemini_3_8_flash` with `data_class_max = 'PUBLIC'` (lowest public class, not PRIVILEGED) and price card `$0.75` input / `$3.75` output per Mtok per `docs/mvp/04_stack_and_infra.md §210`. In `google_adapter.py`, configured an explicit 60s request timeout with `AdapterInvocationError` on timeout, `thinking_config` with small thinking budget (512 tokens), raised `max_output_tokens` to 8192, per-call telemetry logging (latency, finish_reason, thinking tokens, output tokens, no prompt bodies), and fallback to active counterpart (`gemini-3.5-flash`) on 429 quota exhaustion. Gemini temporarily primary for Q&A synthesis until Anthropic key is available; 04 §194 primary is Claude Sonnet 5.5.
-- **Reason:** Model provider qualification update per user directive; Claude 3.5 Sonnet snapshot `20241022` retired by provider, and Anthropic API key currently unavailable. Google GenAI SDK adapter with active `GEMINI_API_KEY` satisfies the real Model Gateway endpoint requirement for Session S07 exit check with explicit timeouts, token protection, and exact spec pricing.
-- **Doc Reference:** `docs/mvp/04_stack_and_infra.md` §194, §210; Session S07 Evaluation Directives.
+---
+
+### 2026-10-10 — Gateway Router 429 Failover, Judgment Paragraph Plausibility, and Unverified Summary Label
+- **Decision:**
+  1. **Gateway Router 429 Failover:** Removed silent internal model fallbacks from `google_adapter.py`. Added qualified endpoint `ep_gemini_3_5_flash` (pricing: $0.075 in, $0.30 out per Mtok; data_class_max=PUBLIC; priority=2) via migration `reason.0003_qualify_gemini_3_5_flash`. Updated Gateway router (`gateway.runner`) to catch HTTP 429 (`RateLimitError`) on primary endpoints (`ep_gemini_3_8_flash`, priority=1) and fail over to next qualified endpoints (`ep_gemini_3_5_flash`), recording the exact endpoint and model actually called in `LLMCallRecord`. Tested via `test_router_429_failover.py`.
+  2. **Judgment Parser Plausibility & Year Rejection:** Updated `backend/parse/judgment.py` to enforce sequential and plausible court paragraph numbering: rejecting 4-digit years (`cand_main_int >= 1000` or `1900 <= cand_main_int <= 2099`), parenthesized numbers > 99, and numbers immediately followed by citation patterns (e.g. `SCC`, `AIR`, `SCR`, `]` etc.). Re-parsed `wrk_01M3Y2TMYE567QN84SXM3431NZ` (`DINESHCHAND SURANA v. UCO BANK`), tombstoning false anchors `#p2010`, `#p2012`, `#p2014`, `#p2018` into `#p39`, and re-indexed into generation `g1`.
+  3. **Executive Summary Verification Status:** Labeled the executive synthesis as `summary_status = "unverified summary"` in both API schema (`ResearchQueryResponse`) and Frontend UI (`ResearchPage.tsx`), tested via `test_api_research.py`.
+- **Reason:** S07 Closeout Directives #1–#3 ensuring full transparency, absence of silent adapter fallbacks, honest uncalibrated status disclosure, and structural integrity of court-printed numbering.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.1, §3.4, §3.12; `docs/mvp/04_stack_and_infra.md` §2.8, §2.10; AGENTS.md §4 (#1, #2, #4).
 
 
 

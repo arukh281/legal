@@ -35,6 +35,7 @@ export interface ResearchQueryResponse {
   query_id: string;
   text: string;
   summary: string;
+  summary_status: string;
   in_corpus: boolean;
   claims: ClaimItem[];
   contrary_sweep: ContrarySweep;

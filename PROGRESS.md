@@ -516,13 +516,19 @@ uv run python manage.py swap_index_alias --family plc_chunks --to-generation g1 
 #### C. Frontend UI & Source Viewer
 - **Typed API Client (`frontend/src/api/client.ts`):** `executeResearchQuery()`, `fetchAnchorSource()`, and `fetchDocumentSource()`.
 - **Source Viewer (`frontend/src/components/SourceViewer.tsx`):** Slide-over modal with primary court header, OCR confidence badge, auto-scroll to pinpoint anchor, and high-contrast yellow quote highlighting (`<mark>`).
-- **Research Q&A Page (`frontend/src/pages/ResearchPage.tsx`):** Complete UI with 4 pre-configured demo chips (Section 7, Section 9/10A, Section 14, and Admiralty out-of-corpus), executive summary card, proposition cards with `"quote verified · uncalibrated preview"`, contrary sweep card, and dynamic lineage footer.
+- **Research Q&A Page (`frontend/src/pages/ResearchPage.tsx`):** Complete UI with 4 pre-configured demo chips (Section 7, Section 9/10A, Section 14, and Admiralty out-of-corpus), executive summary card labeled with `summary_status` badge, proposition cards with `"quote verified · uncalibrated preview"`, contrary sweep card, and dynamic lineage footer.
 
 ---
 
 ### 6. Corpus & Exit Check Demonstration Output
 
-Ran `eval/run_s07_exit_check.py` against the real database and Model Gateway:
+Ran `eval/run_s07_exit_check.py` against the real database and Model Gateway (demonstrating gateway router-level 429 failover from `ep_gemini_3_8_flash` to `ep_gemini_3_5_flash` and audited `LLMCallRecord` capture):
+
+> [!NOTE]
+> **Exit-Check Annotation & Router Failover:**
+> Earlier runs utilized an internal fallback loop in `google_adapter.py`. This was refactored: all silent adapter-level fallbacks were removed, and the Gateway Router (`backend/gateway/runner.py`) now explicitly handles failovers across qualified endpoints upon encountering HTTP 429 (`RateLimitError`). The exit check below demonstrates live 429 quota exhaustion on `ep_gemini_3_8_flash` (free tier daily quota) immediately triggering clean failover to `ep_gemini_3_5_flash`, with each `LLMCallRecord` recording the exact endpoint (`ep_gemini_3_5_flash`) and model (`gemini-3.5-flash`) actually invoked.
+>
+> Furthermore, anchor `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p2012` was investigated and diagnosed: a multi-page SCC citation `(2012) 3 SCC (Cri) 241]` was previously misparsed as a paragraph number. The judgment parser was upgraded with strict sequential/plausible numbering constraints (rejecting 4-digit years and citations). Work `wrk_01M3Y2TMYE567QN84SXM3431NZ` was re-parsed (tombstoning `#p2010`, `#p2012`, `#p2014`, `#p2018`) and re-indexed. The executive summary is now explicitly flagged `unverified summary` across the API and UI.
 
 ```
 ================================================================================
@@ -535,62 +541,85 @@ SESSION S07 EXIT CHECK DEMO: RESEARCH Q&A WITH PINPOINTED CLAIMS
 
 [DEMO RUN #1] Q1_SECTION_7
 Question: "What is the scope of enquiry under Section 7 of the IBC for a financial debt and default?"
-  -> P5 Retrieval: 2 evidence chunks retrieved (bundle_id: evb_01M4H5HVMXYB90XCXMW66H6E4A)
+  -> P5 Retrieval: 2 evidence chunks retrieved (bundle_id: evb_01M4KDJR5JAJV2QF5ZA3SE4DJP)
+  -> Router Failover: ep_gemini_3_8_flash 429 RESOURCE_EXHAUSTED -> failed over to ep_gemini_3_5_flash
   -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> Gateway Call: Endpoint=ep_gemini_3_5_flash | Model=gemini-3.5-flash | Provider=google
+     LLMCallRecord ID: 01M4KDJYTT3QTA40JW3B7T3ASS (Tokens: in=1181, out=286)
   -> P8 Verification: gate=PASS, withheld=0
-    Claim [clm_01M4H5HVNHWF0B8DKVYJBFH8K1]: Under established legal authority, The learned Counsel for the Appella...
+  -> Executive Summary: Under Section 7 of the IBC, the scope of enquiry involves determining the existence of a financial debt and the occurrence of default, as well as verifying the anterior issue regarding the authority of the petitioner to invoke insolvency jurisdiction.
+    Claim [clm_01M4KDJYTZY3KWR7VB30XTMEB4]:
+      Text:   The scope of enquiry under Section 7 of the Insolvency and Bankruptcy Code requires examining the existence of a financial debt and the occurrence of default, alongside anterior questions regarding the authority of the petitioner to invoke insolvency jurisdiction.
       Status: VERIFIED | Band: "quote verified · uncalibrated preview"
-      Anchor: wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p3
-      Quote:  "The learned Counsel for the Appellant contended: a)the Adjudicating Authority er..."
+      Anchor: wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p7
+      Quote:  "Has the Adjudicating Authority overstepped the scope of enquiry when it is required to examine merely the existence of a financial debt and the occurrence of default; (b) the other is an anterior question and it relates to the authority of the petitioner invoking the insolvency jurisdiction"
       Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2VN62VEPM3MH330JF3VKD)
   -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
 
 [DEMO RUN #2] Q2_SECTION_9_10A
 Question: "Can an operational creditor invoke Section 9 for default during the Section 10A period?"
-  -> P5 Retrieval: 1 evidence chunks retrieved (bundle_id: evb_01M4H5HVPNVRMWDYCQWVWH66KT)
-  -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> P5 Retrieval: 1 evidence chunks retrieved (bundle_id: evb_01M4KDJYW7WSAA6C8WJ9QJRC2J)
+  -> Router Failover: ep_gemini_3_8_flash 429 RESOURCE_EXHAUSTED -> failed over to ep_gemini_3_5_flash
+  -> P6 Synthesis: in_corpus=True, claims_count=2
+  -> Gateway Call: Endpoint=ep_gemini_3_5_flash | Model=gemini-3.5-flash | Provider=google
+     LLMCallRecord ID: 01M4KDK2J2F43MG5D1TNTP8DX5 (Tokens: in=646, out=484)
   -> P8 Verification: gate=PASS, withheld=0
-    Claim [clm_01M4H5HVQ43Q66405XFGPQX141]: Under established legal authority, Applying the aforesaid principle, a...
+  -> Executive Summary: An operational creditor cannot invoke Section 9 of the IBC for a default occurring within the Section 10A protected period. Continued non-payment or subsequent acknowledgement of debt after the period expires does not shift the default date, and amounts arising from a Section 10A-protected default must be excluded when assessing CIRP initiation requirements.
+    Claim [clm_01M4KDK2J5F9DVG4KH1T98EVCB]:
+      Text:   An Operational Creditor is prohibited from initiating a Section 9 application for a default that occurred during the Section 10A statutory bar period.
       Status: VERIFIED | Band: "quote verified · uncalibrated preview"
       Anchor: wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9
-      Quote:  "Applying the aforesaid principle, an Operational Creditor cannot invoke Section ..."
+      Quote:  "an Operational Creditor cannot invoke Section 9 in respect of a default which falls within the statutory prohibition merely because the debt subsequently continued to remain outstanding or was subsequently acknowledged."
+      Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2VRFJGZAF26VMB4236ZFS)
+    Claim [clm_01M4KDK2JDDMBD4R73PRB9WFZJ]:
+      Text:   The continuation of non-payment post the Section 10A period or subsequent acknowledgment does not alter the original default date occurring within the protected period, and amounts arising from a protected default cannot be considered to fulfill CIRP initiation requirements.
+      Status: VERIFIED | Band: "quote verified · uncalibrated preview"
+      Anchor: wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9
+      Quote:  "Continuation of non-payment after expiry of the Section 10A period does not shift the original default occurring during the protected period to a later date so as to overcome the statutory bar.The principle emerging from the aforesaid judgment is that a creditor cannot rely upon an amount arising from a Section 10A-protected default for satisfying the statutory requirements governing initiation of CIRP."
       Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2VRFJGZAF26VMB4236ZFS)
   -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
 
 [DEMO RUN #3] Q3_SECTION_14_NI
 Question: "Does moratorium under Section 14 of IBC apply to Section 138 NI Act proceedings?"
-  -> P5 Retrieval: 12 evidence chunks retrieved (bundle_id: evb_01M4H5HVRFVEYQHQ8E25Q6MEDG)
+  -> P5 Retrieval: 10 evidence chunks retrieved (bundle_id: evb_01M4KDK2QDWRQJX4FXGPTB4ZS6)
+  -> Router Failover: ep_gemini_3_8_flash 429 RESOURCE_EXHAUSTED -> failed over to ep_gemini_3_5_flash
   -> P6 Synthesis: in_corpus=True, claims_count=1
+  -> Gateway Call: Endpoint=ep_gemini_3_5_flash | Model=gemini-3.5-flash | Provider=google
+     LLMCallRecord ID: 01M4KDK6AM8RQK8V9FDJCHHX9Y (Tokens: in=3653, out=350)
   -> P8 Verification: gate=PASS, withheld=0
-    Claim [clm_01M4H5HVS2EMYDHWM9GRKXDNR2]: Under established legal authority, In terms of sub-section (1) of Sect...
+  -> Executive Summary: Under the Insolvency and Bankruptcy Code (IBC), the moratorium under Section 14 applies to the corporate debtor. However, it does not extend to cover criminal proceedings or shield natural persons (such as directors) from their statutory criminal liability under the Negotiable Instruments Act, 1881.
+    Claim [clm_01M4KDK6ARG8FPBG9XDT4A68Z6]:
+      Text:   The moratorium under Section 14 of the IBC applies solely to the corporate debtor and does not extend to natural persons who remain statutorily liable under the NI Act, 1881, as the IBC's moratorium does not cover criminal proceedings.
       Status: VERIFIED | Band: "quote verified · uncalibrated preview"
-      Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p12
-      Quote:  "In terms of sub-section (1) of Section 357 of the Code, a criminal court is empo..."
+      Anchor: wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p27
+      Quote:  "concluded that the moratorium provision contained in Section 14 IBC would apply only to the corporate debtor, and the natural persons mentioned therein, continuing to be statutorily liable under the NI Act, 1881. In doing so, it was clarified that the moratorium under IBC does not extend to criminal proceedings."
       Corpus Check: ✓ Exists in plc.anchor (Work: wrk_01M3Y2TMYE567QN84SXM3431NZ)
   -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
 
 [DEMO RUN #4] Q4_OUT_OF_CORPUS
 Question: "What are the rules for maritime salvage under the Admiralty Act 2017?"
-  -> P5 Retrieval: 0 evidence chunks retrieved (bundle_id: evb_01M4H5HVSVFV0FZXXE5GAZ4TK5)
+  -> P5 Retrieval: 0 evidence chunks retrieved (bundle_id: evb_01M4KDK6BV60GSYV79F2VDZ0FS)
   -> P6 Synthesis: in_corpus=False, claims_count=0
+  -> Gateway Call: Skipped (honest out-of-corpus gate halted before LLM call)
   -> P8 Verification: gate=PASS, withheld=0
-    Honest Negative Output: "The requested topic was not found in the MVP corpus. Out of corpus means 'not in MVP corpus', not th..."
+  -> Executive Summary: The requested topic was not found in the MVP corpus. Out of corpus means 'not in MVP corpus', not that the legal proposition is incorrect.
+    Honest Negative Output: "The requested topic was not found in the MVP corpus. Out of corpus means 'not in MVP corpus', not that the legal proposition is incorrect."
     Claims minted: 0 (Honest zero-hallucination compliance)
   -> Contrary Sweep: STATUS=LIMITED (lexical only, no citator)
 
 ================================================================================
 EXIT CHECK SUMMARY SCORECARD
 ================================================================================
-  - Q1_SECTION_7: in_corpus=True, claims=2, gate=PASS
+  - Q1_SECTION_7: in_corpus=True, claims=1, gate=PASS
   - Q2_SECTION_9_10A: in_corpus=True, claims=2, gate=PASS
-  - Q3_SECTION_14_NI: in_corpus=True, claims=3, gate=PASS
+  - Q3_SECTION_14_NI: in_corpus=True, claims=1, gate=PASS
   - Q4_OUT_OF_CORPUS: in_corpus=False, claims=0, gate=PASS
 
 ================================================================================
 SESSION S07 EXIT CHECK COMPLETED SUCCESSFULLY
 ================================================================================
 Verified Checks Executed:
-  ✓ Real Gateway Endpoint Execution (ep_gemini_3_8_flash / gemini-3.8-flash)
+  ✓ Real Gateway Endpoint Execution (ep_gemini_3_8_flash / ep_gemini_3_5_flash)
   ✓ Audited LLMCallRecord Generation with Token Metering
   ✓ P5 Lexical Retrieval with Dynamic Law Current Date (plc.capture)
   ✓ In-Corpus vs Honest Out-of-Corpus Negative Grounding Gate

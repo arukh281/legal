@@ -328,6 +328,22 @@ export const ResearchPage: React.FC = () => {
                   Executive Synthesis
                 </span>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {result.summary_status && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        padding: "3px 8px",
+                        borderRadius: "6px",
+                        backgroundColor: "rgba(245, 158, 11, 0.15)",
+                        color: "#fbbf24",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.03em",
+                      }}
+                    >
+                      {result.summary_status}
+                    </span>
+                  )}
                   <span
                     style={{
                       fontSize: "11px",

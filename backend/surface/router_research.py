@@ -59,6 +59,7 @@ class ResearchQueryResponse(Schema):
     query_id: str
     text: str
     summary: str
+    summary_status: str
     in_corpus: bool
     claims: list[ClaimResponseItem]
     contrary_sweep: ContrarySweepResponse
@@ -179,8 +180,11 @@ def execute_research_query(
             "notes": "lexical only, no citator",
         }
 
+    summary_status = "unverified summary" if synthesis_output.get("in_corpus", True) else "out of corpus"
+
     answer_payload = {
         "summary": synthesis_output.get("summary", ""),
+        "summary_status": summary_status,
         "in_corpus": synthesis_output.get("in_corpus", True),
         "claims": formatted_claims,
         "contrary_sweep": contrary_sweep_data,
@@ -197,6 +201,7 @@ def execute_research_query(
         "query_id": query_id,
         "text": query.text,
         "summary": answer_payload["summary"],
+        "summary_status": summary_status,
         "in_corpus": answer_payload["in_corpus"],
         "claims": formatted_claims,
         "contrary_sweep": contrary_sweep_data,

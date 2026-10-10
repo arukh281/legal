@@ -29,3 +29,7 @@ class SchemaValidationError(GatewayError):
 
 class AdapterInvocationError(GatewayError):
     """Raised when provider API call encounters an unrecoverable failure."""
+
+
+class RateLimitError(GatewayError):
+    """Raised when provider API call encounters a rate limit (HTTP 429) or quota exhaustion."""

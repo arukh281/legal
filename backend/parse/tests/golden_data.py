@@ -87,7 +87,6 @@ GOLDEN_FIXTURES: dict[str, dict[str, Any]] = {
             "p9": "9. On issuance of notice dtd. 19.03.2026",
             "p10": "10. Observations",
             "ord": "ORDER",
-            "p2016": "2016.",
         },
     },
     "nclt_scanned_ahm_2": {

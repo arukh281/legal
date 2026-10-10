@@ -179,6 +179,7 @@ def test_research_query_endpoint_end_to_end(
 
     assert data["query_id"].startswith("qry_")
     assert data["in_corpus"] is True
+    assert data["summary_status"] == "unverified summary"
     assert "Section 7" in data["summary"]
 
     # Amendment #1 & #2 assertions

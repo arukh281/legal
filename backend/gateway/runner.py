@@ -31,6 +31,7 @@ from gateway.exceptions import (
     BudgetExhaustedError,
     ContractNotFoundError,
     NoQualifiedEndpointError,
+    RateLimitError,
     ResidencyFailClosedError,
     SchemaValidationError,
 )
@@ -170,151 +171,177 @@ def run(
             f"Task budget exhausted: spent ${spent_usd:.4f} >= limit ${max_budget_usd:.4f}."
         )
 
-    # Order endpoints: IN first for IN_PREFERRED, then batch-capable, then cheapest
-    def sort_key(ep: ModelEndpoint) -> tuple[int, int, float]:
+    # Order endpoints: IN first for IN_PREFERRED, then batch-capable, then priority, then cheapest
+    def sort_key(ep: ModelEndpoint) -> tuple[int, int, int, float]:
         in_prio = 0 if (ctx.residency_policy != "IN_PREFERRED" or ep.processing_geo == "IN") else 1
         batch_prio = 0 if ep.limits.get("supports_batch") else 1
-        in_price = ep.price.get("in_per_mtok", 1.0)
-        return (in_prio, batch_prio, in_price)
+        prio = ep.limits.get("priority", 100) if isinstance(ep.limits, dict) else 100
+        in_price = ep.price.get("in_per_mtok", 1.0) if isinstance(ep.price, dict) else 1.0
+        return (in_prio, batch_prio, prio, in_price)
 
     qualified.sort(key=sort_key)
-    endpoint = qualified[0]
 
-    adapter = _get_adapter(endpoint.provider)
+    last_rate_limit_exc: Exception | None = None
+    for endpoint in qualified:
+        adapter = _get_adapter(endpoint.provider)
 
-    # Render prompt from template
-    template = contract.prompt_variants.get(endpoint.provider) or contract.prompt_variants.get(
-        "default", "{inputs}"
-    )
-    prompt = template.format(inputs=serialized_inputs)
+        # Render prompt from template
+        template = contract.prompt_variants.get(endpoint.provider) or contract.prompt_variants.get(
+            "default", "{inputs}"
+        )
+        prompt = template.format(inputs=serialized_inputs)
 
-    # Prepare call identifiers
-    trace_id = ctx.traceparent or mint_ulid()
-    now = timezone.now()
-    year_str = now.strftime("%Y")
-    month_str = now.strftime("%m")
-    tenant_part = ctx.tenant_id if ctx.tenant_id else "plc"
+        # Prepare call identifiers
+        trace_id = ctx.traceparent or mint_ulid()
+        now = timezone.now()
+        year_str = now.strftime("%Y")
+        month_str = now.strftime("%m")
+        tenant_part = ctx.tenant_id if ctx.tenant_id else "plc"
 
-    # Attempt 1
-    t0 = time.perf_counter()
-    response = adapter.generate(
-        endpoint=endpoint,
-        prompt=prompt,
-        temperature=contract.determinism.get("temperature", 0.0),
-        max_tokens=contract.max_output_tokens,
-        json_mode=True,
-        response_schema=contract.output_schema,
-    )
-    latency_ms = int((time.perf_counter() - t0) * 1000)
+        # Attempt 1
+        t0 = time.perf_counter()
+        try:
+            response = adapter.generate(
+                endpoint=endpoint,
+                prompt=prompt,
+                temperature=contract.determinism.get("temperature", 0.0),
+                max_tokens=contract.max_output_tokens,
+                json_mode=True,
+                response_schema=contract.output_schema,
+            )
+        except RateLimitError as exc:
+            logger.warning(
+                "Endpoint %s rate limited (429): %s. Failing over to next qualified endpoint.",
+                endpoint.endpoint_id,
+                exc,
+            )
+            last_rate_limit_exc = exc
+            continue
 
-    # Calculate USD cost
-    cost_usd = calculate_cost(endpoint, response)
+        latency_ms = int((time.perf_counter() - t0) * 1000)
 
-    # Validate output schema
-    parsed_json, schema_valid, val_error = validate_json(response.content, contract.output_schema)
+        # Calculate USD cost
+        cost_usd = calculate_cost(endpoint, response)
 
-    call_id_1 = mint_ulid()  # Unprefixed ULID per Directive #1
-    inputs_ref_1 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_1}.in.json.gz"
-    outputs_ref_1 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_1}.out.json.gz"
+        # Validate output schema
+        parsed_json, schema_valid, val_error = validate_json(response.content, contract.output_schema)
 
-    # Write call record for attempt 1
-    record_1 = LLMCallRecord.objects.create(
-        call_id=call_id_1,
-        trace_id=trace_id,
-        task_id=task_id,
-        endpoint_id=endpoint.endpoint_id,
-        pipeline_version=pipeline_version,
-        tenant_id=ctx.tenant_id,
-        matter_id=ctx.matter_id,
-        dataclass=ctx.dataclass,
-        residency=ctx.residency_policy,
-        processing_geo=endpoint.processing_geo,
-        purpose=ctx.purpose,
-        input_chars=len(prompt),
-        output_chars=len(response.content),
-        tokens_in=response.tokens_in,
-        tokens_out=response.tokens_out,
-        cache_read_tokens=response.cache_read_tokens,
-        usd=cost_usd,
-        latency_ms=latency_ms,
-        schema_valid=schema_valid,
-        repaired=False,
-        escalated_from=None,
-        inputs_ref=inputs_ref_1,
-        outputs_ref=outputs_ref_1,
-        created_at=now,
-    )
+        call_id_1 = mint_ulid()  # Unprefixed ULID per Directive #1
+        inputs_ref_1 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_1}.in.json.gz"
+        outputs_ref_1 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_1}.out.json.gz"
 
-    log_gateway_call(record_1, ctx.dataclass)
+        # Write call record for attempt 1
+        record_1 = LLMCallRecord.objects.create(
+            call_id=call_id_1,
+            trace_id=trace_id,
+            task_id=task_id,
+            endpoint_id=endpoint.endpoint_id,
+            pipeline_version=pipeline_version,
+            tenant_id=ctx.tenant_id,
+            matter_id=ctx.matter_id,
+            dataclass=ctx.dataclass,
+            residency=ctx.residency_policy,
+            processing_geo=endpoint.processing_geo,
+            purpose=ctx.purpose,
+            input_chars=len(prompt),
+            output_chars=len(response.content),
+            tokens_in=response.tokens_in,
+            tokens_out=response.tokens_out,
+            cache_read_tokens=response.cache_read_tokens,
+            usd=cost_usd,
+            latency_ms=latency_ms,
+            schema_valid=schema_valid,
+            repaired=False,
+            escalated_from=None,
+            inputs_ref=inputs_ref_1,
+            outputs_ref=outputs_ref_1,
+            created_at=now,
+        )
 
-    if schema_valid and parsed_json is not None:
-        return GatewayResult(output=parsed_json, call_record=record_1, attempts=1)
+        log_gateway_call(record_1, ctx.dataclass)
 
-    # 6. Output invalid -> attempt ONE repair
-    repair_prompt = (
-        f"Your previous response did not satisfy the required JSON schema:\n"
-        f"Validation error: {val_error}\n"
-        f"Previous response:\n{response.content}\n"
-        f"Please repair and return strictly conforming JSON for schema:\n"
-        f"{json.dumps(contract.output_schema)}"
-    )
+        if schema_valid and parsed_json is not None:
+            return GatewayResult(output=parsed_json, call_record=record_1, attempts=1)
 
-    t0 = time.perf_counter()
-    repair_response = adapter.generate(
-        endpoint=endpoint,
-        prompt=repair_prompt,
-        temperature=0.0,
-        max_tokens=contract.max_output_tokens,
-        json_mode=True,
-        response_schema=contract.output_schema,
-    )
-    repair_latency_ms = int((time.perf_counter() - t0) * 1000)
-    repair_cost_usd = calculate_cost(endpoint, repair_response)
+        # 6. Output invalid -> attempt ONE repair
+        repair_prompt = (
+            f"Your previous response did not satisfy the required JSON schema:\n"
+            f"Validation error: {val_error}\n"
+            f"Previous response:\n{response.content}\n"
+            f"Please repair and return strictly conforming JSON for schema:\n"
+            f"{json.dumps(contract.output_schema)}"
+        )
 
-    repaired_json, repaired_valid, repair_error = validate_json(
-        repair_response.content, contract.output_schema
-    )
+        t0 = time.perf_counter()
+        try:
+            repair_response = adapter.generate(
+                endpoint=endpoint,
+                prompt=repair_prompt,
+                temperature=0.0,
+                max_tokens=contract.max_output_tokens,
+                json_mode=True,
+                response_schema=contract.output_schema,
+            )
+        except RateLimitError as exc:
+            logger.warning(
+                "Endpoint %s rate limited during repair (429): %s. Failing over to next qualified endpoint.",
+                endpoint.endpoint_id,
+                exc,
+            )
+            last_rate_limit_exc = exc
+            continue
 
-    call_id_2 = mint_ulid()
-    inputs_ref_2 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_2}.in.json.gz"
-    outputs_ref_2 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_2}.out.json.gz"
+        repair_latency_ms = int((time.perf_counter() - t0) * 1000)
+        repair_cost_usd = calculate_cost(endpoint, repair_response)
 
-    now_repair = timezone.now()
-    record_2 = LLMCallRecord.objects.create(
-        call_id=call_id_2,
-        trace_id=trace_id,
-        task_id=task_id,
-        endpoint_id=endpoint.endpoint_id,
-        pipeline_version=pipeline_version,
-        tenant_id=ctx.tenant_id,
-        matter_id=ctx.matter_id,
-        dataclass=ctx.dataclass,
-        residency=ctx.residency_policy,
-        processing_geo=endpoint.processing_geo,
-        purpose=ctx.purpose,
-        input_chars=len(repair_prompt),
-        output_chars=len(repair_response.content),
-        tokens_in=repair_response.tokens_in,
-        tokens_out=repair_response.tokens_out,
-        cache_read_tokens=repair_response.cache_read_tokens,
-        usd=repair_cost_usd,
-        latency_ms=repair_latency_ms,
-        schema_valid=repaired_valid,
-        repaired=True,
-        escalated_from=call_id_1,
-        inputs_ref=inputs_ref_2,
-        outputs_ref=outputs_ref_2,
-        created_at=now_repair,
-    )
+        repaired_json, repaired_valid, repair_error = validate_json(
+            repair_response.content, contract.output_schema
+        )
 
-    log_gateway_call(record_2, ctx.dataclass)
+        call_id_2 = mint_ulid()
+        inputs_ref_2 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_2}.in.json.gz"
+        outputs_ref_2 = f"s3://storage/llm/{tenant_part}/{year_str}/{month_str}/{call_id_2}.out.json.gz"
 
-    if repaired_valid and repaired_json is not None:
-        return GatewayResult(output=repaired_json, call_record=record_2, attempts=2)
+        now_repair = timezone.now()
+        record_2 = LLMCallRecord.objects.create(
+            call_id=call_id_2,
+            trace_id=trace_id,
+            task_id=task_id,
+            endpoint_id=endpoint.endpoint_id,
+            pipeline_version=pipeline_version,
+            tenant_id=ctx.tenant_id,
+            matter_id=ctx.matter_id,
+            dataclass=ctx.dataclass,
+            residency=ctx.residency_policy,
+            processing_geo=endpoint.processing_geo,
+            purpose=ctx.purpose,
+            input_chars=len(repair_prompt),
+            output_chars=len(repair_response.content),
+            tokens_in=repair_response.tokens_in,
+            tokens_out=repair_response.tokens_out,
+            cache_read_tokens=repair_response.cache_read_tokens,
+            usd=repair_cost_usd,
+            latency_ms=repair_latency_ms,
+            schema_valid=repaired_valid,
+            repaired=True,
+            escalated_from=call_id_1,
+            inputs_ref=inputs_ref_2,
+            outputs_ref=outputs_ref_2,
+            created_at=now_repair,
+        )
 
-    raise SchemaValidationError(
-        f"Model output schema validation failed after repair: {repair_error}"
-    )
+        log_gateway_call(record_2, ctx.dataclass)
+
+        if repaired_valid and repaired_json is not None:
+            return GatewayResult(output=repaired_json, call_record=record_2, attempts=2)
+
+        raise SchemaValidationError(
+            f"Model output schema validation failed after repair: {repair_error}"
+        )
+
+    if last_rate_limit_exc is not None:
+        raise last_rate_limit_exc
+    raise NoQualifiedEndpointError(f"No qualified endpoints succeeded for task '{task_id}'.")
 
 
 def embed(

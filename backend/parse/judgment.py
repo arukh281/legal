@@ -445,7 +445,11 @@ class JudgmentParser:
         blocks: list[ParsedBlock] = []
 
         para_pat = re.compile(
-            r"^\s*(?:([1-9]\d*\.[1-9]\d*)[.)]?\s+|(?:\b[Pp]ara(?:graph)?\s*)?([1-9]\d*)[.)]\s*|\(([1-9]\d*)\)\s*)"
+            r"^\s*(?:([1-9]\d*\.[1-9]\d*)[.)]?\s+|(?:\b[Pp]ara(?:graph)?\s*)?([1-9]\d*)[.)]\s*|\(([1-9]\d{0,2})\)\s*)"
+        )
+        citation_follow_pat = re.compile(
+            r"^\s*\]?\s*(?:\d+\s+)?(?:SCC|AIR|SCR|SCALE|Comp\s*Cas|Cri|Civ|OnLine|ILR|DLT|Bom\s*CR|MLJ)\b",
+            re.IGNORECASE,
         )
         date_pat = re.compile(r"^\s*\d{1,2}[./-]\d{1,2}[./-]20[12]\d")
         order_divider_pat = re.compile(
@@ -528,12 +532,41 @@ class JudgmentParser:
                 if not date_pat.match(text):
                     m = para_pat.match(text)
 
+                is_valid_para = False
+                dec_sub = main_num = paren_num = None
+                cand_main_int: int | None = None
+
                 if m:
+                    dec_sub, main_num, paren_num = m.groups()
+                    after_match = text[m.end():]
+                    cand_main_int = (
+                        int(main_num)
+                        if main_num
+                        else (
+                            int(paren_num)
+                            if paren_num
+                            else int(dec_sub.split(".")[0])
+                        )
+                    )
+
+                    # Court-printed numbering must be sequential/plausible:
+                    # 1. 4-digit numbers (years 1900-2099 or >= 1000) are never paragraph numbers
+                    # 2. Parenthesized numbers must be sub-paragraphs (<= 99)
+                    # 3. Numbers followed immediately by citation markers or ']' are citations
+                    if cand_main_int >= 1000 or (1900 <= cand_main_int <= 2099):
+                        is_valid_para = False
+                    elif paren_num and int(paren_num) > 99:
+                        is_valid_para = False
+                    elif citation_follow_pat.match(after_match):
+                        is_valid_para = False
+                    else:
+                        is_valid_para = True
+
+                if is_valid_para:
                     has_seen_first_numbered_para = True
                     if current_block is not None:
                         blocks.append(current_block)
 
-                    dec_sub, main_num, paren_num = m.groups()
                     if dec_sub:
                         frag = f"p{dec_sub}"
                         printed = dec_sub

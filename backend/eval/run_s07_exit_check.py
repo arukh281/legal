@@ -91,6 +91,11 @@ def run_exit_check() -> int:
             data_class_max="PUBLIC",
             price={"in_per_mtok": 0.75, "out_per_mtok": 3.75},
         )
+        ModelEndpoint.objects.filter(endpoint_id="ep_gemini_3_5_flash").update(
+            health="UP",
+            data_class_max="PUBLIC",
+            price={"in_per_mtok": 0.075, "out_per_mtok": 0.30},
+        )
 
     # 1. Ensure test tenant & user
     with admin_db_context():
@@ -269,7 +274,7 @@ def run_exit_check() -> int:
         print("SESSION S07 EXIT CHECK COMPLETED SUCCESSFULLY")
         print("=" * 80)
         print("Verified Checks Executed:")
-        print("  ✓ Real Gateway Endpoint Execution (ep_gemini_3_8_flash / gemini-3.8-flash)")
+        print("  ✓ Real Gateway Endpoint Execution (ep_gemini_3_8_flash / ep_gemini_3_5_flash)")
         print("  ✓ Audited LLMCallRecord Generation with Token Metering")
         print("  ✓ P5 Lexical Retrieval with Dynamic Law Current Date (plc.capture)")
         print("  ✓ In-Corpus vs Honest Out-of-Corpus Negative Grounding Gate")
