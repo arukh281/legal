@@ -11,12 +11,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from django.db import transaction
-
 from anchor_lib.ids import mint_id
 from core.db_router import admin_db_context
-from eval.evaluator import DeterministicEvaluator
-from eval.scorecard import generate_markdown_scorecard
+from django.db import transaction
+from gateway.models import ModelEndpoint
 from ops.models import EvalCase, EvalResult, EvalRun, GoldSet, PipelineVersion
 from reason.synthesizer import AnswerSynthesizer
 from retrieve.models import ResearchQuery
@@ -25,6 +23,9 @@ from verify.verifier import VerificationEngine
 from workspace.authz import ExecutionContext
 from workspace.db import tenant_db_context
 from workspace.models import AppUser, Tenant
+
+from eval.evaluator import DeterministicEvaluator
+from eval.scorecard import generate_markdown_scorecard
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,7 @@ class EvalRunner:
         total_prop_scores: list[float] = []
         passed_cases = 0
         eval_results_to_create: list[dict[str, Any]] = []
+        case_models: dict[str, dict[str, Any]] = {}
 
         # Execute each case within tenant context
         for c in cases:
@@ -186,11 +188,32 @@ class EvalRunner:
                 }
             )
 
+            call_rec = getattr(self.synthesizer, "last_call_record", None)
+            if call_rec:
+                ep_id = call_rec.endpoint_id
+                with admin_db_context():
+                    ep_obj = ModelEndpoint.objects.filter(endpoint_id=ep_id).first()
+                actual_model = ep_obj.model_id if ep_obj else ep_id
+                ep_provider = ep_obj.provider if ep_obj else "unknown"
+            else:
+                ep_id = "N/A"
+                actual_model = "out_of_corpus"
+                ep_provider = None
+
+            case_models[c.eval_case_id] = {
+                "endpoint_id": ep_id,
+                "model": actual_model,
+                "provider": ep_provider,
+                "call_id": call_rec.call_id if call_rec else None,
+            }
+
             case_summaries.append(
                 {
                     "eval_case_id": c.eval_case_id,
                     "split": c.split,
                     "task": c.task,
+                    "endpoint_id": ep_id,
+                    "model": actual_model,
                     "passed": c_eval.passed,
                     "score": c_eval.score,
                     "reasons": c_eval.reasons,
@@ -220,11 +243,30 @@ class EvalRunner:
 
         avg_recall = sum(total_prop_scores) / n_total if n_total > 0 else 0.0
 
+        active_providers = {
+            cm["provider"] for cm in case_models.values() if cm["provider"] is not None
+        }
+        overall_adapter = "fake" if "fake" in active_providers else "real"
+        unique_endpoints = sorted(
+            {cm["endpoint_id"] for cm in case_models.values() if cm["endpoint_id"] != "N/A"}
+        )
+        unique_models = sorted(
+            {cm["model"] for cm in case_models.values() if cm["model"] != "out_of_corpus"}
+        )
+
         pipeline_ver = PipelineVersion.objects.first()
         candidate_info = {
             "pipeline_version": pipeline_ver.pipeline_version if pipeline_ver else "dev",
             "task": cases[0].task if cases else "p6.qa_synthesis@1",
+            "adapter": overall_adapter,
+            "endpoints": unique_endpoints,
+            "models": unique_models,
+            "cases": case_models,
         }
+        if len(unique_endpoints) == 1:
+            candidate_info["endpoint_id"] = unique_endpoints[0]
+        if len(unique_models) == 1:
+            candidate_info["model"] = unique_models[0]
 
         metrics_info = {
             "n": n_total,
@@ -236,32 +278,31 @@ class EvalRunner:
             "zero_tolerance_reviewed": reviewed_zero_tolerance,
         }
 
-        with admin_db_context():
-            with transaction.atomic(using="owner"):
-                eval_run = EvalRun(
-                    run_id=run_id,
-                    gold_set=gold_set,
-                    candidate=candidate_info,
-                    metrics=metrics_info,
-                    gate_decision=gate_decision,
-                    sentinel_failures=None,
-                    cost_usd=None,
-                )
-                if not dry_run:
-                    eval_run.save()
-                    for r_data in eval_results_to_create:
-                        EvalResult.objects.create(
-                            result_id=r_data["result_id"],
-                            run=eval_run,
-                            eval_case=r_data["eval_case"],
-                            actual=r_data["actual"],
-                            passed=r_data["passed"],
-                            score=r_data["score"],
-                            reasons=r_data["reasons"],
-                            gate_checks=r_data["gate_checks"],
-                        )
-                else:
-                    transaction.set_rollback(True, using="owner")
+        with admin_db_context(), transaction.atomic(using="owner"):
+            eval_run = EvalRun(
+                run_id=run_id,
+                gold_set=gold_set,
+                candidate=candidate_info,
+                metrics=metrics_info,
+                gate_decision=gate_decision,
+                sentinel_failures=None,
+                cost_usd=None,
+            )
+            if not dry_run:
+                eval_run.save()
+                for r_data in eval_results_to_create:
+                    EvalResult.objects.create(
+                        result_id=r_data["result_id"],
+                        run=eval_run,
+                        eval_case=r_data["eval_case"],
+                        actual=r_data["actual"],
+                        passed=r_data["passed"],
+                        score=r_data["score"],
+                        reasons=r_data["reasons"],
+                        gate_checks=r_data["gate_checks"],
+                    )
+            else:
+                transaction.set_rollback(True, using="owner")
 
         scorecard_md = generate_markdown_scorecard(eval_run, case_summaries)
         return eval_run, case_summaries, scorecard_md

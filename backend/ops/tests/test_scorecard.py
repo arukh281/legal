@@ -121,3 +121,52 @@ def test_scorecard_reject_banner_on_zero_tolerance_failure() -> None:
     scorecard_md = generate_markdown_scorecard(eval_run, cases)
     assert "GATE DECISION: REJECT" in scorecard_md
     assert "Fabricated Anchors | 0 | 1 | FAIL" in scorecard_md
+
+
+def test_scorecard_shows_adapter_and_model_at_top() -> None:
+    """Item 1: Scorecard must display adapter (fake/real) and model(s) at top and in table."""
+    gold_set = GoldSet(
+        gold_set_id="gld_01M4TESTGOLDSET0000000000",
+        name="Test Suite",
+        version=1,
+        scope="PUBLIC",
+    )
+    eval_run = EvalRun(
+        run_id="evr_01M4TESTEVALRUN0000000000",
+        gold_set=gold_set,
+        candidate={
+            "pipeline_version": "p6.reasoner@0.1.0|qa_synthesis_v1",
+            "adapter": "real",
+            "models": ["gemini-3.8-flash"],
+            "endpoints": ["ep_gemini_3_8_flash"],
+            "cases": {
+                "evc_01TESTCASE0000000000000001": {
+                    "endpoint_id": "ep_gemini_3_8_flash",
+                    "model": "gemini-3.8-flash",
+                }
+            },
+        },
+        metrics={"n": 1, "passed_cases": 1, "zero_tolerance": {}},
+        gate_decision="PREVIEW",
+        created_at=datetime.datetime(2026, 10, 11, 12, 0, 0, tzinfo=datetime.UTC),
+    )
+
+    cases = [
+        {
+            "eval_case_id": "evc_01TESTCASE0000000000000001",
+            "split": "DEV",
+            "task": "p6.qa_synthesis@1",
+            "model": "gemini-3.8-flash",
+            "passed": True,
+            "score": 1.0,
+            "reasons": [],
+            "gate_checks": {},
+            "in_corpus_match": True,
+        }
+    ]
+
+    scorecard_md = generate_markdown_scorecard(eval_run, cases)
+    assert "- **Adapter:** `real`" in scorecard_md
+    assert "- **Model(s):** gemini-3.8-flash (`ep_gemini_3_8_flash`)" in scorecard_md
+    assert "| `evc_01TESTCASE0000000000000001` | DEV | `p6.qa_synthesis@1` | `gemini-3.8-flash` |" in scorecard_md
+

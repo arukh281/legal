@@ -16,6 +16,7 @@ import logging
 from typing import Any
 
 from anchor_lib.ids import mint_id
+from gateway.models import LLMCallRecord
 from gateway.runner import run as gateway_run
 from reason.models import Claim
 from retrieve.models import EvidenceBundle, ResearchQuery
@@ -29,6 +30,9 @@ QA_SYNTHESIS_TASK_ID = "p6.qa_synthesis@1"
 class AnswerSynthesizer:
     """Answer Synthesizer calling Model Gateway with strictly delimited chunk data."""
 
+    def __init__(self) -> None:
+        self.last_call_record: LLMCallRecord | None = None
+
     def synthesize(
         self,
         query: ResearchQuery,
@@ -38,6 +42,7 @@ class AnswerSynthesizer:
         """Synthesize answer from EvidenceBundle or report out-of-corpus honestly."""
         # 1. Honest out-of-corpus gate (Non-negotiable #3)
         if not bundle.items:
+            self.last_call_record = None
             payload = {
                 "summary": "The requested topic was not found in the MVP corpus. Out of corpus means 'not in MVP corpus', not that the legal proposition is incorrect.",
                 "in_corpus": False,
@@ -78,6 +83,7 @@ class AnswerSynthesizer:
             ctx=ctx,
             pipeline_version="p6.reasoner@0.1.0|qa_synthesis_v1",
         )
+        self.last_call_record = result.call_record
         output = result.output
 
         # 5. Mint Claim instances for valid in-corpus claims

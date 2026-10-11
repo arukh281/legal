@@ -37,12 +37,26 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
     n_reviewed = metrics.get("n_reviewed", 0)
     n_synthetic = metrics.get("n_synthetic_unreviewed", n - n_reviewed)
 
+    adapter_kind = eval_run.candidate.get("adapter", "unknown")
+    models_list = eval_run.candidate.get("models", [])
+    endpoints_list = eval_run.candidate.get("endpoints", [])
+    if models_list and endpoints_list:
+        models_str = ", ".join(f"{m} (`{ep}`)" for m, ep in zip(models_list, endpoints_list))
+    elif models_list:
+        models_str = ", ".join(models_list)
+    elif "model" in eval_run.candidate:
+        models_str = str(eval_run.candidate["model"])
+    else:
+        models_str = "N/A"
+
     lines: list[str] = [
         "# Evaluation Run Scorecard",
         f"- **Run ID:** `{eval_run.run_id}`",
         f"- **Gold Set:** `{eval_run.gold_set_id}`",
         f"- **Created At:** {created_str}",
         f"- **Candidate:** `{eval_run.candidate.get('pipeline_version', 'dev')}`",
+        f"- **Adapter:** `{adapter_kind}`",
+        f"- **Model(s):** {models_str}",
         f"- **Sample Size (n):** {n} (Reviewed: {n_reviewed}, Synthetic Unreviewed: {n_synthetic})",
         "",
         "## 1. Zero-Tolerance Gating Checks",
@@ -76,8 +90,8 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
         [
             "",
             "## 3. Case-by-Case Breakdown",
-            "| Case ID | Split | Task | In-Corpus | Score | ZT Violations | Verdict |",
-            "|---|---|---|---|---|---|---|",
+            "| Case ID | Split | Task | Model | In-Corpus | Score | ZT Violations | Verdict |",
+            "|---|---|---|---|---|---|---|---|",
         ]
     )
 
@@ -85,11 +99,14 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
         cid = item.get("eval_case_id", "")
         split = item.get("split", "DEV")
         task = item.get("task", "")
+        model_name = item.get("model", "N/A")
         in_corp = "Yes" if item.get("in_corpus_match", True) else "Mismatch"
         score = f"{item.get('score', 0.0):.2f}"
         zt_v = sum(item.get("gate_checks", {}).values())
         verdict = "PASS" if item.get("passed", False) else "FAIL"
-        lines.append(f"| `{cid}` | {split} | `{task}` | {in_corp} | {score} | {zt_v} | {verdict} |")
+        lines.append(
+            f"| `{cid}` | {split} | `{task}` | `{model_name}` | {in_corp} | {score} | {zt_v} | {verdict} |"
+        )
 
     lines.append("")
     return "\n".join(lines)
