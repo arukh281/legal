@@ -16,10 +16,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from django.db import transaction
-
 from anchor_lib.ids import parse_id
 from core.db_router import admin_db_context
+from django.db import transaction
 from ops.models import EvalCase, GoldSet
 from parse.models import Anchor
 
@@ -80,46 +79,44 @@ def load_gold_set_from_dict(data: dict[str, Any], dry_run: bool = False) -> Gold
 
     cases_data = data.get("cases", [])
 
-    with admin_db_context():
-        with transaction.atomic(using="owner"):
-            gold_set, _ = GoldSet.objects.update_or_create(
-                gold_set_id=gold_set_id,
-                defaults={
-                    "name": name,
-                    "version": version,
-                    "scope": scope,
-                    "frozen_at": data.get("frozen_at"),
-                    "metadata": data.get("metadata", {}),
-                },
-            )
+    with admin_db_context(), transaction.atomic(using="owner"):
+        gold_set, _ = GoldSet.objects.update_or_create(
+            gold_set_id=gold_set_id,
+            defaults={
+                "name": name,
+                "version": version,
+                "scope": scope,
+                "frozen_at": data.get("frozen_at"),
+                "metadata": data.get("metadata", {}),
+            },
+        )
 
-            for c in cases_data:
-                case_id = c.get("eval_case_id", "")
-                if not case_id.startswith("evc_"):
-                    raise GoldLoaderError(f"Invalid eval_case_id: {case_id} (must start with evc_)")
+        for c in cases_data:
+            case_id = c.get("eval_case_id", "")
+            if not case_id.startswith("evc_"):
+                raise GoldLoaderError(f"Invalid eval_case_id: {case_id} (must start with evc_)")
 
-                # Validate Crockford ULID
-                try:
-                    p_case_id = parse_id(case_id)
-                    if not p_case_id.ulid:
-                        raise GoldLoaderError(f"Malformed Crockford ULID in eval_case_id: {case_id}")
-                except ValueError as e:
-                    raise GoldLoaderError(f"Invalid eval_case_id: {e}") from e
+            # Validate Crockford ULID
+            try:
+                p_case_id = parse_id(case_id)
+                if not p_case_id.ulid:
+                    raise GoldLoaderError(f"Malformed Crockford ULID in eval_case_id: {case_id}")
+            except ValueError as e:
+                raise GoldLoaderError(f"Invalid eval_case_id: {e}") from e
 
-                split = c.get("split", "DEV")
-                if split not in ("DEV", "EXAM", "TRAIN"):
-                    raise GoldLoaderError(f"Case {case_id}: Invalid split {split}")
+            split = c.get("split", "DEV")
+            if split not in ("DEV", "EXAM", "SENTINEL"):
+                raise GoldLoaderError(f"Case {case_id}: Invalid split {split}")
 
-                task = c.get("task", "p6.qa_synthesis@1")
-                strata = c.get("strata", {})
-                inp = c.get("input", {})
-                expected = c.get("expected", {})
-                provenance = c.get("provenance", {})
+            task = c.get("task", "p6.qa_synthesis@1")
+            strata = c.get("strata", {})
+            inp = c.get("input", {})
+            expected = c.get("expected", {})
+            provenance = c.get("provenance", {})
 
-                # Amendment 2(b): Agent-authored cases have provenance SYNTHETIC, reviewed=false
-                if provenance.get("source") == "SYNTHETIC":
-                    if "reviewed" not in provenance:
-                        provenance["reviewed"] = False
+            # Amendment 2(b): Agent-authored cases have provenance SYNTHETIC, reviewed=false
+            if provenance.get("source") == "SYNTHETIC" and "reviewed" not in provenance:
+                provenance["reviewed"] = False
 
                 # Amendment 2(a): Validate expected quotes strictly
                 validate_expected_quotes(case_id, expected)

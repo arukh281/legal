@@ -36,8 +36,8 @@ class Command(BaseCommand):
             "--split",
             type=str,
             default=None,
-            choices=["DEV", "EXAM", "TRAIN"],
-            help="Filter suite by split (DEV, EXAM, TRAIN)",
+            choices=["DEV", "EXAM", "SENTINEL"],
+            help="Filter suite by split (DEV, EXAM, SENTINEL)",
         )
         parser.add_argument(
             "--dry-run",

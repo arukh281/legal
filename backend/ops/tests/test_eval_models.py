@@ -195,3 +195,49 @@ def test_fake_override_does_not_modify_model_endpoint_health(db: None) -> None:
     assert after_fake_health == initial_fake_health
     assert after_gemini_health == initial_gemini_health
 
+
+@pytest.mark.django_db(databases=["default", "admin", "owner"])
+def test_eval_case_split_constraint_sentinel_and_train(db: None) -> None:
+    """Item 3: ops.eval_case accepts 'SENTINEL' and rejects 'TRAIN' per 01 line 1317."""
+    from django.db import IntegrityError
+
+    with admin_db_context():
+        with transaction.atomic(using="owner"):
+            gold_set = GoldSet.objects.create(
+                gold_set_id=mint_id("gld"),
+                name="Split Test Suite",
+                version=1,
+                scope="PUBLIC",
+            )
+            # SENTINEL must be accepted
+            sentinel_case = EvalCase.objects.create(
+                eval_case_id=mint_id("evc"),
+                gold_set=gold_set,
+                version=1,
+                split="SENTINEL",
+                task="p6.qa_synthesis@1",
+                strata={},
+                input={},
+                expected={},
+                provenance={"source": "SYNTHETIC", "reviewed": False},
+                depends_on_ids=[],
+            )
+            assert sentinel_case.split == "SENTINEL"
+
+            # TRAIN must be rejected by check constraint
+            with pytest.raises(IntegrityError):
+                with transaction.atomic(using="owner"):
+                    EvalCase.objects.create(
+                        eval_case_id=mint_id("evc"),
+                        gold_set=gold_set,
+                        version=1,
+                        split="TRAIN",
+                        task="p6.qa_synthesis@1",
+                        strata={},
+                        input={},
+                        expected={},
+                        provenance={"source": "SYNTHETIC", "reviewed": False},
+                        depends_on_ids=[],
+                    )
+
+
