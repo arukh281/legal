@@ -241,3 +241,22 @@ def test_eval_case_split_constraint_sentinel_and_train(db: None) -> None:
                     )
 
 
+@pytest.mark.django_db(databases=["default", "admin", "owner"])
+def test_deliberate_pipeline_version_selection(db: None) -> None:
+    """Item 4: get_deliberate_pipeline_version selects active/latest version for task component."""
+    from eval.runner import get_deliberate_pipeline_version
+
+    # For p6 QA synthesis, should select latest p6.reasoner
+    ver_p6 = get_deliberate_pipeline_version("p6.qa_synthesis@1")
+    assert ver_p6.startswith("p6.reasoner@")
+
+    # For p8 verification, should select latest p8.verifier
+    ver_p8 = get_deliberate_pipeline_version("p8.verify@1")
+    assert ver_p8.startswith("p8.verifier@")
+
+    # Explicit request must override
+    ver_override = get_deliberate_pipeline_version("p6.qa_synthesis@1", requested_version="p6.custom@2.0.0")
+    assert ver_override == "p6.custom@2.0.0"
+
+
+

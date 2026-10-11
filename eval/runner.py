@@ -30,11 +30,48 @@ from eval.scorecard import generate_markdown_scorecard
 logger = logging.getLogger(__name__)
 
 
+def get_deliberate_pipeline_version(task_id: str, requested_version: str | None = None) -> str:
+    """Deliberately choose the active or latest pipeline version for a task."""
+    if requested_version:
+        return requested_version
+
+    with admin_db_context():
+        phase_map = {
+            "p6": "p6.reasoner",
+            "p8": "p8.verifier",
+            "p5": "p5.retriever",
+            "p2": "p2.index",
+            "p1": "p1.citation",
+        }
+        phase_key = task_id.split(".")[0] if "." in task_id else ""
+        component_name = phase_map.get(phase_key)
+
+        pv: PipelineVersion | None = None
+        if component_name:
+            pv = (
+                PipelineVersion.objects.filter(component=component_name)
+                .order_by("-created_at")
+                .first()
+            )
+        if not pv:
+            pv = PipelineVersion.objects.order_by("-created_at").first()
+
+        if pv:
+            return str(pv.pipeline_version)
+
+    return "p6.reasoner@0.1.0|qa_synthesis_v1"
+
+
 class EvalRunner:
     """Executes evaluation cases and records audited results."""
 
-    def __init__(self, endpoint_override: str | None = None) -> None:
+    def __init__(
+        self,
+        endpoint_override: str | None = None,
+        pipeline_version: str | None = None,
+    ) -> None:
         self.endpoint_override = endpoint_override
+        self.pipeline_version = pipeline_version
         self.retriever = RetrievalEngine(index_family="plc_chunks")
         self.synthesizer = AnswerSynthesizer(endpoint_override=endpoint_override)
         self.verifier = VerificationEngine()
@@ -48,9 +85,11 @@ class EvalRunner:
         ctx: ExecutionContext | None = None,
         dry_run: bool = False,
         endpoint_override: str | None = None,
+        pipeline_version: str | None = None,
     ) -> tuple[EvalRun, list[dict[str, Any]], str]:
         """Execute gold cases in the given suite, score results, and record an EvalRun."""
         active_override = endpoint_override or self.endpoint_override
+        active_pipeline_ver_override = pipeline_version or self.pipeline_version
         with admin_db_context():
             gold_set = GoldSet.objects.get(gold_set_id=gold_set_id)
             case_qs = EvalCase.objects.filter(gold_set=gold_set, stale=False)
@@ -262,10 +301,14 @@ class EvalRunner:
             {cm["model"] for cm in case_models.values() if cm["model"] != "out_of_corpus"}
         )
 
-        pipeline_ver = PipelineVersion.objects.first()
+        task_str = cases[0].task if cases else "p6.qa_synthesis@1"
+        chosen_pipeline_ver = get_deliberate_pipeline_version(
+            task_id=task_str,
+            requested_version=active_pipeline_ver_override,
+        )
         candidate_info = {
-            "pipeline_version": pipeline_ver.pipeline_version if pipeline_ver else "dev",
-            "task": cases[0].task if cases else "p6.qa_synthesis@1",
+            "pipeline_version": chosen_pipeline_ver,
+            "task": task_str,
             "adapter": overall_adapter,
             "endpoints": unique_endpoints,
             "models": unique_models,
