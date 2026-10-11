@@ -139,3 +139,59 @@ def test_identity_merge_ledger_iml_prefix_persistence(db: None) -> None:
             assert fetched.event_id.startswith("iml_")
             assert fetched.from_id == work2.work_id
             assert fetched.to_id == work1.work_id
+
+
+@pytest.mark.django_db(databases=["default", "admin", "owner"])
+def test_fake_override_does_not_modify_model_endpoint_health(db: None) -> None:
+    """Item 2: --fake / endpoint_override must NEVER mutate ModelEndpoint.health in the database."""
+    from gateway.models import ModelEndpoint
+    from gateway.runner import run as gateway_run
+    from workspace.authz import ExecutionContext
+
+    with admin_db_context():
+        fake_ep = ModelEndpoint.objects.get(endpoint_id="ep_fake_qa")
+        initial_fake_health = fake_ep.health
+        gemini_ep = ModelEndpoint.objects.get(endpoint_id="ep_gemini_3_8_flash")
+        initial_gemini_health = gemini_ep.health
+
+    ctx = ExecutionContext(
+        tenant_id="ten_01M3DEMOTENANT0000000000",
+        user_id="usr_01M3DEMOPARTNER000000000",
+        firm_role="PARTNER",
+        residency_policy="ANY",
+        purpose="TEST_ENDPOINT_OVERRIDE",
+        dataclass="PUBLIC",
+    )
+
+    inputs = {
+        "question": "What is the trigger under Section 7?",
+        "as_of_legal_date": "2026-10-10",
+        "evidence_chunks": [
+            {
+                "item_id": "item_1",
+                "anchor_id": "wrk_test#p1",
+                "work_id": "wrk_test",
+                "court_id": "SC",
+                "title": "Header",
+                "text": "The statutory record establishes that default occurred.",
+            }
+        ],
+    }
+
+    result = gateway_run(
+        task_id="p6.qa_synthesis@1",
+        inputs=inputs,
+        ctx=ctx,
+        endpoint_override="ep_fake_qa",
+    )
+
+    assert result.call_record.endpoint_id == "ep_fake_qa"
+
+    # Verify that ModelEndpoint health in database was NOT touched
+    with admin_db_context():
+        after_fake_health = ModelEndpoint.objects.get(endpoint_id="ep_fake_qa").health
+        after_gemini_health = ModelEndpoint.objects.get(endpoint_id="ep_gemini_3_8_flash").health
+
+    assert after_fake_health == initial_fake_health
+    assert after_gemini_health == initial_gemini_health
+

@@ -100,13 +100,15 @@ def run(
     inputs: dict[str, Any],
     ctx: ExecutionContext,
     pipeline_version: str = "v1.0.0",
+    endpoint_override: str | None = None,
 ) -> GatewayResult:
     """Execute a model task through the audited, budgeted, residency-checked Model Gateway.
 
     Steps:
     1. Load ModelTaskContract by task_id.
     2. Validate inputs against input_schema and max_input_chars.
-    3. Filter qualified endpoints (health, qualification, data_class_max, residency fail-closed).
+    3. Filter qualified endpoints (health, qualification, data_class_max, residency fail-closed),
+       or route directly if endpoint_override is specified.
     4. Enforce task budget.
     5. Call adapter and validate output against output_schema.
     6. Allow 1 repair attempt if validation fails; fail loudly if repair fails.
@@ -140,29 +142,39 @@ def run(
         )
 
     # 3. Filter qualified endpoints
-    endpoints = list(ModelEndpoint.objects.filter(health__in=["UP", "DEGRADED"]))
+    selected_override = endpoint_override or (
+        ctx.llm_policy.get("endpoint_override") if isinstance(ctx.llm_policy, dict) else None
+    )
 
     qualified: list[ModelEndpoint] = []
-    for ep in endpoints:
-        # Check task qualification
-        if task_id not in ep.qualified_tasks:
-            continue
-        # Directive #8: endpoint.data_class_max >= call dataclass
-        ep_dataclass_level = DATACLASS_HIERARCHY.get(ep.data_class_max, 0)
-        if ep_dataclass_level < req_dataclass_level:
-            continue
-        qualified.append(ep)
+    if selected_override:
+        override_ep = ModelEndpoint.objects.filter(endpoint_id=selected_override).first()
+        if not override_ep:
+            raise NoQualifiedEndpointError(f"Override endpoint '{selected_override}' not found.")
+        qualified = [override_ep]
+    else:
+        endpoints = list(ModelEndpoint.objects.filter(health__in=["UP", "DEGRADED"]))
 
-    # Residency enforcement (D15: fail-closed)
-    if ctx.residency_policy == "IN_ONLY":
-        qualified = [ep for ep in qualified if ep.processing_geo == "IN"]
+        for ep in endpoints:
+            # Check task qualification
+            if task_id not in ep.qualified_tasks:
+                continue
+            # Directive #8: endpoint.data_class_max >= call dataclass
+            ep_dataclass_level = DATACLASS_HIERARCHY.get(ep.data_class_max, 0)
+            if ep_dataclass_level < req_dataclass_level:
+                continue
+            qualified.append(ep)
+
+        # Residency enforcement (D15: fail-closed)
+        if ctx.residency_policy == "IN_ONLY":
+            qualified = [ep for ep in qualified if ep.processing_geo == "IN"]
+            if not qualified:
+                raise ResidencyFailClosedError(
+                    "RESIDENCY_NO_QUALIFIED_ENDPOINT: No in-India endpoints available for IN_ONLY policy."
+                )
+
         if not qualified:
-            raise ResidencyFailClosedError(
-                "RESIDENCY_NO_QUALIFIED_ENDPOINT: No in-India endpoints available for IN_ONLY policy."
-            )
-
-    if not qualified:
-        raise NoQualifiedEndpointError(f"No qualified endpoints found for task '{task_id}'.")
+            raise NoQualifiedEndpointError(f"No qualified endpoints found for task '{task_id}'.")
 
     # 4. Enforce budget if specified in context
     max_budget_usd = ctx.llm_policy.get("max_cost_usd")

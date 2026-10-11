@@ -57,16 +57,7 @@ class Command(BaseCommand):
         dry_run = options.get("dry_run", False)
         use_fake = options.get("fake", False)
 
-        from core.db_router import admin_db_context
-        from gateway.models import ModelEndpoint
-
-        prev_healths: dict[str, str] = {}
-        if use_fake:
-            with admin_db_context():
-                for ep in ModelEndpoint.objects.all():
-                    prev_healths[ep.endpoint_id] = ep.health
-                ModelEndpoint.objects.filter(endpoint_id="ep_fake_qa").update(health="UP")
-                ModelEndpoint.objects.filter(endpoint_id__startswith="ep_gemini").update(health="DOWN")
+        endpoint_override = "ep_fake_qa" if use_fake else None
 
         if not gold_set_id:
             # Find latest gold set
@@ -77,28 +68,23 @@ class Command(BaseCommand):
             gold_set_id = gs.gold_set_id
 
         self.stdout.write(
-            f"[*] Starting EvalRunner for gold_set={gold_set_id} (case={case_id}, split={split}, dry_run={dry_run})..."
+            f"[*] Starting EvalRunner for gold_set={gold_set_id} (case={case_id}, split={split}, dry_run={dry_run}, fake={use_fake})..."
         )
 
-        try:
-            runner = EvalRunner()
-            eval_run, case_summaries, scorecard_md = runner.run_suite(
-                gold_set_id=gold_set_id,
-                split=split,
-                specific_case_id=case_id,
-                dry_run=dry_run,
-            )
+        runner = EvalRunner(endpoint_override=endpoint_override)
+        eval_run, case_summaries, scorecard_md = runner.run_suite(
+            gold_set_id=gold_set_id,
+            split=split,
+            specific_case_id=case_id,
+            dry_run=dry_run,
+            endpoint_override=endpoint_override,
+        )
 
-            self.stdout.write("\n" + "=" * 80)
-            self.stdout.write(scorecard_md)
-            self.stdout.write("=" * 80 + "\n")
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"[✓] Evaluation complete. Run ID: {eval_run.run_id} | Gate Decision: {eval_run.gate_decision}"
-                )
+        self.stdout.write("\n" + "=" * 80)
+        self.stdout.write(scorecard_md)
+        self.stdout.write("=" * 80 + "\n")
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"[✓] Evaluation complete. Run ID: {eval_run.run_id} | Gate Decision: {eval_run.gate_decision}"
             )
-        finally:
-            if use_fake:
-                with admin_db_context():
-                    for ep_id, h in prev_healths.items():
-                        ModelEndpoint.objects.filter(endpoint_id=ep_id).update(health=h)
+        )

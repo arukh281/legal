@@ -33,9 +33,10 @@ logger = logging.getLogger(__name__)
 class EvalRunner:
     """Executes evaluation cases and records audited results."""
 
-    def __init__(self) -> None:
+    def __init__(self, endpoint_override: str | None = None) -> None:
+        self.endpoint_override = endpoint_override
         self.retriever = RetrievalEngine(index_family="plc_chunks")
-        self.synthesizer = AnswerSynthesizer()
+        self.synthesizer = AnswerSynthesizer(endpoint_override=endpoint_override)
         self.verifier = VerificationEngine()
         self.evaluator = DeterministicEvaluator()
 
@@ -46,8 +47,10 @@ class EvalRunner:
         specific_case_id: str | None = None,
         ctx: ExecutionContext | None = None,
         dry_run: bool = False,
+        endpoint_override: str | None = None,
     ) -> tuple[EvalRun, list[dict[str, Any]], str]:
         """Execute gold cases in the given suite, score results, and record an EvalRun."""
+        active_override = endpoint_override or self.endpoint_override
         with admin_db_context():
             gold_set = GoldSet.objects.get(gold_set_id=gold_set_id)
             case_qs = EvalCase.objects.filter(gold_set=gold_set, stale=False)
@@ -82,6 +85,7 @@ class EvalRunner:
                         "active": True,
                     },
                 )
+            llm_pol = {"endpoint_override": active_override} if active_override else {}
             ctx = ExecutionContext(
                 user_id=user.user_id,
                 tenant_id=tenant.tenant_id,
@@ -89,6 +93,7 @@ class EvalRunner:
                 residency_policy="ANY",
                 purpose="EXIT_CHECK_EVAL",
                 dataclass="PUBLIC",
+                llm_policy=llm_pol,
             )
 
         run_id = mint_id("evr")
@@ -140,7 +145,7 @@ class EvalRunner:
                 bundle = self.retriever.retrieve(query=query, ctx=ctx, k=15)
                 # 2. Synthesize
                 synthesis_output, claims = self.synthesizer.synthesize(
-                    query=query, bundle=bundle, ctx=ctx
+                    query=query, bundle=bundle, ctx=ctx, endpoint_override=active_override
                 )
                 # 3. Verify
                 v_report = self.verifier.verify(
@@ -246,7 +251,10 @@ class EvalRunner:
         active_providers = {
             cm["provider"] for cm in case_models.values() if cm["provider"] is not None
         }
-        overall_adapter = "fake" if "fake" in active_providers else "real"
+        if active_override == "ep_fake_qa" or "fake" in active_providers:
+            overall_adapter = "fake"
+        else:
+            overall_adapter = "real"
         unique_endpoints = sorted(
             {cm["endpoint_id"] for cm in case_models.values() if cm["endpoint_id"] != "N/A"}
         )

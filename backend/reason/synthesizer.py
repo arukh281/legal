@@ -30,7 +30,8 @@ QA_SYNTHESIS_TASK_ID = "p6.qa_synthesis@1"
 class AnswerSynthesizer:
     """Answer Synthesizer calling Model Gateway with strictly delimited chunk data."""
 
-    def __init__(self) -> None:
+    def __init__(self, endpoint_override: str | None = None) -> None:
+        self.endpoint_override = endpoint_override
         self.last_call_record: LLMCallRecord | None = None
 
     def synthesize(
@@ -38,6 +39,7 @@ class AnswerSynthesizer:
         query: ResearchQuery,
         bundle: EvidenceBundle,
         ctx: ExecutionContext,
+        endpoint_override: str | None = None,
     ) -> tuple[dict[str, Any], list[Claim]]:
         """Synthesize answer from EvidenceBundle or report out-of-corpus honestly."""
         # 1. Honest out-of-corpus gate (Non-negotiable #3)
@@ -77,11 +79,13 @@ class AnswerSynthesizer:
         }
 
         # 4. Invoke Model Gateway
+        selected_override = endpoint_override or self.endpoint_override
         result = gateway_run(
             task_id=QA_SYNTHESIS_TASK_ID,
             inputs=gateway_inputs,
             ctx=ctx,
             pipeline_version="p6.reasoner@0.1.0|qa_synthesis_v1",
+            endpoint_override=selected_override,
         )
         self.last_call_record = result.call_record
         output = result.output
