@@ -410,7 +410,7 @@ def test_retire_then_split_round_trip() -> None:
     )
 
     split_event_id = split_work(merge_ledger.event_id, reason="TEST_REVERSAL")
-    assert split_event_id.startswith("evr_")
+    assert split_event_id.startswith("iml_")
 
     # 5. Assert: prior status restored (PROVISIONAL, not hardcoded ACTIVE!)
     dup_work.refresh_from_db()
@@ -463,7 +463,7 @@ def test_split_work_when_canonical_has_active_alias_does_not_raise() -> None:
     )
 
     # Recorded merge with details where dup_alias was superseded, but can_alias was NOT created/activated by merge
-    event_id = mint_id("evr")
+    event_id = mint_id("iml")
     IdentityMergeLedger.objects.create(
         event_id=event_id,
         kind="WORK",
@@ -492,7 +492,7 @@ def test_split_work_when_canonical_has_active_alias_does_not_raise() -> None:
 
     # split_work must reverse the merge without raising an alias_one_active integrity error
     split_event_id = split_work(event_id, reason="TEST_SPLIT_COLLISION")
-    assert split_event_id.startswith("evr_")
+    assert split_event_id.startswith("iml_")
 
     # Canonical alias remains ACTIVE
     can_alias.refresh_from_db()
@@ -531,7 +531,7 @@ def test_split_work_leaves_preexisting_superseded_alias_when_details_lists_empty
     )
 
     # Merge ledger recorded with explicit empty lists in details
-    event_id = mint_id("evr")
+    event_id = mint_id("iml")
     IdentityMergeLedger.objects.create(
         event_id=event_id,
         kind="WORK",
@@ -554,7 +554,7 @@ def test_split_work_leaves_preexisting_superseded_alias_when_details_lists_empty
 
     # Execute split
     split_event_id = split_work(event_id, reason="TEST_REVERSAL")
-    assert split_event_id.startswith("evr_")
+    assert split_event_id.startswith("iml_")
 
     # The pre-existing superseded alias MUST REMAIN SUPERSEDED (not reactivated)
     old_alias.refresh_from_db()

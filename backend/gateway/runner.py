@@ -28,6 +28,7 @@ from gateway.adapters.google_adapter import GoogleAdapter
 from gateway.adapters.openai_adapter import OpenAIAdapter
 from gateway.adapters.voyage_adapter import VoyageAdapter
 from gateway.exceptions import (
+    AdapterInvocationError,
     BudgetExhaustedError,
     ContractNotFoundError,
     NoQualifiedEndpointError,
@@ -209,9 +210,9 @@ def run(
                 json_mode=True,
                 response_schema=contract.output_schema,
             )
-        except RateLimitError as exc:
+        except (RateLimitError, AdapterInvocationError) as exc:
             logger.warning(
-                "Endpoint %s rate limited (429): %s. Failing over to next qualified endpoint.",
+                "Endpoint %s invocation failed: %s. Failing over to next qualified endpoint.",
                 endpoint.endpoint_id,
                 exc,
             )

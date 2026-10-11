@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S07 Complete (Retrieval, Q&A with claims pinned to anchors, source viewer; Demo 1)
+## Current State: Session S08 Complete (Eval Harness & Gold Store: ops.gold_set, ops.eval_case, ops.eval_run, ops.eval_result)
 
 ### 1. What Was Built
 
@@ -671,17 +671,79 @@ Verified Checks Executed:
 
 ---
 
-### 7. Stubs & Notes
-- **Dense Retrieval Deferred:** Single-leg lexical search active for S07 (generation `g1` holds fake embeddings to save dev cost). Real Voyage generation `g2` will be built in Session S08 under partner approval.
-- **Citator Doctrine Rules:** Adverse treatment graph propagation and citator badges deferred to Session S09; contrary sweep honestly reports `LIMITED ("lexical only, no citator")`.
+---
+
+## Session S08: Evaluation Harness & Gold Store (Completed 2026-10-11)
+
+### 1. What Was Built
+- **Operational Data Model & PostgreSQL Migration (`backend/ops/migrations/0003_eval_store_tables.py`):**
+  - Verbatim DDL per `docs/mvp/03_data_model_and_contracts.md` §3.15 creating `ops.gold_set`, `ops.eval_case`, `ops.eval_run`, and `ops.eval_result`.
+  - Added Django models `GoldSet`, `EvalCase`, `EvalRun`, and `EvalResult` to `backend/ops/models.py`.
+- **ID Prefix Collision Resolution (Amendment 2f):**
+  - Reclaimed prefix `evr_` strictly for `eval_run` (P8) per `01 §5.2`.
+  - Registered `iml_` for identity merge ledger events in `MVP_PREFIX_ADDITIONS` (`backend/anchor_lib/ids.py`) and registered `evres_` for `eval_result`.
+  - Migration `backend/parse/migrations/0004_fix_identity_merge_ledger_prefix.py` migrated all 346 existing rows in `plc.identity_merge_ledger` from `evr_` to `iml_`.
+  - Updated `resolver.py`, `dedupe.py`, `retire_duplicate_works.py`, and test suites to mint `iml_`.
+- **Gold Set Loader with Invariant Gates (`eval/gold_loader.py`):**
+  - `validate_expected_quotes`: Amendment 2(a) enforces that every expected quote is an exact substring of live anchor text in `plc.anchor`. Rejects non-substring quotes, non-existent anchors, or tombstoned anchors with `GoldLoaderError`.
+  - Amendment 2(b): Synthetic cases are strictly stamped with `provenance: {"source": "SYNTHETIC", "reviewed": false}`.
+- **Deterministic Evaluation Engine (`eval/evaluator.py`):**
+  - Amendment 2(d): Deterministic proposition matching requiring citation of expected anchor (or forward pointer) AND lexical overlap ($\ge 40\%$ token Jaccard or exact substring match). No LLM judge utilized until a second model family is available.
+  - Zero-Tolerance Invariants: enforces 0 fabricated anchors, 0 unmapped tombstones, 0 ungrounded/withheld claims, and 0 sentinel leaks.
+- **Audited Scorecard Generator (`eval/scorecard.py`):**
+  - Amendment 2(c): For $n < 30$, suppresses statistical confidence intervals and automated PROMOTE/REJECT thresholds, displaying `GATE DECISION: PREVIEW (n < 30)`. Only zero-tolerance check failures reject a run (`REJECT`).
+- **End-to-End Suite Runner (`eval/runner.py`):**
+  - Orchestrates retrieval, synthesis, verification, deterministic evaluation, and writes `ops.eval_run` and `ops.eval_result` records.
+  - Automatically excludes unreviewed synthetic cases from promotion decisions per Amendment 2(b).
+- **CLI Management Commands:**
+  - `manage.py load_gold_set <json_path>`: Loads and validates gold test suites.
+  - `manage.py run_eval [--gold-set=...] [--case=...] [--split=...] [--dry-run] [--fake]`: Runs the evaluation pipeline, prints the Markdown scorecard, and records audited results.
+- **Seeded Gold Suite (`eval/fixtures/gold/gld_ibc_research_v1.json`):**
+  - 10 verified test cases loaded into suite `gld_01M4MRF7M7GM9YBPW1PEB317AT`:
+    - Q1: Section 7 scope of enquiry on debt and default (`wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p7`)
+    - Q2: Section 10A bar on operational creditor applications (`wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9`)
+    - Q3: Section 14 moratorium applies to Section 138 NI Act (*P. Mohanraj*, `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p39`)
+    - Q4: Admiralty Act 2017 salvage (out-of-corpus)
+    - Q5: Corporate Laws (Amendment) Bill 2026 threshold (Bill not law, out-of-corpus)
+    - Q6: Article 137 Limitation Act applicability to Section 9 (`wrk_01M3Y2VM40R56G8R4YMDNM1BTA/en#p20`)
+    - Q7: CoC commercial wisdom non-justiciable under Section 31 (`wrk_01M3Y2VHSCW4DQSH9VJ3Z2RJWX/en#p89`)
+    - Q8: Section 8/9 pre-existing dispute (*Mobilox Innovations*, `wrk_01M3Y2VC1MR98J1A5C6GTG8DCW/en#p15`)
+    - Q9: Section 61(2) NCLAT 30-day limitation and 15-day condonation (`wrk_01M3Y2VDC4AF2SJSPMYBSRXK99/en#p14`)
+    - Q10: Section 60(2) common forum for corporate debtor and personal guarantor (`wrk_01M3Y2W3B6E90BS9NC96GF0W9V/en#p8`)
 
 ---
 
-### 8. What the Next Session (S08) Needs
-- **Session S08: Eval harness + gold store + real Voyage generation build:**
-  - Gold store loader and runner (`eval/`).
-  - Scorecard generation across legal question gold suites.
-  - Zero-tolerance gates for hallucination, statute fabrication, and out-of-corpus handling.
-  - Promotion of real Voyage embeddings generation `g2`.
+### 2. How to Run the Evaluation Harness
+```bash
+# Load seed gold set into database (validating exact quote substrings against live anchors)
+python manage.py load_gold_set ../eval/fixtures/gold/gld_ibc_research_v1.json
+
+# Run evaluation suite on all 10 cases (using offline deterministic FakeModelAdapter)
+python manage.py run_eval --fake
+
+# Run evaluation on single case in isolation (e.g. Q3: P. Mohanraj Section 14 qua Section 138)
+python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --fake
+
+# Dry-run evaluation generating scorecard without database persistence
+python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
+```
+
+---
+
+### 3. Verification & Test Metrics
+- **Backend Test Suite:** 280 passed, 1 skipped, 0 failed in 32s.
+- **Lint & Types:** Ruff clean (0 errors), mypy clean (0 errors across 248 source files).
+- **Zero-Tolerance Invariant Checks:** 100% compliant (0 fabricated anchors, 0 unmapped tombstones, 0 ungrounded claims, 0 sentinel leaks).
+
+---
+
+### 4. What the Next Session (S09) Needs
+- **Session S09: Citator:**
+  - AuthorityView resolver & direct history linking.
+  - Bitemporal Assertion ledger with evidence and provenance (`valid_period`, `tx_period`).
+  - Treatment extraction on the head of decisions (`OVERRULED`, `DISTINGUISHED`, `FOLLOWED`, etc.).
+  - Doctrine rules engine (`rul_`) propagating status up the court hierarchy.
+  - Lawyer review console and visual treatment badges (NEGATIVE, CAUTION, NEUTRAL, POSITIVE).
+
 
 

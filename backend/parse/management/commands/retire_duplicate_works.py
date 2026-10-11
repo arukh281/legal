@@ -176,7 +176,7 @@ class Command(BaseCommand):
                     )
 
                 # 4. Re-target ACTIVE aliases to canonical work (new ACTIVE alias on can_id + old SUPERSEDED on dup_id)
-                event_id = mint_id("evr")
+                event_id = mint_id("iml")
                 superseded_alias_ids: list[dict[str, str]] = []
                 retargeted_alias_ids: list[dict[str, str]] = []
 

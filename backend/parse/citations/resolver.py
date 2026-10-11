@@ -248,7 +248,7 @@ def promote_authoritative_alias(
                     old_work.merged_into_id = authoritative_target_id
                     old_work.save(update_fields=["status", "merged_into"])
 
-                    merge_event_id = mint_id("evr")
+                    merge_event_id = mint_id("iml")
                     IdentityMergeLedger.objects.create(
                         event_id=merge_event_id,
                         kind="WORK",

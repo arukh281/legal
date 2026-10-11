@@ -64,6 +64,7 @@ ignore = ["E501"]
 python_version = "3.13"
 strict = true
 warn_unused_configs = true
+mypy_path = [".."]
 plugins = ["mypy_django_plugin.main"]
 
 [[tool.mypy.overrides]]

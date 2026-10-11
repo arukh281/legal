@@ -1,6 +1,7 @@
 """Base settings for lawyer_brain."""
 
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -8,6 +9,10 @@ from dotenv import load_dotenv
 from core.logging import setup_logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+REPO_ROOT = BASE_DIR.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.append(str(REPO_ROOT))
+
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-s01-dev-key-lawyer-brain-phase1")

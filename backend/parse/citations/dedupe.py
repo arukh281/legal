@@ -136,7 +136,7 @@ def dedupe_and_merge(
         from_work.save(update_fields=["status", "merged_into"])
 
         # 2. Re-target ACTIVE aliases to canonical work
-        event_id = mint_id("evr")
+        event_id = mint_id("iml")
         superseded_alias_ids: list[dict[str, str]] = []
         retargeted_alias_ids: list[dict[str, str]] = []
 
@@ -355,7 +355,7 @@ def split_work(
                 ).update(resolved_target_id=merge_entry.from_id)
 
         # 5. Record SPLIT in identity_merge_ledger
-        split_event_id = mint_id("evr")
+        split_event_id = mint_id("iml")
         IdentityMergeLedger.objects.create(
             event_id=split_event_id,
             kind="WORK",

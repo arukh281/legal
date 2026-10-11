@@ -4,6 +4,7 @@ Matches verbatim DDL from docs/mvp/03_data_model_and_contracts.md §3.1 and §3.
 All models have managed = False because tables are created by verbatim SQL migrations.
 """
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
@@ -144,3 +145,88 @@ class JobSignal(models.Model):
         managed = False
         db_table = 'ops"."job_signal'
         unique_together = (("job_id", "signal", "received_at"),)
+
+
+class GoldSet(models.Model):
+    """Frozen, versioned evaluation suite (ops.gold_set)."""
+
+    gold_set_id = models.TextField(primary_key=True)
+    name = models.TextField()
+    version = models.IntegerField(default=1)
+    frozen_at = models.DateTimeField(null=True, blank=True)
+    scope = models.TextField()
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ops"."gold_set'
+
+    def __str__(self) -> str:
+        return f"GoldSet({self.gold_set_id}, {self.name} v{self.version})"
+
+
+class EvalCase(models.Model):
+    """An individual evaluation test case (ops.eval_case)."""
+
+    eval_case_id = models.TextField(primary_key=True)
+    gold_set = models.ForeignKey(GoldSet, on_delete=models.CASCADE, db_column="gold_set_id")
+    version = models.IntegerField(default=1)
+    split = models.TextField()
+    task = models.TextField()
+    strata = models.JSONField(default=dict)
+    input = models.JSONField(default=dict)
+    expected = models.JSONField(default=dict)
+    provenance = models.JSONField(default=dict)
+    depends_on_ids: list[str] = ArrayField(models.TextField(), default=list)  # type: ignore[assignment]
+    stale = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ops"."eval_case'
+
+    def __str__(self) -> str:
+        return f"EvalCase({self.eval_case_id}, task={self.task})"
+
+
+class EvalRun(models.Model):
+    """Execution run of an evaluation suite (ops.eval_run)."""
+
+    run_id = models.TextField(primary_key=True)
+    gold_set = models.ForeignKey(GoldSet, on_delete=models.RESTRICT, db_column="gold_set_id")
+    candidate = models.JSONField(default=dict)
+    metrics = models.JSONField(default=dict)
+    gate_decision = models.TextField()
+    sentinel_failures = models.JSONField(null=True, blank=True)
+    cost_usd = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ops"."eval_run'
+
+    def __str__(self) -> str:
+        return f"EvalRun({self.run_id}, decision={self.gate_decision})"
+
+
+class EvalResult(models.Model):
+    """Per-case result within an eval run (ops.eval_result)."""
+
+    result_id = models.TextField(primary_key=True)
+    run = models.ForeignKey(EvalRun, on_delete=models.CASCADE, db_column="run_id")
+    eval_case = models.ForeignKey(EvalCase, on_delete=models.RESTRICT, db_column="eval_case_id")
+    actual = models.JSONField(default=dict)
+    passed = models.BooleanField()
+    score = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True)
+    reasons: list[str] = ArrayField(models.TextField(), default=list)  # type: ignore[assignment]
+    gate_checks = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ops"."eval_result'
+
+    def __str__(self) -> str:
+        return f"EvalResult({self.result_id}, case={self.eval_case_id}, passed={self.passed})"
+

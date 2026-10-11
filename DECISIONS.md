@@ -564,6 +564,33 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** S07 Close-Out Directives #1–#3.
 - **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.4, §3.12, §3.15; `docs/mvp/04_stack_and_infra.md` §2.10; AGENTS.md §4 (#1, #4).
 
+---
+
+### 2026-10-11 — S08: Evaluation Store, Gold Loader Invariants, and Deterministic Gating Harness
+- **Decision:**
+  1. **ID Prefix Collision Resolution (Amendment 2f):** Reclaimed prefix `evr_` strictly for `eval_run` (P8) per `docs/01_master_architecture.md` §5.2. Proposed and registered prefix `iml_` (Identity Merge Ledger event, P1) in `MVP_PREFIX_ADDITIONS` in `anchor_lib.ids`, and registered `evres_` for `eval_result` (P8). Migrated all 346 existing rows in `plc.identity_merge_ledger` from `evr_` to `iml_` via migration `parse.0004_fix_identity_merge_ledger_prefix`. Updated `resolver.py`, `dedupe.py`, `retire_duplicate_works.py`, and test suites to mint `iml_`.
+  2. **Eval Store PostgreSQL Schema:** Created and applied migration `ops.0003_eval_store_tables` with verbatim DDL from `docs/mvp/03_data_model_and_contracts.md` §3.15 creating `ops.gold_set`, `ops.eval_case`, `ops.eval_run`, and `ops.eval_result`.
+  3. **Exact Substring Invariant (Amendment 2a):** `eval/gold_loader.py` validates that every expected quote is an exact substring of its expected anchor's live text in `plc.anchor`. Non-substrings, non-existent anchors, and tombstoned anchors are rejected with `GoldLoaderError`.
+  4. **Synthetic Case Provenance & Gate Exclusion (Amendment 2b):** Agent-authored cases are tagged with `provenance: {"source": "SYNTHETIC", "reviewed": false}`. They are excluded from promotion gate decisions until reviewed and signed off by a partner lawyer.
+  5. **Sample Size & Zero-Tolerance Gate Rules (Amendment 2c):** For sample size $n < 30$, statistical confidence intervals and automated PROMOTE/REJECT thresholds are deferred, reporting counts, $n$, and gate decision `PREVIEW`. Only zero-tolerance violations (fabricated anchors, unmapped tombstones, ungrounded claims, sentinel leaks) fail a run with `REJECT`.
+  6. **Deterministic Proposition Matcher (Amendment 2d):** Implemented in `eval/evaluator.py`: propositions match if and only if the expected anchor (or its forwarded live anchor) is cited in the claim support AND the quoted text exhibits significant lexical overlap (exact substring or $\ge 40\%$ token Jaccard overlap). No model-based LLM judge is utilized until a second model family is available.
+  7. **Seed Gold Set (Amendment 2e):** Seeded 10 verified test cases in `eval/fixtures/gold/gld_ibc_research_v1.json` loaded into suite `gld_01M4MRF7M7GM9YBPW1PEB317AT`:
+     - Q1: Scope of enquiry under Section 7 IBC (`wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p7`)
+     - Q2: Bar on Section 9 operational creditor filing during Section 10A period (`wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9`)
+     - Q3: Moratorium under Section 14 IBC qua Section 138 NI Act (*P. Mohanraj*, `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p39`)
+     - Q4: Admiralty Act 2017 maritime salvage rules (out-of-corpus)
+     - Q5: Corporate Laws (Amendment) Bill 2026 CIRP threshold (Bill not law, out-of-corpus)
+     - Q6: Three-year limitation period under Article 137 Limitation Act for Section 9 (`wrk_01M3Y2VM40R56G8R4YMDNM1BTA/en#p20`)
+     - Q7: CoC commercial wisdom non-justiciable under Section 31 (`wrk_01M3Y2VHSCW4DQSH9VJ3Z2RJWX/en#p89`)
+     - Q8: Pre-existing dispute under Section 8 and 9 (*Mobilox Innovations*, `wrk_01M3Y2VC1MR98J1A5C6GTG8DCW/en#p15`)
+     - Q9: NCLAT 30-day limitation and 15-day condonation under Section 61(2) (`wrk_01M3Y2VDC4AF2SJSPMYBSRXK99/en#p14`)
+     - Q10: Section 60(2) common adjudicating authority for corporate debtor and personal guarantor (`wrk_01M3Y2W3B6E90BS9NC96GF0W9V/en#p8`)
+  8. **CLI Management Commands:**
+     - `manage.py load_gold_set <path>`: Validates and loads gold sets into PostgreSQL.
+     - `manage.py run_eval [--gold-set=...] [--case=...] [--split=...] [--dry-run] [--fake]`: Executes the evaluation harness, evaluates propositions, validates zero-tolerance gates, generates an audited Markdown scorecard, and records `ops.eval_run` and `ops.eval_result`.
+- **Reason:** Session S08 requirements and User Amendments 2(a)–2(f).
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4.1; `docs/mvp/03_data_model_and_contracts.md` §1, §3.15; `docs/mvp/06_test_set_plan.md` §1, §5, §6, §7; `docs/01_master_architecture.md` §5.2; AGENTS.md §4, §8.
+
 
 
 

@@ -1,0 +1,306 @@
+{
+  "gold_set_id": "gld_01M4MRF7M7GM9YBPW1PEB317AT",
+  "name": "ibc_research_qa_v1",
+  "version": 1,
+  "scope": "PUBLIC",
+  "frozen_at": "2026-10-11T00:00:00Z",
+  "metadata": {
+    "description": "Baseline gold evaluation suite for Indian corporate law and IBC research Q&A",
+    "curator": "Session S08 Seed Suite"
+  },
+  "cases": [
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317AV",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "7",
+        "topic": "Scope of enquiry on financial debt and default"
+      },
+      "input": {
+        "question": "What is the scope of enquiry under Section 7 of the IBC for a financial debt and default?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VN62VEPM3MH330JF3VKD/en#p7",
+            "quote": "Has the Adjudicating Authority overstepped the scope of enquiry when it is required to examine merely the existence of a financial debt and the occurrence of default",
+            "topic": "Scope of enquiry is limited to examining existence of debt and default"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317AW",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "9_10A",
+        "topic": "Bar on operational creditor applications during COVID excluded period"
+      },
+      "input": {
+        "question": "Can an operational creditor invoke Section 9 for default during the Section 10A period?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VRFJGZAF26VMB4236ZFS/en#p3.9",
+            "quote": "an Operational Creditor cannot invoke Section 9 in respect of a default which falls within the statutory prohibition",
+            "topic": "Operational creditor barred from invoking Section 9 for default in Section 10A period"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317AX",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC_NI_ACT",
+        "section": "14_138",
+        "topic": "Section 14 moratorium qua Section 138 Negotiable Instruments Act"
+      },
+      "input": {
+        "question": "Does moratorium under Section 14 of IBC apply to Section 138 NI Act proceedings?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p39",
+            "quote": "held that proceedings under Sections 138 and 141 of the Negotiable Instruments Act, 1881 against the corporate debtor would be covered by the moratorium provision under Section 14 IBC",
+            "topic": "Section 138 NI Act proceedings against corporate debtor are barred under Section 14 moratorium (P. Mohanraj)"
+          },
+          {
+            "anchor_id": "wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p39",
+            "quote": "moratorium was only in relation to the corporate debtor (as highlighted above) and not in respect of the Directors/management of the corporate debtor, against whom proceedings could continue",
+            "topic": "Directors and management remain statutorily liable under Section 138 NI Act despite moratorium"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317AY",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IPC",
+        "section": "406",
+        "topic": "Out of corpus negative control test"
+      },
+      "input": {
+        "question": "What are the essential ingredients for criminal breach of trust under Section 406 of the Indian Penal Code?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": false,
+        "propositions": []
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317AZ",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "CORPORATE_LAWS_BILL_2026",
+        "section": "BILL_NOT_LAW",
+        "topic": "Corporate Laws Amendment Bill 2026 pending status"
+      },
+      "input": {
+        "question": "Does the Corporate Laws (Amendment) Bill 2026 change the threshold for initiating CIRP?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": false,
+        "propositions": []
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317B0",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "LIMITATION_ACT_IBC",
+        "section": "ART_137_SEC_9",
+        "topic": "Three year limitation period under Article 137 Limitation Act"
+      },
+      "input": {
+        "question": "What is the limitation period for filing an insolvency application under the IBC pursuant to the Limitation Act?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VM40R56G8R4YMDNM1BTA/en#p20",
+            "quote": "Article 137 of the Limitation Act, 1963 governs all applications under the IBC, including those under Section 9, and that the right to apply arises strictly from the date of default, after which a limitation period of three years applies",
+            "topic": "Article 137 Limitation Act prescribes a three-year period from default for IBC applications (B.K. Educational)"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317B1",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "30_31",
+        "topic": "Non-justiciability of commercial wisdom of Committee of Creditors"
+      },
+      "input": {
+        "question": "Can the Adjudicating Authority interfere with the commercial wisdom of the Committee of Creditors in approving a resolution plan?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VHSCW4DQSH9VJ3Z2RJWX/en#p89",
+            "quote": "commercial wisdom of the CoC in accepting the SRA's plan (100 % vote) is not justiciable",
+            "topic": "Commercial wisdom of the CoC is non-justiciable (Essar Steel / K. Sashidhar)"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317B2",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "8_9",
+        "topic": "Pre-existing dispute threshold under Section 9 (Mobilox Innovations)"
+      },
+      "input": {
+        "question": "When must the Adjudicating Authority reject a Section 9 application on grounds of a pre-existing dispute?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VC1MR98J1A5C6GTG8DCW/en#p15",
+            "quote": "the adjudicating authority must reject the application under Section 9(5)(i)(d) if notice of dispute has been received by the operational creditor",
+            "topic": "Adjudicating authority must reject Section 9 if notice of plausible pre-existing dispute is received (Mobilox Innovations)"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317B3",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "61(2)",
+        "topic": "Limitation period for filing appeal before NCLAT"
+      },
+      "input": {
+        "question": "Can the NCLAT condone delay in filing an appeal beyond 15 days under Section 61(2) of the IBC?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2VDC4AF2SJSPMYBSRXK99/en#p14",
+            "quote": "Once the prescribed and condonable periods (i.e., 30 + 15 days) expire, the NCLAT has no jurisdiction to entertain appeals, regardless of the reason for the delay",
+            "topic": "NCLAT has no jurisdiction to condone delay beyond 30+15 days under Section 61(2) (Tata Steel)"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    },
+    {
+      "eval_case_id": "evc_01M4MRF7M7GM9YBPW1PEB317B4",
+      "version": 1,
+      "split": "DEV",
+      "task": "p6.qa_synthesis@1",
+      "strata": {
+        "statute": "IBC",
+        "section": "60(2)",
+        "topic": "Insolvency of Personal Guarantor filed before same NCLT"
+      },
+      "input": {
+        "question": "Before which forum must an insolvency application against a personal guarantor be filed when CIRP of the corporate debtor is pending?",
+        "as_of_legal_date": "2026-10-02"
+      },
+      "expected": {
+        "in_corpus": true,
+        "propositions": [
+          {
+            "anchor_id": "wrk_01M3Y2W3B6E90BS9NC96GF0W9V/en#p8",
+            "quote": "the application relating to Insolvency Process of a Corporate Guarantor or Personal Guarantor should be filed before the same NCLT",
+            "topic": "Insolvency of corporate or personal guarantor must be filed before the same NCLT where debtor CIRP is pending (Section 60(2))"
+          }
+        ]
+      },
+      "provenance": {
+        "source": "SYNTHETIC",
+        "author": "agent",
+        "reviewed": false
+      }
+    }
+  ]
+}

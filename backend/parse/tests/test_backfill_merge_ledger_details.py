@@ -42,7 +42,7 @@ def test_backfill_dry_run_and_commit() -> None:
     now = datetime.now(UTC)
     for dup_id in report_inventory:
         IdentityMergeLedger.objects.create(
-            event_id=mint_id("evr"),
+            event_id=mint_id("iml"),
             kind="WORK",
             op="MERGE",
             from_id=dup_id,
