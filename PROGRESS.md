@@ -721,6 +721,9 @@ python manage.py load_gold_set ../eval/fixtures/gold/gld_ibc_research_v1.json
 # Run evaluation suite on all 10 cases (using offline deterministic FakeModelAdapter)
 python manage.py run_eval --fake
 
+# Run evaluation suite on real Gemini models (router failover enabled)
+python manage.py run_eval
+
 # Run evaluation on single case in isolation (e.g. Q3: P. Mohanraj Section 14 qua Section 138)
 python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --fake
 
@@ -731,9 +734,14 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
 ---
 
 ### 3. Verification & Test Metrics
-- **Backend Test Suite:** 280 passed, 1 skipped, 0 failed in 32s.
-- **Lint & Types:** Ruff clean (0 errors), mypy clean (0 errors across 248 source files).
-- **Zero-Tolerance Invariant Checks:** 100% compliant (0 fabricated anchors, 0 unmapped tombstones, 0 ungrounded claims, 0 sentinel leaks).
+- **Backend Test Suite:** 284 passed, 1 skipped, 0 failed in 32s.
+- **Lint & Types:** Ruff clean (0 errors), mypy strict clean (0 errors across 248 source files).
+- **Zero-Tolerance Invariant Checks:** Fully active and enforced; ungrounded submission claims correctly rejected.
+- **Real Gemini Eval Run (`evr_01M4NEARV8M9JB86MEY5WT0CZN`):**
+  - Adapter: `real` (Google Gemini with `gemini-3.8-flash` primary and `gemini-3.5-flash` automatic failover).
+  - Telemetry: Each case records actual endpoint and model in `candidate["cases"]` and on the scorecard.
+  - Q3: Reported proposition recall failure (score 0.00) as expected, without model tuning.
+  - Case 9 (`evc_01M4MRF7M7GM9YBPW1PEB317B3`): Verifier caught ungrounded legal proposition derived from a submission paragraph (`SUBMISSION_CANNOT_SUPPORT_PROPOSITION`).
 
 ---
 
@@ -744,6 +752,7 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
   - Treatment extraction on the head of decisions (`OVERRULED`, `DISTINGUISHED`, `FOLLOWED`, etc.).
   - Doctrine rules engine (`rul_`) propagating status up the court hierarchy.
   - Lawyer review console and visual treatment badges (NEGATIVE, CAUTION, NEUTRAL, POSITIVE).
+
 
 
 

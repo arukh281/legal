@@ -591,6 +591,20 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Session S08 requirements and User Amendments 2(a)–2(f).
 - **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4.1; `docs/mvp/03_data_model_and_contracts.md` §1, §3.15; `docs/mvp/06_test_set_plan.md` §1, §5, §6, §7; `docs/01_master_architecture.md` §5.2; AGENTS.md §4, §8.
 
+---
+
+### 2026-10-11 — S08 Post-Evaluation Fixes and Real Gemini Baseline
+- **Decision:**
+  1. **Candidate Model & Adapter Telemetry:** Recorded each case's `endpoint_id`, actual `model`, and `call_id` from its `LLMCallRecord` in `eval_run.candidate["cases"]`, stored overall `adapter` (`real` vs `fake`), `models`, and `endpoints`, and displayed `Adapter` and `Model(s)` in the scorecard header and per-case in the breakdown table.
+  2. **Isolated Per-Run Endpoint Override:** Replaced the previous `ModelEndpoint.health` database mutations in `manage.py run_eval` with a clean `endpoint_override` parameter passed through `EvalRunner`, `AnswerSynthesizer`, and `gateway.runner.run` (and stamped in `ctx.llm_policy["endpoint_override"]`), ensuring running application database state is never modified.
+  3. **Split Canonical Choices (01 line 1317):** Aligned `--split` choices to `DEV`, `EXAM`, and `SENTINEL` across `run_eval.py` and `gold_loader.py`. Applied migration `ops.0004_fix_eval_case_split_check` updating PostgreSQL constraint `eval_case_split_check` to `CHECK (split IN ('DEV', 'EXAM', 'SENTINEL'))`.
+  4. **Deliberate Pipeline Version Resolution:** Replaced arbitrary `PipelineVersion.objects.first()` with `get_deliberate_pipeline_version(task_id)`, targeting the active/latest pipeline version registered for that task component (`p6.reasoner@0.1.0|qa_synthesis_v1` for `p6.qa_synthesis@1`).
+  5. **Human Lawyer Review Console Document:** Authored `eval/fixtures/gold/REVIEW.md` listing question, expected anchor, and exact quote for all 10 seed cases for partner lawyer verification. Preserved `reviewed=false` in database and gold fixtures until partner review.
+  6. **Real Baseline Evaluation Execution (`evr_01M4NEARV8M9JB86MEY5WT0CZN`):** Executed full suite against Google Gemini (`gemini-3.8-flash` primary with automatic failover to `gemini-3.5-flash` on 504/503). Reported 4/10 passed cases. Confirmed Q3 failed proposition matching (score 0.00) due to quoting paragraph `#p27` rather than target `#p39`. Discovered and verified zero-tolerance gate catch on case 9 (`evc_01M4MRF7M7GM9YBPW1PEB317B3`) where a synthesized claim used a submission paragraph as an ungrounded legal proposition (`SUBMISSION_CANNOT_SUPPORT_PROPOSITION`).
+- **Reason:** User directives for Session S08 fixes before S09.
+- **Doc Reference:** `docs/01_master_architecture.md` line 1317; `docs/mvp/03_data_model_and_contracts.md` §3.1, §3.15; `docs/mvp/06_test_set_plan.md` §6, §7; AGENTS.md §4.
+
+
 
 
 
