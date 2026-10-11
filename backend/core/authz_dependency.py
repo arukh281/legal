@@ -60,16 +60,19 @@ class AuthzDependency(HttpBearer):
 
         traceparent = request.headers.get("traceparent")
 
+        matter_id = request.headers.get("X-Matter-ID")
+        dataclass_val = request.headers.get("X-Dataclass") or ("TENANT_CONFIDENTIAL" if matter_id else "PUBLIC")
+
         ctx = ExecutionContext(
             tenant_id=app_user.tenant_id,
             user_id=app_user.user_id,
             firm_role=app_user.firm_role,
-            matter_id=request.headers.get("X-Matter-ID"),
+            matter_id=matter_id,
             purpose=request.headers.get("X-Purpose", "INTERACTIVE"),
             traceparent=traceparent,
             residency_policy=residency_policy,
             llm_policy=llm_policy,
-            dataclass="TENANT_CONFIDENTIAL",
+            dataclass=dataclass_val,
         )
 
         # Set database session parameters for this request
