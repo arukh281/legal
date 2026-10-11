@@ -130,3 +130,27 @@ export async function fetchDocumentSource(workId: string): Promise<DocumentSourc
   }
   return response.json();
 }
+
+export interface DevLoginResponse {
+  status: string;
+  user_id: string;
+  email: string;
+  tenant_id: string;
+  firm_role: string;
+}
+
+export async function devLogin(email: string = "partner.lawyer@firm.in"): Promise<DevLoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/dev-login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ email }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Dev login failed (${response.status}): ${errorText}`);
+  }
+  return response.json();
+}

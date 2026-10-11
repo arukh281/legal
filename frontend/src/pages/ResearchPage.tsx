@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { executeResearchQuery, type ClaimItem, type ResearchQueryResponse } from "../api/client";
+import {
+  devLogin,
+  executeResearchQuery,
+  type ClaimItem,
+  type DevLoginResponse,
+  type ResearchQueryResponse,
+} from "../api/client";
 import { SourceViewer } from "../components/SourceViewer";
 
 interface PreloadedQuery {
@@ -47,6 +53,8 @@ export const ResearchPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResearchQueryResponse | null>(null);
+  const [devAuthUser, setDevAuthUser] = useState<DevLoginResponse | null>(null);
+  const [devLoggingIn, setDevLoggingIn] = useState<boolean>(false);
 
   // Source Viewer state
   const [activeViewer, setActiveViewer] = useState<{
@@ -54,6 +62,20 @@ export const ResearchPage: React.FC = () => {
     workId: string;
     quote?: string;
   } | null>(null);
+
+  const handleDevLogin = async () => {
+    setDevLoggingIn(true);
+    setError(null);
+    try {
+      const resp = await devLogin("partner.lawyer@firm.in");
+      setDevAuthUser(resp);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Dev login failed";
+      setError(msg);
+    } finally {
+      setDevLoggingIn(false);
+    }
+  };
 
   const handleRunQuery = async (textToRun: string) => {
     if (!textToRun.trim()) return;
@@ -84,23 +106,67 @@ export const ResearchPage: React.FC = () => {
     <div style={{ maxWidth: "1200px", margin: "0 auto", paddingBottom: "60px" }}>
       {/* Page Title & Subtitle */}
       <div style={{ marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-          <h2 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.02em" }}>
-            Research Q&A & Citator Pinpoints
-          </h2>
-          <span
-            style={{
-              fontSize: "11px",
-              padding: "3px 8px",
-              borderRadius: "12px",
-              backgroundColor: "rgba(59, 130, 246, 0.15)",
-              color: "#60a5fa",
-              fontWeight: "600",
-              border: "1px solid rgba(59, 130, 246, 0.3)",
-            }}
-          >
-            Phase P5 / P6 / P8
-          </span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <h2 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.02em" }}>
+              Research Q&A & Citator Pinpoints
+            </h2>
+            <span
+              style={{
+                fontSize: "11px",
+                padding: "3px 8px",
+                borderRadius: "12px",
+                backgroundColor: "rgba(59, 130, 246, 0.15)",
+                color: "#60a5fa",
+                fontWeight: "600",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+              }}
+            >
+              Phase P5 / P6 / P8
+            </span>
+          </div>
+
+          {/* Dev-only Login Button */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {devAuthUser && (
+              <span
+                id="dev-auth-status"
+                style={{
+                  fontSize: "12px",
+                  color: "#34d399",
+                  fontWeight: "600",
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                }}
+              >
+                ✓ {devAuthUser.email} ({devAuthUser.firm_role})
+              </span>
+            )}
+            <button
+              id="btn-dev-login"
+              onClick={handleDevLogin}
+              disabled={devLoggingIn}
+              style={{
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                borderRadius: "6px",
+                backgroundColor: devAuthUser ? "rgba(59, 130, 246, 0.15)" : "var(--accent)",
+                color: devAuthUser ? "#60a5fa" : "#ffffff",
+                border: devAuthUser ? "1px solid rgba(59, 130, 246, 0.3)" : "none",
+                cursor: devLoggingIn ? "not-allowed" : "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {devLoggingIn
+                ? "Logging in..."
+                : devAuthUser
+                  ? "Dev login (Re-auth)"
+                  : "Dev login (partner.lawyer@firm.in)"}
+            </button>
+          </div>
         </div>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.5" }}>
           Ground legal questions in statutory provisions and primary court orders. Every proposition resolves to a verified
