@@ -391,3 +391,145 @@ def test_verifier_submission_cannot_support_unqualified_legal_proposition(
     assert ver_b.display_band == "VERIFIED"
     assert "SUBMISSION_CANNOT_SUPPORT_PROPOSITION" not in ver_b.reason_codes
     assert ver_b.warrant["role_ok"] == "PASS"
+
+
+@pytest.mark.django_db
+def test_verifier_c1_tombstone_without_forward_to_unsupported(
+    auth_ctx: ExecutionContext,
+    sample_work_and_anchor: tuple[Work, Anchor],
+) -> None:
+    """C1 check: Tombstone without forward_to => UNSUPPORTED with WITHHELD display band."""
+    work, _ = sample_work_and_anchor
+
+    with connection.cursor() as cur:
+        cur.execute("SET LOCAL app.tenant_id = %s;", [auth_ctx.tenant_id])
+
+    tomb_anchor = Anchor.objects.create(
+        anchor_id=f"{work.work_id}/en#p9999",
+        work_id=work.work_id,
+        expression_key="en",
+        fragment="p9999",
+        node_type="PARA",
+        text="Stray dissolved number without valid forward mapping.",
+        text_hash="hash_p9999",
+        ocr_conf=1.0,
+        lang="en",
+        is_authoritative_expression=True,
+        state="TOMBSTONED",
+        forward_to=None,
+        first_parse_id="par_test",
+        last_parse_id="par_test",
+    )
+
+    query_id = mint_id("qry")
+    bundle = EvidenceBundle(
+        tenant_id=auth_ctx.tenant_id,
+        bundle_id=mint_id("evb"),
+        query_id=query_id,
+        as_of_legal_date=datetime.date(2026, 10, 1),
+        index_generation="g1",
+        pipeline_version=PipelineVersion.objects.first(),
+        items=[{"item_id": "item_1", "anchor_ids": [tomb_anchor.anchor_id]}],
+        coverage={},
+        trace_id="trace_test",
+    )
+
+    claim = Claim.objects.create(
+        tenant_id=auth_ctx.tenant_id,
+        claim_id=mint_id("clm"),
+        owner_kind="ANSWER",
+        owner_id=query_id,
+        text="A legal proposition citing an unmapped tombstoned anchor.",
+        claim_type="LEGAL_PROPOSITION",
+        support=[
+            {
+                "anchor_id": tomb_anchor.anchor_id,
+                "quote": "Stray dissolved number without valid forward mapping.",
+                "span": [0, 50],
+                "support_type": "DIRECT",
+            }
+        ],
+    )
+
+    verifier = VerificationEngine()
+    report = verifier.verify(query_id=query_id, claims=[claim], bundle=bundle, ctx=auth_ctx)
+
+    claim_ver = ClaimVerification.objects.get(
+        tenant_id=auth_ctx.tenant_id, report_id=report.report_id, claim_id=claim.claim_id
+    )
+    assert claim_ver.status == "UNSUPPORTED"
+    assert claim_ver.display_band == "WITHHELD"
+    assert "TOMBSTONED_WITHOUT_FORWARD" in claim_ver.reason_codes
+    assert claim_ver.warrant["exists"] == "FAIL"
+
+
+@pytest.mark.django_db
+def test_verifier_c1_tombstone_with_forward_to_resolves_and_verifies(
+    auth_ctx: ExecutionContext,
+    sample_work_and_anchor: tuple[Work, Anchor],
+) -> None:
+    """C1 check: Tombstone with forward_to resolves to target live anchor and verifies quote."""
+    work, live_anchor = sample_work_and_anchor
+
+    with connection.cursor() as cur:
+        cur.execute("SET LOCAL app.tenant_id = %s;", [auth_ctx.tenant_id])
+
+    tomb_anchor = Anchor.objects.create(
+        anchor_id=f"{work.work_id}/en#p2012",
+        work_id=work.work_id,
+        expression_key="en",
+        fragment="p2012",
+        node_type="PARA",
+        text="A misparsed citation year that was tombstoned.",
+        text_hash="hash_p2012",
+        ocr_conf=1.0,
+        lang="en",
+        is_authoritative_expression=True,
+        state="TOMBSTONED",
+        forward_to=live_anchor.anchor_id,
+        first_parse_id="par_test",
+        last_parse_id="par_test",
+    )
+
+    query_id = mint_id("qry")
+    bundle = EvidenceBundle(
+        tenant_id=auth_ctx.tenant_id,
+        bundle_id=mint_id("evb"),
+        query_id=query_id,
+        as_of_legal_date=datetime.date(2026, 10, 1),
+        index_generation="g1",
+        pipeline_version=PipelineVersion.objects.first(),
+        items=[{"item_id": "item_1", "anchor_ids": [tomb_anchor.anchor_id]}],
+        coverage={},
+        trace_id="trace_test",
+    )
+
+    # Claim cites tombstone, but quote is verified against forward_to anchor (live_anchor)
+    claim = Claim.objects.create(
+        tenant_id=auth_ctx.tenant_id,
+        claim_id=mint_id("clm"),
+        owner_kind="ANSWER",
+        owner_id=query_id,
+        text="The enquiry under Section 7 is limited to financial debt and default.",
+        claim_type="LEGAL_PROPOSITION",
+        support=[
+            {
+                "anchor_id": tomb_anchor.anchor_id,
+                "quote": "scope of enquiry under Section 7 of the Insolvency and Bankruptcy Code, 2016 is limited to ascertaining the existence of a financial debt and the occurrence of default",
+                "span": [0, 150],
+                "support_type": "DIRECT",
+            }
+        ],
+    )
+
+    verifier = VerificationEngine()
+    report = verifier.verify(query_id=query_id, claims=[claim], bundle=bundle, ctx=auth_ctx)
+
+    claim_ver = ClaimVerification.objects.get(
+        tenant_id=auth_ctx.tenant_id, report_id=report.report_id, claim_id=claim.claim_id
+    )
+    assert claim_ver.status == "VERIFIED"
+    assert claim_ver.display_band == "VERIFIED"
+    assert "TOMBSTONED_FORWARDED" in claim_ver.reason_codes
+    assert claim_ver.warrant["exists"] == "PASS"
+    assert claim_ver.warrant["quote_exact"] == "PASS"

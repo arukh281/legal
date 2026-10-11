@@ -534,9 +534,14 @@ Ran `eval/run_s07_exit_check.py` against the real database and Model Gateway (de
 > Re-parsed all 157 captures across the corpus using the updated `judgment.py` rules:
 > - **Works Re-parsed:** 156 distinct works.
 > - **Anchors Tombstoned:** 163 spurious anchors eradicated (citation years like `#p2012`, `#p2010`, `#p1954`, `#p2023`, `#p2014`, `#p2018`, phone numbers, etc.).
-> - **Tombstones with `forward_to`:** 82 (e.g. `#p2012` forwarded to `#p39`, `#p2010` forwarded to `#p125`).
-> - **Tombstones without `forward_to`:** 81 (dissolved fragments/unmapped deleted numbers).
+> - **Tombstone Re-alignment:** 52 of 81 unmapped tombstones matched containing live anchors via text substring and `QuoteSelector`.
+> - **Management Command:** Added idempotent `manage.py backfill_tombstone_forwards` (supports `--all` and `--dry-run`) to re-align tombstoned anchors anytime.
+> - **Tombstones with `forward_to`:** 134 total (82 initial + 52 re-aligned).
+> - **Tombstones without `forward_to`:** 29 remaining unmappable (stray dissolved fragments, isolated numbers/pincodes).
+> - **Verifier C1 Rule:** Tombstone without `forward_to` yields `UNSUPPORTED` (`TOMBSTONED_WITHOUT_FORWARD`); tombstone with `forward_to` resolves to live target and verifies quote.
+> - **`tpl.claim` Audit:** Exactly 2 rows in `tpl.claim` cite tombstoned anchors (`clm_01M4KAT2DS1VYSVY0YA67V532S` and `clm_01M4KAT2DYHM0HD5ZGZMWCH01A`, both citing `#p2012` forwarded to `#p39`).
 > - **Corpus Indexing:** Re-indexed 154 works (2710 chunks) cleanly into index generation `g1`.
+> - **Endpoint Pricing:** `ep_gemini_3_5_flash` recorded with `price_verified=false` in `DECISIONS.md`.
 > - **Executive Summary:** Flagged `unverified summary` across API and UI.
 > - **Synthesis Prompt:** Atomic claims enforced (one proposition per claim, no joining with "as/because/therefore", rules and exceptions split into separate claims).
 

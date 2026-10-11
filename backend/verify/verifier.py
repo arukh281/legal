@@ -149,9 +149,21 @@ class VerificationEngine:
                 else:
                     target_anchor = anchors_by_id[target_a_id]
                     if target_anchor.state != "LIVE":
-                        c1_pass = False
-                        reasons.append("TOMBSTONED_ANCHOR")
-                        warrant["exists"] = "WARN"
+                        if not target_anchor.forward_to:
+                            c1_pass = False
+                            reasons.append("TOMBSTONED_WITHOUT_FORWARD")
+                            warrant["exists"] = "FAIL"
+                        else:
+                            fwd_anchor = Anchor.objects.filter(
+                                anchor_id=target_anchor.forward_to
+                            ).first()
+                            if fwd_anchor and fwd_anchor.state == "LIVE":
+                                target_anchor = fwd_anchor
+                                reasons.append("TOMBSTONED_FORWARDED")
+                            else:
+                                c1_pass = False
+                                reasons.append("TOMBSTONED_WITHOUT_FORWARD")
+                                warrant["exists"] = "FAIL"
 
             checks.append(
                 {

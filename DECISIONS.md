@@ -553,6 +553,17 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** User directive ensuring claim atomicity, preventing multi-proposition conflation, and enabling granular verification and citator badge attachment.
 - **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4.1; `docs/08_P6_strategic_reasoning.md` §2.3; Session S07 Closeout Directive #2.
 
+---
+
+### 2026-10-10 — S07 Close-Out: Tombstone Re-alignment, Verifier C1 Gate, and Endpoint Pricing Verification
+- **Decision:**
+  1. **Tombstone Forwarding Re-alignment:** For all 81 tombstoned anchors with null `forward_to`, searched live anchors in the same work using text containment and `QuoteSelector`. Mapped 52 anchors to their containing live anchor; 29 remain unmappable (stray dissolved fragments, isolated years/pincodes, or page-break splits discarded on re-parse). Updated `backend/parse/anchors.py` so `align_anchors` automatically falls back to text containment and `QuoteSelector` during future re-parses.
+  2. **Verifier C1 Tombstone Enforcement:** Updated `backend/verify/verifier.py` C1 check so that citing a tombstoned anchor without `forward_to` yields `c1_pass = False`, `reason_codes = ["TOMBSTONED_WITHOUT_FORWARD"]`, `warrant["exists"] = "FAIL"`, and claim status `UNSUPPORTED` (`display_band = "WITHHELD"`). Citing a tombstone with valid `forward_to` resolves to the destination live anchor, allowing quote verification to proceed against that live anchor. Tested in `backend/verify/tests/test_verifier.py`.
+  3. **Claims Citing Tombstones:** Audited all tenant claims in `tpl.claim`: exactly 2 claims cite tombstoned anchors (`clm_01M4KAT2DS1VYSVY0YA67V532S` and `clm_01M4KAT2DYHM0HD5ZGZMWCH01A`, both citing `wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p2012`, which carries `forward_to = wrk_01M3Y2TMYE567QN84SXM3431NZ/en#p39`).
+  4. **ep_gemini_3_5_flash Price Verification:** `price_verified = false`. Model snapshot moniker `gemini-3.5-flash` lacks an official published price card from Google; rates ($0.075 input / $0.30 output per Mtok) are configured provisionally based on standard flash-class ratios.
+- **Reason:** S07 Close-Out Directives #1–#3.
+- **Doc Reference:** `docs/mvp/03_data_model_and_contracts.md` §3.4, §3.12, §3.15; `docs/mvp/04_stack_and_infra.md` §2.10; AGENTS.md §4 (#1, #4).
+
 
 
 
