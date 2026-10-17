@@ -104,15 +104,23 @@ class IndexAccessLayer:
         text: str,
         instruction_id: str | None = None,
         ctx: Any = None,
+        generation: str | None = None,
     ) -> list[float]:
-        """Embed a search query via Model Gateway."""
+        """Embed a search query via Model Gateway using target generation's model."""
+        gen = self._resolve_generation(generation)
+        gen_obj = IndexGeneration.objects.filter(
+            index_family=self.index_family, generation=gen
+        ).first()
+        model_id = gen_obj.embed_model if gen_obj else "voyage-4-large"
+        dims = gen_obj.embed_dims if gen_obj else 1024
         res = embed(
             task_id="p2.embed.v1",
             texts=[text],
-            model_id="voyage-4-large",
-            dims=1024,
+            model_id=model_id,
+            dims=dims,
             ctx=ctx,
             input_type="query",
+            pipeline_version=f"p2.embedder@0.1.0|approx_tok_v1|{model_id}|{dims}",
         )
         return res.embeddings[0]
 
@@ -261,11 +269,17 @@ class IndexAccessLayer:
         k: int,
     ) -> list[IndexHit]:
         """Dense vector search using HNSW halfvec cosine distance."""
+        gen = self._resolve_generation(query.generation)
+        gen_obj = IndexGeneration.objects.filter(
+            index_family=self.index_family, generation=gen
+        ).first()
+        dims = gen_obj.embed_dims if gen_obj else 1024
+
         vec = query.vector
         if vec is None:
             if not query.text:
                 return []
-            vec = self.embed_query(query.text, query.query_instruction_id)
+            vec = self.embed_query(query.text, query.query_instruction_id, generation=query.generation)
 
         vec_str = "[" + ",".join(str(x) for x in vec) + "]"
 
@@ -278,11 +292,11 @@ class IndexAccessLayer:
                 f"""
                 SELECT chunk_id, work_id, expression_key, anchor_ids, anchor_first, anchor_last,
                        chunk_kind, context_header, text,
-                       (1.0 - ((embedding::halfvec(1024)) <=> %s::halfvec(1024))) AS score,
+                       (1.0 - ((embedding::halfvec({dims})) <=> %s::halfvec({dims}))) AS score,
                        court_id, decision_date, doc_type, binding_scope_tags, body
                 FROM plc.{table_name}
                 {where_str}
-                ORDER BY (embedding::halfvec(1024)) <=> %s::halfvec(1024)
+                ORDER BY (embedding::halfvec({dims})) <=> %s::halfvec({dims})
                 LIMIT %s;
                 """,
                 [vec_str] + list(params) + [vec_str, k],

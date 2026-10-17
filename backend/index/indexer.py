@@ -285,14 +285,23 @@ class IndexPipeline:
                 }
             )
 
-        # 9. Dense embeddings via Model Gateway
+        # 9. Dense embeddings via Model Gateway (dynamically resolve generation model/dims)
+        from index.models import IndexGeneration
+        gen_obj = IndexGeneration.objects.filter(
+            index_family="plc_chunks", generation=target_gen
+        ).first()
+        active_embed_model = gen_obj.embed_model if gen_obj else EMBED_MODEL
+        active_embed_dims = gen_obj.embed_dims if gen_obj else EMBED_DIMS
+        active_pipeline_ver = f"p2.index@0.1.0|{target_gen}"
+
         embed_result = embed(
             task_id="p2.embed.v1",
             texts=embedding_texts,
-            model_id=EMBED_MODEL,
-            dims=EMBED_DIMS,
+            model_id=active_embed_model,
+            dims=active_embed_dims,
             ctx=None,
             input_type="document",
+            pipeline_version=f"p2.embedder@0.1.0|approx_tok_v1|{active_embed_model}|{active_embed_dims}",
         )
         embeddings = embed_result.embeddings
 
@@ -350,7 +359,7 @@ class IndexPipeline:
                         setweight(to_tsvector('public.legal_en', %s), 'B') ||
                         setweight(array_to_tsvector(%s::text[]), 'C')
                     ),
-                    %s::halfvec(1024), %s, %s
+                    %s::halfvec({active_embed_dims}), %s, %s
                 );
                 """
 
@@ -396,7 +405,7 @@ class IndexPipeline:
                             p_chunk["lexemes"],
                             vec_str,
                             doc_seq,
-                            PIPELINE_VERSION_P2,
+                            active_pipeline_ver,
                         ],
                     )
 

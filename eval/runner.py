@@ -69,9 +69,11 @@ class EvalRunner:
         self,
         endpoint_override: str | None = None,
         pipeline_version: str | None = None,
+        generation: str | None = None,
     ) -> None:
         self.endpoint_override = endpoint_override
         self.pipeline_version = pipeline_version
+        self.generation = generation
         self.retriever = RetrievalEngine(index_family="plc_chunks")
         self.synthesizer = AnswerSynthesizer(endpoint_override=endpoint_override)
         self.verifier = VerificationEngine()
@@ -182,7 +184,9 @@ class EvalRunner:
                 )
 
                 # 1. Retrieve
-                bundle = self.retriever.retrieve(query=query, ctx=ctx, k=15)
+                bundle = self.retriever.retrieve(
+                    query=query, ctx=ctx, k=15, generation=self.generation
+                )
                 # 2. Synthesize
                 synthesis_output, claims = self.synthesizer.synthesize(
                     query=query, bundle=bundle, ctx=ctx, endpoint_override=active_override

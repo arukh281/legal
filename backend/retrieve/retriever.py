@@ -14,17 +14,20 @@ Normative sources:
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import Any
 
 from django.utils import timezone
 
 from anchor_lib.ids import mint_id, mint_ulid
-from index.ial import IndexAccessLayer, IndexQuery
+from index.ial import IndexAccessLayer, IndexHit, IndexQuery
 from ingest.models import Capture
 from ops.models import PipelineVersion
 from parse.models import Anchor, Work
 from retrieve.models import EvidenceBundle, ResearchQuery
 from workspace.authz import ExecutionContext
+
+logger = logging.getLogger(__name__)
 
 
 def get_law_current_to_date() -> datetime.date:
@@ -39,6 +42,7 @@ class RetrievalEngine:
     """Retrieval Engine for compiling EvidenceBundle using IndexAccessLayer."""
 
     def __init__(self, index_family: str = "plc_chunks") -> None:
+        self.index_family = index_family
         self.ial = IndexAccessLayer(index_family=index_family)
 
     def retrieve(
@@ -46,18 +50,73 @@ class RetrievalEngine:
         query: ResearchQuery,
         ctx: ExecutionContext,
         k: int = 15,
+        generation: str | None = None,
+        hybrid: bool = True,
     ) -> EvidenceBundle:
-        """Execute single-leg lexical search and build EvidenceBundle."""
-        # 1. Lexical retrieval via IAL
-        index_query = IndexQuery(
+        """Execute hybrid search (lexical + dense with RRF) and build EvidenceBundle."""
+        target_gen = generation or self.ial._resolve_generation(generation)
+
+        # 1. Candidate Generation
+        # Leg 1: Lexical
+        lex_query = IndexQuery(
             query_id=query.query_id,
             mode="LEXICAL",
             text=query.text,
-            k=k,
+            k=k * 2,
+            generation=target_gen,
         )
-        hits = self.ial.search(index_query)
+        lex_hits = self.ial.search(lex_query)
 
-        # 2. Extract and resolve anchor and work details
+        # Leg 2: Dense (if hybrid is enabled)
+        dense_hits: list[IndexHit] = []
+        if hybrid:
+            try:
+                dense_query = IndexQuery(
+                    query_id=query.query_id,
+                    mode="DENSE",
+                    text=query.text,
+                    k=k * 2,
+                    generation=target_gen,
+                )
+                dense_hits = self.ial.search(dense_query)
+            except Exception as exc:
+                logger.warning(
+                    "Dense retrieval leg failed for generation %s (falling back to lexical): %s",
+                    target_gen,
+                    exc,
+                )
+                dense_hits = []
+
+        # 2. Reciprocal Rank Fusion (RRF k=60 per Cormack et al. 2009; docs/07 §5.7)
+        has_dense = len(dense_hits) > 0
+        rrf_scores: dict[str, float] = {}
+        legs_hit_map: dict[str, list[str]] = {}
+        hit_by_id: dict[str, IndexHit] = {}
+
+        if has_dense:
+            for rank, hit in enumerate(lex_hits, start=1):
+                rrf_scores[hit.chunk_id] = rrf_scores.get(hit.chunk_id, 0.0) + (1.0 / (60.0 + rank))
+                if "LEXICAL" not in legs_hit_map.get(hit.chunk_id, []):
+                    legs_hit_map.setdefault(hit.chunk_id, []).append("LEXICAL")
+                hit_by_id[hit.chunk_id] = hit
+
+            for rank, hit in enumerate(dense_hits, start=1):
+                rrf_scores[hit.chunk_id] = rrf_scores.get(hit.chunk_id, 0.0) + (1.0 / (60.0 + rank))
+                if "DENSE" not in legs_hit_map.get(hit.chunk_id, []):
+                    legs_hit_map.setdefault(hit.chunk_id, []).append("DENSE")
+                if hit.chunk_id not in hit_by_id:
+                    hit_by_id[hit.chunk_id] = hit
+
+            fused_cids = sorted(
+                rrf_scores.keys(), key=lambda cid: rrf_scores[cid], reverse=True
+            )[:k]
+            hits = [hit_by_id[cid] for cid in fused_cids]
+        else:
+            rrf_scores = {h.chunk_id: h.score for h in lex_hits}
+            legs_hit_map = {h.chunk_id: ["LEXICAL"] for h in lex_hits}
+            hits = lex_hits[:k]
+
+        # 3. Extract and resolve anchor and work details
         items: list[dict[str, Any]] = []
         anchor_ids_to_fetch: list[str] = []
         for hit in hits:
@@ -102,6 +161,9 @@ class RetrievalEngine:
             )
 
             item_id = f"item_{rank:03d}_{mint_ulid()[:8]}"
+            hit_score = rrf_scores.get(hit.chunk_id, hit.score)
+            legs = legs_hit_map.get(hit.chunk_id, ["LEXICAL"])
+
             items.append(
                 {
                     "item_id": item_id,
@@ -116,9 +178,9 @@ class RetrievalEngine:
                         "rhetorical_role": rhetorical_role,
                     },
                     "retrieval_signals": {
-                        "lexical": hit.score,
-                        "fused": hit.score,
-                        "legs_hit": ["LEXICAL"],
+                        "lexical": hit.score if "LEXICAL" in legs else 0.0,
+                        "fused": hit_score,
+                        "legs_hit": legs,
                     },
                     "authority": {
                         "court_id": court_id,
@@ -129,8 +191,12 @@ class RetrievalEngine:
                         "toward_client": "NEUTRAL",
                         "confidence": 1.0,
                     },
-                    "why_included": f"Lexical match on '{query.text[:50]}' (rank {rank}, score {hit.score:.4f})",
-                    "role": "RULE" if (target_anchor and target_anchor.node_type == "STATUTE_SECTION") else "APPLICATION",
+                    "why_included": f"{'+'.join(legs)} match on '{query.text[:50]}' (rank {rank}, score {hit_score:.4f})",
+                    "role": (
+                        "RULE"
+                        if (target_anchor and target_anchor.node_type == "STATUTE_SECTION")
+                        else "APPLICATION"
+                    ),
                     "source_layer": "PLC",
                     "trust_label": "PUBLIC_PRIMARY",
                     "lang": (target_anchor.lang if target_anchor else "en") or "en",
@@ -138,8 +204,10 @@ class RetrievalEngine:
                 }
             )
 
-        # 3. Contrary authority sweep: Directive #2
-        # S07 Amendment #2: report status LIMITED ("lexical only, no citator")
+        # 4. Contrary authority sweep: Directive #2
+        contrary_reason = (
+            "hybrid (lexical + dense RRF), no citator" if has_dense else "lexical only, no citator"
+        )
         coverage: dict[str, Any] = {
             "per_issue": {
                 "main": {
@@ -153,24 +221,29 @@ class RetrievalEngine:
                         "binding_candidates_examined": len(items),
                         "graph_negative_checks": 0,
                         "attested": True,
-                        "reason": "lexical only, no citator",
+                        "reason": contrary_reason,
                     },
                 }
             }
         }
 
-        # 4. Warnings and degradations (D19.2)
-        warnings: list[dict[str, Any]] = [
-            {
-                "kind": "INDEX_LAG",
-                "severity": "INFO",
-                "anchor_ids": [],
-                "message": "Lexical retrieval only (g1 dense embeddings provisional).",
-            }
-        ]
+        # 5. Warnings and degradations (D19.2)
+        warnings: list[dict[str, Any]] = []
+        if not has_dense:
+            warnings.append(
+                {
+                    "kind": "INDEX_LAG",
+                    "severity": "INFO",
+                    "anchor_ids": [],
+                    "message": f"Lexical retrieval only ({target_gen} dense embeddings not active).",
+                }
+            )
 
         bundle_id = mint_id("evb")
-        pipeline_ver = PipelineVersion.objects.get(pipeline_version="p5.retriever@0.1.0|lexical_v1")
+        pipeline_ver_str = (
+            "p5.retriever@0.1.0|hybrid_rrf_v1" if has_dense else "p5.retriever@0.1.0|lexical_v1"
+        )
+        pipeline_ver = PipelineVersion.objects.get(pipeline_version=pipeline_ver_str)
         now = timezone.now()
 
         bundle = EvidenceBundle(
@@ -179,7 +252,7 @@ class RetrievalEngine:
             query_id=query.query_id,
             as_of_legal_date=query.as_of_legal_date,
             as_known_at=now,
-            index_generation="g1",
+            index_generation=target_gen,
             graph_watermark=0,
             pipeline_version=pipeline_ver,
             issues=[
@@ -204,7 +277,7 @@ class RetrievalEngine:
             searched=[
                 {
                     "sq_id": f"{query.query_id}/sq1",
-                    "legs": ["LEXICAL"],
+                    "legs": ["LEXICAL", "DENSE"] if has_dense else ["LEXICAL"],
                     "candidates": len(hits),
                 }
             ],

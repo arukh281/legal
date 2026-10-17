@@ -55,6 +55,12 @@ class Command(BaseCommand):
             default=None,
             help="Deliberate pipeline version to evaluate (defaults to active/latest for task)",
         )
+        parser.add_argument(
+            "--generation",
+            type=str,
+            default=None,
+            help="Target chunk index generation partition (e.g. g1, g2)",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         gold_set_id = options.get("gold_set")
@@ -63,6 +69,7 @@ class Command(BaseCommand):
         dry_run = options.get("dry_run", False)
         use_fake = options.get("fake", False)
         pipeline_version = options.get("pipeline_version")
+        generation = options.get("generation")
 
         endpoint_override = "ep_fake_qa" if use_fake else None
 
@@ -75,12 +82,13 @@ class Command(BaseCommand):
             gold_set_id = gs.gold_set_id
 
         self.stdout.write(
-            f"[*] Starting EvalRunner for gold_set={gold_set_id} (case={case_id}, split={split}, dry_run={dry_run}, fake={use_fake})..."
+            f"[*] Starting EvalRunner for gold_set={gold_set_id} (case={case_id}, split={split}, dry_run={dry_run}, fake={use_fake}, generation={generation})..."
         )
 
         runner = EvalRunner(
             endpoint_override=endpoint_override,
             pipeline_version=pipeline_version,
+            generation=generation,
         )
         eval_run, case_summaries, scorecard_md = runner.run_suite(
             gold_set_id=gold_set_id,

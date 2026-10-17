@@ -430,7 +430,7 @@ def embed(
     adapter = _get_adapter(endpoint.provider)
 
     # 2. Retry with backoff (Directive #7: retry with backoff and then fail loudly)
-    max_retries = 3
+    max_retries = 8
     last_exc: Exception | None = None
     start_time = time.monotonic()
     resp = None
@@ -446,8 +446,24 @@ def embed(
             break
         except Exception as exc:
             last_exc = exc
+            is_rate_limit = (
+                isinstance(exc, RateLimitError)
+                or "429" in str(exc)
+                or "RESOURCE_EXHAUSTED" in str(exc)
+            )
+            if not is_rate_limit and attempt >= 2:
+                # Non-rate-limit errors fail after 3 attempts
+                break
             if attempt < max_retries - 1:
-                time.sleep(0.05 * (2**attempt))
+                sleep_s = min(60.0, 15.0 * (attempt + 1)) if is_rate_limit else (0.1 * (2**attempt))
+                logger.warning(
+                    "Embedding call failed (attempt %d/%d): %s. Sleeping %.2fs...",
+                    attempt + 1,
+                    max_retries,
+                    exc,
+                    sleep_s,
+                )
+                time.sleep(sleep_s)
 
     if resp is None:
         raise RuntimeError(

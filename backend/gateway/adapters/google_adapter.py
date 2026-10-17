@@ -11,7 +11,7 @@ import httpx
 from google import genai
 from google.genai import errors, types
 
-from gateway.adapters.base import BaseModelAdapter, LLMResponse
+from gateway.adapters.base import BaseModelAdapter, EmbeddingResponse, LLMResponse
 from gateway.exceptions import AdapterInvocationError, RateLimitError
 from gateway.models import ModelEndpoint
 
@@ -138,3 +138,58 @@ class GoogleAdapter(BaseModelAdapter):
                     f"Google GenAI API call timed out after 60s: {exc}"
                 ) from exc
             raise AdapterInvocationError(f"Google GenAI API call failed: {exc}") from exc
+
+    def embed(
+        self,
+        endpoint: ModelEndpoint,
+        texts: list[str],
+        dims: int = 1024,
+        input_type: str = "document",
+    ) -> EmbeddingResponse:
+        """Call Google GenAI client.models.embed_content()."""
+        client = self._get_client()
+        model_name = endpoint.model_snapshot or endpoint.model_id
+        task_type = "RETRIEVAL_DOCUMENT" if input_type == "document" else "RETRIEVAL_QUERY"
+        config = types.EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=dims,
+        )
+
+        all_embeddings: list[list[float]] = []
+        batch_size = 10
+        for i in range(0, len(texts), batch_size):
+            if i > 0:
+                time.sleep(1.5)
+            batch = texts[i : i + batch_size]
+            for attempt in range(8):
+                try:
+                    res = cast(Any, client.models.embed_content)(
+                        model=model_name,
+                        contents=batch,
+                        config=config,
+                    )
+                    for emb in res.embeddings:
+                        all_embeddings.append(list(emb.values))
+                    break
+                except Exception as exc:
+                    if ("429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc)) and attempt < 7:
+                        sleep_s = min(60.0, 15.0 * (attempt + 1))
+                        logger.warning(
+                            "Google GenAI embed batch 429 (attempt %d/8). Sleeping %.1fs...",
+                            attempt + 1,
+                            sleep_s,
+                        )
+                        time.sleep(sleep_s)
+                    elif "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc):
+                        raise RateLimitError(
+                            f"Google GenAI embedding rate limit (429): {exc}"
+                        ) from exc
+                    else:
+                        raise AdapterInvocationError(
+                            f"Google GenAI embed_content failed: {exc}"
+                        ) from exc
+
+        return EmbeddingResponse(
+            embeddings=all_embeddings,
+            tokens_in=sum(len(t.split()) for t in texts),
+        )
