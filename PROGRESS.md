@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session S08 Complete (Eval Harness & Gold Store: ops.gold_set, ops.eval_case, ops.eval_run, ops.eval_result)
+## Current State: Session R1 Complete (The Client File: clients, matters, document vault)
 
 ### 1. What Was Built
 
@@ -734,14 +734,11 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
 ---
 
 ### 3. Verification & Test Metrics
-- **Backend Test Suite:** 292 passed, 1 skipped, 0 failed in 36s.
-- **Lint & Types:** Ruff clean (0 errors), mypy strict clean (0 errors across 261 source files).
+- **Backend Test Suite:** 303 passed, 1 skipped, 0 failed in 63.9s.
+- **Lint & Types:** Ruff clean (0 errors), mypy strict clean (0 errors across 260 source files).
 - **Frontend Test & Build:** Vitest 3/3 passed, TypeScript + Vite build clean (0 errors).
 - **Zero-Tolerance Invariant Checks:** All gates PASS (0 fabricated anchors, 0 unmapped tombstones, 0 ungrounded claims, 0 sentinel leaks).
-- **Real Model Eval Runs:**
-  - `g1` run (`evr_01M550KQ14A6JK8M4AFB4GNMRV`): Claude Sonnet 5.5 + Gemini, lexical fallback, 4/10 passed, 3 false out-of-corpus declarations on in-corpus queries.
-  - `g2` run (`evr_01M550XPQXRMJATTAZ37BF69BN`): Claude Sonnet 5.5 + Gemini, dense halfvec HNSW + lexical hybrid RRF, 3/10 passed, **10/10 in-corpus match (100%)**, zero false out-of-corpus declarations, 8/8 target works in top-15 retrieved.
-  - Active Index Alias: Swapped `plc_chunks` to `g2` (dense embeddings `gemini-embedding-001`, 768 dims); preserved `g1`.
+- **Migration Idempotency & Reversibility:** Migration `workspace.0005_client_and_document_vault` cleanly applies on an empty database and rolls back to `0004` without error.
 
 ---
 
@@ -757,11 +754,74 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
 
 ---
 
-### 5. What the Next Session (R1: client file) Needs
-- **Client Entity (`tpl.client`):** The client entity is new (not in docs/mvp/03) and needs a prefix proposal (`cli_`), contact/identifiers JSONB, and RLS forced.
-- **Document Vault Tables:** `tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`, and `tpl.matter_case_link` per `docs/mvp/03 §3.9`.
-- **Parsing Pipeline in Tenant Mode:** The parsing pipeline in `backend/parse` adapted for tenant documents, minting private anchors `pdoc_<ulid>/v{ver}#p{n}`, recording OCR confidence, and flagging hidden text.
-- **Authorization & RLS:** `authz.can()` and RLS enforcement for client visibility (visible only to firm admins, creators, or users with active matter memberships under that client).
+### 5. Session R1: The Client File (Completed 2026-10-17)
+The product has been re-centred on the client file: law firms open matters under clients and manage all case documents in an immutable, stage-tagged vault across any court or jurisdiction.
+
+#### A. Data Models & Database (`backend/workspace/models.py`, `0005_client_and_document_vault.py`)
+- `tpl.client`: `client_id` (prefixed `cli_`), `tenant_id` (RLS forced), `display_name`, `client_type` (INDIVIDUAL, COMPANY, LLP, PARTNERSHIP, GOVERNMENT, OTHER), `identifiers` JSONB (CIN, PAN, GSTIN), `contact` JSONB, `notes`, `status` (ACTIVE, ARCHIVED), `created_by`, `created_at`.
+- `tpl.matter`: extended with `client_id` (FK to `tpl.client`, required on new matters), `case_type` (free text with suggestions: Insolvency (IBC), Arbitration, Company law, Cheque bounce (s.138), Civil suit, Writ, Criminal, Advisory), and `court_or_forum` (free text: NCLT Mumbai, Delhi High Court, Arbitral tribunal, etc.).
+- `tpl.matter_case_link`: scheme, value_normalized, role, track.
+- `tpl.pdoc`: `pdoc_id`, `matter_id`, `family_id`, `parent_pdoc_id`, `doc_type`, `provenance`, `trust_label`, `privilege_class`, `privilege_state` ("SUGGESTED"), `stage` (tag: NOTICE, PLEADING, REPLY, ORDER, CORRESPONDENCE, EVIDENCE, DRAFT, OTHER), `title`, `current_version`.
+- `tpl.pdoc_version`: `pdoc_id`, `pver` (v1, v2...), `raw_sha256`, `storage_uri` (`tpl/{tenant}/{matter}/raw/{sha256}` in MinIO/S3), `mime`, `gate`.
+- `tpl.private_anchor`: `anchor_id` (`pdoc_<ulid>/v{ver}#p{n}`), `fragment`, `text`, `ocr_conf`, `privilege_class`.
+
+#### B. Ingestion & Parsing Pipeline (`backend/parse/vault.py`)
+- Magic-byte detection (PDF, DOCX, EML, ZIP; strictly rejects all unsupported types).
+- Immutable raw storage at `tpl/{tenant}/{matter}/raw/{sha256}`.
+- 1-level ZIP expansion: unpacks child files, generates a parent bundle record, sets `family_id` and `parent_pdoc_id` on children.
+- Tenant parsing: extracts paragraphs into private anchors minted via `anchor_lib.ids.mint_id("pdoc")` and validated against Anchor Grammar v1.1. Native text extraction + Tesseract OCR path with `ocr_conf` per anchor; hidden text detection flagging `FLAGGED` gate.
+- Version history: re-uploading an existing `pdoc_id` increments `pver` (v2, v3...), leaves v1 anchors intact and queryable.
+- Data class protection: untrusted documents are data, never instructions. Zero facts or deadlines extracted, zero private embeddings minted.
+
+#### C. Authorization & Audit Single Choke Point (`backend/workspace/authz.py`, `backend/workspace/audit.py`)
+- Centralized `authz.can()` authorization choke point.
+- Client visibility rule: a user may read a client if they are a firm `ADMIN`, the client creator, or a member of at least one unwalled (or authorized walled) matter open under that client.
+- Walled matters stay hidden from non-members.
+- SQL RLS function `tpl.can_read_client(user_id, client_id)` enforced at the database row level.
+- Every create, upload, download, and view operation records an audited row in `tpl.audit_event`.
+
+#### D. Typed Surface API (`backend/surface/router_workspace.py`)
+- Ninja endpoints with mandatory `auth=authz_required`:
+  - Clients: `GET /clients`, `POST /clients`, `GET /clients/{client_id}`, `PATCH /clients/{client_id}`, `POST /clients/{client_id}/archive`.
+  - Matters: `GET /clients/{client_id}/matters`, `GET /matters`, `POST /matters`, `GET /matters/{matter_id}`, `PATCH /matters/{matter_id}`, `POST /matters/{matter_id}/close`.
+  - Case Links: `GET /matters/{matter_id}/case-links`, `POST /matters/{matter_id}/case-links`, `DELETE /matters/{matter_id}/case-links`.
+  - Documents: `POST /matters/{matter_id}/documents/upload` (multipart with one-click metadata), `GET /matters/{matter_id}/documents` (grouped by stage), `GET /documents/{pdoc_id}/versions`, `GET /documents/{pdoc_id}/paragraphs` (numbered paragraphs with anchors and OCR conf), `GET /documents/{pdoc_id}/download` (immutable raw bytes with audit log).
+- OpenAPI specification exported (`openapi.json`) and synchronized via `openapi-typescript` to `frontend/src/api/schema.d.ts`.
+
+#### E. Frontend SPA (`frontend/src/pages/`, `frontend/src/components/SourceViewer.tsx`)
+- `ClientsPage.tsx`: list clients, search by name/CIN/PAN, "New Client" modal.
+- `ClientDetailPage.tsx`: client details, contact/identifiers, matters list, "New Matter" modal with suggested case types and courts.
+- `MatterDetailPage.tsx`: case header (client, case type, court, case links), drag-and-drop document upload with one-click doc_type/provenance/trust/stage, documents grouped by stage tag (NOTICE, PLEADING, ORDER, etc.), version history drawer, and click-to-view in `SourceViewer`.
+- `MattersPage.tsx`: searchable table of matters across all accessible clients.
+- `SourceViewer.tsx`: extended to support private anchors (`pdoc_...`), render paragraphs with anchor badges and OCR confidence flags, and highlight text quotes.
+- Mobile-responsive design: stacks seamlessly on phone screens without horizontal scroll.
+- Plain language in UI: "Client", "Matter", "Documents", "Upload".
+
+#### F. Exit Check Demonstration (`surface/tests/test_workspace_api.py`)
+1. **Client & Matter Creation:** Created client "Acme Steel Pvt Ltd" (`cli_...`), opened matter "Acme v. Zenith, s.9 petition" under it with case type "Insolvency (IBC)" and court "NCLT Mumbai". Added case number "CP (IB) 123/MB/2026" under scheme "NCLT".
+2. **Multi-Format Upload:** Uploaded IBBI fixture PDF (`nclat_born_digital_del.pdf`) as ORDER with provenance COURT, DOCX as DRAFT with provenance FIRM, and a ZIP bundle containing 2 PDFs.
+3. **Stage Grouping & SourceViewer Paragraphs:** Listed documents grouped by stage; opened ORDER in viewer displaying numbered paragraphs with private anchors (`pdoc_.../v1#p1`, `#p2`...) and `ocr_conf` (avg 0.93), verified exact quote highlighting.
+4. **Document Versioning:** Uploaded version 2 of DOCX (`pver="v2"`). Version history lists both v1 and v2; v1 paragraphs and private anchors continue to resolve.
+5. **Security & Authorization Isolation:**
+   - Non-member user sharing no other matters under Acme Steel receives HTTP 403 on the matter, its documents, and the client.
+   - User in a separate tenant receives HTTP 403 / zero rows under RLS.
+6. **Code Health & Migration Safety:**
+   - 303 pytest tests passed in 63.9s.
+   - Ruff: 0 errors.
+   - Mypy: strict clean (260 source files).
+   - Migration `workspace.0005_client_and_document_vault` cleanly rolls back and re-applies.
+
+---
+
+### 6. What the Next Session (R2: "Hearings, Dates and Today") Needs
+- **Hearings & Calendar Entity:**
+  - `tpl.hearing`: matter_id, court_or_forum, bench, hearing_date, hearing_type, judge_names, stage, notes, outcome/order_ref.
+- **Procedural Dates & Today View:**
+  - "Today" firm dashboard: upcoming hearings, case deadlines, filings due, and recent activity.
+  - Court diary / causelist linkage stubs.
+- **Matter Chronology:**
+  - Unified timeline combining hearings, filings, orders, and vault documents.
+
 
 
 

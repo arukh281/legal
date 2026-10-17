@@ -602,21 +602,37 @@ Record of decisions made during the build. Every entry has: date, decision, reas
   5. **Human Lawyer Review Console Document:** Authored `eval/fixtures/gold/REVIEW.md` listing question, expected anchor, and exact quote for all 10 seed cases for partner lawyer verification. Preserved `reviewed=false` in database and gold fixtures until partner review.
   6. **Real Baseline Evaluation Execution (`evr_01M4NEARV8M9JB86MEY5WT0CZN`):** Executed full suite against Google Gemini (`gemini-3.8-flash` primary with automatic failover to `gemini-3.5-flash` on 504/503). Reported 4/10 passed cases. Confirmed Q3 failed proposition matching (score 0.00) due to quoting paragraph `#p27` rather than target `#p39`. Discovered and verified zero-tolerance gate catch on case 9 (`evc_01M4MRF7M7GM9YBPW1PEB317B3`) where a synthesized claim used a submission paragraph as an ungrounded legal proposition (`SUBMISSION_CANNOT_SUPPORT_PROPOSITION`).
 - **Reason:** User directives for Session S08 fixes before S09.
-- **Doc Reference:** `docs/01_master_architecture.md` line 1317; `docs/mvp/03_data_model_and_contracts.md` §3.1, §3.15; `docs/mvp/06_test_set_plan.md` §6, §7; AGENTS.md §4.
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.5, §3.11, §3.15; `docs/04_P2_enrichment_indexing.md` §2.4, §5.7; AGENTS.md §4, §5, §6.
 
 ---
 
-### 2026-10-17 — Pre-S09 Research-Quality Session (Steps 1–8)
+### 2026-10-17 — Session R1: The Client File (Clients, Matters, Document Vault)
 - **Decision:**
-  1. **Server-Authoritative Data Class Elevation & Matter Scoping:** The server exclusively determines the base data class (`PUBLIC` for public corpus, `CLIENT_CONFIDENTIAL` for matter-scoped operations). `X-Dataclass` header may only elevate the data classification, never lower it. Any attempt to set `X-Dataclass: PUBLIC` for matter-scoped queries is rejected with HTTP 422.
-  2. **Tombstone Forward Pointer Fallback Constraint (Item 0):** Updated `parse/anchors.py` so that the containment/QuoteSelector fallback activates only if old anchor text is $\ge 40$ characters AND matches exactly one node in the new document revision. Otherwise, `forward_to` remains null.
-  3. **Eval Scoring Withheld Claims Separation:** Claims withheld by the verifier are tracked and reported as their own metric (`withheld_claims`) rather than counted as zero-tolerance failures. Zero-tolerance gate failures strictly check for shown fabricated, unmapped, ungrounded claims, or sentinel leaks.
-  4. **Claude Sonnet 5.5 Qualification & Daily Budgeting:** Qualified `ep_claude_sonnet_5_5` (`claude-sonnet-5-5`) via Anthropic adapter as Priority 1 for `p6.qa_synthesis@1`, retaining Gemini as fallback. Implemented daily spend cap in `gateway.runner.run` tracking cumulative 24h spend against budget limits. Recorded verifier/judge family as Gemini in scorecard metadata ensuring generator $\ne$ verifier.
-  5. **Dense Generation g2 & Hybrid RRF Retrieval:** Built partition `plc.chunk_g2` using `gemini-embedding-001` (768-dim `halfvec` HNSW + GIN), backfilled across all public corpus works. Implemented reciprocal rank fusion (RRF $k=60$) in `RetrievalEngine` combining lexical and dense candidate legs with graceful fallback to lexical if dense is unavailable.
-  6. **Gold Set Bake-off & Alias Promotion:** Re-ran full 10-case gold suite on real models (`evr_01M550KQ14A6JK8M4AFB4GNMRV` for `g1` vs `evr_01M550XPQXRMJATTAZ37BF69BN` for `g2`). Proved `g2` achieves 100% in-corpus agreement (10/10 vs `g1`'s 7/10) and 100% target work recall in top 15 (8/8 vs `g1`'s 4/8). Promoted `ops.index_alias` for `plc_chunks` to `g2` while keeping `g1`.
-  7. **Research Screen Design Pass:** Upgraded `ResearchPage.tsx` with a multi-line free-text query box with shortcut execution (`Cmd/Ctrl + Enter`), styled interactive citation chips (`[📍 ... ↗]`), and removed inactive placeholder navigation tabs from `Layout.tsx`.
-- **Reason:** Research-quality hardening before Session S09 Citator.
-- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.5, §3.11, §3.15; `docs/04_P2_enrichment_indexing.md` §2.4, §5.7; AGENTS.md §4, §5, §6.
+  1. **Client Entity (`tpl.client`) and `cli_` Prefix Addition:**
+     - Created table `tpl.client` with columns: `tenant_id` (NOT NULL, RLS forced), `client_id` (PK, Crockford ULID prefixed `cli_`), `display_name`, `client_type` (`CHECK (client_type IN ('INDIVIDUAL', 'COMPANY', 'LLP', 'PARTNERSHIP', 'GOVERNMENT', 'OTHER'))`), `identifiers` JSONB, `contact` JSONB, `notes` TEXT, `status` (`CHECK (status IN ('ACTIVE', 'ARCHIVED'))`), `created_by`, `created_at`.
+     - Registered prefix `cli` in `MVP_PREFIX_ADDITIONS` within `backend/anchor_lib/ids.py`.
+     - Reason: The product is being re-centred on the client file. A law firm creates a client, opens matters (cases) under that client, and keeps every document for that client in one place across any court or forum. AGENTS.md §9 requires an explicit decision record entry for any contract change / new table / ID prefix.
+     - Doc Reference: AGENTS.md §5, §9; Session R1 prompt.
+
+  2. **Matter Extensions & Matter Case Links:**
+     - Extended `tpl.matter` with `client_id` (nullable for backward compatibility; required on all new matter creations via API), `case_type` (free text with suggestions such as "Insolvency (IBC)", "Arbitration", "Company law", "Cheque bounce (s.138)", "Civil suit", "Writ", "Criminal", "Advisory"), and `court_or_forum` (free text such as "NCLT Mumbai", "Delhi High Court", "Arbitral tribunal").
+     - Created `tpl.matter_case_link` (`matter_id`, `scheme`, `value_normalized`, `role`, `track`) for court case numbers entered by the firm.
+     - Reason: Supports general litigation and advisory across all courts and forums, not solely insolvency.
+     - Doc Reference: `docs/mvp/03_data_model_and_contracts.md` §3.8, §3.9; Session R1 prompt.
+
+  3. **Document Vault Entity & Stage Tag (`tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`):**
+     - Created `tpl.pdoc`, `tpl.pdoc_version`, and `tpl.private_anchor` exactly per docs/mvp/03 §3.9.
+     - Added a `stage` tag column on `tpl.pdoc`: `CHECK (stage IN ('NOTICE', 'PLEADING', 'REPLY', 'ORDER', 'CORRESPONDENCE', 'EVIDENCE', 'DRAFT', 'OTHER'))`.
+     - Ingestion enforces magic-byte detection (PDF, DOCX, EML, ZIP), immutable storage at `tpl/{tenant}/{matter}/raw/{sha256}` in `S3_TENANT_BUCKET` (`tpl-vault`), 1-level ZIP expansion with child documents tagged with `family_id`, and tenant parsing into private anchors `pdoc_<ulid>/v{ver}#p{n}` with OCR confidence and hidden text inspection (`FLAGGED` gate). New versions create a new `pdoc_version` while keeping existing anchors.
+     - Reason: Flat stage-based grouping prevents cumbersome folder trees while supporting litigators' filing workflows.
+     - Doc Reference: `docs/mvp/03_data_model_and_contracts.md` §3.9; `docs/mvp/04_stack_and_infra.md` §2.9; Session R1 prompt.
+
+  4. **Client Visibility Rule & Authorization Choke Point:**
+     - Implemented client authorization check in `workspace/authz.py` (`can(user, 'read', client)`): a user may view a client if and only if they are a firm `ADMIN`, the client creator, or an active member of at least one readable matter open under that client. Matter-level ethical walls continue to hide walled matters from non-members.
+     - Added PostgreSQL RLS function `tpl.can_read_client(user_id, client_id)` and applied RLS policy on `tpl.client`.
+     - Reason: Ensures non-members with no matters for a client cannot see client existence or details, strictly enforcing need-to-know access and confidentiality.
+     - Doc Reference: `docs/mvp/03_data_model_and_contracts.md` §6; AGENTS.md §4, §5; Session R1 prompt.
+
 
 ---
 
