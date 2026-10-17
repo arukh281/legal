@@ -28,6 +28,1033 @@
           "Health"
         ]
       }
+    },
+    "/api/auth/dev-login": {
+      "post": {
+        "operationId": "core_api_dev_login",
+        "summary": "Dev Login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DevLoginResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Dev-only login endpoint for local development and integration tests.\n\nSTRICTLY FORBIDDEN IN PRODUCTION. Refuses to execute if DEV_AUTH_ENABLED is False\nor settings.DEBUG is False.",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevLoginRequest"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "operationId": "core_api_get_current_user_profile",
+        "summary": "Get Current User Profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Protected profile endpoint resolving current ExecutionContext.",
+        "tags": [
+          "Identity"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/research/query": {
+      "post": {
+        "operationId": "surface_router_research_execute_research_query",
+        "summary": "Execute Research Query",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchQueryResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Execute end-to-end legal research Q&A with claim-level verification and contrary sweep.",
+        "tags": [
+          "Research & Source Viewer"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/research/documents/anchor": {
+      "get": {
+        "operationId": "surface_router_research_get_anchor_source",
+        "summary": "Get Anchor Source",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "anchor_id",
+            "schema": {
+              "title": "Anchor Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnchorSourceResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Retrieve full text and metadata for a specific pinpoint anchor.",
+        "tags": [
+          "Research & Source Viewer"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/research/documents/{work_id}/source": {
+      "get": {
+        "operationId": "surface_router_research_get_document_source",
+        "summary": "Get Document Source",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "work_id",
+            "schema": {
+              "title": "Work Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentSourceResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Retrieve all ordered paragraphs and metadata for source document inspection.",
+        "tags": [
+          "Research & Source Viewer"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/clients": {
+      "get": {
+        "operationId": "surface_router_workspace_list_clients",
+        "summary": "List Clients",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClientResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List clients visible to the user under RLS and can_read_client rule.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_client",
+        "summary": "Create Client",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a new client entity.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/clients/{client_id}": {
+      "get": {
+        "operationId": "surface_router_workspace_get_client",
+        "summary": "Get Client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get client details and its matters.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "surface_router_workspace_update_client",
+        "summary": "Update Client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Update client fields.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/clients/{client_id}/archive": {
+      "post": {
+        "operationId": "surface_router_workspace_archive_client",
+        "summary": "Archive Client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Archive client.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/clients/{client_id}/matters": {
+      "get": {
+        "operationId": "surface_router_workspace_list_client_matters",
+        "summary": "List Client Matters",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatterSummaryResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List matters opened under a client.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters": {
+      "get": {
+        "operationId": "surface_router_workspace_list_all_matters",
+        "summary": "List All Matters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatterSummaryResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List all matters accessible to user.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_matter",
+        "summary": "Create Matter",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatterSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Open a new matter under a client.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatterCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}": {
+      "get": {
+        "operationId": "surface_router_workspace_get_matter",
+        "summary": "Get Matter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatterDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get full details of a matter including client, case links, and document count.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "surface_router_workspace_update_matter",
+        "summary": "Update Matter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatterSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Update matter properties.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatterUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/close": {
+      "post": {
+        "operationId": "surface_router_workspace_close_matter",
+        "summary": "Close Matter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatterSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Close matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/case-links": {
+      "get": {
+        "operationId": "surface_router_workspace_list_case_links",
+        "summary": "List Case Links",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CaseLinkResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List case numbers associated with a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_add_case_link",
+        "summary": "Add Case Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Add a case number link to a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseLinkCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "surface_router_workspace_remove_case_link",
+        "summary": "Remove Case Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "scheme",
+            "schema": {
+              "title": "Scheme",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "value_normalized",
+            "schema": {
+              "title": "Value Normalized",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Remove a case number link from a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/documents/upload": {
+      "post": {
+        "operationId": "surface_router_workspace_upload_document",
+        "summary": "Upload Document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PdocResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Upload and parse a document (PDF, DOCX, EML, ZIP) into the matter vault.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  },
+                  "doc_type": {
+                    "default": "OTHER",
+                    "title": "Doc Type",
+                    "type": "string"
+                  },
+                  "provenance": {
+                    "default": "CLIENT",
+                    "title": "Provenance",
+                    "type": "string"
+                  },
+                  "trust_label": {
+                    "default": "TENANT_CLIENT_DOC",
+                    "title": "Trust Label",
+                    "type": "string"
+                  },
+                  "stage": {
+                    "default": "OTHER",
+                    "title": "Stage",
+                    "type": "string"
+                  },
+                  "privilege_class": {
+                    "default": "ATTORNEY_CLIENT",
+                    "title": "Privilege Class",
+                    "type": "string"
+                  },
+                  "pdoc_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Pdoc Id"
+                  },
+                  "title": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Title"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "MultiPartBodyParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/documents": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_documents",
+        "summary": "List Matter Documents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PdocResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List documents for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/documents/{pdoc_id}/versions": {
+      "get": {
+        "operationId": "surface_router_workspace_list_document_versions",
+        "summary": "List Document Versions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pdoc_id",
+            "schema": {
+              "title": "Pdoc Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PdocVersionResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List all versions of a document.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/documents/{pdoc_id}/paragraphs": {
+      "get": {
+        "operationId": "surface_router_workspace_get_document_paragraphs",
+        "summary": "Get Document Paragraphs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pdoc_id",
+            "schema": {
+              "title": "Pdoc Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "pver",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pver"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParagraphViewResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get numbered paragraphs with private anchors and OCR confidence for viewer.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/documents/{pdoc_id}/download": {
+      "get": {
+        "operationId": "surface_router_workspace_download_document",
+        "summary": "Download Document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pdoc_id",
+            "schema": {
+              "title": "Pdoc Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "pver",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pver"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Download immutable raw document bytes.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -62,6 +1089,1265 @@
         ],
         "title": "HealthResponse",
         "type": "object"
+      },
+      "DevLoginResponse": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "firm_role": {
+            "title": "Firm Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "user_id",
+          "email",
+          "tenant_id",
+          "firm_role"
+        ],
+        "title": "DevLoginResponse",
+        "type": "object"
+      },
+      "DevLoginRequest": {
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "title": "DevLoginRequest",
+        "type": "object"
+      },
+      "UserProfileResponse": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "tenant_id": {
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "firm_role": {
+            "title": "Firm Role",
+            "type": "string"
+          },
+          "residency_policy": {
+            "title": "Residency Policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "email",
+          "tenant_id",
+          "firm_role",
+          "residency_policy"
+        ],
+        "title": "UserProfileResponse",
+        "type": "object"
+      },
+      "ClaimResponseItem": {
+        "properties": {
+          "claim_id": {
+            "title": "Claim Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "claim_type": {
+            "title": "Claim Type",
+            "type": "string"
+          },
+          "support": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Support",
+            "type": "array"
+          },
+          "verification_status": {
+            "title": "Verification Status",
+            "type": "string"
+          },
+          "display_band": {
+            "title": "Display Band",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "claim_id",
+          "text",
+          "claim_type",
+          "support",
+          "verification_status",
+          "display_band",
+          "reason_codes"
+        ],
+        "title": "ClaimResponseItem",
+        "type": "object"
+      },
+      "ContrarySweepResponse": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "notes"
+        ],
+        "title": "ContrarySweepResponse",
+        "type": "object"
+      },
+      "DegradationItem": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "detail"
+        ],
+        "title": "DegradationItem",
+        "type": "object"
+      },
+      "ResearchQueryResponse": {
+        "properties": {
+          "query_id": {
+            "title": "Query Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "summary_status": {
+            "title": "Summary Status",
+            "type": "string"
+          },
+          "in_corpus": {
+            "title": "In Corpus",
+            "type": "boolean"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimResponseItem"
+            },
+            "title": "Claims",
+            "type": "array"
+          },
+          "contrary_sweep": {
+            "$ref": "#/components/schemas/ContrarySweepResponse"
+          },
+          "law_current_to": {
+            "title": "Law Current To",
+            "type": "string"
+          },
+          "degradations": {
+            "items": {
+              "$ref": "#/components/schemas/DegradationItem"
+            },
+            "title": "Degradations",
+            "type": "array"
+          },
+          "verification_gate": {
+            "title": "Verification Gate",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query_id",
+          "text",
+          "summary",
+          "summary_status",
+          "in_corpus",
+          "claims",
+          "contrary_sweep",
+          "law_current_to",
+          "degradations",
+          "verification_gate",
+          "created_at"
+        ],
+        "title": "ResearchQueryResponse",
+        "type": "object"
+      },
+      "ResearchQueryRequest": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "mode": {
+            "default": "STANDARD",
+            "title": "Mode",
+            "type": "string"
+          },
+          "as_of_legal_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of Legal Date"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ResearchQueryRequest",
+        "type": "object"
+      },
+      "AnchorSourceResponse": {
+        "properties": {
+          "anchor_id": {
+            "title": "Anchor Id",
+            "type": "string"
+          },
+          "work_id": {
+            "title": "Work Id",
+            "type": "string"
+          },
+          "fragment": {
+            "title": "Fragment",
+            "type": "string"
+          },
+          "number_as_printed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number As Printed"
+          },
+          "node_type": {
+            "title": "Node Type",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "ocr_conf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conf"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "court_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Id"
+          },
+          "decision_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Date"
+          }
+        },
+        "required": [
+          "anchor_id",
+          "work_id",
+          "fragment",
+          "number_as_printed",
+          "node_type",
+          "text",
+          "ocr_conf",
+          "title",
+          "court_id",
+          "decision_date"
+        ],
+        "title": "AnchorSourceResponse",
+        "type": "object"
+      },
+      "DocumentParagraphItem": {
+        "properties": {
+          "anchor_id": {
+            "title": "Anchor Id",
+            "type": "string"
+          },
+          "fragment": {
+            "title": "Fragment",
+            "type": "string"
+          },
+          "number_as_printed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number As Printed"
+          },
+          "node_type": {
+            "title": "Node Type",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "ocr_conf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conf"
+          }
+        },
+        "required": [
+          "anchor_id",
+          "fragment",
+          "number_as_printed",
+          "node_type",
+          "text",
+          "ocr_conf"
+        ],
+        "title": "DocumentParagraphItem",
+        "type": "object"
+      },
+      "DocumentSourceResponse": {
+        "properties": {
+          "work_id": {
+            "title": "Work Id",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "court_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Id"
+          },
+          "decision_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Date"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentParagraphItem"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "work_id",
+          "title",
+          "court_id",
+          "decision_date",
+          "status",
+          "paragraphs"
+        ],
+        "title": "DocumentSourceResponse",
+        "type": "object"
+      },
+      "ClientResponse": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "client_type": {
+            "title": "Client Type",
+            "type": "string"
+          },
+          "identifiers": {
+            "additionalProperties": true,
+            "title": "Identifiers",
+            "type": "object"
+          },
+          "contact": {
+            "additionalProperties": true,
+            "title": "Contact",
+            "type": "object"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "display_name",
+          "client_type",
+          "identifiers",
+          "contact",
+          "notes",
+          "status",
+          "created_by",
+          "created_at"
+        ],
+        "title": "ClientResponse",
+        "type": "object"
+      },
+      "ClientCreateRequest": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "client_type": {
+            "default": "COMPANY",
+            "title": "Client Type",
+            "type": "string"
+          },
+          "identifiers": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Identifiers",
+            "type": "object"
+          },
+          "contact": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Contact",
+            "type": "object"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "display_name"
+        ],
+        "title": "ClientCreateRequest",
+        "type": "object"
+      },
+      "ClientDetailResponse": {
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ClientResponse"
+          },
+          "matters": {
+            "items": {
+              "$ref": "#/components/schemas/MatterSummaryResponse"
+            },
+            "title": "Matters",
+            "type": "array"
+          }
+        },
+        "required": [
+          "client",
+          "matters"
+        ],
+        "title": "ClientDetailResponse",
+        "type": "object"
+      },
+      "MatterSummaryResponse": {
+        "properties": {
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "client_role": {
+            "title": "Client Role",
+            "type": "string"
+          },
+          "case_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Type"
+          },
+          "court_or_forum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Or Forum"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "matter_id",
+          "client_id",
+          "title",
+          "client_role",
+          "case_type",
+          "court_or_forum",
+          "status",
+          "created_at"
+        ],
+        "title": "MatterSummaryResponse",
+        "type": "object"
+      },
+      "ClientUpdateRequest": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "client_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Type"
+          },
+          "identifiers": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Identifiers"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "ClientUpdateRequest",
+        "type": "object"
+      },
+      "MatterCreateRequest": {
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "client_role": {
+            "default": "PETITIONER",
+            "title": "Client Role",
+            "type": "string"
+          },
+          "case_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Type"
+          },
+          "court_or_forum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Or Forum"
+          },
+          "client_matter_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Matter No"
+          },
+          "jurisdiction_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jurisdiction State"
+          },
+          "walled": {
+            "default": false,
+            "title": "Walled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "client_id",
+          "title"
+        ],
+        "title": "MatterCreateRequest",
+        "type": "object"
+      },
+      "CaseLinkResponse": {
+        "properties": {
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "scheme": {
+            "title": "Scheme",
+            "type": "string"
+          },
+          "value_normalized": {
+            "title": "Value Normalized",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "track": {
+            "title": "Track",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "matter_id",
+          "scheme",
+          "value_normalized",
+          "role",
+          "track"
+        ],
+        "title": "CaseLinkResponse",
+        "type": "object"
+      },
+      "MatterDetailResponse": {
+        "properties": {
+          "matter": {
+            "$ref": "#/components/schemas/MatterSummaryResponse"
+          },
+          "client": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "case_links": {
+            "items": {
+              "$ref": "#/components/schemas/CaseLinkResponse"
+            },
+            "title": "Case Links",
+            "type": "array"
+          },
+          "documents_count": {
+            "title": "Documents Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "matter",
+          "client",
+          "case_links",
+          "documents_count"
+        ],
+        "title": "MatterDetailResponse",
+        "type": "object"
+      },
+      "MatterUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "client_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Role"
+          },
+          "case_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Type"
+          },
+          "court_or_forum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Or Forum"
+          },
+          "client_matter_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Matter No"
+          },
+          "jurisdiction_state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jurisdiction State"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "title": "MatterUpdateRequest",
+        "type": "object"
+      },
+      "CaseLinkCreateRequest": {
+        "properties": {
+          "scheme": {
+            "title": "Scheme",
+            "type": "string"
+          },
+          "value_normalized": {
+            "title": "Value Normalized",
+            "type": "string"
+          },
+          "role": {
+            "default": "CASE",
+            "title": "Role",
+            "type": "string"
+          },
+          "track": {
+            "default": true,
+            "title": "Track",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "scheme",
+          "value_normalized"
+        ],
+        "title": "CaseLinkCreateRequest",
+        "type": "object"
+      },
+      "PdocResponse": {
+        "properties": {
+          "pdoc_id": {
+            "title": "Pdoc Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "family_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family Id"
+          },
+          "parent_pdoc_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Pdoc Id"
+          },
+          "doc_type": {
+            "title": "Doc Type",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "trust_label": {
+            "title": "Trust Label",
+            "type": "string"
+          },
+          "privilege_class": {
+            "title": "Privilege Class",
+            "type": "string"
+          },
+          "privilege_state": {
+            "title": "Privilege State",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "current_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Version"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pdoc_id",
+          "matter_id",
+          "family_id",
+          "parent_pdoc_id",
+          "doc_type",
+          "provenance",
+          "trust_label",
+          "privilege_class",
+          "privilege_state",
+          "stage",
+          "title",
+          "current_version",
+          "created_by",
+          "created_at"
+        ],
+        "title": "PdocResponse",
+        "type": "object"
+      },
+      "PdocVersionResponse": {
+        "properties": {
+          "pdoc_id": {
+            "title": "Pdoc Id",
+            "type": "string"
+          },
+          "pver": {
+            "title": "Pver",
+            "type": "string"
+          },
+          "raw_sha256": {
+            "title": "Raw Sha256",
+            "type": "string"
+          },
+          "storage_uri": {
+            "title": "Storage Uri",
+            "type": "string"
+          },
+          "mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime"
+          },
+          "gate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pdoc_id",
+          "pver",
+          "raw_sha256",
+          "storage_uri",
+          "mime",
+          "gate",
+          "created_at"
+        ],
+        "title": "PdocVersionResponse",
+        "type": "object"
+      },
+      "ParagraphViewResponse": {
+        "properties": {
+          "pdoc_id": {
+            "title": "Pdoc Id",
+            "type": "string"
+          },
+          "pver": {
+            "title": "Pver",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "doc_type": {
+            "title": "Doc Type",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/PrivateAnchorItem"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "pdoc_id",
+          "pver",
+          "title",
+          "doc_type",
+          "stage",
+          "paragraphs"
+        ],
+        "title": "ParagraphViewResponse",
+        "type": "object"
+      },
+      "PrivateAnchorItem": {
+        "properties": {
+          "anchor_id": {
+            "title": "Anchor Id",
+            "type": "string"
+          },
+          "fragment": {
+            "title": "Fragment",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "ocr_conf": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conf"
+          },
+          "privilege_class": {
+            "title": "Privilege Class",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anchor_id",
+          "fragment",
+          "text",
+          "ocr_conf",
+          "privilege_class"
+        ],
+        "title": "PrivateAnchorItem",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AuthzDependency": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   },

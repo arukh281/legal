@@ -14,6 +14,7 @@ from ninja.errors import HttpError
 
 from core.authz_dependency import authz_required
 from surface.router_research import router as research_router
+from surface.router_workspace import router as workspace_router
 from workspace.authz import ExecutionContext
 from workspace.models import AppUser
 
@@ -25,6 +26,7 @@ api = NinjaAPI(
 )
 
 api.add_router("/research", research_router)
+api.add_router("", workspace_router)
 
 
 class HealthResponse(Schema):

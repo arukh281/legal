@@ -24,6 +24,393 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/dev-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dev Login
+         * @description Dev-only login endpoint for local development and integration tests.
+         *
+         *     STRICTLY FORBIDDEN IN PRODUCTION. Refuses to execute if DEV_AUTH_ENABLED is False
+         *     or settings.DEBUG is False.
+         */
+        post: operations["core_api_dev_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Current User Profile
+         * @description Protected profile endpoint resolving current ExecutionContext.
+         */
+        get: operations["core_api_get_current_user_profile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute Research Query
+         * @description Execute end-to-end legal research Q&A with claim-level verification and contrary sweep.
+         */
+        post: operations["surface_router_research_execute_research_query"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/documents/anchor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Anchor Source
+         * @description Retrieve full text and metadata for a specific pinpoint anchor.
+         */
+        get: operations["surface_router_research_get_anchor_source"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/documents/{work_id}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Document Source
+         * @description Retrieve all ordered paragraphs and metadata for source document inspection.
+         */
+        get: operations["surface_router_research_get_document_source"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Clients
+         * @description List clients visible to the user under RLS and can_read_client rule.
+         */
+        get: operations["surface_router_workspace_list_clients"];
+        put?: never;
+        /**
+         * Create Client
+         * @description Create a new client entity.
+         */
+        post: operations["surface_router_workspace_create_client"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clients/{client_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Client
+         * @description Get client details and its matters.
+         */
+        get: operations["surface_router_workspace_get_client"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Client
+         * @description Update client fields.
+         */
+        patch: operations["surface_router_workspace_update_client"];
+        trace?: never;
+    };
+    "/api/clients/{client_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Client
+         * @description Archive client.
+         */
+        post: operations["surface_router_workspace_archive_client"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clients/{client_id}/matters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Client Matters
+         * @description List matters opened under a client.
+         */
+        get: operations["surface_router_workspace_list_client_matters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List All Matters
+         * @description List all matters accessible to user.
+         */
+        get: operations["surface_router_workspace_list_all_matters"];
+        put?: never;
+        /**
+         * Create Matter
+         * @description Open a new matter under a client.
+         */
+        post: operations["surface_router_workspace_create_matter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Matter
+         * @description Get full details of a matter including client, case links, and document count.
+         */
+        get: operations["surface_router_workspace_get_matter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Matter
+         * @description Update matter properties.
+         */
+        patch: operations["surface_router_workspace_update_matter"];
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Close Matter
+         * @description Close matter.
+         */
+        post: operations["surface_router_workspace_close_matter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/case-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Case Links
+         * @description List case numbers associated with a matter.
+         */
+        get: operations["surface_router_workspace_list_case_links"];
+        put?: never;
+        /**
+         * Add Case Link
+         * @description Add a case number link to a matter.
+         */
+        post: operations["surface_router_workspace_add_case_link"];
+        /**
+         * Remove Case Link
+         * @description Remove a case number link from a matter.
+         */
+        delete: operations["surface_router_workspace_remove_case_link"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/documents/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Document
+         * @description Upload and parse a document (PDF, DOCX, EML, ZIP) into the matter vault.
+         */
+        post: operations["surface_router_workspace_upload_document"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Documents
+         * @description List documents for a matter.
+         */
+        get: operations["surface_router_workspace_list_matter_documents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{pdoc_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Document Versions
+         * @description List all versions of a document.
+         */
+        get: operations["surface_router_workspace_list_document_versions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{pdoc_id}/paragraphs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Document Paragraphs
+         * @description Get numbered paragraphs with private anchors and OCR confidence for viewer.
+         */
+        get: operations["surface_router_workspace_get_document_paragraphs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{pdoc_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Document
+         * @description Download immutable raw document bytes.
+         */
+        get: operations["surface_router_workspace_download_document"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -38,6 +425,413 @@ export interface components {
             schemas: string[];
             /** Timestamp */
             timestamp: string;
+        };
+        /** DevLoginResponse */
+        DevLoginResponse: {
+            /** Status */
+            status: string;
+            /** User Id */
+            user_id: string;
+            /** Email */
+            email: string;
+            /** Tenant Id */
+            tenant_id: string;
+            /** Firm Role */
+            firm_role: string;
+        };
+        /** DevLoginRequest */
+        DevLoginRequest: {
+            /** Email */
+            email?: string | null;
+            /** User Id */
+            user_id?: string | null;
+        };
+        /** UserProfileResponse */
+        UserProfileResponse: {
+            /** User Id */
+            user_id: string;
+            /** Email */
+            email: string;
+            /** Tenant Id */
+            tenant_id: string;
+            /** Firm Role */
+            firm_role: string;
+            /** Residency Policy */
+            residency_policy: string;
+        };
+        /** ClaimResponseItem */
+        ClaimResponseItem: {
+            /** Claim Id */
+            claim_id: string;
+            /** Text */
+            text: string;
+            /** Claim Type */
+            claim_type: string;
+            /** Support */
+            support: {
+                [key: string]: unknown;
+            }[];
+            /** Verification Status */
+            verification_status: string;
+            /** Display Band */
+            display_band: string;
+            /** Reason Codes */
+            reason_codes: string[];
+        };
+        /** ContrarySweepResponse */
+        ContrarySweepResponse: {
+            /** Status */
+            status: string;
+            /** Notes */
+            notes: string;
+        };
+        /** DegradationItem */
+        DegradationItem: {
+            /** Kind */
+            kind: string;
+            /** Detail */
+            detail: string;
+        };
+        /** ResearchQueryResponse */
+        ResearchQueryResponse: {
+            /** Query Id */
+            query_id: string;
+            /** Text */
+            text: string;
+            /** Summary */
+            summary: string;
+            /** Summary Status */
+            summary_status: string;
+            /** In Corpus */
+            in_corpus: boolean;
+            /** Claims */
+            claims: components["schemas"]["ClaimResponseItem"][];
+            contrary_sweep: components["schemas"]["ContrarySweepResponse"];
+            /** Law Current To */
+            law_current_to: string;
+            /** Degradations */
+            degradations: components["schemas"]["DegradationItem"][];
+            /** Verification Gate */
+            verification_gate: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** ResearchQueryRequest */
+        ResearchQueryRequest: {
+            /** Text */
+            text: string;
+            /**
+             * Mode
+             * @default STANDARD
+             */
+            mode: string;
+            /** As Of Legal Date */
+            as_of_legal_date?: string | null;
+        };
+        /** AnchorSourceResponse */
+        AnchorSourceResponse: {
+            /** Anchor Id */
+            anchor_id: string;
+            /** Work Id */
+            work_id: string;
+            /** Fragment */
+            fragment: string;
+            /** Number As Printed */
+            number_as_printed: string | null;
+            /** Node Type */
+            node_type: string;
+            /** Text */
+            text: string;
+            /** Ocr Conf */
+            ocr_conf: number | null;
+            /** Title */
+            title: string | null;
+            /** Court Id */
+            court_id: string | null;
+            /** Decision Date */
+            decision_date: string | null;
+        };
+        /** DocumentParagraphItem */
+        DocumentParagraphItem: {
+            /** Anchor Id */
+            anchor_id: string;
+            /** Fragment */
+            fragment: string;
+            /** Number As Printed */
+            number_as_printed: string | null;
+            /** Node Type */
+            node_type: string;
+            /** Text */
+            text: string;
+            /** Ocr Conf */
+            ocr_conf: number | null;
+        };
+        /** DocumentSourceResponse */
+        DocumentSourceResponse: {
+            /** Work Id */
+            work_id: string;
+            /** Title */
+            title: string | null;
+            /** Court Id */
+            court_id: string | null;
+            /** Decision Date */
+            decision_date: string | null;
+            /** Status */
+            status: string;
+            /** Paragraphs */
+            paragraphs: components["schemas"]["DocumentParagraphItem"][];
+        };
+        /** ClientResponse */
+        ClientResponse: {
+            /** Client Id */
+            client_id: string;
+            /** Display Name */
+            display_name: string;
+            /** Client Type */
+            client_type: string;
+            /** Identifiers */
+            identifiers: {
+                [key: string]: unknown;
+            };
+            /** Contact */
+            contact: {
+                [key: string]: unknown;
+            };
+            /** Notes */
+            notes: string | null;
+            /** Status */
+            status: string;
+            /** Created By */
+            created_by: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** ClientCreateRequest */
+        ClientCreateRequest: {
+            /** Display Name */
+            display_name: string;
+            /**
+             * Client Type
+             * @default COMPANY
+             */
+            client_type: string;
+            /**
+             * Identifiers
+             * @default {}
+             */
+            identifiers: {
+                [key: string]: unknown;
+            };
+            /**
+             * Contact
+             * @default {}
+             */
+            contact: {
+                [key: string]: unknown;
+            };
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ClientDetailResponse */
+        ClientDetailResponse: {
+            client: components["schemas"]["ClientResponse"];
+            /** Matters */
+            matters: components["schemas"]["MatterSummaryResponse"][];
+        };
+        /** MatterSummaryResponse */
+        MatterSummaryResponse: {
+            /** Matter Id */
+            matter_id: string;
+            /** Client Id */
+            client_id: string | null;
+            /** Title */
+            title: string;
+            /** Client Role */
+            client_role: string;
+            /** Case Type */
+            case_type: string | null;
+            /** Court Or Forum */
+            court_or_forum: string | null;
+            /** Status */
+            status: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** ClientUpdateRequest */
+        ClientUpdateRequest: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Client Type */
+            client_type?: string | null;
+            /** Identifiers */
+            identifiers?: {
+                [key: string]: unknown;
+            } | null;
+            /** Contact */
+            contact?: {
+                [key: string]: unknown;
+            } | null;
+            /** Notes */
+            notes?: string | null;
+            /** Status */
+            status?: string | null;
+        };
+        /** MatterCreateRequest */
+        MatterCreateRequest: {
+            /** Client Id */
+            client_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Client Role
+             * @default PETITIONER
+             */
+            client_role: string;
+            /** Case Type */
+            case_type?: string | null;
+            /** Court Or Forum */
+            court_or_forum?: string | null;
+            /** Client Matter No */
+            client_matter_no?: string | null;
+            /** Jurisdiction State */
+            jurisdiction_state?: string | null;
+            /**
+             * Walled
+             * @default false
+             */
+            walled: boolean;
+        };
+        /** CaseLinkResponse */
+        CaseLinkResponse: {
+            /** Matter Id */
+            matter_id: string;
+            /** Scheme */
+            scheme: string;
+            /** Value Normalized */
+            value_normalized: string;
+            /** Role */
+            role: string;
+            /** Track */
+            track: boolean;
+        };
+        /** MatterDetailResponse */
+        MatterDetailResponse: {
+            matter: components["schemas"]["MatterSummaryResponse"];
+            client: components["schemas"]["ClientResponse"] | null;
+            /** Case Links */
+            case_links: components["schemas"]["CaseLinkResponse"][];
+            /** Documents Count */
+            documents_count: number;
+        };
+        /** MatterUpdateRequest */
+        MatterUpdateRequest: {
+            /** Title */
+            title?: string | null;
+            /** Client Role */
+            client_role?: string | null;
+            /** Case Type */
+            case_type?: string | null;
+            /** Court Or Forum */
+            court_or_forum?: string | null;
+            /** Client Matter No */
+            client_matter_no?: string | null;
+            /** Jurisdiction State */
+            jurisdiction_state?: string | null;
+            /** Status */
+            status?: string | null;
+        };
+        /** CaseLinkCreateRequest */
+        CaseLinkCreateRequest: {
+            /** Scheme */
+            scheme: string;
+            /** Value Normalized */
+            value_normalized: string;
+            /**
+             * Role
+             * @default CASE
+             */
+            role: string;
+            /**
+             * Track
+             * @default true
+             */
+            track: boolean;
+        };
+        /** PdocResponse */
+        PdocResponse: {
+            /** Pdoc Id */
+            pdoc_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Family Id */
+            family_id: string | null;
+            /** Parent Pdoc Id */
+            parent_pdoc_id: string | null;
+            /** Doc Type */
+            doc_type: string;
+            /** Provenance */
+            provenance: string;
+            /** Trust Label */
+            trust_label: string;
+            /** Privilege Class */
+            privilege_class: string;
+            /** Privilege State */
+            privilege_state: string;
+            /** Stage */
+            stage: string;
+            /** Title */
+            title: string | null;
+            /** Current Version */
+            current_version: string | null;
+            /** Created By */
+            created_by: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** PdocVersionResponse */
+        PdocVersionResponse: {
+            /** Pdoc Id */
+            pdoc_id: string;
+            /** Pver */
+            pver: string;
+            /** Raw Sha256 */
+            raw_sha256: string;
+            /** Storage Uri */
+            storage_uri: string;
+            /** Mime */
+            mime: string | null;
+            /** Gate */
+            gate: string | null;
+            /** Created At */
+            created_at: string;
+        };
+        /** ParagraphViewResponse */
+        ParagraphViewResponse: {
+            /** Pdoc Id */
+            pdoc_id: string;
+            /** Pver */
+            pver: string;
+            /** Title */
+            title: string | null;
+            /** Doc Type */
+            doc_type: string;
+            /** Stage */
+            stage: string;
+            /** Paragraphs */
+            paragraphs: components["schemas"]["PrivateAnchorItem"][];
+        };
+        /** PrivateAnchorItem */
+        PrivateAnchorItem: {
+            /** Anchor Id */
+            anchor_id: string;
+            /** Fragment */
+            fragment: string;
+            /** Text */
+            text: string;
+            /** Ocr Conf */
+            ocr_conf: number | null;
+            /** Privilege Class */
+            privilege_class: string;
         };
     };
     responses: never;
@@ -65,6 +859,590 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
                 };
+            };
+        };
+    };
+    core_api_dev_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DevLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DevLoginResponse"];
+                };
+            };
+        };
+    };
+    core_api_get_current_user_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserProfileResponse"];
+                };
+            };
+        };
+    };
+    surface_router_research_execute_research_query: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchQueryResponse"];
+                };
+            };
+        };
+    };
+    surface_router_research_get_anchor_source: {
+        parameters: {
+            query: {
+                anchor_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnchorSourceResponse"];
+                };
+            };
+        };
+    };
+    surface_router_research_get_document_source: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                work_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentSourceResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_clients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientDetailResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_update_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_archive_client: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_client_matters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterSummaryResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_all_matters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterSummaryResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_matter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatterCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterSummaryResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_matter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterDetailResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_update_matter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatterUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterSummaryResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_close_matter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterSummaryResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_case_links: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseLinkResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_add_case_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseLinkCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseLinkResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_remove_case_link: {
+        parameters: {
+            query: {
+                scheme: string;
+                value_normalized: string;
+            };
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_upload_document: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                    /**
+                     * Doc Type
+                     * @default OTHER
+                     */
+                    doc_type?: string;
+                    /**
+                     * Provenance
+                     * @default CLIENT
+                     */
+                    provenance?: string;
+                    /**
+                     * Trust Label
+                     * @default TENANT_CLIENT_DOC
+                     */
+                    trust_label?: string;
+                    /**
+                     * Stage
+                     * @default OTHER
+                     */
+                    stage?: string;
+                    /**
+                     * Privilege Class
+                     * @default ATTORNEY_CLIENT
+                     */
+                    privilege_class?: string;
+                    /** Pdoc Id */
+                    pdoc_id?: string | null;
+                    /** Title */
+                    title?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdocResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_matter_documents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdocResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_document_versions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pdoc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PdocVersionResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_document_paragraphs: {
+        parameters: {
+            query?: {
+                pver?: string | null;
+            };
+            header?: never;
+            path: {
+                pdoc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParagraphViewResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_download_document: {
+        parameters: {
+            query?: {
+                pver?: string | null;
+            };
+            header?: never;
+            path: {
+                pdoc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
