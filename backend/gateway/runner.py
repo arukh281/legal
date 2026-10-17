@@ -292,6 +292,7 @@ def run(
             return GatewayResult(output=parsed_json, call_record=record_1, attempts=1)
 
         # 6. Output invalid -> attempt ONE repair
+        logger.warning("Gateway call schema validation failed on attempt 1: %s", val_error)
         repair_prompt = (
             f"Your previous response did not satisfy the required JSON schema:\n"
             f"Validation error: {val_error}\n"
