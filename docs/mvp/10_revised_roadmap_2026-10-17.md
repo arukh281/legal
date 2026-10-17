@@ -13,16 +13,16 @@ Research is the one capability law firms already purchase elsewhere. Building re
 
 ## 3. Revised Session Roadmap (R1 to R8)
 
-| # | Session | Works for |
-|---|---|---|
-| R1 | Client file: client entity, matters under a client with free-text case type and court, document vault (PDF, DOCX, EML, ZIP) with stage tags, versions and private anchors, manual case-number entry | Any case |
-| R2 | Hearings, dates and Today: manual hearing and date entry for any court; NCLT/NCLAT cause-list PDF matching on entered case numbers; new orders in IBC cases land in the matter via the IBBI delta crawl; Today page, phone-usable | Any case (manual); IBC (automatic) |
-| R3 | Tasks with due dates linked to hearings or deadlines; client status link or email per matter; Excel import of live cases | Any case |
-| R4 | Dates and facts from documents with exact quotes for lawyer confirmation; order-set dates for any court; statutory deadlines for the IBC pack only (02 Part A), after re-anchoring to India Code text | Any case (order-set); IBC (statutory) |
-| R5 | Corpus to real scale: IBC, CIRP Regulations and AAA Rules from India Code with point-in-time for the 2026 amendment; IBBI mirror backfill; real embeddings as g2; hybrid retrieval; research inside the matter | IBC |
-| R6 | Templates and filing bundles: vakalatnama, affidavit, memo of parties, annexure index first; then IBC forms (s.8 notice, s.7 and s.9 petition skeletons, reply skeleton), e-filing checklist, defect-cure tracker. Assemble, never submit | Any case (generic); IBC (forms) |
-| R7 | Cite-check on uploaded drafts against the corpus, honest "not in MVP corpus" | Any case within corpus |
-| R8 | Hardening and pilot: residency decision, DPA, backups and restore drill, firm-visible access log, two law firms live | — |
+| # | Session | Works for | Status |
+|---|---|---|---|
+| R1 | Client file: client entity, matters under a client with free-text case type and court, document vault (PDF, DOCX, EML, ZIP) with stage tags, versions and private anchors, manual case-number entry | Any case | Done |
+| R2 | Hearings, dates and Today: manual hearing and date entry for any court; NCLT/NCLAT cause-list PDF matching on entered case numbers; new orders in IBC cases land in the matter via the IBBI delta crawl; Today page, phone-usable | Any case (manual); IBC (automatic) | |
+| R3 | Tasks with due dates linked to hearings or deadlines; client status link or email per matter; Excel import of live cases | Any case | |
+| R4 | Dates and facts from documents with exact quotes for lawyer confirmation; order-set dates for any court; statutory deadlines for the IBC pack only (02 Part A), after re-anchoring to India Code text | Any case (order-set); IBC (statutory) | |
+| R5 | Corpus to real scale: IBC, CIRP Regulations and AAA Rules from India Code with point-in-time for the 2026 amendment; IBBI mirror backfill; research inside the matter *(Note: real embeddings as g2 and hybrid retrieval already landed in the research-quality session)* | IBC | |
+| R6 | Templates and filing bundles: vakalatnama, affidavit, memo of parties, annexure index first; then IBC forms (s.8 notice, s.7 and s.9 petition skeletons, reply skeleton), e-filing checklist, defect-cure tracker. Assemble, never submit | Any case (generic); IBC (forms) | |
+| R7 | Cite-check on uploaded drafts against the corpus, honest "not in MVP corpus" | Any case within corpus | |
+| R8 | Hardening and pilot: residency decision, DPA, backups and restore drill, firm-visible access log, two law firms live | — | |
 
 ## 4. Plain-Words Reason for Each Session
 

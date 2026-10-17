@@ -80,16 +80,16 @@ Apps talk only through the contracts in 03 (tables they own, typed objects, outb
 | S06 | Index: chunks, FTS `legal_en`, embeddings, pgvector generations + aliases, Index Access Layer | — | Done |
 | S07 | Retrieval, Q&A with claims, source viewer (Demo 1) | — | Done |
 | S08 | Eval harness + gold store | — | Done |
-| R1 | Client file: client entity, matters under a client with free-text case type and court, document vault (PDF, DOCX, EML, ZIP) with stage tags, versions and private anchors, manual case-number entry | Any case | |
+| R1 | Client file: client entity, matters under a client with free-text case type and court, document vault (PDF, DOCX, EML, ZIP) with stage tags, versions and private anchors, manual case-number entry | Any case | Done |
 | R2 | Hearings, dates and Today: manual hearing and date entry for any court; NCLT/NCLAT cause-list PDF matching on entered case numbers; new orders in IBC cases land in the matter via the IBBI delta crawl; Today page, phone-usable | Any case (manual); IBC (automatic) | |
 | R3 | Tasks with due dates linked to hearings or deadlines; client status link or email per matter; Excel import of live cases | Any case | |
 | R4 | Dates and facts from documents with exact quotes for lawyer confirmation; order-set dates for any court; statutory deadlines for the IBC pack only (02 Part A), after re-anchoring to India Code text | Any case (order-set); IBC (statutory) | |
-| R5 | Corpus to real scale: IBC, CIRP Regulations and AAA Rules from India Code with point-in-time for the 2026 amendment; IBBI mirror backfill; real embeddings as g2; hybrid retrieval; research inside the matter | IBC | |
+| R5 | Corpus to real scale: IBC, CIRP Regulations and AAA Rules from India Code with point-in-time for the 2026 amendment; IBBI mirror backfill; research inside the matter (real embeddings as g2 and hybrid retrieval already landed in the research-quality session) | IBC | |
 | R6 | Templates and filing bundles: vakalatnama, affidavit, memo of parties, annexure index first; then IBC forms (s.8 notice, s.7 and s.9 petition skeletons, reply skeleton), e-filing checklist, defect-cure tracker. Assemble, never submit | Any case (generic); IBC (forms) | |
 | R7 | Cite-check on uploaded drafts against the corpus, honest "not in MVP corpus" | Any case within corpus | |
 | R8 | Hardening and pilot: residency decision, DPA, backups and restore drill, firm-visible access log, two law firms live | — | |
 
-Note: S09 citator, S12 memo chain, S17 alerts and digest, and corpus breadth beyond IBC are deferred, not deleted.
+Note: S09 citator, S12 memo chain, S17 alerts and digest, and corpus breadth beyond IBC are deferred, not deleted. Real embeddings (g2) and hybrid retrieval already landed in the pre-S09 research-quality session.
 
 After R8: a module for insolvency professionals (CIRP compliance calendar, claims, CoC meetings, IBBI forms); then the next legal areas one per session from 02 Parts B to D (arbitration, company law, s.138 cheque bounce, commercial suits).
 
