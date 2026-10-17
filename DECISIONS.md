@@ -636,10 +636,38 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 
 ---
 
-### 2026-10-17 — Roadmap Re-centred on the Client File (Sessions R1 to R8)
-- **Decision:** Roadmap re-centred on the client file for law firms, any case type, IBC as the first deep area, sessions R1 to R8 replace S09 to S18; S09, S12, S17 and corpus breadth deferred.
-- **Reason:** The product's users are law firms running cases, research is the one job they already buy elsewhere, and the plan built it first; the corpus (156 works, no statute text) cannot support a citator or memo chain yet.
-- **Doc Reference:** AGENTS.md §8; `docs/mvp/10_revised_roadmap_2026-10-17.md`.
+### 2026-10-18 — Session R2: Hearings, Dates, and Today (NCLT Cause-List Sync, Case-Number Normalization, and Calendar Export)
+- **Decision:**
+  1. **Hearing Entity (`tpl.hearing`, prefix `hrg_`):**
+     - Created table `tpl.hearing` with columns: `tenant_id` (NOT NULL, RLS forced), `hearing_id` (PK, Crockford ULID prefixed `hrg_`), `matter_id` (FK to `tpl.matter`), `date` (DATE NOT NULL), `court_or_forum` (TEXT, defaults to matter's `court_or_forum`), `court_no` (TEXT NULL), `item_no` (TEXT NULL), `bench` (TEXT NULL, set from cause-list header or manual input), `purpose` (TEXT NULL), `source` (`CHECK (source IN ('MANUAL', 'CAUSE_LIST'))`), `source_ref` (TEXT NULL), `status` (`CHECK (status IN ('LISTED', 'HEARD', 'ADJOURNED', 'RESERVED', 'DISPOSED'))`), `outcome` (TEXT NULL), `notes` (TEXT NULL), `created_by`, `created_at`.
+     - Supports one-click outcome recording (`POST /api/hearings/{id}/outcome`) with optional next-date scheduling in the same atomic action.
+  2. **Deadlines & Non-Negotiable Refusal of `rule_id` (`tpl.deadline`, prefix `ddl_`):**
+     - Created table `tpl.deadline` with columns: `tenant_id`, `deadline_id` (PK, prefixed `ddl_`), `matter_id`, `label` (TEXT NOT NULL), `due_on` (DATE NOT NULL), `rule_id` (TEXT NULL), `source_note` (TEXT NOT NULL, e.g. "entered by <name>, not computed"), `owner` (TEXT NULL), `lifecycle` (`CHECK (lifecycle IN ('ENTERED', 'CONFIRMED', 'DONE', 'DISMISSED'))`), `created_by`, `created_at`.
+     - Non-negotiable #2 enforcement: added constraint `CHECK (rule_id IS NULL)` at the database level and an HTTP 400 rejection in the router. An LLM never computes or suggests a deadline. **R4 will drop this constraint and replace it with the trigger in `docs/mvp/03_data_model_and_contracts.md` §3.10** once ACTIVE RuleSpecs are active.
+  3. **Case-Number Normalizer & Strict Distinctness (`backend/anchor_lib/case_numbers.py`):**
+     - Keeps `CP (IB)` vs `RCP (IB)` strictly distinct (preventing restoration petitions from cross-matching main insolvency applications).
+     - Standardizes bench aliases to canonical codes (`MB`/`MUM` -> `MUM`, `ND`/`DEL` -> `DEL`, `AHM` -> `AHM`, `KOL` -> `KOL`, `CH`/`CHD` -> `CHD`, `HYD` -> `HYD`, `AL`/`ALL` -> `ALL`, `JA`/`JAI` -> `JAI`, `KO`/`KOC` -> `KOC`, `AM`/`AMT` -> `AMT`, `CT`/`CUT` -> `CUT`, `IN`/`IND` -> `IND`).
+     - Extracts parent case number from interlocutory applications (`IA 456/2026 in CP (IB) 123/MUM/2026`).
+     - Matching rule: `EXACT` only when case type, number, year, and bench are all present and equal. Missing bench or missing year yields `PARTIAL`. A bench or year mismatch yields `NONE`.
+     - On write, `POST /matters/{id}/case-numbers` normalizes incoming case numbers and reports warnings when numbers cannot be canonically parsed. Migration `0008` backfills existing rows reversibly.
+  4. **Stable Keys for Cause-List Hearings and Candidates (`tpl.case_candidate`, prefix `cnd_`):**
+     - Cause-list hearings keyed by `(matter_id, date, bench, court_no)`: revised cause lists update `item_no` in-place rather than duplicating hearings.
+     - Candidates keyed by `(matter_id, kind, list_date, bench, case_number_normalized)`. Registered prefix `cnd` in `anchor_lib.ids`.
+     - If a case is dropped from a revised cause list, the hearing is preserved, and a candidate with `kind='HEARING_DROPPED'` is routed to the firm's "Check these" inbox.
+     - Dismissed candidates (`status='DISMISSED'`) are remembered and never resurrected by subsequent crawl sweeps.
+  5. **Per-Tenant Matching & System Actor Audit:**
+     - Cause-list sync consumer loops tenant by tenant with explicit `tenant_db_context(tenant_id)` set and reason logged, querying only that tenant's case links.
+     - Automatic system writes are audited with `actor = "system:causelist"`.
+  6. **Order Sync Cause Title & Header Fallback:**
+     - Order sync consumer matches only listing subject and cause title (text before the first numbered paragraph if no separate header anchor exists). Body citations never link orders to matters.
+     - Matched public orders surface in the matter with an uncertified copy badge opening the public `SourceViewer`.
+  7. **RFC 5545 All-Day Calendar Export:**
+     - Exports matter or firm calendars with `DTSTART;VALUE=DATE:YYYYMMDD` and `DTEND;VALUE=DATE:YYYYMMDD` (exclusive next day), preventing phone calendar clients from shifting dates across time zones. All exports are logged to `ops.audit_log`.
+  8. **NCLAT Live Probe:**
+     - Gated probe recorded live NCLAT HTML structure in `eval/fixtures/nclat_probe.json` for review in future sessions.
+- **Reason:** AGENTS.md §8 (Session R2); User Prompt and Corrections 1–7.
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.9, §3.10; `docs/01a_spine_decision_record.md`; AGENTS.md §4, §5.
+
 
 
 

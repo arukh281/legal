@@ -8,9 +8,20 @@ import {
   removeCaseLink,
   uploadDocument,
   getDocumentDownloadUrl,
+  fetchMatterHearings,
+  createMatterHearing,
+  recordHearingOutcome,
+  fetchMatterDeadlines,
+  createMatterDeadline,
+  updateDeadlineLifecycle,
+  fetchMatterOrders,
+  fetchMatterTimeline,
+  getMatterCalendarExportUrl,
   type PdocResponse,
   type PdocVersionResponse,
   type CaseLinkCreateRequest,
+  type HearingResponse,
+  type CourtOrderResponse,
 } from "../api/client";
 import { SourceViewer } from "../components/SourceViewer";
 
@@ -20,12 +31,17 @@ interface MatterDetailPageProps {
   onSelectClient?: (clientId: string) => void;
 }
 
+export type MatterTab = "documents" | "hearings" | "dates" | "orders" | "timeline";
+
 export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
   matterId,
   onBack,
   onSelectClient,
 }) => {
   const queryClient = useQueryClient();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<MatterTab>("documents");
 
   // Modal and viewer states
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -34,6 +50,7 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
 
   // Source viewer target
   const [viewingPdoc, setViewingPdoc] = useState<{ pdocId: string; pver: string } | null>(null);
+  const [viewingPublicOrder, setViewingPublicOrder] = useState<CourtOrderResponse | null>(null);
 
   // Case link form
   const [showCaseLinkForm, setShowCaseLinkForm] = useState(false);
@@ -46,6 +63,25 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
   const [provenanceChoice, setProvenanceChoice] = useState<"COURT" | "CLIENT" | "FIRM" | "OPPONENT" | "THIRD_PARTY">("COURT");
   const [docType, setDocType] = useState("ORDER");
   const [docTitle, setDocTitle] = useState("");
+
+  // Hearing form & outcome modal state
+  const [showHearingForm, setShowHearingForm] = useState(false);
+  const [hearingDate, setHearingDate] = useState("");
+  const [hearingCourtNo, setHearingCourtNo] = useState("");
+  const [hearingItemNo, setHearingItemNo] = useState("");
+  const [hearingBench, setHearingBench] = useState("");
+  const [hearingPurpose, setHearingPurpose] = useState("");
+  const [outcomeHearing, setOutcomeHearing] = useState<HearingResponse | null>(null);
+  const [outcomeText, setOutcomeText] = useState("");
+  const [outcomeStatus, setOutcomeStatus] = useState("HEARD");
+  const [nextHearingDate, setNextHearingDate] = useState("");
+  const [nextHearingPurpose, setNextHearingPurpose] = useState("");
+
+  // Deadline form state
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);
+  const [deadlineLabel, setDeadlineLabel] = useState("");
+  const [deadlineDueOn, setDeadlineDueOn] = useState("");
+  const [deadlineOwner, setDeadlineOwner] = useState("");
 
   const { data: matterData, isLoading: matterLoading } = useQuery({
     queryKey: ["matter", matterId],
@@ -61,6 +97,26 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
     queryKey: ["doc_versions", expandedVersionsDocId],
     queryFn: () => (expandedVersionsDocId ? fetchDocumentVersions(expandedVersionsDocId) : Promise.resolve([])),
     enabled: Boolean(expandedVersionsDocId),
+  });
+
+  const { data: hearings, isLoading: hearingsLoading } = useQuery({
+    queryKey: ["matter_hearings", matterId],
+    queryFn: () => fetchMatterHearings(matterId),
+  });
+
+  const { data: deadlines, isLoading: deadlinesLoading } = useQuery({
+    queryKey: ["matter_deadlines", matterId],
+    queryFn: () => fetchMatterDeadlines(matterId),
+  });
+
+  const { data: orders, isLoading: ordersLoading } = useQuery({
+    queryKey: ["matter_orders", matterId],
+    queryFn: () => fetchMatterOrders(matterId),
+  });
+
+  const { data: timeline, isLoading: timelineLoading } = useQuery({
+    queryKey: ["matter_timeline", matterId],
+    queryFn: () => fetchMatterTimeline(matterId),
   });
 
   // Mutations
@@ -86,8 +142,80 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matter_documents", matterId] });
       queryClient.invalidateQueries({ queryKey: ["doc_versions", versionTargetPdocId] });
+      queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
       setShowUploadModal(false);
       resetUploadForm();
+    },
+  });
+
+  const createHearingMutation = useMutation({
+    mutationFn: (payload: { date: string; court_no?: string; item_no?: string; bench?: string; purpose?: string }) =>
+      createMatterHearing(matterId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["matter_hearings", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["today"] });
+      setShowHearingForm(false);
+      setHearingDate("");
+      setHearingCourtNo("");
+      setHearingItemNo("");
+      setHearingBench("");
+      setHearingPurpose("");
+    },
+  });
+
+  const recordOutcomeMutation = useMutation({
+    mutationFn: ({
+      hearingId,
+      outcome,
+      status,
+      next_date,
+      next_purpose,
+    }: {
+      hearingId: string;
+      outcome: string;
+      status: string;
+      next_date?: string;
+      next_purpose?: string;
+    }) =>
+      recordHearingOutcome(hearingId, {
+        outcome,
+        status,
+        next_date: next_date || null,
+        next_purpose: next_purpose || null,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["matter_hearings", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["today"] });
+      setOutcomeHearing(null);
+      setOutcomeText("");
+      setNextHearingDate("");
+      setNextHearingPurpose("");
+    },
+  });
+
+  const createDeadlineMutation = useMutation({
+    mutationFn: (payload: { label: string; due_on: string; owner?: string }) =>
+      createMatterDeadline(matterId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["matter_deadlines", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["today"] });
+      setShowDeadlineForm(false);
+      setDeadlineLabel("");
+      setDeadlineDueOn("");
+      setDeadlineOwner("");
+    },
+  });
+
+  const updateDeadlineMutation = useMutation({
+    mutationFn: ({ deadlineId, lifecycle }: { deadlineId: string; lifecycle: string }) =>
+      updateDeadlineLifecycle(deadlineId, lifecycle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["matter_deadlines", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
+      queryClient.invalidateQueries({ queryKey: ["today"] });
     },
   });
 
@@ -300,24 +428,46 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
             )}
           </div>
 
-          <button
-            onClick={() => {
-              resetUploadForm();
-              setShowUploadModal(true);
-            }}
-            style={{
-              backgroundColor: "var(--accent)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              padding: "10px 18px",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            + Upload Document
-          </button>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <a
+              href={getMatterCalendarExportUrl(matterId)}
+              download={`matter_${matterId}_calendar.ics`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}
+            >
+              <span>📅</span> Export Calendar (.ics)
+            </a>
+            <button
+              onClick={() => {
+                resetUploadForm();
+                setShowUploadModal(true);
+              }}
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              + Upload Document
+            </button>
+          </div>
         </div>
 
         {/* Matter Attributes */}
@@ -491,9 +641,62 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div style={{ display: "flex", gap: "8px", borderBottom: "1px solid var(--border)", marginBottom: "24px", overflowX: "auto" }}>
+        {(
+          [
+            { id: "documents", label: "Documents", icon: "📄", count: documents?.length || 0 },
+            { id: "hearings", label: "Hearings", icon: "🏛️", count: hearings?.length || 0 },
+            { id: "dates", label: "Dates", icon: "⏱️", count: deadlines?.length || 0 },
+            { id: "orders", label: "Court Orders", icon: "📜", count: orders?.length || 0 },
+            { id: "timeline", label: "Timeline", icon: "⏳", count: timeline?.length || 0 },
+          ] as const
+        ).map((t) => {
+          const active = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 16px",
+                borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
+                color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                fontWeight: active ? "600" : "500",
+                fontSize: "14px",
+                background: "none",
+                borderTop: "none",
+                borderLeft: "none",
+                borderRight: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  padding: "1px 6px",
+                  borderRadius: "10px",
+                  backgroundColor: active ? "var(--accent)" : "rgba(255, 255, 255, 0.08)",
+                  color: active ? "#ffffff" : "var(--text-muted)",
+                }}
+              >
+                {t.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Document Vault Section */}
-      <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+      {activeTab === "documents" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div>
             <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Documents</h2>
             <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "2px 0 0" }}>
@@ -834,6 +1037,7 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
           </div>
         )}
       </div>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
@@ -1042,6 +1246,806 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
         </div>
       )}
 
+      {/* Hearings Section */}
+      {activeTab === "hearings" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Hearings & Court Listings</h2>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "2px 0 0" }}>
+                Scheduled listings and tribunal appearance records
+              </p>
+            </div>
+            <button
+              onClick={() => setShowHearingForm(!showHearingForm)}
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              {showHearingForm ? "Cancel" : "+ Add Hearing"}
+            </button>
+          </div>
+
+          {showHearingForm && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (hearingDate) {
+                  createHearingMutation.mutate({
+                    date: hearingDate,
+                    court_no: hearingCourtNo || undefined,
+                    item_no: hearingItemNo || undefined,
+                    bench: hearingBench || undefined,
+                    purpose: hearingPurpose || undefined,
+                  });
+                }
+              }}
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "10px",
+                padding: "20px",
+                marginBottom: "20px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Hearing Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={hearingDate}
+                  onChange={(e) => setHearingDate(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Court No.
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 1"
+                  value={hearingCourtNo}
+                  onChange={(e) => setHearingCourtNo(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Item No.
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 24"
+                  value={hearingItemNo}
+                  onChange={(e) => setHearingItemNo(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Bench / Court
+                </label>
+                <input
+                  type="text"
+                  placeholder={matter.court_or_forum || "e.g. NCLT Mumbai"}
+                  value={hearingBench}
+                  onChange={(e) => setHearingBench(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Purpose
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. First listing for admission / Arguments on IA"
+                  value={hearingPurpose}
+                  onChange={(e) => setHearingPurpose(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowHearingForm(false)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createHearingMutation.isPending}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  {createHearingMutation.isPending ? "Saving..." : "Save Hearing"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {hearingsLoading ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Loading hearings...</div>
+          ) : !hearings || hearings.length === 0 ? (
+            <div
+              style={{
+                padding: "48px 24px",
+                textAlign: "center",
+                backgroundColor: "var(--bg-secondary)",
+                border: "2px dashed var(--border)",
+                borderRadius: "12px",
+              }}
+            >
+              <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "6px" }}>No Hearings Scheduled</p>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px" }}>
+                Manually record court listings or let automatic NCLT cause list matching find them.
+              </p>
+              <button
+                onClick={() => setShowHearingForm(true)}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                + Add First Hearing
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {hearings.map((h) => (
+                <div
+                  key={h.hearing_id}
+                  style={{
+                    backgroundColor: "var(--bg-secondary)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    padding: "18px 20px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: "260px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "15px", fontWeight: "700" }}>{h.date}</span>
+                      {h.court_no && (
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            backgroundColor: "rgba(59, 130, 246, 0.15)",
+                            color: "var(--accent)",
+                          }}
+                        >
+                          Court {h.court_no}
+                        </span>
+                      )}
+                      {h.item_no && (
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            backgroundColor: "rgba(255, 255, 255, 0.08)",
+                          }}
+                        >
+                          Item #{h.item_no}
+                        </span>
+                      )}
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          backgroundColor: h.source === "CAUSE_LIST" ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                          color: h.source === "CAUSE_LIST" ? "var(--success)" : "var(--text-muted)",
+                        }}
+                      >
+                        {h.source === "CAUSE_LIST" ? "NCLT Cause List" : "Manual"}
+                      </span>
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          backgroundColor: h.status === "HEARD" ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                          color: h.status === "HEARD" ? "var(--success)" : "#f59e0b",
+                        }}
+                      >
+                        {h.status}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginBottom: "4px" }}>
+                      {h.court_or_forum || h.bench || matter.court_or_forum}
+                      {h.purpose && ` • Purpose: ${h.purpose}`}
+                    </div>
+
+                    {h.outcome && (
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          padding: "8px 12px",
+                          backgroundColor: "rgba(255, 255, 255, 0.03)",
+                          borderRadius: "6px",
+                          borderLeft: "3px solid var(--accent)",
+                          fontSize: "13px",
+                        }}
+                      >
+                        <strong>Outcome:</strong> {h.outcome}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setOutcomeHearing(h);
+                      setOutcomeStatus(h.status === "LISTED" ? "HEARD" : h.status);
+                      setOutcomeText(h.outcome || "");
+                      setNextHearingDate("");
+                      setNextHearingPurpose("");
+                    }}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "6px",
+                      backgroundColor: "var(--bg-primary)",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-primary)",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      minHeight: "44px",
+                    }}
+                  >
+                    📝 Record Outcome
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Dates Section */}
+      {activeTab === "dates" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div>
+              <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Dates & Procedural Clock</h2>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "2px 0 0" }}>
+                Filing deadlines, limitation dates, and internal targets
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDeadlineForm(!showDeadlineForm)}
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontSize: "13px",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              {showDeadlineForm ? "Cancel" : "+ Add Deadline"}
+            </button>
+          </div>
+
+          {showDeadlineForm && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (deadlineLabel && deadlineDueOn) {
+                  createDeadlineMutation.mutate({
+                    label: deadlineLabel.trim(),
+                    due_on: deadlineDueOn,
+                    owner: deadlineOwner.trim() || undefined,
+                  });
+                }
+              }}
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "10px",
+                padding: "20px",
+                marginBottom: "20px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: "12px",
+              }}
+            >
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Deadline Description / Label *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. File Reply to Section 7 Application"
+                  value={deadlineLabel}
+                  onChange={(e) => setDeadlineLabel(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Due Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={deadlineDueOn}
+                  onChange={(e) => setDeadlineDueOn(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Responsible Lawyer / Owner
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Adv. Sharma"
+                  value={deadlineOwner}
+                  onChange={(e) => setDeadlineOwner(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowDeadlineForm(false)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createDeadlineMutation.isPending}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  {createDeadlineMutation.isPending ? "Saving..." : "Save Deadline"}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {deadlinesLoading ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Loading deadlines...</div>
+          ) : !deadlines || deadlines.length === 0 ? (
+            <div
+              style={{
+                padding: "48px 24px",
+                textAlign: "center",
+                backgroundColor: "var(--bg-secondary)",
+                border: "2px dashed var(--border)",
+                borderRadius: "12px",
+              }}
+            >
+              <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "6px" }}>No Deadlines Set</p>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px" }}>
+                Add procedural deadlines or court-directed dates to track them here and on Today.
+              </p>
+              <button
+                onClick={() => setShowDeadlineForm(true)}
+                style={{
+                  backgroundColor: "var(--accent)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                + Add First Deadline
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {deadlines.map((d) => (
+                <div
+                  key={d.deadline_id}
+                  style={{
+                    backgroundColor: "var(--bg-secondary)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    padding: "16px 20px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: "260px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "700", color: "var(--accent)" }}>
+                        Due: {d.due_on}
+                      </span>
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "600",
+                          backgroundColor: d.lifecycle === "DONE" ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.08)",
+                          color: d.lifecycle === "DONE" ? "var(--success)" : "var(--text-secondary)",
+                        }}
+                      >
+                        {d.lifecycle}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>
+                      {d.label}
+                    </div>
+
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px", fontStyle: "italic" }}>
+                      {d.source_note}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    {d.lifecycle !== "DONE" && (
+                      <button
+                        onClick={() => updateDeadlineMutation.mutate({ deadlineId: d.deadline_id, lifecycle: "DONE" })}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          backgroundColor: "rgba(16, 185, 129, 0.12)",
+                          color: "var(--success)",
+                          border: "1px solid rgba(16, 185, 129, 0.3)",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                        }}
+                      >
+                        ✓ Mark Done
+                      </button>
+                    )}
+                    {d.lifecycle === "DONE" && (
+                      <button
+                        onClick={() => updateDeadlineMutation.mutate({ deadlineId: d.deadline_id, lifecycle: "CONFIRMED" })}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          backgroundColor: "transparent",
+                          color: "var(--text-muted)",
+                          border: "1px solid var(--border)",
+                          fontSize: "12px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Re-open
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Orders Section */}
+      {activeTab === "orders" && (
+        <div>
+          <div style={{ marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Court Orders (Public Mirror)</h2>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "2px 0 0" }}>
+              Public tribunal orders automatically landed in this matter via IBBI public crawling
+            </p>
+          </div>
+
+          {ordersLoading ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Loading orders...</div>
+          ) : !orders || orders.length === 0 ? (
+            <div
+              style={{
+                padding: "48px 24px",
+                textAlign: "center",
+                backgroundColor: "var(--bg-secondary)",
+                border: "2px dashed var(--border)",
+                borderRadius: "12px",
+                color: "var(--text-muted)",
+                fontSize: "14px",
+              }}
+            >
+              No orders matched yet. When an official order matching this matter's case number is published, it will automatically appear here.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {orders.map((o) => (
+                <div
+                  key={o.public_id}
+                  style={{
+                    backgroundColor: "var(--bg-secondary)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    padding: "18px 20px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                      <span
+                        style={{
+                          backgroundColor: "rgba(245, 158, 11, 0.15)",
+                          color: "#f59e0b",
+                          border: "1px solid rgba(245, 158, 11, 0.3)",
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "11px",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Uncertified copy from official public mirror
+                      </span>
+                      <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        {o.decision_date || "Date unspecified"}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>
+                      {o.public_id} ({o.match_key})
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                      Source: {o.source_ref}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setViewingPublicOrder(o)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      backgroundColor: "var(--accent)",
+                      color: "#fff",
+                      border: "none",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      minHeight: "44px",
+                    }}
+                  >
+                    🔍 View in Source Viewer
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Timeline Section */}
+      {activeTab === "timeline" && (
+        <div>
+          <div style={{ marginBottom: "20px" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Matter Timeline</h2>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "2px 0 0" }}>
+              Unified chronological timeline of filings, hearings, deadlines, and orders
+            </p>
+          </div>
+
+          {timelineLoading ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Loading timeline...</div>
+          ) : !timeline || timeline.length === 0 ? (
+            <div
+              style={{
+                padding: "48px 24px",
+                textAlign: "center",
+                backgroundColor: "var(--bg-secondary)",
+                border: "2px dashed var(--border)",
+                borderRadius: "12px",
+                color: "var(--text-muted)",
+                fontSize: "14px",
+              }}
+            >
+              No timeline events recorded yet.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderLeft: "2px solid var(--border)", paddingLeft: "20px", marginLeft: "12px" }}>
+              {timeline.map((item) => {
+                const icon =
+                  item.item_type === "HEARING"
+                    ? "🏛️"
+                    : item.item_type === "DEADLINE"
+                    ? "⏱️"
+                    : item.item_type === "ORDER"
+                    ? "📜"
+                    : "📄";
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      position: "relative",
+                      backgroundColor: "var(--bg-secondary)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "8px",
+                      padding: "14px 18px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: "-31px",
+                        top: "14px",
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        backgroundColor: "var(--bg-primary)",
+                        border: "2px solid var(--accent)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "10px",
+                      }}
+                    >
+                      {icon}
+                    </span>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--accent)" }}>
+                        {item.date} • {item.item_type}
+                      </span>
+                      {item.status && (
+                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500" }}>
+                          {item.status}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>
+                      {item.title}
+                    </div>
+
+                    {item.subtitle && (
+                      <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                        {item.subtitle}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Private Document Source Viewer */}
       {viewingPdoc && (
         <SourceViewer
@@ -1050,6 +2054,207 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
           pver={viewingPdoc.pver}
           onClose={() => setViewingPdoc(null)}
         />
+      )}
+
+      {/* Public Court Order Source Viewer */}
+      {viewingPublicOrder && (
+        <SourceViewer
+          anchorId={viewingPublicOrder.public_id}
+          workId={viewingPublicOrder.public_id}
+          onClose={() => setViewingPublicOrder(null)}
+        />
+      )}
+
+      {/* Record Outcome & Next Date Modal */}
+      {outcomeHearing && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border)",
+              borderRadius: "12px",
+              padding: "24px",
+              width: "100%",
+              maxWidth: "520px",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "17px", fontWeight: "700", margin: 0 }}>
+                Record Hearing Outcome
+              </h3>
+              <button
+                onClick={() => setOutcomeHearing(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--text-muted)",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px" }}>
+              Hearing on <strong>{outcomeHearing.date}</strong> • {outcomeHearing.court_or_forum || outcomeHearing.bench || "Court"}
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                recordOutcomeMutation.mutate({
+                  hearingId: outcomeHearing.hearing_id,
+                  outcome: outcomeText,
+                  status: outcomeStatus,
+                  next_date: nextHearingDate || undefined,
+                  next_purpose: nextHearingPurpose || undefined,
+                });
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+            >
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Hearing Status
+                </label>
+                <select
+                  value={outcomeStatus}
+                  onChange={(e) => setOutcomeStatus(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                  }}
+                >
+                  <option value="HEARD">Heard</option>
+                  <option value="ADJOURNED">Adjourned</option>
+                  <option value="RESERVED">Order Reserved</option>
+                  <option value="DISPOSED">Disposed / Final Order</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                  Outcome Note / Daily Order Summary *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="e.g. Arguments heard in part. Time granted to Respondent to file rejoinder affidavit within 2 weeks."
+                  value={outcomeText}
+                  onChange={(e) => setOutcomeText(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+
+              <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
+                <div style={{ fontSize: "13px", fontWeight: "700", marginBottom: "8px", color: "var(--accent)" }}>
+                  Schedule Next Date (Optional)
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                      Next Date
+                    </label>
+                    <input
+                      type="date"
+                      value={nextHearingDate}
+                      onChange={(e) => setNextHearingDate(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border)",
+                        backgroundColor: "var(--bg-primary)",
+                        color: "var(--text-primary)",
+                        fontSize: "13px",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+                      Next Purpose
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Further Arguments"
+                      value={nextHearingPurpose}
+                      onChange={(e) => setNextHearingPurpose(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border)",
+                        backgroundColor: "var(--bg-primary)",
+                        color: "var(--text-primary)",
+                        fontSize: "13px",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setOutcomeHearing(null)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={recordOutcomeMutation.isPending}
+                  style={{
+                    padding: "8px 20px",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                  }}
+                >
+                  {recordOutcomeMutation.isPending ? "Saving..." : "Save Outcome"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

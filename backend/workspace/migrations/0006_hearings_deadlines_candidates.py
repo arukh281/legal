@@ -32,6 +32,7 @@ CREATE TABLE tpl.hearing (
   source text NOT NULL DEFAULT 'MANUAL' CHECK (source IN ('MANUAL','CAUSE_LIST','ECOURTS','SC')),
   source_ref text,
   status text NOT NULL DEFAULT 'LISTED' CHECK (status IN ('LISTED','HEARD','ADJOURNED','NOT_REACHED','CANCELLED')),
+  outcome text,
   next_date date,
   entered_by text NOT NULL,
   observed_at timestamptz NOT NULL,

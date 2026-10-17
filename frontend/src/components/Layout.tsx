@@ -8,6 +8,8 @@ interface LayoutProps {
   children: React.ReactNode;
   userEmail?: string;
   onLogout?: () => void;
+  health?: any;
+  healthLoading?: boolean;
 }
 
 export const Layout: React.FC<LayoutProps> = ({
@@ -16,12 +18,14 @@ export const Layout: React.FC<LayoutProps> = ({
   children,
   userEmail,
   onLogout,
+  health,
+  healthLoading,
 }) => {
   const navItems: { id: NavTab; label: string; icon: string }[] = [
+    { id: "today", label: "Today", icon: "☀️" },
     { id: "clients", label: "Clients", icon: "🏢" },
     { id: "matters", label: "Matters", icon: "📁" },
     { id: "research", label: "Research", icon: "🔍" },
-    { id: "today", label: "Today", icon: "☀️" },
   ];
 
   return (
@@ -75,15 +79,48 @@ export const Layout: React.FC<LayoutProps> = ({
           })}
         </nav>
 
-        {/* User / Session Footer */}
+        {/* User / Session Footer & Health */}
         <div
           style={{
             borderTop: "1px solid var(--border)",
             paddingTop: "16px",
             fontSize: "12px",
             color: "var(--text-muted)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
           }}
         >
+          {/* Compact Platform Health Pill */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "6px 10px",
+              backgroundColor: "rgba(255, 255, 255, 0.03)",
+              borderRadius: "6px",
+              border: "1px solid var(--border)",
+              fontSize: "11px",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span
+                style={{
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "50%",
+                  backgroundColor: health?.status === "ok" ? "var(--success)" : "var(--warning)",
+                  display: "inline-block",
+                }}
+              />
+              System
+            </span>
+            <span style={{ color: "var(--text-muted)", fontWeight: "500" }}>
+              {healthLoading ? "..." : health?.database ? "Postgres 18" : "Online"}
+            </span>
+          </div>
+
           {userEmail ? (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>

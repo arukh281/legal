@@ -430,6 +430,7 @@ class Hearing(DomainModel):
             ("CANCELLED", "CANCELLED"),
         ],
     )
+    outcome = models.TextField(null=True, blank=True)
     next_date = models.DateField(null=True, blank=True)
     entered_by = models.TextField()
     observed_at = models.DateTimeField(default=timezone.now)
