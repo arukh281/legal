@@ -9,11 +9,13 @@ Normative sources:
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 import pytest
 from django.db import connections
 
 from anchor_lib.ids import mint_id
+from index.ial import IndexHit
 from index.tests.test_ial import _insert_chunk
 from retrieve.models import EvidenceBundle, ResearchQuery
 from retrieve.retriever import RetrievalEngine, get_law_current_to_date
@@ -177,7 +179,7 @@ def test_retrieve_hybrid_rrf(auth_ctx: ExecutionContext, monkeypatch: pytest.Mon
         orig_search = retriever.ial.search
 
         # Mock dense search to return chk_test_hybrid_1 (rank 1) and chk_test_hybrid_2 (rank 2)
-        def mock_search(idx_query):
+        def mock_search(idx_query: Any) -> list[IndexHit]:
             if idx_query.mode == "DENSE":
                 return [
                     IndexHit(
@@ -255,7 +257,7 @@ def test_retrieve_hybrid_dense_fallback(auth_ctx: ExecutionContext, monkeypatch:
         retriever = RetrievalEngine(index_family="plc_chunks")
         orig_search = retriever.ial.search
 
-        def mock_search(idx_query):
+        def mock_search(idx_query: Any) -> list[IndexHit]:
             if idx_query.mode == "DENSE":
                 raise RuntimeError("Dense index offline or unreachable")
             return orig_search(idx_query)
