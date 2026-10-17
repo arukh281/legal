@@ -74,24 +74,27 @@ class Command(BaseCommand):
                     t_text = tomb.text.strip()
                     target: Anchor | None = None
 
-                    # 1. Exact or stripped containment
-                    if t_text:
+                    # 1. Exact or stripped containment / QuoteSelector fallback
+                    # Only used when text is >= 40 chars and matches exactly one live anchor
+                    if len(t_text) >= 40:
+                        matching_targets: list[Anchor] = []
                         for live in live_anchors:
+                            matched = False
                             if t_text in live.text:
-                                target = live
-                                break
+                                matched = True
+                            elif tomb.quote_prefix or tomb.quote_suffix:
+                                qs_obj = QuoteSelector(
+                                    exact=t_text[:min(len(t_text), 100)],
+                                    prefix=tomb.quote_prefix or "",
+                                    suffix=tomb.quote_suffix or "",
+                                )
+                                if qs_obj.find_in(live.text) is not None:
+                                    matched = True
+                            if matched and live not in matching_targets:
+                                matching_targets.append(live)
 
-                    # 2. QuoteSelector prefix/suffix match
-                    if not target and t_text and (tomb.quote_prefix or tomb.quote_suffix):
-                        qs_obj = QuoteSelector(
-                            exact=t_text[:min(len(t_text), 100)],
-                            prefix=tomb.quote_prefix or "",
-                            suffix=tomb.quote_suffix or "",
-                        )
-                        for live in live_anchors:
-                            if qs_obj.find_in(live.text) is not None:
-                                target = live
-                                break
+                        if len(matching_targets) == 1:
+                            target = matching_targets[0]
 
                     if target:
                         if tomb.forward_to == target.anchor_id:

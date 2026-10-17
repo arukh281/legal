@@ -247,22 +247,30 @@ class AnchorAssigner:
             if best_sim < 0.50:
                 best_forward = None
 
-            # Fallback: check if old_text is contained within a new node or matches via QuoteSelector
-            if not best_forward and old_text.strip():
+            # Fallback: only use containment/QuoteSelector fallback when old text is >= 40 chars
+            # and matches EXACTLY ONE new node; otherwise forward_to stays null.
+            if not best_forward and len(old_text.strip()) >= 40:
                 t_strip = old_text.strip()
+                matching_new_ids: list[str] = []
                 for new_node in aligned_nodes:
+                    matched = False
                     if t_strip in new_node.text:
-                        best_forward = new_node.anchor_id
-                        break
-                    if old_anchor and (old_anchor.quote_prefix or old_anchor.quote_suffix):
+                        matched = True
+                    elif old_anchor and (old_anchor.quote_prefix or old_anchor.quote_suffix):
                         qs = QuoteSelector(
                             exact=t_strip[:min(len(t_strip), 100)],
                             prefix=old_anchor.quote_prefix or "",
                             suffix=old_anchor.quote_suffix or "",
                         )
                         if qs.find_in(new_node.text) is not None:
-                            best_forward = new_node.anchor_id
-                            break
+                            matched = True
+                    if matched and new_node.anchor_id not in matching_new_ids:
+                        matching_new_ids.append(new_node.anchor_id)
+
+                if len(matching_new_ids) == 1:
+                    best_forward = matching_new_ids[0]
+                else:
+                    best_forward = None
 
             tombstoned_records.append(
                 {
