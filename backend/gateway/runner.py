@@ -184,7 +184,7 @@ def run(
             raise NoQualifiedEndpointError(f"No qualified endpoints found for task '{task_id}'.")
 
     # 4. Enforce gateway daily budget cap and task budget
-    daily_cap = getattr(settings, "GATEWAY_DAILY_BUDGET_USD", None)
+    daily_cap = getattr(settings, "GATEWAY_DAILY_BUDGET_USD", 5.0)
     if daily_cap is not None:
         today_spent = get_daily_spent_usd()
         if today_spent >= decimal.Decimal(str(daily_cap)):

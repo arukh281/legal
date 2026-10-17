@@ -214,7 +214,7 @@ S3_RAW_BUCKET = os.environ.get("S3_RAW_BUCKET", "plc-raw")
 S3_PARSED_BUCKET = os.environ.get("S3_PARSED_BUCKET", "plc-parsed")
 
 # Model Gateway daily budget cap (USD)
-GATEWAY_DAILY_BUDGET_USD = float(os.environ.get("GATEWAY_DAILY_BUDGET_USD", "50.0"))
+GATEWAY_DAILY_BUDGET_USD = float(os.environ.get("GATEWAY_DAILY_BUDGET_USD", "5.0"))
 
 # Configure structured JSON logging
 setup_logging(os.environ.get("LOG_LEVEL", "INFO"))
