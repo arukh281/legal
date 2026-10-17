@@ -31,6 +31,12 @@ from anchor_lib.anchors import (
     rewrite_statute_expression,
     validate,
 )
+from anchor_lib.case_numbers import (
+    NormalizedCaseNumber,
+    compare_case_numbers,
+    normalize_bench,
+    normalize_case_number,
+)
 from anchor_lib.ids import (
     MNEMONIC_PREFIXES,
     PREFIX_REGISTRY,
@@ -53,6 +59,7 @@ __all__ = [
     "JudgmentFragment",
     "MNEMONIC_PREFIXES",
     "NoExpressionError",
+    "NormalizedCaseNumber",
     "PITRef",
     "PREFIX_REGISTRY",
     "ParsedID",
@@ -68,6 +75,7 @@ __all__ = [
     "canonical_key",
     "check_reconstructed_text",
     "check_translation_support",
+    "compare_case_numbers",
     "format",
     "get_clause_hierarchy",
     "is_fallback_locator",
@@ -76,6 +84,8 @@ __all__ = [
     "is_valid_id",
     "is_valid_sha256",
     "mint_id",
+    "normalize_bench",
+    "normalize_case_number",
     "parse",
     "parse_id",
     "resolve_pit",

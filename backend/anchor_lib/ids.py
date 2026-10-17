@@ -125,6 +125,7 @@ MVP_PREFIX_ADDITIONS: dict[str, str] = {
     "iml": "DECISIONS.md 2026-10-11: Identity merge ledger event identifier prefix to fix collision with evr_ (Session S08 Amendment 2f)",
     "evres": "DECISIONS.md 2026-10-11: Eval result identifier prefix for ops.eval_result (Session S08)",
     "cli": "DECISIONS.md 2026-10-17: Client entity identifier prefix for tpl.client (Session R1)",
+    "cnd": "DECISIONS.md 2026-10-18: Candidate identifier prefix for tpl.case_candidate (Session R2)",
 }
 
 # The active prefix registry is the union of normative blueprint prefixes and MVP additions.
