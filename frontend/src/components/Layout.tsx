@@ -1,6 +1,6 @@
 import React from "react";
 
-export type NavTab = "today" | "research" | "matters" | "authority" | "alerts";
+export type NavTab = "clients" | "matters" | "research" | "today" | "authority" | "alerts";
 
 interface LayoutProps {
   currentTab: NavTab;
@@ -18,6 +18,8 @@ export const Layout: React.FC<LayoutProps> = ({
   onLogout,
 }) => {
   const navItems: { id: NavTab; label: string; icon: string }[] = [
+    { id: "clients", label: "Clients", icon: "🏢" },
+    { id: "matters", label: "Matters", icon: "📁" },
     { id: "research", label: "Research", icon: "🔍" },
     { id: "today", label: "Today", icon: "☀️" },
   ];

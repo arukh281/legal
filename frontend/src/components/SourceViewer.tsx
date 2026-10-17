@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { fetchDocumentSource, type DocumentSourceResponse } from "../api/client";
+import {
+  fetchDocumentSource,
+  fetchDocumentParagraphs,
+  type DocumentSourceResponse,
+} from "../api/client";
 
 interface SourceViewerProps {
   anchorId: string;
-  workId: string;
+  workId?: string;
+  pdocId?: string;
+  pver?: string;
   highlightQuote?: string;
   onClose: () => void;
 }
@@ -11,6 +17,8 @@ interface SourceViewerProps {
 export const SourceViewer: React.FC<SourceViewerProps> = ({
   anchorId,
   workId,
+  pdocId,
+  pver,
   highlightQuote,
   onClose,
 }) => {
@@ -24,24 +32,75 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
     setLoading(true);
     setError(null);
 
-    fetchDocumentSource(workId)
-      .then((doc) => {
-        if (isMounted) {
-          setData(doc);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err.message || "Failed to load document source.");
-          setLoading(false);
-        }
-      });
+    // Determine whether this is a private pdoc or a public work
+    const isPrivate = Boolean(pdocId || anchorId.startsWith("pdoc_"));
+
+    if (isPrivate) {
+      let resolvedPdocId = pdocId;
+      let resolvedPver = pver;
+      if (!resolvedPdocId && anchorId.startsWith("pdoc_")) {
+        const withoutHash = anchorId.split("#")[0];
+        const parts = withoutHash.split("/");
+        resolvedPdocId = parts[0];
+        resolvedPver = parts[1];
+      }
+
+      if (!resolvedPdocId) {
+        setError("Invalid private document identifier.");
+        setLoading(false);
+        return;
+      }
+
+      fetchDocumentParagraphs(resolvedPdocId, resolvedPver)
+        .then((doc) => {
+          if (isMounted) {
+            setData({
+              work_id: doc.pdoc_id,
+              title: doc.title || doc.pdoc_id,
+              court_id: null,
+              decision_date: null,
+              status: doc.stage,
+              paragraphs: doc.paragraphs.map((p) => ({
+                anchor_id: p.anchor_id,
+                fragment: p.fragment,
+                number_as_printed: p.fragment,
+                node_type: "PARAGRAPH",
+                text: p.text,
+                ocr_conf: p.ocr_conf,
+              })),
+            });
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError(err.message || "Failed to load document paragraphs.");
+            setLoading(false);
+          }
+        });
+    } else if (workId) {
+      fetchDocumentSource(workId)
+        .then((doc) => {
+          if (isMounted) {
+            setData(doc);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) {
+            setError(err.message || "Failed to load document source.");
+            setLoading(false);
+          }
+        });
+    } else {
+      setError("No document reference provided.");
+      setLoading(false);
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [workId]);
+  }, [workId, pdocId, pver, anchorId]);
 
   // Auto-scroll to target anchor paragraph once loaded
   useEffect(() => {
