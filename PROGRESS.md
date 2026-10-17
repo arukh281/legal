@@ -734,24 +734,37 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
 ---
 
 ### 3. Verification & Test Metrics
-- **Backend Test Suite:** 284 passed, 1 skipped, 0 failed in 32s.
-- **Lint & Types:** Ruff clean (0 errors), mypy strict clean (0 errors across 248 source files).
-- **Zero-Tolerance Invariant Checks:** Fully active and enforced; ungrounded submission claims correctly rejected.
-- **Real Gemini Eval Run (`evr_01M4NEARV8M9JB86MEY5WT0CZN`):**
-  - Adapter: `real` (Google Gemini with `gemini-3.8-flash` primary and `gemini-3.5-flash` automatic failover).
-  - Telemetry: Each case records actual endpoint and model in `candidate["cases"]` and on the scorecard.
-  - Q3: Reported proposition recall failure (score 0.00) as expected, without model tuning.
-  - Case 9 (`evc_01M4MRF7M7GM9YBPW1PEB317B3`): Verifier caught ungrounded legal proposition derived from a submission paragraph (`SUBMISSION_CANNOT_SUPPORT_PROPOSITION`).
+- **Backend Test Suite:** 292 passed, 1 skipped, 0 failed in 36s.
+- **Lint & Types:** Ruff clean (0 errors), mypy strict clean (0 errors across 261 source files).
+- **Frontend Test & Build:** Vitest 3/3 passed, TypeScript + Vite build clean (0 errors).
+- **Zero-Tolerance Invariant Checks:** All gates PASS (0 fabricated anchors, 0 unmapped tombstones, 0 ungrounded claims, 0 sentinel leaks).
+- **Real Model Eval Runs:**
+  - `g1` run (`evr_01M550KQ14A6JK8M4AFB4GNMRV`): Claude Sonnet 5.5 + Gemini, lexical fallback, 4/10 passed, 3 false out-of-corpus declarations on in-corpus queries.
+  - `g2` run (`evr_01M550XPQXRMJATTAZ37BF69BN`): Claude Sonnet 5.5 + Gemini, dense halfvec HNSW + lexical hybrid RRF, 3/10 passed, **10/10 in-corpus match (100%)**, zero false out-of-corpus declarations, 8/8 target works in top-15 retrieved.
+  - Active Index Alias: Swapped `plc_chunks` to `g2` (dense embeddings `gemini-embedding-001`, 768 dims); preserved `g1`.
 
 ---
 
-### 4. What the Next Session (S09) Needs
+### 4. Pre-S09 Research-Quality Hardening (Completed 2026-10-17)
+- **Step 1:** Server-authoritative data class elevation; `X-Dataclass` may only raise; matter-scoped requests default to `CLIENT_CONFIDENTIAL` and can never be `PUBLIC`.
+- **Step 2:** Anchor tombstone forward fallback constrained to text $\ge 40$ chars and unique single-node match (`parse/anchors.py`).
+- **Step 3:** Eval scoring treats withheld claims as operational metric (`withheld_claims`), reserving zero-tolerance for shown violations.
+- **Step 4:** Qualified `ep_claude_sonnet_5_5` as Priority 1 for `p6.qa_synthesis@1`, Gemini fallback, gateway daily spend limit, verifier family recorded as Gemini (generator $\ne$ verifier).
+- **Step 5:** Built dense embedding generation `g2` with `gemini-embedding-001` (public corpus only), backfilled 8/8 works, enabled hybrid RRF retrieval.
+- **Step 6:** Real model gold set evaluation bake-off (`g1` vs `g2`), verified 100% in-corpus recall on `g2`, promoted `plc_chunks` alias to `g2`.
+- **Step 7:** Research UI redesign: free-text query input with `Cmd/Ctrl + Enter`, suggestion chips, clean pinpoint citation chips (`[📍 ... ↗]`), removed inactive placeholder tabs.
+- **Step 8:** Full verification across pytest (292 pass), ruff, mypy (261 files), frontend build.
+
+---
+
+### 5. What the Next Session (S09) Needs
 - **Session S09: Citator:**
   - AuthorityView resolver & direct history linking.
   - Bitemporal Assertion ledger with evidence and provenance (`valid_period`, `tx_period`).
   - Treatment extraction on the head of decisions (`OVERRULED`, `DISTINGUISHED`, `FOLLOWED`, etc.).
   - Doctrine rules engine (`rul_`) propagating status up the court hierarchy.
   - Lawyer review console and visual treatment badges (NEGATIVE, CAUTION, NEUTRAL, POSITIVE).
+
 
 
 

@@ -604,6 +604,21 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** User directives for Session S08 fixes before S09.
 - **Doc Reference:** `docs/01_master_architecture.md` line 1317; `docs/mvp/03_data_model_and_contracts.md` §3.1, §3.15; `docs/mvp/06_test_set_plan.md` §6, §7; AGENTS.md §4.
 
+---
+
+### 2026-10-17 — Pre-S09 Research-Quality Session (Steps 1–8)
+- **Decision:**
+  1. **Server-Authoritative Data Class Elevation & Matter Scoping:** The server exclusively determines the base data class (`PUBLIC` for public corpus, `CLIENT_CONFIDENTIAL` for matter-scoped operations). `X-Dataclass` header may only elevate the data classification, never lower it. Any attempt to set `X-Dataclass: PUBLIC` for matter-scoped queries is rejected with HTTP 422.
+  2. **Tombstone Forward Pointer Fallback Constraint (Item 0):** Updated `parse/anchors.py` so that the containment/QuoteSelector fallback activates only if old anchor text is $\ge 40$ characters AND matches exactly one node in the new document revision. Otherwise, `forward_to` remains null.
+  3. **Eval Scoring Withheld Claims Separation:** Claims withheld by the verifier are tracked and reported as their own metric (`withheld_claims`) rather than counted as zero-tolerance failures. Zero-tolerance gate failures strictly check for shown fabricated, unmapped, ungrounded claims, or sentinel leaks.
+  4. **Claude Sonnet 5.5 Qualification & Daily Budgeting:** Qualified `ep_claude_sonnet_5_5` (`claude-sonnet-5-5`) via Anthropic adapter as Priority 1 for `p6.qa_synthesis@1`, retaining Gemini as fallback. Implemented daily spend cap in `gateway.runner.run` tracking cumulative 24h spend against budget limits. Recorded verifier/judge family as Gemini in scorecard metadata ensuring generator $\ne$ verifier.
+  5. **Dense Generation g2 & Hybrid RRF Retrieval:** Built partition `plc.chunk_g2` using `gemini-embedding-001` (768-dim `halfvec` HNSW + GIN), backfilled across all public corpus works. Implemented reciprocal rank fusion (RRF $k=60$) in `RetrievalEngine` combining lexical and dense candidate legs with graceful fallback to lexical if dense is unavailable.
+  6. **Gold Set Bake-off & Alias Promotion:** Re-ran full 10-case gold suite on real models (`evr_01M550KQ14A6JK8M4AFB4GNMRV` for `g1` vs `evr_01M550XPQXRMJATTAZ37BF69BN` for `g2`). Proved `g2` achieves 100% in-corpus agreement (10/10 vs `g1`'s 7/10) and 100% target work recall in top 15 (8/8 vs `g1`'s 4/8). Promoted `ops.index_alias` for `plc_chunks` to `g2` while keeping `g1`.
+  7. **Research Screen Design Pass:** Upgraded `ResearchPage.tsx` with a multi-line free-text query box with shortcut execution (`Cmd/Ctrl + Enter`), styled interactive citation chips (`[📍 ... ↗]`), and removed inactive placeholder navigation tabs from `Layout.tsx`.
+- **Reason:** Research-quality hardening before Session S09 Citator.
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.5, §3.11, §3.15; `docs/04_P2_enrichment_indexing.md` §2.4, §5.7; AGENTS.md §4, §5, §6.
+
+
 
 
 
