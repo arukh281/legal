@@ -1,6 +1,6 @@
 # AGENTS.md — Corporate-law legal intelligence platform (MVP)
 
-You are building the MVP of an Indian legal-intelligence platform for one corporate-law partner firm: research Q&A pinned to paragraphs, a citator, notice → strategy memo, a rules-based deadline clock, matter workspace, drafting, cite-check, alerts, digest, hearings and feedback. Lawyers will use this on real matters. Correctness and honesty beat speed and features.
+You are building a client file for law firms: a firm creates a client, opens matters (cases) under it, keeps every document there, and the system helps run each case through to filing. It must work for any kind of case, with legal depth added one area at a time (insolvency first). Lawyers will use this on real matters. Correctness and honesty beat speed and features.
 
 ## 1. Source of truth
 Read before coding. Read only the sections your session needs; the docs are long.
@@ -69,27 +69,29 @@ Apps talk only through the contracts in 03 (tables they own, typed objects, outb
 6. End by updating `PROGRESS.md` (what was built, how to run it, stubs, known issues, what the next session needs) and adding any decision to `DECISIONS.md` (date, decision, reason, doc reference).
 7. Commit in small steps with clear messages. Never commit secrets, `.env` files or client documents.
 
-## 8. Session map (weeks from 05 §4)
-| # | Session | 05 workstream | Week |
+## 8. Session map
+| # | Session | Works for | Status |
 |---|---|---|---|
-| S01 | Foundation: repo, Django/Ninja/React skeleton, Compose, CI, schemas, `pipeline_version`, outbox, job chains | A | 1 |
-| S02 | `anchor_lib` + ID minting | A | 1 |
-| S03 | SSO, tenancy, `authz.can()` + RLS, Model Gateway v0 | A | 1 |
-| S04 | Source capture + legal gate (IBBI orders first) | B | 2 |
-| S05 | Parsing: text layer + OCR, judgment and statute parsers, anchors, citation extraction | C | 2–3 |
-| S06 | Index: chunks, FTS `legal_en`, embeddings, pgvector generations + aliases, Index Access Layer | E | 4 |
-| S07 | Retrieval, Q&A with claims, source viewer (Demo 1) | G, H, R | 4 |
-| S08 | Eval harness + gold store | S | 4–5 |
-| S09 | Citator: resolver, direct history, assertion ledger, AuthorityView, doctrine rules, treatment on the head, review console, badges | F | 5–6 |
-| S10 | Matter workspace | I | 7 |
-| S11 | Procedural Clock | J | 8 |
-| S12 | Strategy memo chain, trigger 1 | K | 9 |
-| S13 | Verification v1 + gate | H | 10 |
-| S14 | Cite-check + point-in-time IBC 2026 | M, D | 11 |
-| S15 | Feedback capture, hardening, AWS deploy, backups | Q, T | 12–13 |
-| S16 | Drafting (DOCX) + trigger 2 | L, K | 15 |
-| S17 | Alerts, digest, watchlists, regulator feeds | N+O | 16–17 |
-| S18 | Hearings, trigger 3, corpus breadth (HC, SEBI, SAT, CCI) | P, B | 18 |
+| S01 | Foundation: repo, Django/Ninja/React skeleton, Compose, CI, schemas, `pipeline_version`, outbox, job chains | — | Done |
+| S02 | `anchor_lib` + ID minting | — | Done |
+| S03 | SSO, tenancy, `authz.can()` + RLS, Model Gateway v0 | — | Done |
+| S04 | Source capture + legal gate (IBBI orders first) | — | Done |
+| S05 | Parsing: text layer + OCR, judgment and statute parsers, anchors, citation extraction | — | Done |
+| S06 | Index: chunks, FTS `legal_en`, embeddings, pgvector generations + aliases, Index Access Layer | — | Done |
+| S07 | Retrieval, Q&A with claims, source viewer (Demo 1) | — | Done |
+| S08 | Eval harness + gold store | — | Done |
+| R1 | Client file: client entity, matters under a client with free-text case type and court, document vault (PDF, DOCX, EML, ZIP) with stage tags, versions and private anchors, manual case-number entry | Any case | |
+| R2 | Hearings, dates and Today: manual hearing and date entry for any court; NCLT/NCLAT cause-list PDF matching on entered case numbers; new orders in IBC cases land in the matter via the IBBI delta crawl; Today page, phone-usable | Any case (manual); IBC (automatic) | |
+| R3 | Tasks with due dates linked to hearings or deadlines; client status link or email per matter; Excel import of live cases | Any case | |
+| R4 | Dates and facts from documents with exact quotes for lawyer confirmation; order-set dates for any court; statutory deadlines for the IBC pack only (02 Part A), after re-anchoring to India Code text | Any case (order-set); IBC (statutory) | |
+| R5 | Corpus to real scale: IBC, CIRP Regulations and AAA Rules from India Code with point-in-time for the 2026 amendment; IBBI mirror backfill; real embeddings as g2; hybrid retrieval; research inside the matter | IBC | |
+| R6 | Templates and filing bundles: vakalatnama, affidavit, memo of parties, annexure index first; then IBC forms (s.8 notice, s.7 and s.9 petition skeletons, reply skeleton), e-filing checklist, defect-cure tracker. Assemble, never submit | Any case (generic); IBC (forms) | |
+| R7 | Cite-check on uploaded drafts against the corpus, honest "not in MVP corpus" | Any case within corpus | |
+| R8 | Hardening and pilot: residency decision, DPA, backups and restore drill, firm-visible access log, two law firms live | — | |
+
+Note: S09 citator, S12 memo chain, S17 alerts and digest, and corpus breadth beyond IBC are deferred, not deleted.
+
+After R8: a module for insolvency professionals (CIRP compliance calendar, claims, CoC meetings, IBBI forms); then the next legal areas one per session from 02 Parts B to D (arbitration, company law, s.138 cheque bounce, commercial suits).
 
 ## 9. Never
 - Never fabricate data, results or citations to make a test pass.

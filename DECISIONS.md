@@ -618,6 +618,14 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** Research-quality hardening before Session S09 Citator.
 - **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.5, §3.11, §3.15; `docs/04_P2_enrichment_indexing.md` §2.4, §5.7; AGENTS.md §4, §5, §6.
 
+---
+
+### 2026-10-17 — Roadmap Re-centred on the Client File (Sessions R1 to R8)
+- **Decision:** Roadmap re-centred on the client file for law firms, any case type, IBC as the first deep area, sessions R1 to R8 replace S09 to S18; S09, S12, S17 and corpus breadth deferred.
+- **Reason:** The product's users are law firms running cases, research is the one job they already buy elsewhere, and the plan built it first; the corpus (156 works, no statute text) cannot support a citator or memo chain yet.
+- **Doc Reference:** AGENTS.md §8; `docs/mvp/10_revised_roadmap_2026-10-17.md`.
+
+
 
 
 

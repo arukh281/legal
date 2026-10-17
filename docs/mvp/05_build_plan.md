@@ -1,5 +1,12 @@
 # 05 — Build Plan (week by week)
 
+## Revision 17 October 2026
+The week-by-week schedule in §4 is superseded by the revised session roadmap (R1 to R8) in AGENTS.md §8 and docs/mvp/10_revised_roadmap_2026-10-17.md.
+The product has been re-centred on the client file for law firms: creating clients, opening matters across any court or case type, and managing documents in one place.
+Legal depth is added domain-by-domain, with insolvency (IBC) first because the repo already has its data and drafted rules.
+Research and citator capabilities are deferred until the client file, docket tracking, and primary statute corpus are firmly established.
+Weeks 1–5 (Sessions S01 to S08) remain complete as foundational infrastructure.
+
 **Team assumption** (the brief left it blank, so the brief's own example is used): **a technical founder + 1 full-stack engineer + partner-firm lawyers ≈ 5 hrs/week**. **Target:** partner lawyers using it on real work within **4–5 months**. This plan uses **20 weeks** with a stated buffer policy; §5 shows what changes under other team sizes.
 
 **Earliest working demo: end of week 4.** A partner lawyer asks an IBC question and gets an answer whose every sentence is pinned to a paragraph of an NCLT/NCLAT/SC order or a section of the IBC, with click-to-source. **Real work starts in week 14** with 2–3 lawyers. **All 11 capabilities are live by week 18**, and weeks 19–20 are pilot hardening plus the go/no-go scorecard.

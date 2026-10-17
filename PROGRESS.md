@@ -757,13 +757,12 @@ python manage.py run_eval --case=evc_01M4MRF7M7GM9YBPW1PEB317AX --dry-run --fake
 
 ---
 
-### 5. What the Next Session (S09) Needs
-- **Session S09: Citator:**
-  - AuthorityView resolver & direct history linking.
-  - Bitemporal Assertion ledger with evidence and provenance (`valid_period`, `tx_period`).
-  - Treatment extraction on the head of decisions (`OVERRULED`, `DISTINGUISHED`, `FOLLOWED`, etc.).
-  - Doctrine rules engine (`rul_`) propagating status up the court hierarchy.
-  - Lawyer review console and visual treatment badges (NEGATIVE, CAUTION, NEUTRAL, POSITIVE).
+### 5. What the Next Session (R1: client file) Needs
+- **Client Entity (`tpl.client`):** The client entity is new (not in docs/mvp/03) and needs a prefix proposal (`cli_`), contact/identifiers JSONB, and RLS forced.
+- **Document Vault Tables:** `tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`, and `tpl.matter_case_link` per `docs/mvp/03 §3.9`.
+- **Parsing Pipeline in Tenant Mode:** The parsing pipeline in `backend/parse` adapted for tenant documents, minting private anchors `pdoc_<ulid>/v{ver}#p{n}`, recording OCR confidence, and flagging hidden text.
+- **Authorization & RLS:** `authz.can()` and RLS enforcement for client visibility (visible only to firm admins, creators, or users with active matter memberships under that client).
+
 
 
 
