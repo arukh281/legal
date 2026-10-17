@@ -61,6 +61,7 @@ class CaseEvaluation:
     matched_propositions: list[dict[str, Any]] = field(default_factory=list)
     unmatched_propositions: list[dict[str, Any]] = field(default_factory=list)
     claims_evaluated: int = 0
+    withheld_claims: int = 0
     in_corpus_match: bool = True
 
 
@@ -83,33 +84,65 @@ class DeterministicEvaluator:
             "sentinel_leaks": 0,
         }
 
-        # 1. Zero-Tolerance Gate Checks on Generated Claims
+        # Withheld claims are tracked separately; they are NOT a zero-tolerance failure.
+        withheld_claim_ids: set[str] = set()
+        if verification_report:
+            withheld_claim_ids = set(getattr(verification_report, "withheld_claim_ids", []) or [])
+
+        withheld_claims_count = len(withheld_claim_ids)
+        if withheld_claims_count > 0:
+            reasons.append(f"WITHHELD_CLAIMS_COUNT: {withheld_claims_count}")
+
+        # 1. Zero-Tolerance Gate Checks on SHOWN Claims (not withheld)
         live_anchors: dict[str, Anchor] = {}
         for claim in actual_claims:
+            is_shown = claim.claim_id not in withheld_claim_ids
             supports = claim.support if isinstance(claim.support, list) else []
             for s in supports:
                 if not isinstance(s, dict):
                     continue
                 a_id = s.get("anchor_id", "")
                 anchor = Anchor.objects.filter(anchor_id=a_id).first()
+                quote = str(s.get("quote", "")).strip()
 
-                # Zero Tolerance 1: Fabricated anchor
-                if not anchor:
-                    gate_checks["fabricated_anchors"] += 1
-                    reasons.append(f"FABRICATED_ANCHOR: {a_id}")
+                if is_shown:
+                    # Zero Tolerance 1: Fabricated anchor in shown claim
+                    if not anchor:
+                        gate_checks["fabricated_anchors"] += 1
+                        reasons.append(f"SHOWN_FABRICATED_ANCHOR: {a_id}")
+                    else:
+                        live_anchors[a_id] = anchor
+                        # Zero Tolerance 2: Unmapped tombstone in shown claim
+                        if anchor.state == "TOMBSTONED" and not anchor.forward_to:
+                            gate_checks["unmapped_tombstones"] += 1
+                            reasons.append(f"SHOWN_UNMAPPABLE_TOMBSTONE: {a_id}")
+                        elif anchor.state == "TOMBSTONED" and anchor.forward_to:
+                            fwd = Anchor.objects.filter(anchor_id=anchor.forward_to).first()
+                            if not fwd or fwd.state != "LIVE":
+                                gate_checks["unmapped_tombstones"] += 1
+                                reasons.append(f"SHOWN_UNMAPPABLE_TOMBSTONE: {a_id}")
+
+                        # Zero Tolerance 3: Ungrounded claim shown to user
+                        target_text = anchor.text
+                        if anchor.state == "TOMBSTONED" and anchor.forward_to:
+                            fwd = Anchor.objects.filter(anchor_id=anchor.forward_to).first()
+                            if fwd:
+                                target_text = fwd.text
+                        if quote and quote not in target_text:
+                            gate_checks["ungrounded_claims"] += 1
+                            reasons.append(f"SHOWN_UNGROUNDED_CLAIM_MISQUOTE: {claim.claim_id}")
                 else:
-                    live_anchors[a_id] = anchor
-                    # Zero Tolerance 2: Unmapped tombstone
-                    if anchor.state == "TOMBSTONED" and not anchor.forward_to:
-                        gate_checks["unmapped_tombstones"] += 1
-                        reasons.append(f"UNMAPPABLE_TOMBSTONE: {a_id}")
+                    if anchor:
+                        live_anchors[a_id] = anchor
 
-        # Zero Tolerance 3: Ungrounded / Withheld claims in verification report
+        # Check if any shown claim has an unsupported status in verification report
         if verification_report:
-            withheld = getattr(verification_report, "withheld_claim_ids", [])
-            if withheld:
-                gate_checks["ungrounded_claims"] += len(withheld)
-                reasons.append(f"UNGROUNDED_CLAIMS_COUNT: {len(withheld)}")
+            verifications = getattr(verification_report, "claimverification_set", None)
+            if verifications:
+                for cv in verifications.all():
+                    if cv.claim_id not in withheld_claim_ids and cv.status == "UNSUPPORTED":
+                        gate_checks["ungrounded_claims"] += 1
+                        reasons.append(f"SHOWN_UNSUPPORTED_CLAIM: {cv.claim_id}")
 
         # 2. In-Corpus Check
         expected_in_corpus = expected.get("in_corpus", True)
@@ -123,11 +156,13 @@ class DeterministicEvaluator:
 
         # If expected out of corpus
         if not expected_in_corpus:
+            shown_claims_count = len([c for c in actual_claims if c.claim_id not in withheld_claim_ids])
             passed = (
                 not actual_in_corpus
-                and len(actual_claims) == 0
+                and shown_claims_count == 0
                 and gate_checks["fabricated_anchors"] == 0
                 and gate_checks["unmapped_tombstones"] == 0
+                and gate_checks["ungrounded_claims"] == 0
             )
             score = 1.0 if passed else 0.0
             return CaseEvaluation(
@@ -137,6 +172,7 @@ class DeterministicEvaluator:
                 reasons=reasons,
                 gate_checks=gate_checks,
                 claims_evaluated=len(actual_claims),
+                withheld_claims=withheld_claims_count,
                 in_corpus_match=in_corpus_match,
             )
 
@@ -156,7 +192,8 @@ class DeterministicEvaluator:
                 valid_anchor_ids.add(exp_anchor.forward_to)
 
             prop_matched = False
-            for claim in actual_claims:
+            shown_claims = [c for c in actual_claims if c.claim_id not in withheld_claim_ids]
+            for claim in shown_claims:
                 supports = claim.support if isinstance(claim.support, list) else []
                 for s in supports:
                     if not isinstance(s, dict):
@@ -211,5 +248,6 @@ class DeterministicEvaluator:
             matched_propositions=matched_props,
             unmatched_propositions=unmatched_props,
             claims_evaluated=len(actual_claims),
+            withheld_claims=withheld_claims_count,
             in_corpus_match=in_corpus_match,
         )

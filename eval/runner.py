@@ -11,9 +11,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from django.db import transaction
+
 from anchor_lib.ids import mint_id
 from core.db_router import admin_db_context
-from django.db import transaction
+from eval.evaluator import DeterministicEvaluator
+from eval.scorecard import generate_markdown_scorecard
 from gateway.models import ModelEndpoint
 from ops.models import EvalCase, EvalResult, EvalRun, GoldSet, PipelineVersion
 from reason.synthesizer import AnswerSynthesizer
@@ -23,9 +26,6 @@ from verify.verifier import VerificationEngine
 from workspace.authz import ExecutionContext
 from workspace.db import tenant_db_context
 from workspace.models import AppUser, Tenant
-
-from eval.evaluator import DeterministicEvaluator
-from eval.scorecard import generate_markdown_scorecard
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +152,7 @@ class EvalRunner:
         }
         total_prop_scores: list[float] = []
         passed_cases = 0
+        total_withheld_claims = 0
         eval_results_to_create: list[dict[str, Any]] = []
         case_models: dict[str, dict[str, Any]] = {}
 
@@ -211,6 +212,7 @@ class EvalRunner:
             if c_eval.passed:
                 passed_cases += 1
             total_prop_scores.append(c_eval.score)
+            total_withheld_claims += c_eval.withheld_claims
 
             eval_results_to_create.append(
                 {
@@ -262,6 +264,7 @@ class EvalRunner:
                     "score": c_eval.score,
                     "reasons": c_eval.reasons,
                     "gate_checks": c_eval.gate_checks,
+                    "withheld_claims": c_eval.withheld_claims,
                     "in_corpus_match": c_eval.in_corpus_match,
                     "provenance": c.provenance,
                     "is_reviewed": is_reviewed,
@@ -325,6 +328,7 @@ class EvalRunner:
             "n_synthetic_unreviewed": synthetic_unreviewed_count,
             "passed_cases": passed_cases,
             "avg_proposition_recall": avg_recall,
+            "withheld_claims": total_withheld_claims,
             "zero_tolerance": zero_tolerance_totals,
             "zero_tolerance_reviewed": reviewed_zero_tolerance,
         }

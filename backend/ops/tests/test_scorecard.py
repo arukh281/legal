@@ -69,7 +69,8 @@ def test_scorecard_preview_banner_below_n_30() -> None:
     assert "Sample Size (n):** 10 (Reviewed: 0, Synthetic Unreviewed: 10)" in scorecard_md
     assert "Fabricated Anchors | 0 | 0 | PASS" in scorecard_md
     assert "Unmapped Tombstones | 0 | 0 | PASS" in scorecard_md
-    assert "Ungrounded / Withheld Claims | 0 | 0 | PASS" in scorecard_md
+    assert "Ungrounded Claims (Shown) | 0 | 0 | PASS" in scorecard_md
+    assert "Withheld Claims:" in scorecard_md
 
 
 def test_scorecard_reject_banner_on_zero_tolerance_failure() -> None:

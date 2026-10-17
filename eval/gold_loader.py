@@ -16,9 +16,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from django.db import transaction
+
 from anchor_lib.ids import parse_id
 from core.db_router import admin_db_context
-from django.db import transaction
 from ops.models import EvalCase, GoldSet
 from parse.models import Anchor
 

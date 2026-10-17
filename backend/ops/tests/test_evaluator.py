@@ -182,7 +182,7 @@ def test_evaluator_zero_tolerance_gates(db: None) -> None:
             assert res_tomb.passed is False
             assert res_tomb.gate_checks["unmapped_tombstones"] == 1
 
-            # Ungrounded claim flagged in verification report
+            # Withheld claim in verification report is NOT a zero-tolerance failure
             v_report = MagicMock()
             v_report.withheld_claim_ids = ["clm_01UNGROUNDED000000000000"]
             res_v = evaluator.evaluate(
@@ -192,5 +192,36 @@ def test_evaluator_zero_tolerance_gates(db: None) -> None:
                 actual_claims=[],
                 verification_report=v_report,
             )
-            assert res_v.passed is False
-            assert res_v.gate_checks["ungrounded_claims"] == 1
+            assert res_v.gate_checks["ungrounded_claims"] == 0
+            assert res_v.withheld_claims == 1
+            assert res_v.passed is True
+
+            # Shown ungrounded claim (misquote) IS a zero-tolerance failure
+            live_anchor = Anchor.objects.create(
+                anchor_id=f"{work.work_id}/en#p1",
+                work_id=work.work_id,
+                expression_key="en",
+                fragment="p1",
+                node_type="PARA",
+                state="LIVE",
+                text="Exact text in live anchor for grounding test.",
+                text_hash="hash_p1",
+                lang="en",
+                is_authoritative_expression=True,
+                first_parse_id="par_test",
+                last_parse_id="par_test",
+            )
+            shown_misquoted_claim = Claim(
+                claim_id=mint_id("clm"),
+                text="Claim with misquoted text.",
+                support=[{"anchor_id": live_anchor.anchor_id, "quote": "completely fabricated non-existent quote"}],
+            )
+            res_shown_ungrounded = evaluator.evaluate(
+                case_id="evc_01TEST00000000000000000005",
+                expected={"in_corpus": True, "propositions": []},
+                actual_output={"in_corpus": True},
+                actual_claims=[shown_misquoted_claim],
+                verification_report=None,
+            )
+            assert res_shown_ungrounded.passed is False
+            assert res_shown_ungrounded.gate_checks["ungrounded_claims"] == 1

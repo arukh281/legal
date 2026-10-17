@@ -41,7 +41,7 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
     models_list = eval_run.candidate.get("models", [])
     endpoints_list = eval_run.candidate.get("endpoints", [])
     if models_list and endpoints_list:
-        models_str = ", ".join(f"{m} (`{ep}`)" for m, ep in zip(models_list, endpoints_list))
+        models_str = ", ".join(f"{m} (`{ep}`)" for m, ep in zip(models_list, endpoints_list, strict=False))
     elif models_list:
         models_str = ", ".join(models_list)
     elif "model" in eval_run.candidate:
@@ -64,7 +64,7 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
         "|---|---|---|---|",
         f"| Fabricated Anchors | 0 | {fab_anchors} | {'PASS' if fab_anchors == 0 else 'FAIL'} |",
         f"| Unmapped Tombstones | 0 | {unmap_tombs} | {'PASS' if unmap_tombs == 0 else 'FAIL'} |",
-        f"| Ungrounded / Withheld Claims | 0 | {ungrounded} | {'PASS' if ungrounded == 0 else 'FAIL'} |",
+        f"| Ungrounded Claims (Shown) | 0 | {ungrounded} | {'PASS' if ungrounded == 0 else 'FAIL'} |",
         f"| Sentinel Leaks | 0 | {sentinels} | {'PASS' if sentinels == 0 else 'FAIL'} |",
         "",
     ]
@@ -83,15 +83,22 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
     else:
         banner = f"> [!TIP]\n> **GATE DECISION: PROMOTE** — n={n} >= 30 with zero-tolerance compliance."
 
-    lines.extend([banner, "", "## 2. Metric Summary", f"- **Cases Passed:** {passed_cases} / {n}"])
+    withheld_count = metrics.get("withheld_claims", sum(item.get("withheld_claims", 0) for item in case_evals))
+    lines.extend([
+        banner,
+        "",
+        "## 2. Metric Summary",
+        f"- **Cases Passed:** {passed_cases} / {n}",
+        f"- **Withheld Claims:** {withheld_count} (claims withheld by verifier, not shown to user)",
+    ])
     if "avg_proposition_recall" in metrics:
         lines.append(f"- **Mean Proposition Recall:** {metrics['avg_proposition_recall'] * 100:.1f}%")
     lines.extend(
         [
             "",
             "## 3. Case-by-Case Breakdown",
-            "| Case ID | Split | Task | Model | In-Corpus | Score | ZT Violations | Verdict |",
-            "|---|---|---|---|---|---|---|---|",
+            "| Case ID | Split | Task | Model | In-Corpus | Score | ZT | Withheld | Verdict |",
+            "|---|---|---|---|---|---|---|---|---|",
         ]
     )
 
@@ -103,9 +110,10 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
         in_corp = "Yes" if item.get("in_corpus_match", True) else "Mismatch"
         score = f"{item.get('score', 0.0):.2f}"
         zt_v = sum(item.get("gate_checks", {}).values())
+        withheld_v = item.get("withheld_claims", 0)
         verdict = "PASS" if item.get("passed", False) else "FAIL"
         lines.append(
-            f"| `{cid}` | {split} | `{task}` | `{model_name}` | {in_corp} | {score} | {zt_v} | {verdict} |"
+            f"| `{cid}` | {split} | `{task}` | `{model_name}` | {in_corp} | {score} | {zt_v} | {withheld_v} | {verdict} |"
         )
 
     lines.append("")
