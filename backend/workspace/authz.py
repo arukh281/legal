@@ -15,7 +15,7 @@ from django.db import connection
 
 from workspace.audit import record_audit_event
 from workspace.db import tenant_db_context
-from workspace.models import AppUser, Matter
+from workspace.models import AppUser, Client, Matter
 
 DATACLASS_HIERARCHY: dict[str, int] = {
     "PUBLIC": 0,
@@ -69,12 +69,14 @@ def can(
     2. The user is in a wall_exclusion for the object's matter -> DENY, plus
        a WALL_VIOLATION_ATTEMPT audit row.
     3. Matter-scoped object: ALLOW if user is an active member with sufficient role:
-       - VIEWER: reads
-       - MEMBER: reads, writes
+       - VIEWER: reads, downloads
+       - MEMBER: reads, writes, uploads, downloads
        - LEAD: reads, writes, manages members, approves exports
        - Firm ADMIN: can manage membership, but CANNOT read walled matter content without membership.
-    4. Tenant-scoped object: owner/team only.
-    5. Public (plc) object: any active user.
+    4. Client-scoped object: ALLOW if user is a member of at least one of that client's matters,
+       or is firm ADMIN, or created the client.
+    5. Tenant-scoped object: owner/team only.
+    6. Public (plc) object: any active user.
     """
     # 1. Inactive user -> DENY
     if not user.active:
@@ -84,10 +86,20 @@ def can(
     matter_id: str | None = None
     if isinstance(obj, Matter):
         matter_id = obj.matter_id
-    elif hasattr(obj, "matter_id"):
+    elif hasattr(obj, "matter_id") and getattr(obj, "matter_id", None):
         matter_id = obj.matter_id
     elif isinstance(obj, str) and obj.startswith("mat_"):
         matter_id = obj
+    elif hasattr(obj, "pdoc_id") and getattr(obj, "pdoc_id", None):
+        with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT matter_id FROM tpl.pdoc WHERE tenant_id = %s AND pdoc_id = %s",
+                    [user.tenant_id, obj.pdoc_id],
+                )
+                p_row = cursor.fetchone()
+                if p_row:
+                    matter_id = p_row[0]
     elif ctx and ctx.matter_id:
         matter_id = ctx.matter_id
 
@@ -138,7 +150,7 @@ def can(
             if member_row:
                 member_role = member_row[0]
                 if member_role == "VIEWER":
-                    return action in ("read", "view", "get", "list")
+                    return action in ("read", "view", "get", "list", "download")
                 if member_role == "MEMBER":
                     return action in (
                         "read",
@@ -149,6 +161,8 @@ def can(
                         "edit",
                         "create",
                         "update",
+                        "upload",
+                        "download",
                     )
                 if member_role == "LEAD":
                     return True
@@ -178,6 +192,29 @@ def can(
 
             # Non-member non-admin -> DENY
             return False
+
+    # 4. Client-scoped checks
+    client_id: str | None = None
+    if isinstance(obj, Client):
+        client_id = obj.client_id
+    elif hasattr(obj, "client_id") and getattr(obj, "client_id", None):
+        client_id = obj.client_id
+    elif isinstance(obj, str) and obj.startswith("cli_"):
+        client_id = obj
+
+    if client_id:
+        if action in ("create", "create_client"):
+            return True
+        if user.firm_role == "ADMIN":
+            return True
+        with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT tpl.can_read_client(%s, %s)",
+                    [client_id, user.user_id],
+                )
+                row = cursor.fetchone()
+                return bool(row[0]) if row else False
 
     # 4. Tenant-scoped objects (e.g., owner check)
     if hasattr(obj, "owner_id"):

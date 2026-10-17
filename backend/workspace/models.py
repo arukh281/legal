@@ -74,15 +74,53 @@ class AppUser(DomainModel):
         return f"{self.email} ({self.user_id}) - {self.firm_role}"
 
 
+class Client(DomainModel):
+    """Client entity for matter grouping (tpl.client)."""
+
+    pk = CompositePrimaryKey("tenant_id", "client_id")
+    tenant_id = models.TextField()
+    client_id = PrefixedULIDField(prefix="cli")
+    display_name = models.TextField()
+    client_type = models.TextField(
+        choices=[
+            ("INDIVIDUAL", "INDIVIDUAL"),
+            ("COMPANY", "COMPANY"),
+            ("LLP", "LLP"),
+            ("PARTNERSHIP", "PARTNERSHIP"),
+            ("GOVERNMENT", "GOVERNMENT"),
+            ("OTHER", "OTHER"),
+        ]
+    )
+    identifiers = models.JSONField(default=dict, blank=True)
+    contact = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    status = models.TextField(
+        default="ACTIVE",
+        choices=[("ACTIVE", "ACTIVE"), ("ARCHIVED", "ARCHIVED")],
+    )
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."client'
+
+    def __str__(self) -> str:
+        return f"{self.display_name} ({self.client_id})"
+
+
 class Matter(DomainModel):
     """Legal matter workspace (tpl.matter)."""
 
     pk = CompositePrimaryKey("tenant_id", "matter_id")
     tenant_id = models.TextField()
     matter_id = PrefixedULIDField(prefix="mat")
+    client_id = models.TextField(null=True, blank=True)
     client_matter_no = models.TextField(null=True, blank=True)
     title = models.TextField()
     client_role = models.TextField()  # PETITIONER|RESPONDENT|...
+    case_type = models.TextField(null=True, blank=True)
+    court_or_forum = models.TextField(null=True, blank=True)
     forum = models.JSONField(null=True, blank=True)
     jurisdiction_state = models.TextField(null=True, blank=True)
     status = models.TextField(default="ACTIVE")
@@ -132,6 +170,122 @@ class MatterMember(DomainModel):
     class Meta:
         managed = False
         db_table = 'tpl"."matter_member'
+
+
+class MatterCaseLink(DomainModel):
+    """Normalized case numbers associated with a matter (tpl.matter_case_link)."""
+
+    pk = CompositePrimaryKey("tenant_id", "matter_id", "scheme", "value_normalized")
+    tenant_id = models.TextField()
+    matter_id = models.TextField()
+    case_id = models.TextField(null=True, blank=True)
+    scheme = models.TextField()
+    value_normalized = models.TextField()
+    role = models.TextField(default="CASE")
+    track = models.BooleanField(default=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."matter_case_link'
+
+
+class Pdoc(DomainModel):
+    """Private document metadata (tpl.pdoc)."""
+
+    pk = CompositePrimaryKey("tenant_id", "pdoc_id")
+    tenant_id = models.TextField()
+    matter_id = models.TextField()
+    pdoc_id = PrefixedULIDField(prefix="pdoc")
+    family_id = models.TextField(null=True, blank=True)
+    parent_pdoc_id = models.TextField(null=True, blank=True)
+    doc_type = models.TextField()
+    provenance = models.TextField()
+    trust_label = models.TextField(
+        choices=[
+            ("TENANT_CLIENT_DOC", "TENANT_CLIENT_DOC"),
+            ("TENANT_OPPOSING_DOC", "TENANT_OPPOSING_DOC"),
+            ("TENANT_CORRESPONDENCE", "TENANT_CORRESPONDENCE"),
+            ("TENANT_WORK_PRODUCT", "TENANT_WORK_PRODUCT"),
+            ("TENANT_COURT_RECORD", "TENANT_COURT_RECORD"),
+        ]
+    )
+    privilege_class = models.TextField()
+    privilege_state = models.TextField(default="SUGGESTED")
+    stage = models.TextField(
+        default="OTHER",
+        choices=[
+            ("NOTICE", "NOTICE"),
+            ("PLEADING", "PLEADING"),
+            ("REPLY", "REPLY"),
+            ("ORDER", "ORDER"),
+            ("CORRESPONDENCE", "CORRESPONDENCE"),
+            ("EVIDENCE", "EVIDENCE"),
+            ("DRAFT", "DRAFT"),
+            ("OTHER", "OTHER"),
+        ],
+    )
+    title = models.TextField(null=True, blank=True)
+    doc_date = models.DateField(null=True, blank=True)
+    received_on = models.DateField(null=True, blank=True)
+    current_version = models.TextField(null=True, blank=True)
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    tombstoned_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."pdoc'
+
+    def __str__(self) -> str:
+        return f"{self.title or self.pdoc_id} ({self.pdoc_id})"
+
+
+class PdocVersion(DomainModel):
+    """Specific version of a private document (tpl.pdoc_version)."""
+
+    pk = CompositePrimaryKey("tenant_id", "pdoc_id", "pver")
+    tenant_id = models.TextField()
+    pdoc_id = models.TextField()
+    pver = models.TextField()
+    raw_sha256 = models.TextField()
+    storage_uri = models.TextField()
+    mime = models.TextField(null=True, blank=True)
+    parsed_doc_uri = models.TextField(null=True, blank=True)
+    quality = models.JSONField(null=True, blank=True)
+    gate = models.TextField(
+        null=True,
+        blank=True,
+        choices=[("PASS", "PASS"), ("FLAGGED", "FLAGGED"), ("QUARANTINED", "QUARANTINED")],
+    )
+    pipeline_version = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."pdoc_version'
+
+
+class PrivateAnchor(DomainModel):
+    """Paragraph-level private anchor (tpl.private_anchor)."""
+
+    pk = CompositePrimaryKey("tenant_id", "anchor_id")
+    tenant_id = models.TextField()
+    anchor_id = models.TextField()
+    pdoc_id = models.TextField()
+    pver = models.TextField()
+    rendition = models.TextField(null=True, blank=True)
+    fragment = models.TextField()
+    text = models.TextField()
+    text_hash = models.TextField()
+    quote_prefix = models.TextField(null=True, blank=True)
+    quote_suffix = models.TextField(null=True, blank=True)
+    spans = models.JSONField(default=list, blank=True)
+    ocr_conf = models.FloatField(null=True, blank=True)
+    privilege_class = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."private_anchor'
 
 
 class EthicalWall(DomainModel):

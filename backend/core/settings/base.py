@@ -212,6 +212,7 @@ S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")
 S3_REGION = os.environ.get("AWS_REGION", "ap-south-1")
 S3_RAW_BUCKET = os.environ.get("S3_RAW_BUCKET", "plc-raw")
 S3_PARSED_BUCKET = os.environ.get("S3_PARSED_BUCKET", "plc-parsed")
+S3_TENANT_BUCKET = os.environ.get("S3_TENANT_BUCKET", "tpl-vault")
 
 # Model Gateway daily budget cap (USD)
 GATEWAY_DAILY_BUDGET_USD = float(os.environ.get("GATEWAY_DAILY_BUDGET_USD", "5.0"))
