@@ -174,136 +174,147 @@ export const ResearchPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Demo Queries Selection Cards */}
-      <div style={{ marginBottom: "24px" }}>
-        <div
-          style={{
-            fontSize: "12px",
-            fontWeight: "600",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: "var(--text-muted)",
-            marginBottom: "10px",
-          }}
-        >
-          Curated Demo Questions (Exit Check Golden Test Suite)
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "12px",
-          }}
-        >
-          {PRELOADED_QUERIES.map((pq) => (
-            <div
-              key={pq.id}
-              onClick={() => handleSelectPreloaded(pq)}
-              style={{
-                backgroundColor: "var(--bg-secondary)",
-                border: "1px solid var(--border)",
-                borderRadius: "10px",
-                padding: "14px",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#3b82f6";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--border)";
-                e.currentTarget.style.transform = "translateY(0)";
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{pq.title}</span>
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: "600",
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    backgroundColor: pq.id === "out_of_corpus" ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
-                    color: pq.id === "out_of_corpus" ? "#f87171" : "#34d399",
-                  }}
-                >
-                  {pq.tag}
-                </span>
-              </div>
-              <p style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: "1.4" }}>{pq.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Query Search Bar */}
+      {/* Free-Text Question Box */}
       <div
         style={{
           backgroundColor: "var(--bg-secondary)",
           border: "1px solid var(--border)",
-          borderRadius: "12px",
-          padding: "16px",
-          marginBottom: "32px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+          borderRadius: "14px",
+          padding: "20px",
+          marginBottom: "16px",
+          boxShadow: "0 4px 24px rgba(0, 0, 0, 0.25)",
         }}
       >
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "12px" }}>
-          <input
-            type="text"
+        <div style={{ marginBottom: "12px" }}>
+          <textarea
+            id="research-query-input"
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleRunQuery(queryText);
+              if ((e.key === "Enter" && (e.metaKey || e.ctrlKey)) || (e.key === "Enter" && !e.shiftKey)) {
+                e.preventDefault();
+                handleRunQuery(queryText);
+              }
             }}
-            placeholder="Ask a corporate-law question (e.g. scope of enquiry under Section 7 IBC...)"
+            placeholder="Ask a corporate-law question (e.g. What is the scope of enquiry under Section 7 of the IBC for a financial debt and default?)..."
+            rows={3}
             style={{
-              flex: 1,
+              width: "100%",
               backgroundColor: "var(--bg-primary)",
               border: "1px solid var(--border)",
-              borderRadius: "8px",
-              padding: "12px 16px",
+              borderRadius: "10px",
+              padding: "14px 16px",
               color: "var(--text-primary)",
-              fontSize: "14px",
+              fontSize: "15px",
+              lineHeight: "1.5",
+              fontFamily: "inherit",
               outline: "none",
+              resize: "vertical",
+              boxSizing: "border-box",
+              transition: "border-color 0.15s ease",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#3b82f6";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--border)";
             }}
           />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+          {/* Depth Selector & Keyboard Hint */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "12px", color: "var(--text-secondary)" }}>
+            <span style={{ fontWeight: "600" }}>Depth:</span>
+            <div style={{ display: "inline-flex", backgroundColor: "var(--bg-primary)", padding: "2px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+              {(["QUICK", "STANDARD", "DEEP"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: mode === m ? "600" : "400",
+                    backgroundColor: mode === m ? "var(--accent)" : "transparent",
+                    color: mode === m ? "#ffffff" : "var(--text-muted)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+              ↵ Enter to search, Shift+Enter for newline
+            </span>
+          </div>
+
           <button
+            id="btn-run-research"
             onClick={() => handleRunQuery(queryText)}
             disabled={loading || !queryText.trim()}
             style={{
               backgroundColor: loading || !queryText.trim() ? "var(--bg-tertiary)" : "var(--accent)",
               color: "#ffffff",
-              padding: "12px 24px",
+              padding: "10px 24px",
               borderRadius: "8px",
               fontSize: "14px",
               fontWeight: "600",
+              border: "none",
               cursor: loading || !queryText.trim() ? "not-allowed" : "pointer",
               transition: "all 0.15s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
-            {loading ? "Searching..." : "Research"}
+            <span>🔍</span>
+            <span>{loading ? "Synthesizing..." : "Research"}</span>
           </button>
         </div>
+      </div>
 
-        {/* Mode Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "12px", color: "var(--text-secondary)" }}>
-          <span>Search Depth:</span>
-          {(["QUICK", "STANDARD", "DEEP"] as const).map((m) => (
+      {/* Suggestion Chips */}
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-muted)", marginRight: "4px" }}>
+            Suggestions:
+          </span>
+          {PRELOADED_QUERIES.map((pq) => (
             <button
-              key={m}
-              onClick={() => setMode(m)}
+              key={pq.id}
+              onClick={() => handleSelectPreloaded(pq)}
               style={{
-                padding: "4px 10px",
-                borderRadius: "6px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "20px",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                color: "var(--text-secondary)",
                 fontSize: "12px",
-                fontWeight: mode === m ? "600" : "400",
-                backgroundColor: mode === m ? "rgba(59, 130, 246, 0.2)" : "transparent",
-                color: mode === m ? "#60a5fa" : "var(--text-muted)",
-                border: mode === m ? "1px solid rgba(59, 130, 246, 0.4)" : "1px solid transparent",
+                fontWeight: "500",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#3b82f6";
+                e.currentTarget.style.color = "#60a5fa";
+                e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.08)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border)";
+                e.currentTarget.style.color = "var(--text-secondary)";
+                e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+              }}
+              title={pq.description}
             >
-              {m}
+              <span>⚡</span>
+              <span>{pq.title}</span>
             </button>
           ))}
         </div>
@@ -467,20 +478,28 @@ export const ResearchPage: React.FC = () => {
                     style={{
                       backgroundColor: "var(--bg-secondary)",
                       border: "1px solid var(--border)",
+                      borderLeft:
+                        claim.display_band.includes("WITHHELD")
+                          ? "4px solid #ef4444"
+                          : claim.display_band.includes("CHECK") || claim.display_band.includes("CAUTION")
+                            ? "4px solid #f59e0b"
+                            : "4px solid #10b981",
                       borderRadius: "10px",
                       padding: "18px 20px",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                         <span
                           style={{
                             fontSize: "11px",
                             fontWeight: "700",
-                            padding: "2px 6px",
+                            padding: "2px 8px",
                             borderRadius: "4px",
                             backgroundColor: "rgba(99, 102, 241, 0.15)",
                             color: "#818cf8",
+                            letterSpacing: "0.03em",
                           }}
                         >
                           {claim.claim_type}
@@ -492,9 +511,18 @@ export const ResearchPage: React.FC = () => {
                             fontWeight: "600",
                             padding: "2px 8px",
                             borderRadius: "4px",
-                            backgroundColor: "rgba(16, 185, 129, 0.15)",
-                            color: "#34d399",
-                            border: "1px solid rgba(16, 185, 129, 0.3)",
+                            backgroundColor:
+                              claim.display_band.includes("VERIFIED") || claim.display_band.includes("verified")
+                                ? "rgba(16, 185, 129, 0.15)"
+                                : "rgba(245, 158, 11, 0.15)",
+                            color:
+                              claim.display_band.includes("VERIFIED") || claim.display_band.includes("verified")
+                                ? "#34d399"
+                                : "#fbbf24",
+                            border:
+                              claim.display_band.includes("VERIFIED") || claim.display_band.includes("verified")
+                                ? "1px solid rgba(16, 185, 129, 0.3)"
+                                : "1px solid rgba(245, 158, 11, 0.3)",
                           }}
                         >
                           {claim.display_band}
@@ -505,72 +533,101 @@ export const ResearchPage: React.FC = () => {
                       </span>
                     </div>
 
-                    <p style={{ fontSize: "14px", color: "var(--text-primary)", lineHeight: "1.5", marginBottom: "12px" }}>
+                    <p style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "1.6", marginBottom: "14px", fontWeight: "500" }}>
                       {claim.text}
                     </p>
 
-                    {/* Support & Citation Pinpoint */}
+                    {/* Support & Citation Pinpoints (Clean Chips Pass) */}
                     {claim.support.map((supp, sIdx) => {
                       const workId = extractWorkIdFromAnchor(supp.anchor_id);
                       return (
                         <div
                           key={sIdx}
                           style={{
+                            marginTop: "10px",
                             backgroundColor: "var(--bg-primary)",
                             border: "1px solid var(--border)",
                             borderRadius: "8px",
                             padding: "12px 14px",
-                            marginTop: "8px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            gap: "16px",
                           }}
                         >
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: "12px", fontFamily: "monospace", color: "#60a5fa", marginBottom: "4px" }}>
-                              📌 {supp.anchor_id}
-                            </div>
-                            <div
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                            {/* Citation Chip */}
+                            <button
+                              onClick={() =>
+                                setActiveViewer({
+                                  anchorId: supp.anchor_id,
+                                  workId: workId,
+                                  quote: supp.quote,
+                                })
+                              }
                               style={{
-                                fontSize: "13px",
-                                fontStyle: "italic",
-                                color: "var(--text-secondary)",
-                                lineHeight: "1.4",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "4px 10px",
+                                borderRadius: "6px",
+                                backgroundColor: "rgba(59, 130, 246, 0.12)",
+                                border: "1px solid rgba(59, 130, 246, 0.3)",
+                                color: "#60a5fa",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                fontFamily: "monospace",
+                                cursor: "pointer",
+                                transition: "all 0.15s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.25)";
+                                e.currentTarget.style.borderColor = "#3b82f6";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.12)";
+                                e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.3)";
+                              }}
+                              title="Click to inspect pinpoint in primary source"
+                            >
+                              <span>📍</span>
+                              <span>{supp.anchor_id}</span>
+                              <span style={{ fontSize: "11px", opacity: 0.8 }}>↗</span>
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                setActiveViewer({
+                                  anchorId: supp.anchor_id,
+                                  workId: workId,
+                                  quote: supp.quote,
+                                })
+                              }
+                              style={{
+                                fontSize: "12px",
+                                color: "var(--text-muted)",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                cursor: "pointer",
+                                textDecoration: "underline",
                               }}
                             >
-                              "{supp.quote}"
-                            </div>
+                              Inspect Source Document
+                            </button>
                           </div>
-                          <button
-                            onClick={() =>
-                              setActiveViewer({
-                                anchorId: supp.anchor_id,
-                                workId: workId,
-                                quote: supp.quote,
-                              })
-                            }
+
+                          {/* Quoted Excerpt */}
+                          <blockquote
                             style={{
+                              margin: "8px 0 0 0",
                               padding: "6px 12px",
-                              borderRadius: "6px",
-                              backgroundColor: "rgba(59, 130, 246, 0.15)",
-                              color: "#60a5fa",
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              border: "1px solid rgba(59, 130, 246, 0.3)",
-                              cursor: "pointer",
-                              whiteSpace: "nowrap",
-                              transition: "all 0.15s ease",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.3)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.15)";
+                              borderLeft: "2px solid rgba(59, 130, 246, 0.4)",
+                              backgroundColor: "rgba(0, 0, 0, 0.15)",
+                              borderRadius: "0 6px 6px 0",
+                              fontSize: "13px",
+                              fontStyle: "italic",
+                              color: "var(--text-secondary)",
+                              lineHeight: "1.5",
                             }}
                           >
-                            Inspect in Source →
-                          </button>
+                            "{supp.quote}"
+                          </blockquote>
                         </div>
                       );
                     })}

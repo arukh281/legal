@@ -11,7 +11,7 @@ import { fetchHealth } from "./api/client";
 
 export const App: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string | null>("partner.lawyer@firm.in");
-  const [currentTab, setCurrentTab] = useState<NavTab>("today");
+  const [currentTab, setCurrentTab] = useState<NavTab>("research");
 
   const { data: health, isLoading: healthLoading } = useQuery({
     queryKey: ["health"],

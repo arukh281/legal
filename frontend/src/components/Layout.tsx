@@ -18,11 +18,8 @@ export const Layout: React.FC<LayoutProps> = ({
   onLogout,
 }) => {
   const navItems: { id: NavTab; label: string; icon: string }[] = [
-    { id: "today", label: "Today", icon: "☀️" },
     { id: "research", label: "Research", icon: "🔍" },
-    { id: "matters", label: "Matters", icon: "📁" },
-    { id: "authority", label: "Authority", icon: "⚖️" },
-    { id: "alerts", label: "Alerts", icon: "🔔" },
+    { id: "today", label: "Today", icon: "☀️" },
   ];
 
   return (
