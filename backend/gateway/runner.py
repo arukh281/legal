@@ -13,11 +13,14 @@ from __future__ import annotations
 import decimal
 import json
 import logging
+import re
 import time
 from dataclasses import dataclass
 from typing import Any
 
 import jsonschema
+from django.conf import settings
+from django.db import models
 from django.utils import timezone
 
 from anchor_lib.ids import mint_ulid
@@ -40,6 +43,16 @@ from gateway.models import LLMCallRecord, ModelEndpoint, ModelTaskContract
 from workspace.authz import DATACLASS_HIERARCHY, ExecutionContext
 
 logger = logging.getLogger(__name__)
+
+
+def get_daily_spent_usd(as_of: Any | None = None) -> decimal.Decimal:
+    """Aggregate total USD cost incurred by all LLM calls today across ops.llm_call_record."""
+    now = as_of or timezone.now()
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    total = LLMCallRecord.objects.filter(created_at__gte=start_of_day).aggregate(
+        total=models.Sum("usd")
+    )["total"]
+    return total or decimal.Decimal("0.0")
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,7 +183,15 @@ def run(
         if not qualified:
             raise NoQualifiedEndpointError(f"No qualified endpoints found for task '{task_id}'.")
 
-    # 4. Enforce budget if specified in context
+    # 4. Enforce gateway daily budget cap and task budget
+    daily_cap = getattr(settings, "GATEWAY_DAILY_BUDGET_USD", None)
+    if daily_cap is not None:
+        today_spent = get_daily_spent_usd()
+        if today_spent >= decimal.Decimal(str(daily_cap)):
+            raise BudgetExhaustedError(
+                f"Gateway daily budget cap exhausted: spent ${today_spent:.4f} >= limit ${daily_cap:.4f}."
+            )
+
     max_budget_usd = ctx.llm_policy.get("max_cost_usd")
     spent_usd = ctx.llm_policy.get("spent_usd", 0.0)
     if max_budget_usd is not None and spent_usd >= max_budget_usd:
@@ -489,8 +510,13 @@ def validate_json(
     content: str, schema: dict[str, Any]
 ) -> tuple[dict[str, Any] | None, bool, str | None]:
     """Parse and validate JSON against contract output schema."""
+    cleaned = content.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+        cleaned = cleaned.strip()
     try:
-        parsed = json.loads(content)
+        parsed = json.loads(cleaned)
         jsonschema.validate(instance=parsed, schema=schema)
         return parsed, True, None
     except json.JSONDecodeError as exc:

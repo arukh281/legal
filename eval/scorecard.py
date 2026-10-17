@@ -57,6 +57,8 @@ def generate_markdown_scorecard(eval_run: EvalRun, case_evals: list[dict[str, An
         f"- **Candidate:** `{eval_run.candidate.get('pipeline_version', 'dev')}`",
         f"- **Adapter:** `{adapter_kind}`",
         f"- **Model(s):** {models_str}",
+        f"- **Generator Family:** {eval_run.candidate.get('generator_family', 'Anthropic')}",
+        f"- **Verifier / Judge Family:** {eval_run.candidate.get('verifier_family', 'Gemini')} (generator \u2260 verifier)",
         f"- **Sample Size (n):** {n} (Reviewed: {n_reviewed}, Synthetic Unreviewed: {n_synthetic})",
         "",
         "## 1. Zero-Tolerance Gating Checks",

@@ -8,7 +8,7 @@ from typing import Any, cast
 import anthropic
 
 from gateway.adapters.base import BaseModelAdapter, LLMResponse
-from gateway.exceptions import AdapterInvocationError
+from gateway.exceptions import AdapterInvocationError, RateLimitError
 from gateway.models import ModelEndpoint
 
 
@@ -41,7 +41,6 @@ class AnthropicAdapter(BaseModelAdapter):
         kwargs: dict[str, object] = {
             "model": endpoint.model_snapshot or endpoint.model_id,
             "max_tokens": max_tokens,
-            "temperature": temperature,
             "messages": messages,
         }
         if system_prompt:
@@ -63,5 +62,7 @@ class AnthropicAdapter(BaseModelAdapter):
                 tokens_out=tokens_out,
                 cache_read_tokens=cache_read_tokens,
             )
+        except anthropic.RateLimitError as exc:
+            raise RateLimitError(f"Anthropic rate limit: {exc}") from exc
         except Exception as exc:
             raise AdapterInvocationError(f"Anthropic API call failed: {exc}") from exc

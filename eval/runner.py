@@ -309,10 +309,23 @@ class EvalRunner:
             task_id=task_str,
             requested_version=active_pipeline_ver_override,
         )
+        # Determine generator family from active endpoints/providers
+        if any(cm.get("provider") == "anthropic" for cm in case_models.values()):
+            gen_family = "Anthropic"
+        elif any(cm.get("provider") == "google" for cm in case_models.values()):
+            gen_family = "Gemini"
+        elif overall_adapter == "fake":
+            gen_family = "Fake"
+        else:
+            gen_family = "Anthropic"
+
         candidate_info = {
             "pipeline_version": chosen_pipeline_ver,
             "task": task_str,
             "adapter": overall_adapter,
+            "generator_family": gen_family,
+            "verifier_family": "Gemini",
+            "judge_family": "Gemini",
             "endpoints": unique_endpoints,
             "models": unique_models,
             "cases": case_models,

@@ -67,6 +67,9 @@ def test_gateway_429_failover_names_3_5() -> None:
         purpose="Q&A Failover Test",
     )
 
+    # Disable Anthropic endpoints so this test focuses on Gemini 3.8 -> 3.5 failover
+    ModelEndpoint.objects.filter(provider="anthropic").update(health="DOWN")
+
     mock_adapter = FailoverMockAdapter()
     set_adapter_override("google", mock_adapter)
 
