@@ -37,15 +37,9 @@ from gateway.exceptions import (
     SchemaValidationError,
 )
 from gateway.models import LLMCallRecord, ModelEndpoint, ModelTaskContract
-from workspace.authz import ExecutionContext
+from workspace.authz import DATACLASS_HIERARCHY, ExecutionContext
 
 logger = logging.getLogger(__name__)
-
-DATACLASS_HIERARCHY: dict[str, int] = {
-    "PUBLIC": 0,
-    "TENANT_CONFIDENTIAL": 1,
-    "PRIVILEGED": 2,
-}
 
 
 @dataclass(frozen=True, slots=True)

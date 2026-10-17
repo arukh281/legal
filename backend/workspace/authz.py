@@ -17,6 +17,25 @@ from workspace.audit import record_audit_event
 from workspace.db import tenant_db_context
 from workspace.models import AppUser, Matter
 
+DATACLASS_HIERARCHY: dict[str, int] = {
+    "PUBLIC": 0,
+    "INTERNAL": 1,
+    "TENANT_CONFIDENTIAL": 2,
+    "PRIVILEGED": 3,
+}
+
+
+def resolve_request_dataclass(server_base: str, requested: str | None) -> str:
+    """Resolve request dataclass: server decides baseline; client X-Dataclass may only raise it, never lower it."""
+    base_level = DATACLASS_HIERARCHY.get(server_base, DATACLASS_HIERARCHY["TENANT_CONFIDENTIAL"])
+    if not requested:
+        return server_base
+    req_upper = requested.strip().upper()
+    req_level = DATACLASS_HIERARCHY.get(req_upper, -1)
+    if req_level > base_level:
+        return req_upper
+    return server_base
+
 
 @dataclass(frozen=True, slots=True)
 class ExecutionContext:

@@ -61,7 +61,15 @@ class AuthzDependency(HttpBearer):
         traceparent = request.headers.get("traceparent")
 
         matter_id = request.headers.get("X-Matter-ID")
-        dataclass_val = request.headers.get("X-Dataclass") or ("TENANT_CONFIDENTIAL" if matter_id else "PUBLIC")
+        # Server decides baseline data class: matter-scoped requests are TENANT_CONFIDENTIAL
+        # and can NEVER be PUBLIC. Non-matter requests default to PUBLIC.
+        server_dataclass = "TENANT_CONFIDENTIAL" if matter_id else "PUBLIC"
+        client_dataclass = request.headers.get("X-Dataclass")
+        from workspace.authz import DATACLASS_HIERARCHY, resolve_request_dataclass
+
+        dataclass_val = resolve_request_dataclass(server_dataclass, client_dataclass)
+        if matter_id and DATACLASS_HIERARCHY.get(dataclass_val, 0) < DATACLASS_HIERARCHY["TENANT_CONFIDENTIAL"]:
+            dataclass_val = "TENANT_CONFIDENTIAL"
 
         ctx = ExecutionContext(
             tenant_id=app_user.tenant_id,

@@ -184,3 +184,71 @@ def test_check_dev_auth_not_in_prod(settings: Any) -> None:
     error_ids = {e.id for e in errors}
     assert "core.E001" in error_ids
     assert "core.E002" in error_ids
+
+
+def test_server_decides_dataclass_and_client_cannot_lower(auth_setup: dict[str, Any]) -> None:
+    from django.test import RequestFactory
+
+    from core.authz_dependency import AuthzDependency
+
+    factory = RequestFactory()
+    dep = AuthzDependency()
+    u_active = auth_setup["user_active"]
+
+    # 1. Non-matter request defaults to PUBLIC
+    req1 = factory.get("/api/test", HTTP_AUTHORIZATION=f"Bearer {u_active.email}")
+    ctx1 = dep.authenticate(req1, u_active.email)
+    assert ctx1 is not None
+    assert ctx1.dataclass == "PUBLIC"
+
+    # 2. Non-matter request can be raised to PRIVILEGED or TENANT_CONFIDENTIAL by client
+    req2 = factory.get(
+        "/api/test",
+        HTTP_AUTHORIZATION=f"Bearer {u_active.email}",
+        HTTP_X_DATACLASS="PRIVILEGED",
+    )
+    ctx2 = dep.authenticate(req2, u_active.email)
+    assert ctx2 is not None
+    assert ctx2.dataclass == "PRIVILEGED"
+
+    req2b = factory.get(
+        "/api/test",
+        HTTP_AUTHORIZATION=f"Bearer {u_active.email}",
+        HTTP_X_DATACLASS="TENANT_CONFIDENTIAL",
+    )
+    ctx2b = dep.authenticate(req2b, u_active.email)
+    assert ctx2b is not None
+    assert ctx2b.dataclass == "TENANT_CONFIDENTIAL"
+
+    # 3. Matter-scoped request defaults to TENANT_CONFIDENTIAL
+    req3 = factory.get(
+        "/api/test",
+        HTTP_AUTHORIZATION=f"Bearer {u_active.email}",
+        HTTP_X_MATTER_ID="mat_01TESTMATTER000000000000",
+    )
+    ctx3 = dep.authenticate(req3, u_active.email)
+    assert ctx3 is not None
+    assert ctx3.matter_id == "mat_01TESTMATTER000000000000"
+    assert ctx3.dataclass == "TENANT_CONFIDENTIAL"
+
+    # 4. Matter-scoped request CANNOT be lowered to PUBLIC by client
+    req4 = factory.get(
+        "/api/test",
+        HTTP_AUTHORIZATION=f"Bearer {u_active.email}",
+        HTTP_X_MATTER_ID="mat_01TESTMATTER000000000000",
+        HTTP_X_DATACLASS="PUBLIC",
+    )
+    ctx4 = dep.authenticate(req4, u_active.email)
+    assert ctx4 is not None
+    assert ctx4.dataclass == "TENANT_CONFIDENTIAL"
+
+    # 5. Matter-scoped request CAN be raised to PRIVILEGED by client
+    req5 = factory.get(
+        "/api/test",
+        HTTP_AUTHORIZATION=f"Bearer {u_active.email}",
+        HTTP_X_MATTER_ID="mat_01TESTMATTER000000000000",
+        HTTP_X_DATACLASS="PRIVILEGED",
+    )
+    ctx5 = dep.authenticate(req5, u_active.email)
+    assert ctx5 is not None
+    assert ctx5.dataclass == "PRIVILEGED"
