@@ -5,8 +5,10 @@ import {
   confirmCandidate,
   dismissCandidate,
   updateDeadlineLifecycle,
+  updateTaskStatus,
   getFirmCalendarExportUrl,
   type TodayResponse,
+  type TodayTaskItem,
   type CaseCandidateResponse,
   type TodayHearingItem,
   type TodayDeadlineItem,
@@ -54,6 +56,19 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
       updateDeadlineLifecycle(deadlineId, lifecycle),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["today"] });
+    },
+  });
+
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
+
+  const taskStatusMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
+      updateTaskStatus(taskId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["today"] });
+    },
+    onError: (err: any) => {
+      setActionError(err.message || "Failed to update task.");
     },
   });
 
@@ -283,6 +298,173 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
             </div>
           </section>
         )}
+
+        {/* Section: My Tasks */}
+        <section>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>📋</span> My Tasks ({(data.my_tasks || []).length})
+            </h3>
+          </div>
+
+          {(!data.my_tasks || data.my_tasks.length === 0) ? (
+            <div
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px dashed var(--border)",
+                borderRadius: "10px",
+                padding: "20px",
+                textAlign: "center",
+                color: "var(--text-muted)",
+                fontSize: "14px",
+              }}
+            >
+              No pending tasks assigned to you.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {/* Overdue */}
+              {data.my_tasks.some((t) => t.bucket === "OVERDUE") && (
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--danger)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    ⚠️ Overdue
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {data.my_tasks
+                      .filter((t) => t.bucket === "OVERDUE")
+                      .map((task) => (
+                        <TaskCard
+                          key={task.task_id}
+                          task={task}
+                          isDone={task.status === "DONE" || completedTaskIds.has(task.task_id)}
+                          onToggle={() => {
+                            const isDone = task.status === "DONE" || completedTaskIds.has(task.task_id);
+                            const nextStatus = isDone ? "PENDING" : "DONE";
+                            if (nextStatus === "DONE") {
+                              setCompletedTaskIds((prev) => new Set(prev).add(task.task_id));
+                            } else {
+                              setCompletedTaskIds((prev) => {
+                                const s = new Set(prev);
+                                s.delete(task.task_id);
+                                return s;
+                              });
+                            }
+                            taskStatusMutation.mutate({ taskId: task.task_id, status: nextStatus });
+                          }}
+                          onSelectMatter={onSelectMatter}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Today */}
+              {data.my_tasks.some((t) => t.bucket === "TODAY") && (
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    ⭐ Today
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {data.my_tasks
+                      .filter((t) => t.bucket === "TODAY")
+                      .map((task) => (
+                        <TaskCard
+                          key={task.task_id}
+                          task={task}
+                          isDone={task.status === "DONE" || completedTaskIds.has(task.task_id)}
+                          onToggle={() => {
+                            const isDone = task.status === "DONE" || completedTaskIds.has(task.task_id);
+                            const nextStatus = isDone ? "PENDING" : "DONE";
+                            if (nextStatus === "DONE") {
+                              setCompletedTaskIds((prev) => new Set(prev).add(task.task_id));
+                            } else {
+                              setCompletedTaskIds((prev) => {
+                                const s = new Set(prev);
+                                s.delete(task.task_id);
+                                return s;
+                              });
+                            }
+                            taskStatusMutation.mutate({ taskId: task.task_id, status: nextStatus });
+                          }}
+                          onSelectMatter={onSelectMatter}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* This Week */}
+              {data.my_tasks.some((t) => t.bucket === "THIS_WEEK") && (
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    📅 This Week
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {data.my_tasks
+                      .filter((t) => t.bucket === "THIS_WEEK")
+                      .map((task) => (
+                        <TaskCard
+                          key={task.task_id}
+                          task={task}
+                          isDone={task.status === "DONE" || completedTaskIds.has(task.task_id)}
+                          onToggle={() => {
+                            const isDone = task.status === "DONE" || completedTaskIds.has(task.task_id);
+                            const nextStatus = isDone ? "PENDING" : "DONE";
+                            if (nextStatus === "DONE") {
+                              setCompletedTaskIds((prev) => new Set(prev).add(task.task_id));
+                            } else {
+                              setCompletedTaskIds((prev) => {
+                                const s = new Set(prev);
+                                s.delete(task.task_id);
+                                return s;
+                              });
+                            }
+                            taskStatusMutation.mutate({ taskId: task.task_id, status: nextStatus });
+                          }}
+                          onSelectMatter={onSelectMatter}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Undated */}
+              {data.my_tasks.some((t) => t.bucket === "UNDATED") && (
+                <div>
+                  <div style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    📌 Undated
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {data.my_tasks
+                      .filter((t) => t.bucket === "UNDATED")
+                      .map((task) => (
+                        <TaskCard
+                          key={task.task_id}
+                          task={task}
+                          isDone={task.status === "DONE" || completedTaskIds.has(task.task_id)}
+                          onToggle={() => {
+                            const isDone = task.status === "DONE" || completedTaskIds.has(task.task_id);
+                            const nextStatus = isDone ? "PENDING" : "DONE";
+                            if (nextStatus === "DONE") {
+                              setCompletedTaskIds((prev) => new Set(prev).add(task.task_id));
+                            } else {
+                              setCompletedTaskIds((prev) => {
+                                const s = new Set(prev);
+                                s.delete(task.task_id);
+                                return s;
+                              });
+                            }
+                            taskStatusMutation.mutate({ taskId: task.task_id, status: nextStatus });
+                          }}
+                          onSelectMatter={onSelectMatter}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* Section 4: Deadlines & Dates Due */}
         <section>
@@ -704,6 +886,122 @@ const OrderCard: React.FC<{
       >
         View in Matter →
       </button>
+    </div>
+  );
+};
+
+const TaskCard: React.FC<{
+  task: TodayTaskItem;
+  isDone: boolean;
+  onToggle: () => void;
+  onSelectMatter?: (id: string) => void;
+}> = ({ task, isDone, onToggle, onSelectMatter }) => {
+  return (
+    <div
+      style={{
+        backgroundColor: "var(--bg-secondary)",
+        border: `1px solid ${task.is_overdue && !isDone ? "rgba(239, 68, 68, 0.4)" : "var(--border)"}`,
+        borderRadius: "8px",
+        padding: "12px 16px",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "12px",
+        opacity: isDone ? 0.6 : 1,
+        transition: "opacity 0.2s ease",
+      }}
+    >
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: "44px",
+          minHeight: "44px",
+          margin: "-10px 0 -10px -10px",
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={onToggle}
+          style={{
+            width: "18px",
+            height: "18px",
+            cursor: "pointer",
+            accentColor: "var(--accent)",
+          }}
+        />
+      </label>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "var(--text-primary)",
+              textDecoration: isDone ? "line-through" : "none",
+            }}
+          >
+            {task.title}
+          </span>
+          {task.is_overdue && !isDone && (
+            <span
+              style={{
+                backgroundColor: "rgba(239, 68, 68, 0.15)",
+                color: "var(--danger)",
+                padding: "2px 6px",
+                borderRadius: "4px",
+                fontSize: "11px",
+                fontWeight: "600",
+              }}
+            >
+              Overdue
+            </span>
+          )}
+          {task.due_on && (
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+              Due: {task.due_on}
+            </span>
+          )}
+        </div>
+
+        {task.notes && (
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--text-secondary)",
+              margin: "4px 0 0 0",
+              textDecoration: isDone ? "line-through" : "none",
+            }}
+          >
+            {task.notes}
+          </p>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px", fontSize: "12px" }}>
+          <button
+            onClick={() => onSelectMatter?.(task.matter_id)}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              color: "var(--accent)",
+              cursor: "pointer",
+              fontWeight: "500",
+              textDecoration: "underline",
+            }}
+          >
+            {task.matter_title}
+          </button>
+          {task.assignee_name && (
+            <span style={{ color: "var(--text-muted)" }}>
+              • Assigned to {task.assignee_name}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

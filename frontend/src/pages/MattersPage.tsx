@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllMatters } from "../api/client";
+import { fetchAllMatters, fetchMe } from "../api/client";
 import { MatterDetailPage } from "./MatterDetailPage";
 import { ClientDetailPage } from "./ClientDetailPage";
+import { ImportCasesPage } from "./ImportCasesPage";
 
 interface MattersPageProps {
   initialMatterId?: string | null;
@@ -15,13 +16,25 @@ export const MattersPage: React.FC<MattersPageProps> = ({
 }) => {
   const [selectedMatterId, setSelectedMatterId] = useState<string | null>(initialMatterId);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [showImportPage, setShowImportPage] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "CLOSED">("ALL");
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+  });
+
+  const isFirmAdmin = currentUser?.role === "ADMIN";
 
   const { data: matters, isLoading, error } = useQuery({
     queryKey: ["matters"],
     queryFn: fetchAllMatters,
   });
+
+  if (showImportPage) {
+    return <ImportCasesPage onBack={() => setShowImportPage(false)} />;
+  }
 
   if (selectedMatterId) {
     return (
@@ -85,6 +98,27 @@ export const MattersPage: React.FC<MattersPageProps> = ({
             All active and closed case workspaces
           </p>
         </div>
+
+        {isFirmAdmin && (
+          <button
+            onClick={() => setShowImportPage(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              backgroundColor: "var(--accent)",
+              color: "#fff",
+              border: "none",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+            }}
+          >
+            <span>📥</span> Import Cases
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

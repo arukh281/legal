@@ -514,12 +514,15 @@ export interface TodayDeadlineItem {
   is_overdue: boolean;
 }
 
+export type TodayTaskItem = components["schemas"]["TodayTaskItem"];
+
 export interface TodayResponse {
   today_date: string;
   today_hearings: TodayHearingItem[];
   tomorrow_hearings: TodayHearingItem[];
   this_week_hearings: TodayHearingItem[];
   this_week_deadlines: TodayDeadlineItem[];
+  my_tasks: TodayTaskItem[];
   pending_candidates: CaseCandidateResponse[];
   recent_orders: CourtOrderResponse[];
   total_active_matters: number;
@@ -673,4 +676,254 @@ export function getMatterCalendarExportUrl(matterId: string): string {
 export function getFirmCalendarExportUrl(): string {
   return `${API_BASE_URL}/api/calendar/export`;
 }
+
+// --- R3: Tasks ---
+export type MatterMemberResponse = components["schemas"]["MatterMemberResponse"];
+export type TaskResponse = components["schemas"]["TaskResponse"];
+export type TaskCreateRequest = components["schemas"]["TaskCreateRequest"];
+export type TaskStatusRequest = components["schemas"]["TaskStatusRequest"];
+export type TaskAssignRequest = components["schemas"]["TaskAssignRequest"];
+
+export async function fetchMatterMembers(matterId: string): Promise<MatterMemberResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/members`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch matter members (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterTasks(matterId: string, status?: string): Promise<TaskResponse[]> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/tasks${query}`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch tasks (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function createMatterTask(matterId: string, payload: TaskCreateRequest): Promise<TaskResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to create task (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function updateTaskStatus(taskId: string, status: string): Promise<TaskResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/tasks/${encodeURIComponent(taskId)}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to update task status (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function reassignTask(taskId: string, assignee: string): Promise<TaskResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/tasks/${encodeURIComponent(taskId)}/assign`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ assignee }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to reassign task (${response.status})`);
+  }
+  return response.json();
+}
+
+// --- R3: Client Updates ---
+export type ClientUpdateResponse = components["schemas"]["ClientUpdateResponse"];
+export type ClientUpdateDraftResponse = components["schemas"]["ClientUpdateDraftResponse"];
+export type ClientUpdateCreateRequest = components["schemas"]["ClientUpdateCreateRequest"];
+
+export async function fetchMatterClientUpdates(matterId: string): Promise<ClientUpdateResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/client-updates`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch client updates (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterClientUpdateDraft(matterId: string): Promise<ClientUpdateDraftResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/client-updates/draft`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch client update draft (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function createMatterClientUpdate(
+  matterId: string,
+  payload: ClientUpdateCreateRequest,
+): Promise<ClientUpdateResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/client-updates`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to publish client update (${response.status})`);
+  }
+  return response.json();
+}
+
+// --- R3: Share Links ---
+export type ShareLinkResponse = components["schemas"]["ShareLinkResponse"];
+export type ShareLinkCreateRequest = components["schemas"]["ShareLinkCreateRequest"];
+export type ShareLinkExtendRequest = components["schemas"]["ShareLinkExtendRequest"];
+
+export async function fetchMatterShareLink(matterId: string): Promise<ShareLinkResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/share-link`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch share link (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function createMatterShareLink(
+  matterId: string,
+  payload: ShareLinkCreateRequest = { days: 90 },
+): Promise<ShareLinkResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/share-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to create share link (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function extendMatterShareLink(
+  matterId: string,
+  days: number = 30,
+): Promise<ShareLinkResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/share-link/extend`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ days }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to extend share link (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function revokeMatterShareLink(matterId: string): Promise<ShareLinkResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/share-link/revoke`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to revoke share link (${response.status})`);
+  }
+  return response.json();
+}
+
+// --- R3: Case Import ---
+export type CaseImportUploadResponse = components["schemas"]["CaseImportUploadResponse"];
+export type CaseImportCommitResponse = components["schemas"]["CaseImportCommitResponse"];
+export type CaseImportPreviewRequest = components["schemas"]["CaseImportPreviewRequest"];
+
+export function getImportTemplateUrl(format: "xlsx" | "csv" = "xlsx"): string {
+  return `${API_BASE_URL}/api/cases/import/template?format=${format}`;
+}
+
+export async function uploadCaseImportFile(file: File): Promise<CaseImportUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch(`${API_BASE_URL}/api/cases/import/upload`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to upload import file (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function previewCaseImport(
+  importId: string,
+  payload: CaseImportPreviewRequest,
+): Promise<CaseImportUploadResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/cases/import/${encodeURIComponent(importId)}/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to update import preview (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function commitCaseImport(importId: string): Promise<CaseImportCommitResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/cases/import/${encodeURIComponent(importId)}/commit`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Failed to commit import (${response.status})`);
+  }
+  return response.json();
+}
+
+export function getCaseImportReportUrl(importId: string): string {
+  return `${API_BASE_URL}/api/cases/import/${encodeURIComponent(importId)}/report`;
+}
+
+export interface UserProfileResponse {
+  user_id: string;
+  tenant_id: string;
+  email: string;
+  display_name: string;
+  role: string;
+}
+
+export async function fetchMe(): Promise<UserProfileResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/me`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user profile (${response.status})`);
+  }
+  return response.json();
+}
+
+
 

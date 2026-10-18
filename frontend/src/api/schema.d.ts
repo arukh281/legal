@@ -298,7 +298,7 @@ export interface paths {
         put?: never;
         /**
          * Add Case Link
-         * @description Add a case number link to a matter.
+         * @description Add a case number link to a matter with normalization on write.
          */
         post: operations["surface_router_workspace_add_case_link"];
         /**
@@ -403,6 +403,546 @@ export interface paths {
          * @description Download immutable raw document bytes.
          */
         get: operations["surface_router_workspace_download_document"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/hearings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Hearings
+         * @description List hearings for a matter.
+         */
+        get: operations["surface_router_workspace_list_matter_hearings"];
+        put?: never;
+        /**
+         * Create Hearing
+         * @description Manually enter a hearing for any court.
+         */
+        post: operations["surface_router_workspace_create_hearing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hearings/{hearing_id}/outcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Hearing Outcome
+         * @description Record outcome of a hearing and optionally schedule the next date and add a task in one action.
+         */
+        post: operations["surface_router_workspace_record_hearing_outcome"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/deadlines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Deadlines
+         * @description List procedural deadlines and dates for a matter.
+         */
+        get: operations["surface_router_workspace_list_matter_deadlines"];
+        put?: never;
+        /**
+         * Create Deadline
+         * @description Manually enter a deadline or date. Rule-computed deadlines are rejected until R4.
+         */
+        post: operations["surface_router_workspace_create_deadline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/deadlines/{deadline_id}/lifecycle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Deadline Lifecycle
+         * @description Update deadline lifecycle state (PROPOSED, CONFIRMED, DONE, WAIVED, MISSED).
+         */
+        post: operations["surface_router_workspace_update_deadline_lifecycle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Candidates
+         * @description List pending case candidates requiring lawyer confirmation ('Check these').
+         */
+        get: operations["surface_router_workspace_list_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidates/{candidate_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Candidate
+         * @description Confirm a candidate match and promote to active hearing/order.
+         */
+        post: operations["surface_router_workspace_confirm_candidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidates/{candidate_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Candidate
+         * @description Dismiss a candidate. Remembered permanently so the item never re-alerts.
+         */
+        post: operations["surface_router_workspace_dismiss_candidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Orders
+         * @description List public court orders matched to this matter.
+         */
+        get: operations["surface_router_workspace_list_matter_orders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Matter Timeline
+         * @description Unified chronological timeline of hearings, dates, documents and orders.
+         */
+        get: operations["surface_router_workspace_get_matter_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Today Dashboard
+         * @description Mobile-first Today dashboard answering: What is listed today/tomorrow, what is due, my tasks, what came in.
+         */
+        get: operations["surface_router_workspace_get_today_dashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/calendar/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Matter Calendar
+         * @description Export matter hearings and deadlines as RFC 5545 all-day iCalendar file.
+         */
+        get: operations["surface_router_workspace_export_matter_calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Firm Calendar
+         * @description Export all accessible hearings and deadlines as RFC 5545 all-day iCalendar file.
+         */
+        get: operations["surface_router_workspace_export_firm_calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Members
+         * @description List active members of a matter eligible for task assignment.
+         */
+        get: operations["surface_router_workspace_list_matter_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Matter Tasks
+         * @description List all internal tasks for a matter.
+         */
+        get: operations["surface_router_workspace_list_matter_tasks"];
+        put?: never;
+        /**
+         * Create Matter Task
+         * @description Create an internal work task on a matter.
+         */
+        post: operations["surface_router_workspace_create_matter_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update Task Status
+         * @description Update internal task status (OPEN | DONE | CANCELLED).
+         */
+        post: operations["surface_router_workspace_update_task_status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Task
+         * @description Reassign an internal task to another active LEAD or MEMBER on the matter.
+         */
+        post: operations["surface_router_workspace_assign_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/client-updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Client Updates
+         * @description List published client updates for a matter.
+         */
+        get: operations["surface_router_workspace_list_client_updates"];
+        put?: never;
+        /**
+         * Create Client Update
+         * @description Publish an immutable client status update snapshot (LEAD only).
+         */
+        post: operations["surface_router_workspace_create_client_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/client-updates/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Client Update Draft
+         * @description Generate deterministic client update draft text from factual case events.
+         */
+        get: operations["surface_router_workspace_get_client_update_draft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/share-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Matter Share Link
+         * @description Get active share link status for a matter.
+         */
+        get: operations["surface_router_workspace_get_matter_share_link"];
+        put?: never;
+        /**
+         * Create Matter Share Link
+         * @description Create a new external share link (LEAD only, revokes prior link).
+         */
+        post: operations["surface_router_workspace_create_matter_share_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/share-link/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend Matter Share Link
+         * @description Extend expiration of an existing share link (LEAD only).
+         */
+        post: operations["surface_router_workspace_extend_matter_share_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/matters/{matter_id}/share-link/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Matter Share Link
+         * @description Revoke an active share link immediately (LEAD only).
+         */
+        post: operations["surface_router_workspace_revoke_matter_share_link"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/import/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Import Template
+         * @description Download live cases import spreadsheet template.
+         */
+        get: operations["surface_router_workspace_get_import_template"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/import/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Import File
+         * @description Upload and parse an Excel or CSV file of live cases for preview (ADMIN only).
+         */
+        post: operations["surface_router_workspace_upload_import_file"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/import/{import_id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Import
+         * @description Re-run import preview with updated column mappings or client overrides (ADMIN only).
+         */
+        post: operations["surface_router_workspace_preview_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/import/{import_id}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commit Import
+         * @description Atomically commit a verified case import batch (ADMIN only).
+         */
+        post: operations["surface_router_workspace_commit_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cases/import/{import_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Import Report
+         * @description Download sanitized CSV audit report for an import job.
+         */
+        get: operations["surface_router_workspace_get_import_report"];
         put?: never;
         post?: never;
         delete?: never;
@@ -713,6 +1253,13 @@ export interface components {
             role: string;
             /** Track */
             track: boolean;
+            /**
+             * Parseable
+             * @default true
+             */
+            parseable: boolean;
+            /** Warning */
+            warning?: string | null;
         };
         /** MatterDetailResponse */
         MatterDetailResponse: {
@@ -832,6 +1379,493 @@ export interface components {
             ocr_conf: number | null;
             /** Privilege Class */
             privilege_class: string;
+        };
+        /** HearingResponse */
+        HearingResponse: {
+            /** Hearing Id */
+            hearing_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Date */
+            date: string;
+            /** Court No */
+            court_no: string | null;
+            /** Item No */
+            item_no: string | null;
+            /** Bench */
+            bench: string | null;
+            /** Purpose */
+            purpose: string | null;
+            /** Source */
+            source: string;
+            /** Source Ref */
+            source_ref: string | null;
+            /** Status */
+            status: string;
+            /** Outcome */
+            outcome: string | null;
+            /** Entered By */
+            entered_by: string;
+            /** Observed At */
+            observed_at: string | null;
+            /** Court Or Forum */
+            court_or_forum: string | null;
+        };
+        /** HearingCreateRequest */
+        HearingCreateRequest: {
+            /** Date */
+            date: string;
+            /** Court No */
+            court_no?: string | null;
+            /** Item No */
+            item_no?: string | null;
+            /** Bench */
+            bench?: string | null;
+            /** Purpose */
+            purpose?: string | null;
+        };
+        /** HearingOutcomeRequest */
+        HearingOutcomeRequest: {
+            /** Outcome */
+            outcome: string;
+            /**
+             * Status
+             * @default HEARD
+             */
+            status: string;
+            /** Next Date */
+            next_date?: string | null;
+            /** Next Purpose */
+            next_purpose?: string | null;
+            task?: components["schemas"]["TaskCreateRow"] | null;
+        };
+        /** TaskCreateRow */
+        TaskCreateRow: {
+            /** Title */
+            title: string;
+            /** Assignee */
+            assignee: string;
+            /** Due On */
+            due_on?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** DeadlineResponse */
+        DeadlineResponse: {
+            /** Deadline Id */
+            deadline_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Rule Id */
+            rule_id: string | null;
+            /** Label */
+            label: string;
+            /** Kind */
+            kind: string;
+            /** Due On */
+            due_on: string;
+            /** Lifecycle */
+            lifecycle: string;
+            /** Owner */
+            owner: string | null;
+            /** Source Note */
+            source_note: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** DeadlineCreateRequest */
+        DeadlineCreateRequest: {
+            /** Label */
+            label: string;
+            /** Due On */
+            due_on: string;
+            /** Owner */
+            owner?: string | null;
+            /** Rule Id */
+            rule_id?: string | null;
+        };
+        /** DeadlineLifecycleRequest */
+        DeadlineLifecycleRequest: {
+            /** Lifecycle */
+            lifecycle: string;
+        };
+        /** CaseCandidateResponse */
+        CaseCandidateResponse: {
+            /** Candidate Id */
+            candidate_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Kind */
+            kind: string;
+            /** Source */
+            source: string;
+            /** Source Ref */
+            source_ref: string;
+            /** Case Number Raw */
+            case_number_raw: string;
+            /** List Date */
+            list_date: string | null;
+            /** Bench */
+            bench: string | null;
+            /** Normalized Case No */
+            normalized_case_no: string | null;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            };
+            /** Status */
+            status: string;
+            /** Created At */
+            created_at: string;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Resolved By */
+            resolved_by: string | null;
+        };
+        /** CourtOrderResponse */
+        CourtOrderResponse: {
+            /** Matter Id */
+            matter_id: string;
+            /** Public Id */
+            public_id: string;
+            /** Match Key */
+            match_key: string;
+            /** Decision Date */
+            decision_date: string | null;
+            /** Bench */
+            bench: string | null;
+            /** Kind */
+            kind: string;
+            /** Source Ref */
+            source_ref: string;
+            /**
+             * Uncertified Badge
+             * @default true
+             */
+            uncertified_badge: boolean;
+            /** Source Viewer Url */
+            source_viewer_url: string;
+        };
+        /** TimelineItemResponse */
+        TimelineItemResponse: {
+            /** Id */
+            id: string;
+            /** Date */
+            date: string;
+            /** Item Type */
+            item_type: string;
+            /** Title */
+            title: string;
+            /** Subtitle */
+            subtitle: string | null;
+            /** Status */
+            status: string | null;
+            /** Metadata */
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        /** TodayDeadlineItem */
+        TodayDeadlineItem: {
+            /** Deadline Id */
+            deadline_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Matter Title */
+            matter_title: string;
+            /** Label */
+            label: string;
+            /** Due On */
+            due_on: string;
+            /** Lifecycle */
+            lifecycle: string;
+            /** Source Note */
+            source_note: string;
+            /** Is Overdue */
+            is_overdue: boolean;
+        };
+        /** TodayHearingItem */
+        TodayHearingItem: {
+            /** Hearing Id */
+            hearing_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Matter Title */
+            matter_title: string;
+            /** Client Id */
+            client_id: string | null;
+            /** Court Or Forum */
+            court_or_forum: string | null;
+            /** Court No */
+            court_no: string | null;
+            /** Item No */
+            item_no: string | null;
+            /** Bench */
+            bench: string | null;
+            /** Purpose */
+            purpose: string | null;
+            /** Status */
+            status: string;
+            /** Date */
+            date: string;
+        };
+        /** TodayResponse */
+        TodayResponse: {
+            /** Today Date */
+            today_date: string;
+            /** Today Hearings */
+            today_hearings: components["schemas"]["TodayHearingItem"][];
+            /** Tomorrow Hearings */
+            tomorrow_hearings: components["schemas"]["TodayHearingItem"][];
+            /** This Week Hearings */
+            this_week_hearings: components["schemas"]["TodayHearingItem"][];
+            /** This Week Deadlines */
+            this_week_deadlines: components["schemas"]["TodayDeadlineItem"][];
+            /**
+             * My Tasks
+             * @default []
+             */
+            my_tasks: components["schemas"]["TodayTaskItem"][];
+            /** Pending Candidates */
+            pending_candidates: components["schemas"]["CaseCandidateResponse"][];
+            /** Recent Orders */
+            recent_orders: components["schemas"]["CourtOrderResponse"][];
+            /** Total Active Matters */
+            total_active_matters: number;
+        };
+        /** TodayTaskItem */
+        TodayTaskItem: {
+            /** Task Id */
+            task_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Matter Title */
+            matter_title: string;
+            /** Title */
+            title: string;
+            /** Notes */
+            notes?: string | null;
+            /** Assignee */
+            assignee: string;
+            /** Assignee Name */
+            assignee_name?: string | null;
+            /** Due On */
+            due_on?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Is Overdue
+             * @default false
+             */
+            is_overdue: boolean;
+            /** Bucket */
+            bucket: string;
+        };
+        /** MatterMemberResponse */
+        MatterMemberResponse: {
+            /** User Id */
+            user_id: string;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Role */
+            role: string;
+        };
+        /** TaskResponse */
+        TaskResponse: {
+            /** Task Id */
+            task_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Matter Title */
+            matter_title?: string | null;
+            /** Title */
+            title: string;
+            /** Notes */
+            notes?: string | null;
+            /** Assignee */
+            assignee: string;
+            /** Assignee Name */
+            assignee_name?: string | null;
+            /** Due On */
+            due_on?: string | null;
+            /** Status */
+            status: string;
+            /** Hearing Id */
+            hearing_id?: string | null;
+            /** Deadline Id */
+            deadline_id?: string | null;
+            /** Created By */
+            created_by: string;
+            /** Created At */
+            created_at: string;
+            /** Done By */
+            done_by?: string | null;
+            /** Done At */
+            done_at?: string | null;
+            /**
+             * Is Overdue
+             * @default false
+             */
+            is_overdue: boolean;
+        };
+        /** TaskCreateRequest */
+        TaskCreateRequest: {
+            /** Title */
+            title: string;
+            /** Assignee */
+            assignee: string;
+            /** Notes */
+            notes?: string | null;
+            /** Due On */
+            due_on?: string | null;
+            /** Hearing Id */
+            hearing_id?: string | null;
+            /** Deadline Id */
+            deadline_id?: string | null;
+        };
+        /** TaskStatusRequest */
+        TaskStatusRequest: {
+            /** Status */
+            status: string;
+        };
+        /** TaskAssignRequest */
+        TaskAssignRequest: {
+            /** Assignee */
+            assignee: string;
+        };
+        /** ClientUpdateResponse */
+        ClientUpdateResponse: {
+            /** Update Id */
+            update_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Text */
+            text: string;
+            /** Published By */
+            published_by: string;
+            /** Published At */
+            published_at: string;
+            /** Created By */
+            created_by: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** ClientUpdateCreateRequest */
+        ClientUpdateCreateRequest: {
+            /** Text */
+            text: string;
+            /**
+             * Facts
+             * @default {}
+             */
+            facts: {
+                [key: string]: unknown;
+            };
+        };
+        /** ClientUpdateDraftResponse */
+        ClientUpdateDraftResponse: {
+            /** Matter Id */
+            matter_id: string;
+            /** Matter Title */
+            matter_title: string;
+            /** Draft Text */
+            draft_text: string;
+            /** Facts */
+            facts: {
+                [key: string]: unknown;
+            };
+        };
+        /** ShareLinkResponse */
+        ShareLinkResponse: {
+            /** Link Id */
+            link_id: string;
+            /** Matter Id */
+            matter_id: string;
+            /** Client Matter Title */
+            client_matter_title: string;
+            /** Created By */
+            created_by: string;
+            /** Created At */
+            created_at: string;
+            /** Expires At */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at?: string | null;
+            /** Token */
+            token?: string | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** ShareLinkCreateRequest */
+        ShareLinkCreateRequest: {
+            /** Client Matter Title */
+            client_matter_title?: string | null;
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+        };
+        /** ShareLinkExtendRequest */
+        ShareLinkExtendRequest: {
+            /**
+             * Days
+             * @default 90
+             */
+            days: number;
+        };
+        /** CaseImportUploadResponse */
+        CaseImportUploadResponse: {
+            /** Import Id */
+            import_id: string;
+            /** Filename */
+            filename: string;
+            /** File Type */
+            file_type: string;
+            /** Sheet Names */
+            sheet_names: string[];
+            /** Headers */
+            headers: string[];
+            /** Mapping */
+            mapping: {
+                [key: string]: number;
+            };
+            /** Preview */
+            preview: {
+                [key: string]: unknown;
+            };
+            /** Warning */
+            warning?: string | null;
+        };
+        /** CaseImportPreviewRequest */
+        CaseImportPreviewRequest: {
+            /** Mapping */
+            mapping?: {
+                [key: string]: number;
+            } | null;
+            /** Client Overrides */
+            client_overrides?: {
+                [key: string]: unknown;
+            } | null;
+            /** Sheet Name */
+            sheet_name?: string | null;
+        };
+        /** CaseImportCommitResponse */
+        CaseImportCommitResponse: {
+            /** Import Id */
+            import_id: string;
+            /** Status */
+            status: string;
+            /** Counts */
+            counts: {
+                [key: string]: unknown;
+            };
+            /** Report */
+            report: {
+                [key: string]: unknown;
+            }[];
         };
     };
     responses: never;
@@ -1432,6 +2466,724 @@ export interface operations {
             header?: never;
             path: {
                 pdoc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_list_matter_hearings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HearingResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_hearing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HearingCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HearingResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_record_hearing_outcome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                hearing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HearingOutcomeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HearingResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_matter_deadlines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadlineResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_deadline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadlineResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_update_deadline_lifecycle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deadline_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadlineLifecycleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadlineResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_candidates: {
+        parameters: {
+            query?: {
+                matter_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseCandidateResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_confirm_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_dismiss_candidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_list_matter_orders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CourtOrderResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_matter_timeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineItemResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_today_dashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_export_matter_calendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_export_firm_calendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_list_matter_members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatterMemberResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_matter_tasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_matter_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_update_task_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_assign_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskAssignRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_list_client_updates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientUpdateResponse"][];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_client_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientUpdateCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientUpdateResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_client_update_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientUpdateDraftResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_matter_share_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_create_matter_share_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_extend_matter_share_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareLinkExtendRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_revoke_matter_share_link: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                matter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareLinkResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_import_template: {
+        parameters: {
+            query?: {
+                fmt?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    surface_router_workspace_upload_import_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseImportUploadResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_preview_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseImportPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseImportUploadResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_commit_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseImportCommitResponse"];
+                };
+            };
+        };
+    };
+    surface_router_workspace_get_import_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
             };
             cookie?: never;
         };

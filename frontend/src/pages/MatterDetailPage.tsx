@@ -16,6 +16,10 @@ import {
   updateDeadlineLifecycle,
   fetchMatterOrders,
   fetchMatterTimeline,
+  fetchMatterTasks,
+  fetchMatterClientUpdates,
+  createMatterTask,
+  fetchMatterMembers,
   getMatterCalendarExportUrl,
   type PdocResponse,
   type PdocVersionResponse,
@@ -24,6 +28,9 @@ import {
   type CourtOrderResponse,
 } from "../api/client";
 import { SourceViewer } from "../components/SourceViewer";
+import { TasksTab } from "../components/TasksTab";
+import { ClientUpdatesTab } from "../components/ClientUpdatesTab";
+import { ShareLinkModal } from "../components/ShareLinkModal";
 
 interface MatterDetailPageProps {
   matterId: string;
@@ -31,7 +38,26 @@ interface MatterDetailPageProps {
   onSelectClient?: (clientId: string) => void;
 }
 
-export type MatterTab = "documents" | "hearings" | "dates" | "orders" | "timeline";
+export type MatterTab =
+  | "documents"
+  | "hearings"
+  | "dates"
+  | "tasks"
+  | "client_updates"
+  | "orders"
+  | "timeline";
+
+function getPreviousWorkingDay(dateStr: string): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  if (d.getDay() === 0) {
+    d.setDate(d.getDate() - 2);
+  } else if (d.getDay() === 6) {
+    d.setDate(d.getDate() - 1);
+  }
+  return d.toISOString().split("T")[0];
+}
 
 export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
   matterId,
@@ -83,6 +109,15 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
   const [deadlineDueOn, setDeadlineDueOn] = useState("");
   const [deadlineOwner, setDeadlineOwner] = useState("");
 
+  // R3: Share link modal state
+  const [showShareLinkModal, setShowShareLinkModal] = useState(false);
+
+  // R3: Hearing outcome task creation state
+  const [createTaskForNextDate, setCreateTaskForNextDate] = useState(false);
+  const [nextDateTaskTitle, setNextDateTaskTitle] = useState("");
+  const [nextDateTaskDueOn, setNextDateTaskDueOn] = useState("");
+  const [nextDateTaskAssignee, setNextDateTaskAssignee] = useState("");
+
   const { data: matterData, isLoading: matterLoading } = useQuery({
     queryKey: ["matter", matterId],
     queryFn: () => fetchMatter(matterId),
@@ -118,6 +153,23 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
     queryKey: ["matter_timeline", matterId],
     queryFn: () => fetchMatterTimeline(matterId),
   });
+
+  const { data: tasks } = useQuery({
+    queryKey: ["matter_tasks", matterId],
+    queryFn: () => fetchMatterTasks(matterId),
+  });
+
+  const { data: clientUpdates } = useQuery({
+    queryKey: ["matter_client_updates", matterId],
+    queryFn: () => fetchMatterClientUpdates(matterId),
+  });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ["matter_members", matterId],
+    queryFn: () => fetchMatterMembers(matterId),
+  });
+
+  const assignableMembers = members.filter((m) => m.role === "LEAD" || m.role === "MEMBER");
 
   // Mutations
   const addCaseMutation = useMutation({
@@ -185,6 +237,17 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
         next_purpose: next_purpose || null,
       }),
     onSuccess: () => {
+      if (createTaskForNextDate && nextHearingDate && nextDateTaskAssignee && nextDateTaskTitle) {
+        createMatterTask(matterId, {
+          title: nextDateTaskTitle.trim(),
+          due_on: nextDateTaskDueOn || undefined,
+          assignee: nextDateTaskAssignee,
+          hearing_id: outcomeHearing?.hearing_id,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["matter_tasks", matterId] });
+          queryClient.invalidateQueries({ queryKey: ["today"] });
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["matter_hearings", matterId] });
       queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
       queryClient.invalidateQueries({ queryKey: ["today"] });
@@ -192,6 +255,10 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
       setOutcomeText("");
       setNextHearingDate("");
       setNextHearingPurpose("");
+      setCreateTaskForNextDate(false);
+      setNextDateTaskTitle("");
+      setNextDateTaskDueOn("");
+      setNextDateTaskAssignee("");
     },
   });
 
@@ -429,6 +496,24 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
           </div>
 
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              onClick={() => setShowShareLinkModal(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                padding: "10px 14px",
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "var(--text-primary)",
+                cursor: "pointer",
+              }}
+            >
+              <span>🔗</span> Share Link
+            </button>
             <a
               href={getMatterCalendarExportUrl(matterId)}
               download={`matter_${matterId}_calendar.ics`}
@@ -648,6 +733,8 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
             { id: "documents", label: "Documents", icon: "📄", count: documents?.length || 0 },
             { id: "hearings", label: "Hearings", icon: "🏛️", count: hearings?.length || 0 },
             { id: "dates", label: "Dates", icon: "⏱️", count: deadlines?.length || 0 },
+            { id: "tasks", label: "Tasks", icon: "📋", count: (tasks || []).filter((t) => t.status === "OPEN").length },
+            { id: "client_updates", label: "Client Updates", icon: "💬", count: clientUpdates?.length || 0 },
             { id: "orders", label: "Court Orders", icon: "📜", count: orders?.length || 0 },
             { id: "timeline", label: "Timeline", icon: "⏳", count: timeline?.length || 0 },
           ] as const
@@ -2046,6 +2133,16 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
         </div>
       )}
 
+      {/* Tasks Section */}
+      {activeTab === "tasks" && (
+        <TasksTab matterId={matterId} hearings={hearings || []} deadlines={deadlines || []} />
+      )}
+
+      {/* Client Updates Section */}
+      {activeTab === "client_updates" && (
+        <ClientUpdatesTab matterId={matterId} matterTitle={matter.title} />
+      )}
+
       {/* Private Document Source Viewer */}
       {viewingPdoc && (
         <SourceViewer
@@ -2062,6 +2159,15 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
           anchorId={viewingPublicOrder.public_id}
           workId={viewingPublicOrder.public_id}
           onClose={() => setViewingPublicOrder(null)}
+        />
+      )}
+
+      {/* Share Link Modal */}
+      {showShareLinkModal && (
+        <ShareLinkModal
+          matterId={matterId}
+          matterTitle={matter.title}
+          onClose={() => setShowShareLinkModal(false)}
         />
       )}
 
@@ -2220,6 +2326,117 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
                     />
                   </div>
                 </div>
+
+                {/* Optional preparation task for next date */}
+                {nextHearingDate && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      backgroundColor: "rgba(59, 130, 246, 0.08)",
+                      border: "1px solid rgba(59, 130, 246, 0.25)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={createTaskForNextDate}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setCreateTaskForNextDate(checked);
+                          if (checked) {
+                            setNextDateTaskTitle(`Prepare for listing on ${nextHearingDate}`);
+                            setNextDateTaskDueOn(getPreviousWorkingDay(nextHearingDate));
+                            if (assignableMembers.length > 0 && !nextDateTaskAssignee) {
+                              setNextDateTaskAssignee(assignableMembers[0].user_id);
+                            }
+                          }
+                        }}
+                      />
+                      <span>📋 Add preparation task for next date</span>
+                    </label>
+
+                    {createTaskForNextDate && (
+                      <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div>
+                          <label style={{ fontSize: "11px", fontWeight: "600", display: "block", marginBottom: "2px" }}>
+                            Task Title
+                          </label>
+                          <input
+                            type="text"
+                            value={nextDateTaskTitle}
+                            onChange={(e) => setNextDateTaskTitle(e.target.value)}
+                            style={{
+                              width: "100%",
+                              padding: "6px 8px",
+                              borderRadius: "4px",
+                              border: "1px solid var(--border)",
+                              backgroundColor: "var(--bg-primary)",
+                              color: "var(--text-primary)",
+                              fontSize: "12px",
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                          <div>
+                            <label style={{ fontSize: "11px", fontWeight: "600", display: "block", marginBottom: "2px" }}>
+                              Due Date (Prev Working Day)
+                            </label>
+                            <input
+                              type="date"
+                              value={nextDateTaskDueOn}
+                              onChange={(e) => setNextDateTaskDueOn(e.target.value)}
+                              style={{
+                                width: "100%",
+                                padding: "6px 8px",
+                                borderRadius: "4px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-primary)",
+                                color: "var(--text-primary)",
+                                fontSize: "12px",
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: "11px", fontWeight: "600", display: "block", marginBottom: "2px" }}>
+                              Assignee *
+                            </label>
+                            <select
+                              value={nextDateTaskAssignee}
+                              onChange={(e) => setNextDateTaskAssignee(e.target.value)}
+                              style={{
+                                width: "100%",
+                                padding: "6px 8px",
+                                borderRadius: "4px",
+                                border: "1px solid var(--border)",
+                                backgroundColor: "var(--bg-primary)",
+                                color: "var(--text-primary)",
+                                fontSize: "12px",
+                              }}
+                            >
+                              <option value="">Select Assignee</option>
+                              {assignableMembers.map((m) => (
+                                <option key={m.user_id} value={m.user_id}>
+                                  {m.display_name} ({m.role})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
