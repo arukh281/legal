@@ -592,3 +592,119 @@ class CaseCandidate(DomainModel):
     def __str__(self) -> str:
         return f"CaseCandidate({self.candidate_id}, {self.kind}, {self.status})"
 
+
+class Task(DomainModel):
+    """Internal task or follow-up item (tpl.task)."""
+
+    pk = CompositePrimaryKey("tenant_id", "task_id")
+    tenant_id = models.TextField()
+    task_id = PrefixedULIDField(prefix="tsk")
+    matter_id = models.TextField()
+    title = models.TextField()
+    notes = models.TextField(null=True, blank=True)
+    assignee = models.TextField()
+    due_on = models.DateField(null=True, blank=True)
+    status = models.TextField(
+        default="OPEN",
+        choices=[
+            ("OPEN", "OPEN"),
+            ("DONE", "DONE"),
+            ("CANCELLED", "CANCELLED"),
+        ],
+    )
+    hearing_id = models.TextField(null=True, blank=True)
+    deadline_id = models.TextField(null=True, blank=True)
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    done_by = models.TextField(null=True, blank=True)
+    done_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."task'
+
+    def __str__(self) -> str:
+        return f"Task({self.task_id}, '{self.title}', {self.status})"
+
+
+class ClientUpdate(DomainModel):
+    """Immutable published client status update snapshot (tpl.client_update)."""
+
+    pk = CompositePrimaryKey("tenant_id", "update_id")
+    tenant_id = models.TextField()
+    update_id = PrefixedULIDField(prefix="cup")
+    matter_id = models.TextField()
+    text = models.TextField()
+    facts = models.JSONField(default=dict)
+    published_by = models.TextField()
+    published_at = models.DateTimeField(default=timezone.now)
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."client_update'
+
+    def __str__(self) -> str:
+        return f"ClientUpdate({self.update_id}, matter={self.matter_id})"
+
+
+class ShareLink(DomainModel):
+    """External client read-only share link (tpl.share_link)."""
+
+    pk = CompositePrimaryKey("tenant_id", "link_id")
+    tenant_id = models.TextField()
+    link_id = PrefixedULIDField(prefix="shl")
+    matter_id = models.TextField()
+    token_hash = models.TextField()
+    client_matter_title = models.TextField()
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_by = models.TextField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."share_link'
+
+    def __str__(self) -> str:
+        return f"ShareLink({self.link_id}, matter={self.matter_id})"
+
+
+class ImportJob(DomainModel):
+    """Case import batch job record (tpl.import_job)."""
+
+    pk = CompositePrimaryKey("tenant_id", "import_id")
+    tenant_id = models.TextField()
+    import_id = PrefixedULIDField(prefix="imj")
+    filename = models.TextField()
+    file_size = models.IntegerField()
+    row_count = models.IntegerField()
+    status = models.TextField(
+        default="PREVIEW",
+        choices=[
+            ("PREVIEW", "PREVIEW"),
+            ("COMMITTED", "COMMITTED"),
+            ("FAILED", "FAILED"),
+        ],
+    )
+    sha256 = models.TextField()
+    mapping = models.JSONField(default=dict)
+    client_overrides = models.JSONField(default=dict)
+    counts = models.JSONField(default=dict)
+    report = models.JSONField(default=list)
+    file_ref = models.TextField()
+    created_by = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    committed_at = models.DateTimeField(null=True, blank=True)
+    committed_by = models.TextField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."import_job'
+
+    def __str__(self) -> str:
+        return f"ImportJob({self.import_id}, {self.filename}, {self.status})"
+
+

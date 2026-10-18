@@ -147,6 +147,16 @@ def can(
                 )
                 member_row = cursor.fetchone()
 
+            # Matter export and client updates/share-links: strictly require active LEAD membership
+            if action in (
+                "publish_update",
+                "create_share_link",
+                "extend_share_link",
+                "revoke_share_link",
+                "export",
+            ):
+                return bool(member_row and member_row[0] == "LEAD")
+
             if member_row:
                 member_role = member_row[0]
                 if member_role == "VIEWER":
@@ -192,6 +202,9 @@ def can(
 
             # Non-member non-admin -> DENY
             return False
+
+    if action in ("import_cases", "import"):
+        return bool(user.firm_role == "ADMIN")
 
     # 4. Client-scoped checks
     client_id: str | None = None
