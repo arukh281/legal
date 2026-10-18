@@ -356,8 +356,8 @@ def test_public_share_endpoint_security_and_rendering(r3_client_update_setup: di
     ip_hash = hmac.new(b"test_secret", client_ip.encode("utf-8"), hashlib.sha256).hexdigest()
 
     with connection.cursor() as cursor:
-        cursor.execute("RESET app.current_tenant_id")
-        cursor.execute("RESET app.current_user_id")
+        cursor.execute("RESET app.tenant_id")
+        cursor.execute("RESET app.user_id")
 
         cursor.execute("SELECT count(*) FROM tpl.client_update")
         count = cursor.fetchone()[0]
@@ -403,3 +403,239 @@ def test_public_share_endpoint_security_and_rendering(r3_client_update_setup: di
     resp_bad = client.get("/share/nonexistent_token_12345", REMOTE_ADDR="192.168.1.100")
     assert resp_bad.status_code == 404
     assert "not available" in resp_bad.content.decode("utf-8").lower()
+
+
+def test_uvicorn_share_token_logging_filter() -> None:
+    """Session R3 Item 10: Uvicorn access log filter replaces /share/<token> with /share/<redacted>."""
+    import logging
+
+    from core.logging import UvicornShareTokenFilter
+
+    filt = UvicornShareTokenFilter()
+
+    # Case A: record with args tuple (standard uvicorn format)
+    rec1 = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="uvicorn/protocols/http/httptools_impl.py",
+        lineno=100,
+        msg='%s - "%s %s HTTP/%s" %d',
+        args=("192.168.1.1:54321", "GET", "/share/secret_token_1234567890abcdef", "1.1", 200),
+        exc_info=None,
+    )
+    filt.filter(rec1)
+    assert isinstance(rec1.args, tuple)
+    assert rec1.args[2] == "/share/<redacted>"
+    assert rec1.getMessage() == '192.168.1.1:54321 - "GET /share/<redacted> HTTP/1.1" 200'
+
+    # Case B: record with formatted message string
+    rec2 = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="",
+        lineno=0,
+        msg='10.0.0.1 - "GET /share/secret_token_987654321?foo=bar HTTP/1.1" 200',
+        args=(),
+        exc_info=None,
+    )
+    filt.filter(rec2)
+    assert "secret_token" not in rec2.msg
+    assert "/share/<redacted>" in rec2.msg
+
+
+def test_share_link_responses_byte_identical(r3_client_update_setup: dict[str, Any]) -> None:
+    """Session R3 Item 11: An expired link, revoked link, and unknown token return byte-identical bodies."""
+    ctx = r3_client_update_setup
+    client = HttpClient()
+
+    # 1. Create a share link to revoke
+    res1 = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link",
+        data={"client_matter_title": "Portal 1", "days": 30},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    token_revoked = res1.json()["token"]
+    # Revoke it
+    client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link/revoke",
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+
+    # 2. Create a share link and manually expire it
+    res2 = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link",
+        data={"client_matter_title": "Portal 2", "days": 30},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    token_expired = res2.json()["token"]
+    with admin_db_context():
+        ShareLink.objects.filter(matter_id=ctx["matter_id"], link_id=res2.json()["link_id"]).update(
+            expires_at=timezone.now() - timedelta(days=5)
+        )
+
+    # 3. Unknown token
+    token_unknown = "shl_nonexistent_token_0123456789"
+
+    resp_unknown = client.get(f"/share/{token_unknown}", REMOTE_ADDR="192.168.1.50")
+    resp_revoked = client.get(f"/share/{token_revoked}", REMOTE_ADDR="192.168.1.51")
+    resp_expired = client.get(f"/share/{token_expired}", REMOTE_ADDR="192.168.1.52")
+
+    assert resp_unknown.status_code == 404
+    assert resp_revoked.status_code == 404
+    assert resp_expired.status_code == 404
+
+    # Body bytes must be strictly identical
+    assert resp_unknown.content == resp_revoked.content == resp_expired.content
+
+
+def test_share_link_rate_limit_31st_view(r3_client_update_setup: dict[str, Any]) -> None:
+    """Session R3 Item 11: The 31st view in a minute from one IP gets the not available 404 page."""
+    ctx = r3_client_update_setup
+    client = HttpClient()
+
+    # Create active share link
+    res = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link",
+        data={"client_matter_title": "Active Rate Limited Portal", "days": 30},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    token = res.json()["token"]
+
+    test_ip = "198.51.100.42"
+
+    # First 30 requests succeed
+    for i in range(30):
+        resp = client.get(f"/share/{token}", REMOTE_ADDR=test_ip)
+        assert resp.status_code == 200, f"Request {i+1} failed"
+
+    # 31st request from same IP hits the rate limit -> 404
+    resp31 = client.get(f"/share/{token}", REMOTE_ADDR=test_ip)
+    assert resp31.status_code == 404
+
+    resp_unknown = client.get("/share/unknown_token_for_cmp", REMOTE_ADDR="192.168.1.99")
+    # Body bytes must be strictly identical to unknown token 404 response
+    assert resp31.content == resp_unknown.content
+
+
+def test_cross_tenant_isolation_tasks_updates_links_imports(r3_client_update_setup: dict[str, Any]) -> None:
+    """Session R3 Item 11: A user in tenant B cannot list, read or act on tenant A's tasks, updates, links or imports."""
+    ctx_a = r3_client_update_setup
+    client = HttpClient()
+
+    # 1. Create Tenant B with its own Partner user
+    tenant_b_id = mint_id("ten")
+    user_b_id = mint_id("usr")
+    with admin_db_context():
+        Tenant.objects.create(
+            tenant_id=tenant_b_id,
+            name="Tenant B Law Chambers",
+            deployment_mode="D2",
+            residency_policy="ANY",
+            idp={"kind": "GOOGLE"},
+        )
+        AppUser.objects.create(
+            tenant_id=tenant_b_id,
+            user_id=user_b_id,
+            email="lawyer@tenantb.in",
+            display_name="Tenant B Lawyer",
+            idp_subject=f"sub_{user_b_id}",
+            firm_role="ADMIN",
+            active=True,
+        )
+
+    auth_b = f"Bearer {user_b_id}"
+    matter_a = ctx_a["matter_id"]
+
+    # 2. Tasks isolation
+    # List tasks for Matter A as User B -> 403
+    res_list_tasks = client.get(f"/api/matters/{matter_a}/tasks", HTTP_AUTHORIZATION=auth_b)
+    assert res_list_tasks.status_code in (403, 404)
+
+    # Create task on Matter A as User B -> 403
+    res_create_task = client.post(
+        f"/api/matters/{matter_a}/tasks",
+        data={"title": "Cross tenant task", "assignee": user_b_id},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_create_task.status_code in (400, 403, 404)
+
+    # 3. Client updates isolation
+    # Get draft for Matter A as User B -> 403
+    res_draft = client.get(f"/api/matters/{matter_a}/client-updates/draft", HTTP_AUTHORIZATION=auth_b)
+    assert res_draft.status_code in (403, 404)
+
+    # List updates for Matter A as User B -> 403
+    res_list_updates = client.get(f"/api/matters/{matter_a}/client-updates", HTTP_AUTHORIZATION=auth_b)
+    assert res_list_updates.status_code in (403, 404)
+
+    # Publish update on Matter A as User B -> 403
+    res_pub = client.post(
+        f"/api/matters/{matter_a}/client-updates",
+        data={"text": "Cross-tenant update", "facts": {}},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_pub.status_code in (403, 404)
+
+    # 4. Share links isolation
+    # Get share link for Matter A as User B -> 403
+    res_link = client.get(f"/api/matters/{matter_a}/share-link", HTTP_AUTHORIZATION=auth_b)
+    assert res_link.status_code in (403, 404)
+
+    # Create share link for Matter A as User B -> 403
+    res_create_shl = client.post(
+        f"/api/matters/{matter_a}/share-link",
+        data={"client_matter_title": "Hacked Portal", "days": 30},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_create_shl.status_code in (403, 404)
+
+    # 5. Imports isolation
+    # Setup an import job in Tenant A
+    import_id_a = mint_id("imj")
+    with admin_db_context():
+        from workspace.models import ImportJob
+        ImportJob.objects.create(
+            tenant_id=ctx_a["tenant_id"],
+            import_id=import_id_a,
+            filename="cases_a.xlsx",
+            file_size=1024,
+            row_count=5,
+            status="PREVIEW",
+            sha256="abc123sha",
+            mapping={},
+            client_overrides={},
+            counts={},
+            report=[],
+            file_ref="s3://fake/cases_a.xlsx",
+            created_by=ctx_a["lead_id"],
+            created_at=timezone.now(),
+        )
+
+    # User B tries to preview, commit or get report for Tenant A's import job -> 404
+    res_prev = client.post(
+        f"/api/cases/import/{import_id_a}/preview",
+        data={"mapping": {}},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_prev.status_code == 404
+
+    res_cmt = client.post(
+        f"/api/cases/import/{import_id_a}/commit",
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_cmt.status_code == 404
+
+    res_rep = client.get(
+        f"/api/cases/import/{import_id_a}/report",
+        HTTP_AUTHORIZATION=auth_b,
+    )
+    assert res_rep.status_code == 404

@@ -18,6 +18,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from django.db import connection, transaction
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.utils import timezone
 from ninja import File, Form, Router, Schema, UploadedFile
@@ -170,6 +171,7 @@ class HearingResponse(Schema):
     entered_by: str
     observed_at: str | None
     court_or_forum: str | None
+    source_note: str | None = None
 
 
 class HearingCreateRequest(Schema):
@@ -2437,9 +2439,17 @@ def create_matter_task(request: HttpRequest, matter_id: str, payload: TaskCreate
         if not assignee_user:
             raise HttpError(400, f"Assignee '{payload.assignee}' is not an active user in this firm.")
 
-        from workspace.models import MatterMember
-        mm = MatterMember.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id, user_id=payload.assignee).first()
-        if not mm or mm.role not in ("LEAD", "MEMBER"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT role FROM tpl.matter_member
+                WHERE tenant_id = %s AND matter_id = %s AND user_id = %s AND revoked_at IS NULL
+                ORDER BY granted_at DESC LIMIT 1
+                """,
+                [user.tenant_id, matter_id, payload.assignee],
+            )
+            mm_row = cursor.fetchone()
+        if not mm_row or mm_row[0] not in ("LEAD", "MEMBER"):
             raise HttpError(400, "The assignee must be an active LEAD or MEMBER on this matter, never a VIEWER.")
 
         # Linked hearing/deadline validation (Correction 14):
@@ -2585,9 +2595,17 @@ def assign_task(request: HttpRequest, task_id: str, payload: TaskAssignRequest) 
         if not assignee_user:
             raise HttpError(400, f"Assignee '{payload.assignee}' is not an active user in this firm.")
 
-        from workspace.models import MatterMember
-        mm = MatterMember.objects.filter(tenant_id=user.tenant_id, matter_id=task.matter_id, user_id=payload.assignee).first()
-        if not mm or mm.role not in ("LEAD", "MEMBER"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT role FROM tpl.matter_member
+                WHERE tenant_id = %s AND matter_id = %s AND user_id = %s AND revoked_at IS NULL
+                ORDER BY granted_at DESC LIMIT 1
+                """,
+                [user.tenant_id, task.matter_id, payload.assignee],
+            )
+            mm_row = cursor.fetchone()
+        if not mm_row or mm_row[0] not in ("LEAD", "MEMBER"):
             raise HttpError(400, "The assignee must be an active LEAD or MEMBER on this matter, never a VIEWER.")
 
         old_assignee = task.assignee
@@ -2663,6 +2681,124 @@ def list_client_updates(request: HttpRequest, matter_id: str) -> list[ClientUpda
         ]
 
 
+HEARING_STATUS_PLAIN: dict[str, str] = {
+    "LISTED": "Listed",
+    "HEARD": "Heard",
+    "ADJOURNED": "Adjourned",
+    "NOT_REACHED": "Not reached",
+    "CANCELLED": "Cancelled",
+}
+
+
+def format_draft_date(d: date) -> str:
+    """Format date in plain lawyer-readable format: 21 Oct 2026 (Wed)."""
+    return d.strftime("%d %b %Y (%a)")
+
+
+def build_client_update_facts_and_draft(tenant_id: str, matter: Matter) -> tuple[dict[str, Any], str]:
+    """Deterministically compile authoritative factual snapshot and draft text without unconfirmed deadlines."""
+    today_d = timezone.now().astimezone(IST).date()
+
+    last_update = (
+        ClientUpdate.objects.filter(tenant_id=tenant_id, matter_id=matter.matter_id)
+        .order_by("-published_at")
+        .first()
+    )
+    since_time = last_update.published_at if last_update else None
+
+    # Filed by firm documents
+    doc_query = Pdoc.objects.filter(
+        tenant_id=tenant_id,
+        matter_id=matter.matter_id,
+        stage__in=["PLEADING", "REPLY"],
+        tombstoned_at__isnull=True,
+    ).exclude(trust_label="TENANT_OPPOSING_DOC")
+    if since_time:
+        doc_query = doc_query.filter(created_at__gt=since_time)
+    filed_docs = list(doc_query.order_by("-created_at"))
+
+    # Recent hearings: in past OR has outcome recorded (never overlaps next_hearing)
+    recent_hearings = list(
+        Hearing.objects.filter(
+            tenant_id=tenant_id,
+            matter_id=matter.matter_id,
+        )
+        .filter(
+            Q(date__lt=today_d) | (~Q(outcome__isnull=True) & ~Q(outcome=""))
+        )
+        .exclude(status="CANCELLED")
+        .order_by("-date", "-observed_at")[:5]
+    )
+    last_hearing = recent_hearings[0] if recent_hearings else None
+
+    # Next hearing: in future OR today without outcome recorded
+    next_hearing = (
+        Hearing.objects.filter(
+            tenant_id=tenant_id,
+            matter_id=matter.matter_id,
+        )
+        .filter(
+            Q(date__gte=today_d) & (Q(outcome__isnull=True) | Q(outcome=""))
+        )
+        .exclude(status="CANCELLED")
+        .order_by("date", "hearing_id")
+        .first()
+    )
+
+    facts: dict[str, Any] = {
+        "last_hearing": {
+            "date": last_hearing.date.isoformat(),
+            "status": last_hearing.status,
+            "purpose": last_hearing.purpose,
+            "outcome": last_hearing.outcome,
+        }
+        if last_hearing
+        else None,
+        "next_hearing": {
+            "date": next_hearing.date.isoformat(),
+            "purpose": next_hearing.purpose,
+            "court_no": next_hearing.court_no,
+            "item_no": next_hearing.item_no,
+        }
+        if next_hearing
+        else None,
+        "filed_documents": [
+            {"title": d.title or d.pdoc_id, "stage": d.stage, "date": d.created_at.date().isoformat()}
+            for d in filed_docs
+        ],
+    }
+
+    parts = [f"Dear Client,\n\nHere is an update regarding your matter: {matter.title}"]
+    if matter.court_or_forum:
+        parts.append(f"Forum: {matter.court_or_forum}")
+
+    if last_hearing:
+        plain_status = HEARING_STATUS_PLAIN.get(last_hearing.status, last_hearing.status.capitalize())
+        if last_hearing.outcome:
+            outcome_str = f"{plain_status}: {last_hearing.outcome}"
+        else:
+            outcome_str = plain_status
+        formatted_h_date = format_draft_date(last_hearing.date)
+        parts.append(f"Recent Hearing ({formatted_h_date}): {last_hearing.purpose or 'Listing'} — {outcome_str}")
+
+    if filed_docs:
+        doc_titles = ", ".join(f"'{d.title or d.pdoc_id}' ({d.stage})" for d in filed_docs)
+        parts.append(f"Documents Filed: {doc_titles}")
+
+    if next_hearing:
+        formatted_next_date = format_draft_date(next_hearing.date)
+        court_str = f", Court {next_hearing.court_no}" if next_hearing.court_no else ""
+        item_str = f", Item {next_hearing.item_no}" if next_hearing.item_no else ""
+        parts.append(
+            f"Next Hearing: Scheduled on {formatted_next_date}{court_str}{item_str} for {next_hearing.purpose or 'Hearing'}."
+        )
+
+    parts.append("\nPlease let us know if you have any questions.\n\nWarm regards,\nLegal Team")
+    draft_text = "\n\n".join(parts)
+
+    return facts, draft_text
+
+
 @router.get("/matters/{matter_id}/client-updates/draft", response=ClientUpdateDraftResponse, auth=authz_required)
 def get_client_update_draft(request: HttpRequest, matter_id: str) -> ClientUpdateDraftResponse:
     """Generate deterministic client update draft text from factual case events."""
@@ -2672,109 +2808,7 @@ def get_client_update_draft(request: HttpRequest, matter_id: str) -> ClientUpdat
         if not matter or not authz.can(user, "read", matter):
             raise HttpError(403, "Access to this matter is forbidden.")
 
-        last_update = (
-            ClientUpdate.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
-            .order_by("-published_at")
-            .first()
-        )
-        since_time = last_update.published_at if last_update else None
-
-        # Correction 17: Filed by firm documents
-        doc_query = Pdoc.objects.filter(
-            tenant_id=user.tenant_id,
-            matter_id=matter_id,
-            stage__in=["PLEADING", "REPLY"],
-            tombstoned_at__isnull=True,
-        ).exclude(trust_label="TENANT_OPPOSING_DOC")
-        if since_time:
-            doc_query = doc_query.filter(created_at__gt=since_time)
-        filed_docs = list(doc_query.order_by("-created_at"))
-
-        today_d = timezone.now().astimezone(IST).date()
-        recent_hearings = list(
-            Hearing.objects.filter(
-                tenant_id=user.tenant_id,
-                matter_id=matter_id,
-                date__lte=today_d,
-            ).order_by("-date")[:5]
-        )
-        last_hearing = recent_hearings[0] if recent_hearings else None
-
-        next_hearing = (
-            Hearing.objects.filter(
-                tenant_id=user.tenant_id,
-                matter_id=matter_id,
-                date__gte=today_d,
-            )
-            .exclude(status="CANCELLED")
-            .order_by("date")
-            .first()
-        )
-
-        next_deadline = (
-            Deadline.objects.filter(
-                tenant_id=user.tenant_id,
-                matter_id=matter_id,
-                due_on__gte=today_d,
-                lifecycle__in=["PROPOSED", "CONFIRMED"],
-            )
-            .order_by("due_on")
-            .first()
-        )
-
-        facts: dict[str, Any] = {
-            "last_hearing": {
-                "date": last_hearing.date.isoformat(),
-                "status": last_hearing.status,
-                "purpose": last_hearing.purpose,
-                "outcome": last_hearing.outcome,
-            }
-            if last_hearing
-            else None,
-            "next_hearing": {
-                "date": next_hearing.date.isoformat(),
-                "purpose": next_hearing.purpose,
-                "court_no": next_hearing.court_no,
-                "item_no": next_hearing.item_no,
-            }
-            if next_hearing
-            else None,
-            "filed_documents": [
-                {"title": d.title or d.pdoc_id, "stage": d.stage, "date": d.created_at.date().isoformat()}
-                for d in filed_docs
-            ],
-            "next_deadline": {
-                "label": next_deadline.label,
-                "due_on": next_deadline.due_on.isoformat(),
-            }
-            if next_deadline
-            else None,
-        }
-
-        parts = [f"Dear Client,\n\nHere is an update regarding your matter: {matter.title}"]
-        if matter.court_or_forum:
-            parts.append(f"Forum: {matter.court_or_forum}")
-
-        if last_hearing:
-            outcome_str = f"Outcome: {last_hearing.outcome}" if last_hearing.outcome else f"Status: {last_hearing.status}"
-            parts.append(f"Recent Hearing ({last_hearing.date}): {last_hearing.purpose or 'Listing'} — {outcome_str}")
-
-        if filed_docs:
-            doc_titles = ", ".join(f"'{d.title or d.pdoc_id}' ({d.stage})" for d in filed_docs)
-            parts.append(f"Documents Filed: {doc_titles}")
-
-        if next_hearing:
-            court_str = f", Court {next_hearing.court_no}" if next_hearing.court_no else ""
-            item_str = f", Item {next_hearing.item_no}" if next_hearing.item_no else ""
-            parts.append(
-                f"Next Hearing: Scheduled on {next_hearing.date}{court_str}{item_str} for {next_hearing.purpose or 'Hearing'}."
-            )
-
-        if next_deadline:
-            parts.append(f"Upcoming Target Date: {next_deadline.label} due by {next_deadline.due_on}.")
-
-        parts.append("\nPlease let us know if you have any questions.\n\nWarm regards,\nLegal Team")
-        draft_text = "\n\n".join(parts)
+        facts, draft_text = build_client_update_facts_and_draft(user.tenant_id, matter)
 
         return ClientUpdateDraftResponse(
             matter_id=matter_id,
@@ -2792,12 +2826,15 @@ def create_client_update(request: HttpRequest, matter_id: str, payload: ClientUp
         matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
         if not matter:
             raise HttpError(404, "Matter not found.")
-        if not authz.can(user, "publish_client_update", matter):
+        if not authz.can(user, "publish_update", matter):
             raise HttpError(403, "Only a matter LEAD can publish client updates.")
 
         text = payload.text.strip()
         if not text:
             raise HttpError(400, "Update text cannot be empty.")
+
+        # Recompute authoritative facts snapshot on the server at publish time (ignoring client-sent facts)
+        facts, _ = build_client_update_facts_and_draft(user.tenant_id, matter)
 
         update_id = mint_id("cup")
         now = timezone.now()
@@ -2806,7 +2843,7 @@ def create_client_update(request: HttpRequest, matter_id: str, payload: ClientUp
             update_id=update_id,
             matter_id=matter_id,
             text=text,
-            facts=payload.facts or {},
+            facts=facts,
             published_by=user.user_id,
             published_at=now,
             created_by=user.user_id,
@@ -3104,6 +3141,7 @@ def upload_import_file(request: HttpRequest, file: File[UploadedFile]) -> CaseIm
         preview_data = generate_import_preview(user.tenant_id, raw_rows, mapping)
 
         import_id = mint_id("imj")
+        initial_sheet = sheet_names[0] if sheet_names else None
         ImportJob.objects.create(
             tenant_id=user.tenant_id,
             import_id=import_id,
@@ -3112,6 +3150,7 @@ def upload_import_file(request: HttpRequest, file: File[UploadedFile]) -> CaseIm
             row_count=len(raw_rows),
             status="PREVIEW",
             sha256=raw_sha256,
+            sheet_name=initial_sheet,
             mapping=mapping,
             client_overrides={},
             counts=preview_data["summary"],
@@ -3155,7 +3194,7 @@ def preview_import(request: HttpRequest, import_id: str, payload: CaseImportPrev
         file_bytes = storage.get_raw(job.file_ref)
         file_type, sheet_names, _ = inspect_file_safety(file_bytes, job.filename)
 
-        selected_sheet = payload.sheet_name or (sheet_names[0] if sheet_names else None)
+        selected_sheet = payload.sheet_name or job.sheet_name or (sheet_names[0] if sheet_names else None)
         try:
             headers, raw_rows, parse_warnings = parse_raw_rows(file_bytes, file_type, sheet_name=selected_sheet)
         except ValueError as e:
@@ -3166,11 +3205,12 @@ def preview_import(request: HttpRequest, import_id: str, payload: CaseImportPrev
 
         preview_data = generate_import_preview(user.tenant_id, raw_rows, mapping, client_overrides=client_overrides)
 
+        job.sheet_name = selected_sheet
         job.mapping = mapping
         job.client_overrides = client_overrides
         job.counts = preview_data["summary"]
         job.row_count = len(raw_rows)
-        job.save(update_fields=["mapping", "client_overrides", "counts", "row_count"])
+        job.save(update_fields=["sheet_name", "mapping", "client_overrides", "counts", "row_count"])
 
         return CaseImportUploadResponse(
             import_id=job.import_id,
@@ -3198,27 +3238,16 @@ def commit_import(request: HttpRequest, import_id: str) -> CaseImportCommitRespo
         if job.status == "COMMITTED":
             raise HttpError(400, "This import job has already been committed.")
 
-        storage = VaultStorage()
-        file_bytes = storage.get_raw(job.file_ref)
-        file_type, sheet_names, _ = inspect_file_safety(file_bytes, job.filename)
-        headers, raw_rows, _ = parse_raw_rows(
-            file_bytes, file_type, sheet_name=sheet_names[0] if sheet_names else None
-        )
-
-        preview_data = generate_import_preview(
-            user.tenant_id,
-            raw_rows,
-            job.mapping,
-            client_overrides=job.client_overrides,
-        )
-
-        result = execute_import_commit(
-            tenant_id=user.tenant_id,
-            importer_user_id=user.user_id,
-            import_id=job.import_id,
-            preview_data=preview_data,
-            original_filename=job.filename,
-        )
+        try:
+            result = execute_import_commit(
+                tenant_id=user.tenant_id,
+                importer_user_id=user.user_id,
+                import_id=job.import_id,
+                preview_data=None,
+                original_filename=job.filename,
+            )
+        except ValueError as e:
+            raise HttpError(400, str(e)) from e
 
         return CaseImportCommitResponse(
             import_id=result["import_id"],

@@ -150,6 +150,7 @@ def can(
             # Matter export and client updates/share-links: strictly require active LEAD membership
             if action in (
                 "publish_update",
+                "publish_client_update",
                 "create_share_link",
                 "extend_share_link",
                 "revoke_share_link",
