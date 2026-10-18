@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session R2 Complete (Hearings, Dates and Today)
+## Current State: Session R3 Complete (Tasks, Client Updates, Share Links, and Excel Import)
 
 ### 1. What Was Built
 
@@ -961,10 +961,147 @@ Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor
 
 ---
 
-### 7. What the Next Session (R3: "Tasks, Client Status Link, Excel Import") Needs
-- **Tasks Linked to Hearings or Deadlines:**
-  - `tpl.task` (prefixed `tsk_`): title, assignee, due_date, status, linked `hearing_id` or `deadline_id`.
-- **Client Status Link or Email per Matter:**
-  - Token-protected external read-only view of matter timeline and upcoming hearings for the firm's client.
-- **Excel Import of Live Cases:**
-  - Bulk import of matters, case numbers, and client mappings from spreadsheet templates.
+### 7. Session R3: Tasks, Client Updates, Share Links, and Excel Import (Completed 2026-10-19)
+Litigation teams can manage internal case tasks linked to court events, publish immutable matter updates with external client share links, and bulk-import live firm caseloads from Excel/CSV spreadsheets with strict data safety, advisory concurrency locks, and audit guarantees.
+
+#### A. Database Migrations & Security Models (`backend/workspace/migrations/0010_*.py`, `0011_*.py`)
+- **Forward Migration `0010_reapply_can_read_matter_security`:**
+  - Re-applied corrected `tpl.can_read_matter` and `tenant_isolation` policy on `tpl.matter` with strict `SESSION_USER = 'worker'` enforcement for system actor isolation (addressing Correction 1).
+- **Migration `0011_tasks_client_updates_import`:**
+  - `tpl.task` (prefixed `tsk_`):
+    - Primary key `(tenant_id, task_id)` with Crockford ULID `tsk_`.
+    - Composite foreign keys: `(tenant_id, hearing_id) -> tpl.hearing`, `(tenant_id, deadline_id) -> tpl.deadline`, `(tenant_id, assignee) -> tpl.app_user`.
+    - Mutual exclusion check constraint: `chk_task_mutual_exclusion: CHECK (hearing_id IS NULL OR deadline_id IS NULL)`.
+    - Status lifecycle: `CHECK (status IN ('PENDING', 'COMPLETED', 'CANCELLED'))`.
+    - Permissions: revoked explicit worker grants; access governed by matter membership (LEAD, MEMBER).
+  - `tpl.client_update` (prefixed `cup_`):
+    - Immutable published updates snapshot ledger (`cup_`).
+    - Revoked `UPDATE` and `DELETE` from `app_rw` and `worker`. Attached trigger `trg_immutable_client_update` raising an exception on any modification or deletion.
+    - Status is strictly `PUBLISHED` (`DRAFT` dropped per Correction 6).
+  - `tpl.share_link` (prefixed `shl_`):
+    - Per-matter external access link (`shl_`) holding SHA-256 token hash, creation time, expiration (`expires_at`), and revocation (`revoked_at`).
+    - Partial unique index on active unrevoked unexpired links: creating a new share link automatically revokes previous links in the same transaction.
+  - `ops.share_link_access`:
+    - Access log tracking `link_id`, `ip_hash` (HMAC-SHA256 with server SECRET_KEY), and `viewed_at`.
+    - Revoked `ALL` from `app_rw` and `worker`.
+    - Automatic daily pruning inside the database function.
+  - `tpl.import_job` (prefixed `imj_`):
+    - Audit record of spreadsheet imports with status `PREVIEW`, `COMMITTED`, `FAILED`.
+    - Stores file SHA-256, original filename, row count, column mapping, client overrides, preview/commit summary counts, S3 file reference, and row error reports.
+  - **NOLOGIN `share_reader` Role & Security Definer Function:**
+    - Role `share_reader` created with no `BYPASSRLS`.
+    - Granted column-level SELECT on `tpl.share_link`, `tpl.client_update`, and `tpl.tenant`.
+    - Added `FOR SELECT TO share_reader USING (true)` RLS policies on those three tables.
+    - Security definer function `tpl.get_public_share_update(token_hash, ip_hash)` owned by `share_reader`.
+    - Public execution revoked; `EXECUTE` granted strictly to `app_rw`.
+    - Verified: direct SELECT on `tpl.client_update` as `app_rw` returns 0 rows without tenant context; function call returns published updates securely.
+
+#### B. Workspace Service Refactoring & Write Paths (`backend/workspace/services.py`)
+- Extracted clean, reusable service functions for core workspace write operations:
+  - `create_client(...)`: Normalizes identifiers and contact info, assigns creator, audits `CLIENT_CREATE`.
+  - `create_matter(...)`: Sets lead membership for creator, audits `MATTER_CREATE`.
+  - `create_matter_case_link(...)`: Normalizes case numbers, stamps `track=False` if unparseable, audits `CASE_NUMBER_LINK`.
+  - `create_hearing(...)`: Records hearing with source `MANUAL` or `CAUSE_LIST`, audits `HEARING_CREATE`.
+- All service functions support an optional `import_id` parameter to propagate import lineage into `detail["import_id"]` of audit events.
+
+#### C. Case Import & Spreadsheet Engine (`backend/workspace/import_service.py`)
+- **Strict Role Gate:**
+  - Case import wizard (`upload`, `preview`, `commit`, `report`) is strictly restricted to firm users with role `ADMIN`.
+  - Preserves RLS integrity: admins have global visibility across all clients and non-walled matters, preventing duplicate client creation.
+- **File Safety & Macro Detection:**
+  - Enforces 10 MB compressed file size limit and 100 MB uncompressed limit against zip bombs.
+  - Rejects macro-enabled workbooks (`.xlsm`, `xl/vbaProject.bin`, `macroEnabled` content types in `[Content_Types].xml`).
+  - CSV parser accepts UTF-8 (with or without BOM) and falls back to Windows-1252. Multi-sheet Excel files prompt sheet selection.
+  - Formula injection defense: escapes cells starting with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+- **Date Normalization:**
+  - Native Excel date cells preserved without re-parsing; serial numbers converted via `openpyxl.utils.datetime.from_excel` (correctly handling the 1900 leap-year quirk).
+  - Strings parsed with strict day-first format preference (`DD/MM/YYYY`, `DD-MM-YYYY`).
+- **Deduplication Hierarchy (Under Client):**
+  - Priority 1: Normalized case number match (for readable case numbers).
+  - Priority 2: Trimmed raw text compared case-insensitively (for unparseable case numbers).
+  - Priority 3: Exact matter title match (flagged as "possible duplicate (matched by title)" and skipped by default, user-overridable).
+- **Honest Status for Past Hearings:**
+  - Past hearing dates imported as status `LISTED` (never `HEARD`), source `MANUAL`, with notes explicitly documenting import origin and past date (preserving Non-negotiable #3).
+- **Advisory Transaction Locking:**
+  - Commit executes inside `transaction.atomic()` after acquiring `pg_advisory_xact_lock(hashtext('case_import_' || tenant_id))`.
+  - Re-parses original file from S3 and re-checks every row under the lock.
+  - Prevents race conditions and guarantees idempotency. Warns if file SHA-256 was previously imported.
+- **Benchmark Timing (5,000 Rows):**
+  - Preview generation: **0.05s** (50 ms).
+  - Atomic transaction commit with normalization, client resolution, matter creation, case linking, and hearing creation: **43.14s**.
+
+#### D. Public Share Endpoint & Access Security (`backend/surface/views_public.py`, `backend/core/logging.py`, `backend/core/middleware.py`)
+- Read-only Django HTML view served at `/share/<token>` outside `/api/`.
+- Rate limiting: 30 views/minute per IP, 60 views/minute per link, enforced via `ops.share_link_access`.
+- IP hashing: HMAC-SHA256 computed in Python using server `SECRET_KEY` on `REMOTE_ADDR` (or trusted proxies via `TRUSTED_PROXY_COUNT`).
+- Token path redaction: `public_share_view`, `TenantContextMiddleware`, and `core.logging` mask paths as `/share/<redacted>` to prevent token leakage in server logs.
+- Audit logging: records `SHARE_LINK_VIEW` with actor `public:share_link` in Python hash chain.
+- Security headers: `X-Robots-Tag: noindex, nofollow`, `Referrer-Policy: no-referrer`, and strict CSP `script-src 'none'`.
+
+#### E. Typed Surface API (`backend/surface/router_workspace.py`)
+- Tasks:
+  - `GET /api/matters/{id}/tasks`: Lists matter tasks with assignee details.
+  - `POST /api/matters/{id}/tasks`: Creates task linked to hearing OR deadline (mutual exclusion enforced). Validates assignee is active LEAD or MEMBER (never VIEWER).
+  - `POST /api/tasks/{id}/status`: Transitions task status (`PENDING`, `COMPLETED`, `CANCELLED`).
+  - `POST /api/tasks/{id}/assign`: Reassigns task to valid matter member.
+  - `GET /api/matters/{id}/members`: Returns eligible assignees for the matter.
+- Client Updates & Share Links:
+  - `GET /api/matters/{id}/client-updates`: Lists immutable published updates newest first.
+  - `GET /api/matters/{id}/client-updates/draft`: Generates drafted update from record facts (recent hearings, filings, next dates).
+  - `POST /api/matters/{id}/client-updates`: Publishes update to immutable ledger and audits `CLIENT_UPDATE_PUBLISH`.
+  - `GET /api/matters/{id}/share-link`: Returns current active share link.
+  - `POST /api/matters/{id}/share-link`: Creates share link, revoking any prior links. Returns plain token once.
+  - `POST /api/matters/{id}/share-link/extend`: Extends expiration by 30 or 90 days.
+  - `POST /api/matters/{id}/share-link/revoke`: Immediately revokes share link.
+- Case Import Wizard:
+  - `GET /api/cases/import/template`: Downloads sample Excel `.xlsx` template.
+  - `POST /api/cases/import/upload`: Validates file size, safety, macros, and returns sheet names and column headers.
+  - `POST /api/cases/import/{id}/preview`: Generates parsed preview with summary cards, warnings, and deduplication flags.
+  - `POST /api/cases/import/{id}/commit`: Executes atomic commit under advisory lock.
+  - `GET /api/cases/import/{id}/report`: Downloads sanitized CSV audit report.
+- Today & Timeline Integration:
+  - `GET /api/today`: Returns `my_tasks` bucketed into `OVERDUE` (red), `TODAY` (accent), `THIS_WEEK` (today to today + 7, Asia/Kolkata), and `UNDATED`. Tasks are strictly excluded from statutory deadline calculations.
+  - `GET /api/matters/{id}/timeline`: Unified chronological stream including completed tasks and published client updates.
+
+#### F. Frontend SPA Implementation (`frontend/src/`)
+- Synchronized OpenAPI types via `export_openapi` and `pnpm typegen`.
+- `TodayPage.tsx`:
+  - Added "My Tasks" section with Overdue (red alert), Today (amber accent), This Week, and Undated buckets.
+  - Interactive 44px checkboxes with strike-through completed persistence.
+- `TasksTab.tsx`:
+  - Filter by Pending / Completed / All.
+  - Task creation modal with mutual-exclusion linking to matter hearings or deadlines.
+  - Reassignment and status updates.
+- `ClientUpdatesTab.tsx`:
+  - One-click draft generation pulling facts from recorded hearings and filings.
+  - Editable draft preview and publishing to immutable ledger.
+  - "Copy for WhatsApp" button copying formatted summary with public share link.
+- `ShareLinkModal.tsx`:
+  - Generates token-protected public URL, one-time token display, copy URL, 30/90 days extension, and instant revocation.
+- `ImportCasesPage.tsx`:
+  - 4-step wizard: 1) File upload & template download, 2) Column mapping & sheet selection, 3) Preview with summary metrics, warning badges, and duplicate overrides, 4) Commit and CSV audit report download.
+  - Restricted to firm ADMIN with nav button on `MattersPage.tsx`.
+
+#### G. Verification & Test Demonstrations
+- All 61 backend unit, contract, and benchmark tests pass in 69.02s:
+  - `surface/tests/test_tasks.py`: 3/3 passed
+  - `surface/tests/test_client_updates_share_link.py`: 4/4 passed
+  - `surface/tests/test_case_import.py`: 5/5 passed (including 5,000-row benchmark)
+  - Full workspace and surface suites: 61/61 passed
+- Code quality & types:
+  - `uv run ruff check .`: 0 errors
+  - `uv run mypy core surface workspace`: 0 issues across 70 source files
+  - `pnpm --dir frontend lint`: 0 errors
+  - `pnpm --dir frontend test`: all unit tests passing
+  - `pnpm --dir frontend build`: production bundle builds cleanly
+
+---
+
+### 8. What the Next Session (R4: "Dates and Facts from Documents, Order-set Dates, Statutory Deadlines") Needs
+- **Dates & Facts Extraction from Documents:**
+  - Extract trigger dates and key case facts with exact quotes from uploaded or fetched documents for lawyer confirmation.
+- **Order-set Dates for Any Court:**
+  - Extraction of procedural dates set by court orders (filing deadlines, compliance dates).
+- **Statutory Deadlines (IBC Pack Only):**
+  - Implement statutory deadlines engine using ACTIVE RuleSpecs from 02 Part A (re-anchored to India Code text, signed off by partner).
+  - Transition from manual `CHECK (rule_id IS NULL)` constraint on `tpl.deadline` to the ACTIVE RuleSpec procedural clock.

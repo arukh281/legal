@@ -679,3 +679,81 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Decision:** A database migration that has been pushed to the remote repository (`main` or shared branches) is immutable and is never edited or replaced in-place again. Any schema changes, data fixes, or policy adjustments must go into a new, subsequent migration.
 - **Reason:** Pushed migrations represent applied database state across developer environments, CI pipelines, and production clusters. Modifying a pushed migration corrupts migration histories, creates divergence in `django_migrations`, breaks zero-downtime rollouts, and risks irreproducible environments. Creating a new migration preserves forward-only, reversible evolution.
 - **Doc Reference:** AGENTS.md §5, §7; User Directive (Session R2 Finalization).
+
+---
+
+### 2026-10-19 — Session R3: Tasks, Client Updates, Public Share Links, and Live Case Import
+- **Decision:**
+  1. **Public Share Link Access Security via NOLOGIN `share_reader` Role:**
+     - Created a NOLOGIN database role `share_reader` with no `BYPASSRLS`.
+     - Granted column-level `SELECT` on only the columns required: `tpl.share_link(link_id, tenant_id, matter_id, token_hash, expires_at, revoked_at)`, `tpl.client_update(update_id, tenant_id, matter_id, text, published_at)`, and `tpl.tenant(tenant_id, name)`.
+     - Added `FOR SELECT TO share_reader USING (true)` RLS policies on those three tables.
+     - Defined SECURITY DEFINER function `tpl.get_public_share_update(token_hash, ip_hash)` owned by `share_reader`.
+     - `REVOKE EXECUTE ... FROM PUBLIC`, granted `EXECUTE` strictly to `app_rw`.
+     - Verified: when `app_rw` calls `tpl.get_public_share_update`, it reads the update without any tenant session set; a direct `SELECT` on `tpl.client_update` without tenant context returns 0 rows.
+     - Reason: Every `tpl` table enforces FORCE RLS. Using `share_reader` eliminates dependency on migration owner/superuser bypass, upholding least privilege.
+     - Doc Reference: Session R3 Review Correction 2; `docs/mvp/03_data_model_and_contracts.md` §6.
+
+  2. **Public Share Link Rate Limiting and Access Auditing (`ops.share_link_access`):**
+     - Rate limits: 30 views/minute per IP, 60 views/minute per link, defined as named constants (`MAX_VIEWS_PER_IP_MINUTE = 30`, `MAX_VIEWS_PER_LINK_MINUTE = 60`).
+     - Access tracked in `ops.share_link_access(access_id, link_id, ip_hash, viewed_at)`.
+     - `REVOKE ALL ON ops.share_link_access FROM app_rw, worker`. Only `share_reader` can read or insert.
+     - IP hashed with HMAC-SHA256 using server `SECRET_KEY` in Python from `REMOTE_ADDR` (or trusted proxies via `TRUSTED_PROXY_COUNT`), preventing rainbow table reversal of IPv4 addresses.
+     - Old access rows (>1 day) are purged automatically within the security definer function.
+     - View audit event `SHARE_LINK_VIEW` recorded in Python hash chain with actor `public:share_link`.
+     - Path is redacted in logs as `/share/<redacted>`.
+     - Reason: Protects public endpoints from brute-force token harvesting and scraping while preventing cross-tenant access log exposure.
+     - Doc Reference: Session R3 Review Corrections 4, 5, 19; Open Questions 1, 2.
+
+  3. **Immutability of Published Client Updates (`tpl.client_update`, prefix `cup_`):**
+     - Table `tpl.client_update` stores published snapshots only (`DRAFT` status dropped).
+     - Revoked `UPDATE` and `DELETE` on `tpl.client_update` from `app_rw` and `worker`.
+     - Added trigger `trg_immutable_client_update` raising an exception on any UPDATE or DELETE attempt.
+     - Draft updates are computed on-the-fly via `/api/matters/{id}/client-updates/draft` from matter record facts and are never stored until published.
+     - Reason: Client communications sent or shared must form an immutable audit ledger of representations made by the firm.
+     - Doc Reference: Session R3 Review Correction 6; AGENTS.md §4, §5.
+
+  4. **Live Case Import Restricted to Firm ADMIN:**
+     - Restricted case import wizard (`POST /api/cases/import/upload`, `preview`, `commit`) strictly to firm users with role `ADMIN`.
+     - Reason: Case matching runs under the importer's own visibility under RLS. Under `tpl.can_read_client` and `tpl.can_read_matter`, only ADMIN can see all clients and non-walled matters. Allowing PARTNER or MEMBER to import would create duplicate clients they cannot see, or would require bypassing RLS. Walled matters that the admin cannot see are not matched.
+     - Doc Reference: Session R3 Review Correction 9; AGENTS.md §5; `docs/mvp/03_data_model_and_contracts.md` §6.
+
+  5. **Case Matching and Deduplication Hierarchy:**
+     - Under the same client, incoming rows are deduplicated using:
+       1. Normalized case number (for readable case numbers).
+       2. Trimmed raw text compared case-insensitively (for unreadable case numbers).
+       3. Exact matter title (when no case number is present). Show as "possible duplicate (matched by title)" and skipped by default, with explicit user override.
+     - Unreadable case numbers are saved with `track = false`.
+     - Reason: Prevents separate cases with identical titles (e.g. multiple "Recovery suit" matters) from accidentally merging while preventing duplicate entries.
+     - Doc Reference: Session R3 Review Correction 8, 10.
+
+  6. **Import Concurrency & Atomic Execution:**
+     - Commit acquires a per-tenant advisory transaction lock `pg_advisory_xact_lock(hashtext('case_import_' || tenant_id))`.
+     - Re-parses the uploaded file from S3 and re-evaluates all row validations under the lock inside a single `transaction.atomic()` block.
+     - Once committed, an import job cannot be re-committed. Re-uploading the same file SHA-256 warns "already imported on <date> by <name>".
+     - Reason: Prevents race conditions and duplicate case creation across simultaneous admin uploads.
+     - Doc Reference: Session R3 Review Correction 11.
+
+  7. **Spreadsheet File Safety & Sanitization:**
+     - Macro-enabled Excel files (`.xlsm`, VBA project binaries in zip entries) are rejected immediately.
+     - Total uncompressed size limit of 100 MB enforced against zip bombs (compressed limit 10 MB).
+     - CSV parsing accepts UTF-8 with/without BOM, with automatic fallback to Windows-1252.
+     - Date-typed Excel cells preserved as dates; serial numbers converted via `openpyxl.utils.datetime.from_excel` (addressing 1900 leap-year bug).
+     - Exported and previewed text formulas are escaped if starting with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+     - Reason: Prevents CSV/Excel formula injection and malicious macro execution on lawyer workstations.
+     - Doc Reference: Session R3 Review Correction 12.
+
+  8. **Honest Import of Past Hearings:**
+     - Past hearing dates imported from spreadsheets are created with status `LISTED` (never `HEARD`), source `MANUAL`, and an explicit note: `"imported from <file>, row <n>; date is in the past"`.
+     - Reason: Non-negotiable #3 (honesty in status). The system cannot assume a hearing was heard without lawyer or court confirmation.
+     - Doc Reference: Session R3 Review Correction 7; AGENTS.md §4.
+
+  9. **Task Model Constraints (`tpl.task`, prefix `tsk_`):**
+     - Composite foreign keys: `(tenant_id, hearing_id) -> tpl.hearing`, `(tenant_id, deadline_id) -> tpl.deadline`, `(tenant_id, assignee) -> tpl.app_user`.
+     - Mutual exclusion constraint `chk_task_mutual_exclusion: CHECK (hearing_id IS NULL OR deadline_id IS NULL)`.
+     - Linked hearings or deadlines must belong to the same matter. Assignee must be an active LEAD or MEMBER on the matter (never VIEWER).
+     - Tasks are personal practice items and are strictly excluded from statutory or procedural deadline calculations on Today.
+     - "This week" task window matches Today (today to today + 7, Asia/Kolkata).
+     - Reason: Clear separation between practice management tasks and legal statutory deadlines.
+     - Doc Reference: Session R3 Review Corrections 14, 15, 16.
+

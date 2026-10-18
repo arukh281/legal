@@ -693,7 +693,7 @@
             }
           }
         },
-        "description": "Add a case number link to a matter.",
+        "description": "Add a case number link to a matter with normalization on write.",
         "tags": [
           "Clients, Matters & Vault"
         ],
@@ -1046,6 +1046,1273 @@
           }
         },
         "description": "Download immutable raw document bytes.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/hearings": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_hearings",
+        "summary": "List Matter Hearings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HearingResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List hearings for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_hearing",
+        "summary": "Create Hearing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HearingResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Manually enter a hearing for any court.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HearingCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/hearings/{hearing_id}/outcome": {
+      "post": {
+        "operationId": "surface_router_workspace_record_hearing_outcome",
+        "summary": "Record Hearing Outcome",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hearing_id",
+            "schema": {
+              "title": "Hearing Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HearingResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Record outcome of a hearing and optionally schedule the next date and add a task in one action.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HearingOutcomeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/deadlines": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_deadlines",
+        "summary": "List Matter Deadlines",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DeadlineResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List procedural deadlines and dates for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_deadline",
+        "summary": "Create Deadline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadlineResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Manually enter a deadline or date. Rule-computed deadlines are rejected until R4.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeadlineCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/deadlines/{deadline_id}/lifecycle": {
+      "post": {
+        "operationId": "surface_router_workspace_update_deadline_lifecycle",
+        "summary": "Update Deadline Lifecycle",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deadline_id",
+            "schema": {
+              "title": "Deadline Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeadlineResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Update deadline lifecycle state (PROPOSED, CONFIRMED, DONE, WAIVED, MISSED).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeadlineLifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/candidates": {
+      "get": {
+        "operationId": "surface_router_workspace_list_candidates",
+        "summary": "List Candidates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "matter_id",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Matter Id"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CaseCandidateResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List pending case candidates requiring lawyer confirmation ('Check these').",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/candidates/{candidate_id}/confirm": {
+      "post": {
+        "operationId": "surface_router_workspace_confirm_candidate",
+        "summary": "Confirm Candidate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_id",
+            "schema": {
+              "title": "Candidate Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Confirm a candidate match and promote to active hearing/order.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/candidates/{candidate_id}/dismiss": {
+      "post": {
+        "operationId": "surface_router_workspace_dismiss_candidate",
+        "summary": "Dismiss Candidate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "candidate_id",
+            "schema": {
+              "title": "Candidate Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Dismiss a candidate. Remembered permanently so the item never re-alerts.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/orders": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_orders",
+        "summary": "List Matter Orders",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourtOrderResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List public court orders matched to this matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/timeline": {
+      "get": {
+        "operationId": "surface_router_workspace_get_matter_timeline",
+        "summary": "Get Matter Timeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TimelineItemResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Unified chronological timeline of hearings, dates, documents and orders.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/today": {
+      "get": {
+        "operationId": "surface_router_workspace_get_today_dashboard",
+        "summary": "Get Today Dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Mobile-first Today dashboard answering: What is listed today/tomorrow, what is due, my tasks, what came in.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/calendar/export": {
+      "get": {
+        "operationId": "surface_router_workspace_export_matter_calendar",
+        "summary": "Export Matter Calendar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Export matter hearings and deadlines as RFC 5545 all-day iCalendar file.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/calendar/export": {
+      "get": {
+        "operationId": "surface_router_workspace_export_firm_calendar",
+        "summary": "Export Firm Calendar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Export all accessible hearings and deadlines as RFC 5545 all-day iCalendar file.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/members": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_members",
+        "summary": "List Matter Members",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatterMemberResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List active members of a matter eligible for task assignment.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/tasks": {
+      "get": {
+        "operationId": "surface_router_workspace_list_matter_tasks",
+        "summary": "List Matter Tasks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List all internal tasks for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_matter_task",
+        "summary": "Create Matter Task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create an internal work task on a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/tasks/{task_id}/status": {
+      "post": {
+        "operationId": "surface_router_workspace_update_task_status",
+        "summary": "Update Task Status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Update internal task status (OPEN | DONE | CANCELLED).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/tasks/{task_id}/assign": {
+      "post": {
+        "operationId": "surface_router_workspace_assign_task",
+        "summary": "Assign Task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Reassign an internal task to another active LEAD or MEMBER on the matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskAssignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/client-updates": {
+      "get": {
+        "operationId": "surface_router_workspace_list_client_updates",
+        "summary": "List Client Updates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClientUpdateResponse"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "List published client updates for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_client_update",
+        "summary": "Create Client Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientUpdateResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Publish an immutable client status update snapshot (LEAD only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientUpdateCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/client-updates/draft": {
+      "get": {
+        "operationId": "surface_router_workspace_get_client_update_draft",
+        "summary": "Get Client Update Draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientUpdateDraftResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Generate deterministic client update draft text from factual case events.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/share-link": {
+      "get": {
+        "operationId": "surface_router_workspace_get_matter_share_link",
+        "summary": "Get Matter Share Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Get active share link status for a matter.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "surface_router_workspace_create_matter_share_link",
+        "summary": "Create Matter Share Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create a new external share link (LEAD only, revokes prior link).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareLinkCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/share-link/extend": {
+      "post": {
+        "operationId": "surface_router_workspace_extend_matter_share_link",
+        "summary": "Extend Matter Share Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Extend expiration of an existing share link (LEAD only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareLinkExtendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/matters/{matter_id}/share-link/revoke": {
+      "post": {
+        "operationId": "surface_router_workspace_revoke_matter_share_link",
+        "summary": "Revoke Matter Share Link",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "matter_id",
+            "schema": {
+              "title": "Matter Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Revoke an active share link immediately (LEAD only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/cases/import/template": {
+      "get": {
+        "operationId": "surface_router_workspace_get_import_template",
+        "summary": "Get Import Template",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fmt",
+            "schema": {
+              "default": "xlsx",
+              "title": "Fmt",
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Download live cases import spreadsheet template.",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/cases/import/upload": {
+      "post": {
+        "operationId": "surface_router_workspace_upload_import_file",
+        "summary": "Upload Import File",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseImportUploadResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Upload and parse an Excel or CSV file of live cases for preview (ADMIN only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/cases/import/{import_id}/preview": {
+      "post": {
+        "operationId": "surface_router_workspace_preview_import",
+        "summary": "Preview Import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseImportUploadResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Re-run import preview with updated column mappings or client overrides (ADMIN only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseImportPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/cases/import/{import_id}/commit": {
+      "post": {
+        "operationId": "surface_router_workspace_commit_import",
+        "summary": "Commit Import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseImportCommitResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Atomically commit a verified case import batch (ADMIN only).",
+        "tags": [
+          "Clients, Matters & Vault"
+        ],
+        "security": [
+          {
+            "AuthzDependency": []
+          }
+        ]
+      }
+    },
+    "/api/cases/import/{import_id}/report": {
+      "get": {
+        "operationId": "surface_router_workspace_get_import_report",
+        "summary": "Get Import Report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "Download sanitized CSV audit report for an import job.",
         "tags": [
           "Clients, Matters & Vault"
         ],
@@ -1933,6 +3200,22 @@
           "track": {
             "title": "Track",
             "type": "boolean"
+          },
+          "parseable": {
+            "default": true,
+            "title": "Parseable",
+            "type": "boolean"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
           }
         },
         "required": [
@@ -2341,6 +3624,1546 @@
           "privilege_class"
         ],
         "title": "PrivateAnchorItem",
+        "type": "object"
+      },
+      "HearingResponse": {
+        "properties": {
+          "hearing_id": {
+            "title": "Hearing Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "court_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court No"
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ref"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "entered_by": {
+            "title": "Entered By",
+            "type": "string"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "court_or_forum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Or Forum"
+          }
+        },
+        "required": [
+          "hearing_id",
+          "matter_id",
+          "date",
+          "court_no",
+          "item_no",
+          "bench",
+          "purpose",
+          "source",
+          "source_ref",
+          "status",
+          "outcome",
+          "entered_by",
+          "observed_at",
+          "court_or_forum"
+        ],
+        "title": "HearingResponse",
+        "type": "object"
+      },
+      "HearingCreateRequest": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "court_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court No"
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "HearingCreateRequest",
+        "type": "object"
+      },
+      "HearingOutcomeRequest": {
+        "properties": {
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "status": {
+            "default": "HEARD",
+            "title": "Status",
+            "type": "string"
+          },
+          "next_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Date"
+          },
+          "next_purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Purpose"
+          },
+          "task": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskCreateRow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "outcome"
+        ],
+        "title": "HearingOutcomeRequest",
+        "type": "object"
+      },
+      "TaskCreateRow": {
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "assignee": {
+            "title": "Assignee",
+            "type": "string"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "title",
+          "assignee"
+        ],
+        "title": "TaskCreateRow",
+        "type": "object"
+      },
+      "DeadlineResponse": {
+        "properties": {
+          "deadline_id": {
+            "title": "Deadline Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "due_on": {
+            "title": "Due On",
+            "type": "string"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deadline_id",
+          "matter_id",
+          "rule_id",
+          "label",
+          "kind",
+          "due_on",
+          "lifecycle",
+          "owner",
+          "source_note",
+          "created_at"
+        ],
+        "title": "DeadlineResponse",
+        "type": "object"
+      },
+      "DeadlineCreateRequest": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "due_on": {
+            "title": "Due On",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule Id"
+          }
+        },
+        "required": [
+          "label",
+          "due_on"
+        ],
+        "title": "DeadlineCreateRequest",
+        "type": "object"
+      },
+      "DeadlineLifecycleRequest": {
+        "properties": {
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lifecycle"
+        ],
+        "title": "DeadlineLifecycleRequest",
+        "type": "object"
+      },
+      "CaseCandidateResponse": {
+        "properties": {
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_ref": {
+            "title": "Source Ref",
+            "type": "string"
+          },
+          "case_number_raw": {
+            "title": "Case Number Raw",
+            "type": "string"
+          },
+          "list_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Date"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "normalized_case_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalized Case No"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "resolved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "matter_id",
+          "kind",
+          "source",
+          "source_ref",
+          "case_number_raw",
+          "list_date",
+          "bench",
+          "normalized_case_no",
+          "details",
+          "status",
+          "created_at",
+          "resolved_at",
+          "resolved_by"
+        ],
+        "title": "CaseCandidateResponse",
+        "type": "object"
+      },
+      "CourtOrderResponse": {
+        "properties": {
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "public_id": {
+            "title": "Public Id",
+            "type": "string"
+          },
+          "match_key": {
+            "title": "Match Key",
+            "type": "string"
+          },
+          "decision_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Date"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "source_ref": {
+            "title": "Source Ref",
+            "type": "string"
+          },
+          "uncertified_badge": {
+            "default": true,
+            "title": "Uncertified Badge",
+            "type": "boolean"
+          },
+          "source_viewer_url": {
+            "title": "Source Viewer Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "matter_id",
+          "public_id",
+          "match_key",
+          "decision_date",
+          "bench",
+          "kind",
+          "source_ref",
+          "source_viewer_url"
+        ],
+        "title": "CourtOrderResponse",
+        "type": "object"
+      },
+      "TimelineItemResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "item_type": {
+            "title": "Item Type",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "item_type",
+          "title",
+          "subtitle",
+          "status",
+          "metadata"
+        ],
+        "title": "TimelineItemResponse",
+        "type": "object"
+      },
+      "TodayDeadlineItem": {
+        "properties": {
+          "deadline_id": {
+            "title": "Deadline Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "matter_title": {
+            "title": "Matter Title",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "due_on": {
+            "title": "Due On",
+            "type": "string"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "source_note": {
+            "title": "Source Note",
+            "type": "string"
+          },
+          "is_overdue": {
+            "title": "Is Overdue",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deadline_id",
+          "matter_id",
+          "matter_title",
+          "label",
+          "due_on",
+          "lifecycle",
+          "source_note",
+          "is_overdue"
+        ],
+        "title": "TodayDeadlineItem",
+        "type": "object"
+      },
+      "TodayHearingItem": {
+        "properties": {
+          "hearing_id": {
+            "title": "Hearing Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "matter_title": {
+            "title": "Matter Title",
+            "type": "string"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "court_or_forum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court Or Forum"
+          },
+          "court_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Court No"
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "bench": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bench"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hearing_id",
+          "matter_id",
+          "matter_title",
+          "client_id",
+          "court_or_forum",
+          "court_no",
+          "item_no",
+          "bench",
+          "purpose",
+          "status",
+          "date"
+        ],
+        "title": "TodayHearingItem",
+        "type": "object"
+      },
+      "TodayResponse": {
+        "properties": {
+          "today_date": {
+            "title": "Today Date",
+            "type": "string"
+          },
+          "today_hearings": {
+            "items": {
+              "$ref": "#/components/schemas/TodayHearingItem"
+            },
+            "title": "Today Hearings",
+            "type": "array"
+          },
+          "tomorrow_hearings": {
+            "items": {
+              "$ref": "#/components/schemas/TodayHearingItem"
+            },
+            "title": "Tomorrow Hearings",
+            "type": "array"
+          },
+          "this_week_hearings": {
+            "items": {
+              "$ref": "#/components/schemas/TodayHearingItem"
+            },
+            "title": "This Week Hearings",
+            "type": "array"
+          },
+          "this_week_deadlines": {
+            "items": {
+              "$ref": "#/components/schemas/TodayDeadlineItem"
+            },
+            "title": "This Week Deadlines",
+            "type": "array"
+          },
+          "my_tasks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TodayTaskItem"
+            },
+            "title": "My Tasks",
+            "type": "array"
+          },
+          "pending_candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CaseCandidateResponse"
+            },
+            "title": "Pending Candidates",
+            "type": "array"
+          },
+          "recent_orders": {
+            "items": {
+              "$ref": "#/components/schemas/CourtOrderResponse"
+            },
+            "title": "Recent Orders",
+            "type": "array"
+          },
+          "total_active_matters": {
+            "title": "Total Active Matters",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "today_date",
+          "today_hearings",
+          "tomorrow_hearings",
+          "this_week_hearings",
+          "this_week_deadlines",
+          "pending_candidates",
+          "recent_orders",
+          "total_active_matters"
+        ],
+        "title": "TodayResponse",
+        "type": "object"
+      },
+      "TodayTaskItem": {
+        "properties": {
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "matter_title": {
+            "title": "Matter Title",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "assignee": {
+            "title": "Assignee",
+            "type": "string"
+          },
+          "assignee_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Name"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "is_overdue": {
+            "default": false,
+            "title": "Is Overdue",
+            "type": "boolean"
+          },
+          "bucket": {
+            "title": "Bucket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "matter_id",
+          "matter_title",
+          "title",
+          "assignee",
+          "status",
+          "bucket"
+        ],
+        "title": "TodayTaskItem",
+        "type": "object"
+      },
+      "MatterMemberResponse": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "email",
+          "role"
+        ],
+        "title": "MatterMemberResponse",
+        "type": "object"
+      },
+      "TaskResponse": {
+        "properties": {
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "matter_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matter Title"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "assignee": {
+            "title": "Assignee",
+            "type": "string"
+          },
+          "assignee_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Name"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "hearing_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hearing Id"
+          },
+          "deadline_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Id"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "done_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done By"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "is_overdue": {
+            "default": false,
+            "title": "Is Overdue",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "task_id",
+          "matter_id",
+          "title",
+          "assignee",
+          "status",
+          "created_by",
+          "created_at"
+        ],
+        "title": "TaskResponse",
+        "type": "object"
+      },
+      "TaskCreateRequest": {
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "assignee": {
+            "title": "Assignee",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "due_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "hearing_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hearing Id"
+          },
+          "deadline_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline Id"
+          }
+        },
+        "required": [
+          "title",
+          "assignee"
+        ],
+        "title": "TaskCreateRequest",
+        "type": "object"
+      },
+      "TaskStatusRequest": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "TaskStatusRequest",
+        "type": "object"
+      },
+      "TaskAssignRequest": {
+        "properties": {
+          "assignee": {
+            "title": "Assignee",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assignee"
+        ],
+        "title": "TaskAssignRequest",
+        "type": "object"
+      },
+      "ClientUpdateResponse": {
+        "properties": {
+          "update_id": {
+            "title": "Update Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "published_by": {
+            "title": "Published By",
+            "type": "string"
+          },
+          "published_at": {
+            "title": "Published At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "update_id",
+          "matter_id",
+          "text",
+          "published_by",
+          "published_at",
+          "created_by",
+          "created_at"
+        ],
+        "title": "ClientUpdateResponse",
+        "type": "object"
+      },
+      "ClientUpdateCreateRequest": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Facts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ClientUpdateCreateRequest",
+        "type": "object"
+      },
+      "ClientUpdateDraftResponse": {
+        "properties": {
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "matter_title": {
+            "title": "Matter Title",
+            "type": "string"
+          },
+          "draft_text": {
+            "title": "Draft Text",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "title": "Facts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "matter_id",
+          "matter_title",
+          "draft_text",
+          "facts"
+        ],
+        "title": "ClientUpdateDraftResponse",
+        "type": "object"
+      },
+      "ShareLinkResponse": {
+        "properties": {
+          "link_id": {
+            "title": "Link Id",
+            "type": "string"
+          },
+          "matter_id": {
+            "title": "Matter Id",
+            "type": "string"
+          },
+          "client_matter_title": {
+            "title": "Client Matter Title",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "link_id",
+          "matter_id",
+          "client_matter_title",
+          "created_by",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "ShareLinkResponse",
+        "type": "object"
+      },
+      "ShareLinkCreateRequest": {
+        "properties": {
+          "client_matter_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Matter Title"
+          },
+          "days": {
+            "default": 90,
+            "title": "Days",
+            "type": "integer"
+          }
+        },
+        "title": "ShareLinkCreateRequest",
+        "type": "object"
+      },
+      "ShareLinkExtendRequest": {
+        "properties": {
+          "days": {
+            "default": 90,
+            "title": "Days",
+            "type": "integer"
+          }
+        },
+        "title": "ShareLinkExtendRequest",
+        "type": "object"
+      },
+      "CaseImportUploadResponse": {
+        "properties": {
+          "import_id": {
+            "title": "Import Id",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "file_type": {
+            "title": "File Type",
+            "type": "string"
+          },
+          "sheet_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sheet Names",
+            "type": "array"
+          },
+          "headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "mapping": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Mapping",
+            "type": "object"
+          },
+          "preview": {
+            "additionalProperties": true,
+            "title": "Preview",
+            "type": "object"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "required": [
+          "import_id",
+          "filename",
+          "file_type",
+          "sheet_names",
+          "headers",
+          "mapping",
+          "preview"
+        ],
+        "title": "CaseImportUploadResponse",
+        "type": "object"
+      },
+      "CaseImportPreviewRequest": {
+        "properties": {
+          "mapping": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mapping"
+          },
+          "client_overrides": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Overrides"
+          },
+          "sheet_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet Name"
+          }
+        },
+        "title": "CaseImportPreviewRequest",
+        "type": "object"
+      },
+      "CaseImportCommitResponse": {
+        "properties": {
+          "import_id": {
+            "title": "Import Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": true,
+            "title": "Counts",
+            "type": "object"
+          },
+          "report": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Report",
+            "type": "array"
+          }
+        },
+        "required": [
+          "import_id",
+          "status",
+          "counts",
+          "report"
+        ],
+        "title": "CaseImportCommitResponse",
         "type": "object"
       }
     },
