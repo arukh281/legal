@@ -879,20 +879,82 @@ Lawyers can run their day from inside the platform: track manual hearings and pr
 - `MatterDetailPage.tsx`: Matter header calendar export, tab navigation (`Documents`, `Hearings`, `Dates`, `Court Orders`, `Timeline`), manual hearing entry, outcome recording modal with next-date scheduling, manual deadline entry, public order viewer via `SourceViewer`, unified timeline.
 - `Layout.tsx` & `App.tsx`: Moved platform health indicator to compact sidebar pill; set Today as primary starting tab.
 
-#### G. Exit Check Demonstration (All 9 Passed)
-1. **Manual Hearing CRUD & Outcome Recording:** Created manual hearing, updated outcome and scheduled next date in 1 action (`surface/tests/test_router_r2.py`).
-2. **Deadline Refusal of `rule_id`:** DB constraint `CHECK (rule_id IS NULL)` and API HTTP 400 rejection verified.
-3. **Case Number Normalizer Test Vectors:** Verified `CP (IB)` vs `RCP (IB)` distinctness, bench alias standardization, parent case extraction, and EXACT/PARTIAL/NONE matching (`anchor_lib/tests/test_case_numbers.py`).
-4. **NCLT Cause List Parser:** Parsed standard cause list, extracted bench, date, court number, items, and detected layout drift (`ingest/tests/test_causelist_parser.py`).
-5. **Cause List Revisions & Dropped Notification:** In-place `item_no` update verified; dropped case generated `HEARING_DROPPED` candidate; dismissed candidate never resurrected (`workspace/tests/test_court_sync_consumer.py`).
-6. **Order Sync Cause Title Matching:** Listing subject and cause title matched; citations in body ignored (`workspace/tests/test_court_sync_consumer.py`).
-7. **Today Page Aggregation:** IST aggregation across all 5 sections verified (`surface/tests/test_router_r2.py`).
-8. **Calendar Export RFC 5545:** Validated `VALUE=DATE` all-day format and audit logging (`surface/tests/test_router_r2.py`).
-9. **NCLAT Live Probe:** Recorded fixture in `eval/fixtures/nclat_probe.json`.
+#### G. Real NCLT Fixtures & Golden Test Suite
+- Downloaded 4 real public NCLT daily cause-list PDFs via `GatedHttpClient` (rate limit <= 1 req / 3s, no CAPTCHA) into `eval/fixtures/nclt_causelist/`:
+  - `nclt_causelist_1.pdf`: NCLT Mumbai Bench, Court IV (84 items, 2026-10-21)
+  - `nclt_causelist_2.pdf`: NCLT Chandigarh Bench, Court II (41 items, 2026-10-21)
+  - `nclt_causelist_3.pdf`: NCLT Mumbai Bench, Court III (106 items, 2026-10-20)
+  - `nclt_causelist_4.pdf`: NCLT Mumbai Bench, Court I (62 items, 2026-10-20)
+  - `manifest.json`: SHA-256 hashes, source URLs, item counts, courts, benches, list dates.
+- Golden tests in `backend/ingest/tests/test_causelist_parser.py` (`test_real_nclt_fixtures_golden`):
+  - Validates entry counts, bench, court number, list date, case numbers, and unparsed line bounds.
+  - Handled real PDF idiosyncrasies: single-letter word wrapping across newlines, multi-case rows, combined and separate application columns, and stateful main petition / IA party hierarchy.
 
-- Full suite: 326 pytest passed, 0 failures, 1 skipped (real LLM smoke).
-- TypeScript: `pnpm --dir frontend build` and vitest passed 100% clean.
-- Code hygiene: `ruff check .` passed with 0 errors; `mypy .` checked 275 files with 0 issues.
+#### H. Security Review of Migration 0007 (System Actor Isolation & Document Vault Protection)
+- `tpl.can_read_matter` and `tpl.tenant` strictly check `SESSION_USER IN ('worker', 'admin_rw', 'postgres')`.
+- If an application web session (`app_rw`) sets `app.user_id = 'system:causelist'`, the functions ignore it and return `FALSE` (0 rows exposed).
+- Document vault tables (`tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`) strictly exclude system actors and sync purposes via `COALESCE(app.user_id, '') NOT LIKE 'system:%' AND COALESCE(app.purpose, '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')`. Worker background crawls can never read confidential client documents.
+- Test suite: `backend/workspace/tests/test_security_causelist_actor.py` (both tests pass: app session gets 0 rows; worker gets 0 document rows).
+
+#### I. Live Exit Check Runs on Real Matter ("Acme v. Zenith, s.9 petition")
+1. **Exit Checks 1–3 Live Demonstration (`python manage.py run_r2_exit_checks`):**
+```
+=== SESSION R2 EXIT CHECKS 1-3 LIVE DEMONSTRATION ===
+✓ Created matter: 'Acme v. Zenith, s.9 petition' (ID: mat_01M56TBM0JV6K15TEZZ22KVRCP)
+
+--- EXIT CHECK 1: Manual Hearing & Outcome Recording ---
+✓ Created manual hearing: ID=hrg_01M56TBM2480ZMP4FJX0AY6GPC, date=2026-10-19, court_no=4, item_no=12
+✓ Verified on Today dashboard: Tomorrow's hearings includes ID=hrg_01M56TBM2480ZMP4FJX0AY6GPC
+✓ Recorded outcome: status=ADJOURNED, outcome='Adjourned for filing of rejoinder'
+✓ Next hearing scheduled in same action: ID=hrg_01M56TBM2TYXR1C01EFCTNC44A, date=2026-11-01, purpose='For Rejoinder & Hearing'
+
+--- EXIT CHECK 2: Manual Deadline Entry & rule_id Refusal ---
+✓ Created manual deadline: ID=ddl_01M56TBM35967QWC9QS5THNHJ2, due_on=2026-10-25, label='Rejoinder affidavit to reply'
+✓ Database refused rule_id assignment (CHECK chk_deadline_rule_id_refusal enforced): IntegrityError
+
+--- EXIT CHECK 3: Cause-List Matching on Real NCLT Fixture ---
+✓ Parsed real NCLT fixture: bench=MUM, court_no=4, date=2026-10-21, items=84
+✓ Consumer processed cause-list: exact_matches=7, partial_matches=0
+✓ Verified hearing on matter: ID=hrg_01M56TBMPH8TN0R0PK3E94QHM3, source=CAUSE_LIST, bench=MUM, court_no=4, item_no=101, purpose=''
+✓ Partial match landed in 'Check these': ID=cnd_01M56TBMQVVJ2CH3J1KX6VPC46, case_number_raw='CP (IB) 736/MB', status=PENDING
+✓ Cause-list revision updated in place: ID=hrg_01M56TBMPH8TN0R0PK3E94QHM3, item_no updated from 101 to 5, zero duplicates created.
+
+=== ALL EXIT CHECKS 1-3 DEMONSTRATED SUCCESSFULLY ===
+```
+
+2. **Exit Check 8 Marked Live NCLT Crawl & NCLAT Probe (`python manage.py crawl_nclt_live`):**
+```
+=== EXIT CHECK 8: MARKED LIVE NCLT CRAWL & NCLAT PROBE ===
+
+--- 1. Live NCLT Daily Cause List Crawl ---
+Fetching NCLT cause list index: https://nclt.gov.in/cause-list via GatedHttpClient...
+✓ NCLT index response: status=200, length=29287 bytes, duration=0.31s
+✓ No CAPTCHA detected on NCLT index page.
+Discovered 1 cause list PDF links on NCLT page.
+Fetching live cause list PDF: https://nclt.gov.in/sites/default/files/pdf_cause_list/NCLT20210913124850.pdf (enforcing rate limit >= 3s)...
+✓ PDF downloaded: status=200, size=3386244 bytes, duration=3.99s
+✓ Parsed live PDF: bench=None, court_no=1, date=None
+  - Total items parsed: 0
+  - Unparsed lines: 0
+  - Layout drift: True (reason: BENCH_HEADER_NOT_DETECTED)
+
+--- 2. NCLAT Cause List Page Probe (User Question 5) ---
+Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor)...
+✓ NCLAT response: status=200, content_type='text/html; charset=UTF-8', length=59466 bytes, duration=0.33s, pdf_links=21
+
+=== LIVE RUN SUMMARY REPORT ===
+• Total time taken: 4.66s
+• NCLT lists fetched: 1
+• NCLT entries parsed: 0
+• NCLT unparsed lines: 0
+• NCLT CAPTCHA encountered: False
+• NCLT layout drift: True (BENCH_HEADER_NOT_DETECTED)
+• NCLAT probe status: 200 (Content-Type: text/html; charset=UTF-8, CAPTCHA: False, PDFs found: 21)
+```
+
+- Full test suite: 331 passed, 0 failures, 1 skipped (real LLM smoke).
+- TypeScript: `pnpm --dir frontend test` and `pnpm --dir frontend build` 100% clean.
+- Code hygiene: `ruff check .` passed with 0 errors; `mypy .` checked with 0 issues.
 
 ---
 

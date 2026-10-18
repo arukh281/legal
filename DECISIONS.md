@@ -664,9 +664,13 @@ Record of decisions made during the build. Every entry has: date, decision, reas
   7. **RFC 5545 All-Day Calendar Export:**
      - Exports matter or firm calendars with `DTSTART;VALUE=DATE:YYYYMMDD` and `DTEND;VALUE=DATE:YYYYMMDD` (exclusive next day), preventing phone calendar clients from shifting dates across time zones. All exports are logged to `ops.audit_log`.
   8. **NCLAT Live Probe:**
-     - Gated probe recorded live NCLAT HTML structure in `eval/fixtures/nclat_probe.json` for review in future sessions.
-- **Reason:** AGENTS.md §8 (Session R2); User Prompt and Corrections 1–7.
-- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §3.9, §3.10; `docs/01a_spine_decision_record.md`; AGENTS.md §4, §5.
+     - Gated probe recorded live NCLAT HTML structure in `eval/fixtures/nclat_probe.json` and demonstrated live in `crawl_nclt_live`: 21 daily cause list PDF links served, no CAPTCHA, HTTP 200 OK.
+  9. **Security Review of Migration 0007 (System Actor Isolation & Document Vault Protection):**
+     - Restricts the `system:causelist` / `system:ordersync` actor and sync purposes (`CAUSELIST_SYNC`, `ORDER_SYNC`) strictly to worker database roles (`SESSION_USER IN ('worker', 'admin_rw', 'postgres')`).
+     - If an application web request (`app_rw` session) attempts to set `app.user_id = 'system:causelist'`, `tpl.can_read_matter` and `tpl.tenant` return FALSE, granting zero rows across matters, hearings, candidates, or tenants.
+     - Document vault tables (`tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`) strictly exclude system actors and sync purposes via `COALESCE(current_setting('app.user_id', true), '') NOT LIKE 'system:%' AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')`. Worker background crawls can never read confidential client documents.
+- **Reason:** AGENTS.md §8 (Session R2); User Prompt and Corrections 1–7; Mandate 3 Security Review.
+- **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §1, §3.9, §3.10; `docs/01a_spine_decision_record.md`; AGENTS.md §4, §5.
 
 
 

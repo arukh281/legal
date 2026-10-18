@@ -16,7 +16,7 @@ from datetime import date
 from typing import Any
 
 import structlog
-from django.db import connection
+from django.db import connection, connections
 from django.utils import timezone
 
 from anchor_lib.case_numbers import (
@@ -35,8 +35,9 @@ logger = structlog.get_logger(__name__)
 
 
 def get_active_tenant_ids(purpose: str = "CAUSELIST_SYNC") -> list[str]:
-    """Retrieve all active tenant IDs using system purpose to discover tenants across RLS."""
-    with connection.cursor() as cursor:
+    """Retrieve all active tenant IDs using system purpose on worker DB role to discover tenants across RLS."""
+    conn = connections["worker"] if "worker" in connections else connection
+    with conn.cursor() as cursor:
         cursor.execute("SET app.purpose = %s;", [purpose])
         cursor.execute("SELECT tenant_id FROM tpl.tenant WHERE deployment_mode IS NOT NULL")
         rows = cursor.fetchall()
@@ -277,8 +278,10 @@ def handle_doc_parsed(event: dict[str, Any]) -> dict[str, Any]:
             for n in nodes:
                 anchor_id = str(n.get("anchor_id", ""))
                 node_type = str(n.get("node_type", ""))
-                # Stop at the first numbered paragraph (e.g. #p1 or number_as_printed == '1')
-                if "#p1" in anchor_id or (node_type == "PARAGRAPH" and str(n.get("number_as_printed", "")).strip() in ("1", "1.")):
+                # Stop at the first numbered paragraph (e.g. #p1, #p2, or node_type PARA with printed number)
+                if re.search(r"#p\d+", anchor_id) or (
+                    node_type in ("PARAGRAPH", "PARA") and str(n.get("number_as_printed", "")).strip()
+                ):
                     break
                 header_text_parts.append(str(n.get("text", "")))
 
@@ -300,11 +303,14 @@ def handle_doc_parsed(event: dict[str, Any]) -> dict[str, Any]:
     if not header_case_numbers:
         return {"status": "SKIPPED", "reason": "NO_HEADER_CASE_NUMBERS"}
 
-    # Normalize header cases with default_bench = bench
-    normalized_order_cases = [
-        normalize_case_number(cn, default_bench=bench)
-        for cn in header_case_numbers
-    ]
+    # Normalize header cases with default_bench = bench and deduplicate by canonical
+    seen_canonical = set()
+    normalized_order_cases = []
+    for cn in header_case_numbers:
+        norm = normalize_case_number(cn, default_bench=bench)
+        if norm.canonical not in seen_canonical:
+            seen_canonical.add(norm.canonical)
+            normalized_order_cases.append(norm)
 
     tenant_ids = get_active_tenant_ids(purpose="ORDER_SYNC")
     exact_matches = 0

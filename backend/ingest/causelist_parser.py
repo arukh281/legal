@@ -159,7 +159,7 @@ class NCLTCauseListParser:
 
         # 1. Parse header from page 0
         p0 = doc[0]
-        p0_text = p0.get_text()  # type: ignore[no-untyped-call]
+        p0_text = re.sub(r"\b([A-Za-z]{1,2})\n\s*([A-Za-z]{2,})\b", r"\1\2", p0.get_text())  # type: ignore[no-untyped-call]
 
         bench = None
         court_no = "1"
@@ -178,10 +178,14 @@ class NCLTCauseListParser:
         items: list[CauseListItem] = []
         unparsed_lines = 0
 
+        current_main_item: str | None = None
+        current_main_case: str | None = None
+        current_main_parties: str | None = None
+
         # 2. Extract tables across pages
         for page_idx in range(total_pages):
             page = doc[page_idx]
-            page_text = page.get_text()  # type: ignore[no-untyped-call]
+            page_text = re.sub(r"\b([A-Za-z]{1,2})\n\s*([A-Za-z]{2,})\b", r"\1\2", page.get_text())  # type: ignore[no-untyped-call]
 
             # If bench or court_no or date wasn't found on page 0, check other pages
             if not bench:
@@ -199,29 +203,39 @@ class NCLTCauseListParser:
                         continue
 
                     # Determine column map from header row
-                    col_map: dict[str, int] = {}
+                    col_map: dict[str, int] = {
+                        "item_no": 0,
+                        "cp_no": 1,
+                        "ia_no": 2,
+                        "purpose": 3,
+                        "section": 4,
+                        "parties": 5,
+                    }
                     data_rows_start = 0
 
-                    for r_idx, row in enumerate(extracted_rows[:3]):
-                        row_strs = [str(c or "").strip().lower() for c in row]
-                        # S.No column
-                        for c_idx, val in enumerate(row_strs):
-                            if any(k in val for k in ["s.no", "item", "sr.no", "sl.no", "s. no", "sr no"]):
-                                col_map["item_no"] = c_idx
-                            elif any(k in val for k in ["cp", "ca", "ia", "case no", "petition", "appeal", "application"]):
-                                col_map["case_no"] = c_idx
-                            elif any(k in val for k in ["purpose", "stage"]):
-                                col_map["purpose"] = c_idx
-                            elif any(k in val for k in ["section", "sec"]):
-                                col_map["section"] = c_idx
-                            elif any(k in val for k in ["parties", "name of", "petitioner", "applicant", "respondent"]):
-                                col_map["parties"] = c_idx
-                            elif any(k in val for k in ["practitioner", "counsel", "advocate", "legal"]):
-                                col_map["counsel"] = c_idx
-                            elif any(k in val for k in ["remarks", "coram"]):
-                                col_map["remarks"] = c_idx
-
-                        if "case_no" in col_map or "item_no" in col_map:
+                    for r_idx, row in enumerate(extracted_rows[:4]):
+                        row_str = " ".join([str(c or "").strip().lower() for c in row])
+                        if any(k in row_str for k in ["sr", "s.no", "sl.no", "item"]) and any(
+                            k in row_str for k in ["cp", "case", "petition", "parties", "ia"]
+                        ):
+                            for c_idx, cell in enumerate(row):
+                                val = str(cell or "").strip().lower()
+                                if any(k in val for k in ["sr", "s.no", "sl.no", "item"]):
+                                    col_map["item_no"] = c_idx
+                                elif any(k in val for k in ["cp", "petition", "case no"]) and "ia" not in val:
+                                    col_map["cp_no"] = c_idx
+                                elif any(k in val for k in ["ia", "ca no", "application"]):
+                                    col_map["ia_no"] = c_idx
+                                elif any(k in val for k in ["purpose", "stage"]):
+                                    col_map["purpose"] = c_idx
+                                elif any(k in val for k in ["section", "sec", "rule"]):
+                                    col_map["section"] = c_idx
+                                elif any(k in val for k in ["parties", "name"]):
+                                    col_map["parties"] = c_idx
+                                elif any(k in val for k in ["practitioner", "counsel", "advocate"]):
+                                    col_map["counsel"] = c_idx
+                                elif any(k in val for k in ["remarks", "coram", "re-notified"]):
+                                    col_map["remarks"] = c_idx
                             data_rows_start = r_idx + 1
                             break
 
@@ -229,76 +243,157 @@ class NCLTCauseListParser:
                         if not any(row):
                             continue
 
-                        # Extract item_no
-                        raw_item = str(row[col_map.get("item_no", 0)] or "").strip() if "item_no" in col_map else ""
+                        row_str = " ".join([str(c or "").strip() for c in row])
+                        if any(
+                            banner in row_str.upper()
+                            for banner in [
+                                "ORDINARY LIST",
+                                "SUPPLEMENTARY LIST",
+                                "CORAM:",
+                                "NOTE:",
+                                "FOR PENDING ADMISSION",
+                                "FOR PRONOUNCEMENT",
+                            ]
+                        ):
+                            continue
+
+                        if any(
+                            hdr in row_str.lower()
+                            for hdr in [
+                                "name of parties",
+                                "name of the parties",
+                                "counsel for",
+                                "ia/ca no",
+                                "ca/ia no",
+                                "cp no",
+                                "cp. no",
+                            ]
+                        ):
+                            continue
+
+                        raw_item = str(row[col_map["item_no"]] or "").strip() if col_map["item_no"] < len(row) else ""
+                        raw_cp = str(row[col_map["cp_no"]] or "").strip() if col_map["cp_no"] < len(row) else ""
+                        raw_ia = (
+                            str(row[col_map["ia_no"]] or "").strip()
+                            if "ia_no" in col_map and col_map["ia_no"] < len(row)
+                            else ""
+                        )
+                        purpose = (
+                            str(row[col_map["purpose"]] or "").strip()
+                            if "purpose" in col_map and col_map["purpose"] < len(row)
+                            else ""
+                        )
+                        section_text = (
+                            str(row[col_map["section"]] or "").strip()
+                            if "section" in col_map and col_map["section"] < len(row)
+                            else None
+                        )
+                        parties = (
+                            str(row[col_map["parties"]] or "").strip()
+                            if "parties" in col_map and col_map["parties"] < len(row)
+                            else ""
+                        )
+                        remarks = (
+                            str(row[col_map["remarks"]] or "").strip()
+                            if "remarks" in col_map and col_map["remarks"] < len(row)
+                            else None
+                        )
+
+                        clean_cp = re.sub(r"\s+", " ", raw_cp).strip()
+                        clean_ia = re.sub(r"\s+", " ", raw_ia).strip()
+
                         m_item = re.match(r"^(\d{1,4})", raw_item)
-                        item_no = m_item.group(1) if m_item else ""
+                        if m_item:
+                            it_no = m_item.group(1)
+                            # 1. Main case
+                            if re.search(r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|Company\s+Petition|Comp\.\s*App)\b", clean_cp, re.IGNORECASE):
+                                current_main_item = it_no
+                                current_main_case = clean_cp
+                                current_main_parties = parties
 
-                        # Extract case_text
-                        case_idx = col_map.get("case_no", 1 if len(row) > 1 else 0)
-                        case_text = str(row[case_idx] or "").strip()
+                                norm_c = normalize_case_number(clean_cp, default_bench=bench)
+                                items.append(
+                                    CauseListItem(
+                                        item_no=it_no,
+                                        case_refs=[clean_cp],
+                                        normalized_cases=[norm_c],
+                                        parties=parties,
+                                        purpose=purpose,
+                                        court_no=court_no,
+                                        bench=bench,
+                                        list_date=list_date or date.today(),
+                                        section=section_text,
+                                        remarks=remarks,
+                                        raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
+                                    )
+                                )
 
-                        # Extract purpose
-                        purpose = str(row[col_map["purpose"]] or "").strip() if "purpose" in col_map and col_map["purpose"] < len(row) else ""
-
-                        # Extract section
-                        section_text = str(row[col_map["section"]] or "").strip() if "section" in col_map and col_map["section"] < len(row) else None
-
-                        # Extract parties
-                        parties = str(row[col_map["parties"]] or "").strip() if "parties" in col_map and col_map["parties"] < len(row) else ""
-
-                        # Extract remarks
-                        remarks = str(row[col_map["remarks"]] or "").strip() if "remarks" in col_map and col_map["remarks"] < len(row) else None
-
-                        # If item_no is empty, check if case_text contains a valid case number
-                        if not item_no:
-                            # If row contains case number, invent an item_no or increment
-                            m_candidate = re.search(r"\b(?:CP|IA|CA|RCP)\s*(?:\([A-Za-z]+\))?\s*[\d\/]+", case_text, re.IGNORECASE)
-                            if m_candidate:
-                                item_no = str(len(items) + 1)
+                            # 2. Check if ia_no also has an application in the same row
+                            if clean_ia and not any(k in clean_ia.upper() for k in ["MAIN CASE", "NONE", "-"]):
+                                if re.search(r"\b(?:IA|C\.?A|CONT\.?A|COMP\.?APPL)\b", clean_ia, re.IGNORECASE):
+                                    norm_ia = normalize_case_number(
+                                        clean_ia, default_bench=bench, parent_case=current_main_case
+                                    )
+                                    items.append(
+                                        CauseListItem(
+                                            item_no=f"{it_no}.1",
+                                            case_refs=[clean_ia],
+                                            normalized_cases=[norm_ia],
+                                            parties=parties or (current_main_parties or ""),
+                                            purpose=purpose,
+                                            court_no=court_no,
+                                            bench=bench,
+                                            list_date=list_date or date.today(),
+                                            section=section_text,
+                                            remarks=remarks,
+                                            raw_text=f"{it_no}.1 | {clean_ia} | {parties} | {purpose}",
+                                        )
+                                    )
+                        else:
+                            # Sub-row IA under current main case
+                            if clean_ia and re.search(r"\b(?:IA|C\.?A|CONT\.?A|COMP\.?APPL)\b", clean_ia, re.IGNORECASE):
+                                m_sub = re.search(r"^(\d{1,3})\.?", raw_cp)
+                                sub_no = m_sub.group(1) if m_sub else "1"
+                                it_no = f"{current_main_item}.{sub_no}" if current_main_item else sub_no
+                                norm_ia = normalize_case_number(
+                                    clean_ia, default_bench=bench, parent_case=current_main_case
+                                )
+                                items.append(
+                                    CauseListItem(
+                                        item_no=it_no,
+                                        case_refs=[clean_ia],
+                                        normalized_cases=[norm_ia],
+                                        parties=parties or (current_main_parties or ""),
+                                        purpose=purpose,
+                                        court_no=court_no,
+                                        bench=bench,
+                                        list_date=list_date or date.today(),
+                                        section=section_text,
+                                        remarks=remarks,
+                                        raw_text=f"{it_no} | {clean_ia} | {parties} | {purpose}",
+                                    )
+                                )
+                            elif clean_cp and re.search(r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|Company\s+Petition|Comp\.\s*App)\b", clean_cp, re.IGNORECASE):
+                                # Standalone CP row without item number in col 0
+                                it_no = str(len(items) + 1)
+                                norm_c = normalize_case_number(clean_cp, default_bench=bench)
+                                items.append(
+                                    CauseListItem(
+                                        item_no=it_no,
+                                        case_refs=[clean_cp],
+                                        normalized_cases=[norm_c],
+                                        parties=parties or (current_main_parties or ""),
+                                        purpose=purpose,
+                                        court_no=court_no,
+                                        bench=bench,
+                                        list_date=list_date or date.today(),
+                                        section=section_text,
+                                        remarks=remarks,
+                                        raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
+                                    )
+                                )
                             else:
                                 unparsed_lines += 1
-                                continue
-
-                        # Split case_text if multiple case numbers are present (e.g. IA in CP ...)
-                        case_refs: list[str] = []
-                        # Look for case numbers in case_text
-                        patterns = [
-                            r"(?:(?:IA|CA|MA)\s*(?:\([A-Za-z\s]+\))?\s*(?:No\.?)?\s*[\d\/]+(?:\s+in\s+[^\n,]+)?)",
-                            r"(?:(?:RCP|CP)\s*\([A-Za-z\s]+\)\s*(?:No\.?)?\s*[\d\w\/\-]+)",
-                            r"(?:(?:Company\s+Appeal|Comp\.\s*App)\s*(?:\([A-Za-z\s]+\))?\s*(?:No\.?)?\s*[\d\w\/\-]+)",
-                        ]
-                        found_refs = []
-                        for pat in patterns:
-                            for m in re.finditer(pat, case_text, re.IGNORECASE):
-                                found_refs.append(m.group(0).strip())
-
-                        if found_refs:
-                            case_refs = found_refs
-                        elif case_text:
-                            case_refs = [case_text]
-
-                        # Normalize cases with default_bench = header bench (Correction 1)
-                        norm_cases = [
-                            normalize_case_number(ref, default_bench=bench)
-                            for ref in case_refs
-                        ]
-
-                        items.append(
-                            CauseListItem(
-                                item_no=item_no,
-                                case_refs=case_refs,
-                                normalized_cases=norm_cases,
-                                parties=parties,
-                                purpose=purpose,
-                                court_no=court_no,
-                                bench=bench,
-                                list_date=list_date or date.today(),
-                                section=section_text,
-                                remarks=remarks,
-                                raw_text=f"{item_no} | {case_text} | {parties} | {purpose}",
-                            )
-                        )
             else:
                 # Text-based fallback when no bordered table found
                 lines = [line_text.strip() for line_text in page_text.splitlines() if line_text.strip()]

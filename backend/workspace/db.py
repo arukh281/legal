@@ -60,16 +60,34 @@ def tenant_db_context(
     using: str = "default",
 ) -> Generator[None]:
     """Context manager setting DB session parameters and guaranteeing clean reset/restore on exit."""
-    conn = connections[using]
+    from core.db_router import worker_db_context
+
+    is_worker = (
+        using == "worker"
+        or (
+            using == "default"
+            and (
+                (user_id is not None and user_id.startswith("system:"))
+                or purpose in ("CAUSELIST_SYNC", "ORDER_SYNC")
+            )
+        )
+    )
+    actual_using = "worker" if is_worker else using
+
+    conn = connections[actual_using]
     with conn.cursor() as cursor:
         cursor.execute(
             "SELECT current_setting('app.tenant_id', true), current_setting('app.user_id', true), current_setting('app.purpose', true)"
         )
         prev_tenant, prev_user, prev_purpose = cursor.fetchone()
 
-    set_db_tenant_context(tenant_id=tenant_id, user_id=user_id, purpose=purpose, using=using)
+    set_db_tenant_context(tenant_id=tenant_id, user_id=user_id, purpose=purpose, using=actual_using)
     try:
-        yield
+        if is_worker:
+            with worker_db_context():
+                yield
+        else:
+            yield
     finally:
         with conn.cursor() as cursor:
             if prev_tenant:

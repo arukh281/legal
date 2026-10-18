@@ -161,7 +161,7 @@ class NormalizedCaseNumber:
 RE_RCP_IB = re.compile(
     r"\b(?:R\.?C\.?P\.?|Restoration\s+(?:Company\s+)?Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(?P<num>\d+)"
     r"(?:[/\s]+(?P<subnum>\d+))?"
-    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})[/\s)]*)?"
+    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})(?:/[A-Za-z]+)*[/\s)]*)?"
     r"(?:\s+of\s+|[/\s-]|\bin\b)*(?P<year>\d{4})?\b",
     re.IGNORECASE,
 )
@@ -169,7 +169,7 @@ RE_RCP_IB = re.compile(
 RE_CP_IB = re.compile(
     r"\b(?:C\.?P\.?|Company\s+Petition)\s*\(IB\)[/\s-]*(?:No\.?)?\s*(?P<num>\d+)"
     r"(?:[/\s]+(?P<subnum>\d+))?"
-    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})[/\s)]*)?"
+    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})(?:/[A-Za-z]+)*[/\s)]*)?"
     r"(?:\s+of\s+|[/\s-]|\bin\b)*(?P<year>\d{4})?\b",
     re.IGNORECASE,
 )
@@ -185,11 +185,11 @@ RE_COMPETITION_APP = re.compile(
     re.IGNORECASE,
 )
 
-# Interlocutory / Company Applications: IA (IBC) 123/2024 or IA 123/MB/2024
+# Interlocutory / Company Applications: IA (IBC) 123/2024 or IA 123/MB/2024, CONT.A, COMP.APPL
 RE_APPLICATION = re.compile(
-    r"\b(?P<app_type>I\.?A\.?(?:\s*\([A-Za-z.\s]+\))?|C\.?A\.?(?:\s*\([A-Za-z.\s]+\))?|M\.?A\.?)\s*(?:No\.?)?\s*(?P<num>\d+)"
+    r"\b(?P<app_type>I\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|C\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|M\.?A\.?|CONT\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|COMP\.?APPL\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*)\s*(?:No\.?)?[/\s-]*(?P<num>\d+)"
     r"(?:[/\s]+(?P<subnum>\d+))?"
-    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})[/\s)]*)?"
+    r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})(?:/[A-Za-z]+)*[/\s)]*)?"
     r"(?:\s+of\s+|[/\s-]|\bin\b)*(?P<year>\d{4})?\b",
     re.IGNORECASE,
 )
@@ -218,6 +218,10 @@ def _clean_case_type(raw_type: str) -> str:
         return "Competition Appeal (AT)"
     if "COMPANY APPEAL" in t and "AT" in t:
         return "Company Appeal (AT)"
+    if "CONT" in t:
+        return "CONT.A"
+    if "COMP" in t and "APPL" in t:
+        return "COMP.APPL"
     if "I.A" in t or "IA" in t:
         return "IA"
     if "C.A" in t or "CA" in t:
@@ -228,6 +232,7 @@ def _clean_case_type(raw_type: str) -> str:
 def normalize_case_number(
     text: str,
     default_bench: str | None = None,
+    parent_case: str | None = None,
 ) -> NormalizedCaseNumber:
     """Parse, standardize, and canonicalize a case number string.
 
@@ -266,6 +271,13 @@ def normalize_case_number(
             parent_year = parsed_parent.year
             parent_bench = parsed_parent.bench
         main_text = app_part
+    elif parent_case:
+        parsed_parent = normalize_case_number(parent_case, default_bench=default_bench)
+        if parsed_parent.parseable:
+            parent_type = parsed_parent.case_type
+            parent_num = parsed_parent.case_number
+            parent_year = parsed_parent.year
+            parent_bench = parsed_parent.bench
 
     # 2. Check RCP (IB) first (Restoration Company Petition)
     m = RE_RCP_IB.search(main_text)

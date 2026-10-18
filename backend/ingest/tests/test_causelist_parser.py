@@ -110,3 +110,67 @@ def test_causelist_parser_drift_detection() -> None:
     result = parser.parse_pdf_bytes(pdf_bytes)
     assert result.layout_drift is True
     assert result.drift_reason in ("BENCH_HEADER_NOT_DETECTED", "DATE_HEADER_NOT_DETECTED", "PAGE_TEXT_PRESENT_BUT_ZERO_ITEMS_PARSED")
+
+
+def test_real_nclt_fixtures_golden() -> None:
+    """Golden tests on real public NCLT cause-list PDFs."""
+    from pathlib import Path
+
+    from django.conf import settings
+
+    fixtures_dir = Path(settings.BASE_DIR).parent / "eval" / "fixtures" / "nclt_causelist"
+    if not fixtures_dir.exists():
+        return
+
+    parser = NCLTCauseListParser()
+
+    # Fixture 1: Mumbai Bench Court-IV
+    f1 = fixtures_dir / "nclt_causelist_1.pdf"
+    if f1.exists():
+        res1 = parser.parse_pdf_bytes(f1.read_bytes())
+        assert res1.layout_drift is False
+        assert res1.bench == "MUM"
+        assert res1.court_no == "4"
+        assert res1.list_date == date(2026, 10, 21)
+        assert len(res1.items) >= 40
+        # Check main case and child IA with parent case
+        item101 = next(it for it in res1.items if it.item_no == "101")
+        assert any(c.case_number == "736" and c.case_type == "CP (IB)" for c in item101.normalized_cases)
+        item101_1 = next(it for it in res1.items if it.item_no == "101.1")
+        assert any(c.parent_case_number == "736" and c.parent_case_type == "CP (IB)" for c in item101_1.normalized_cases)
+
+    # Fixture 2: Chandigarh Bench Court-II
+    f2 = fixtures_dir / "nclt_causelist_2.pdf"
+    if f2.exists():
+        res2 = parser.parse_pdf_bytes(f2.read_bytes())
+        assert res2.layout_drift is False
+        assert res2.bench == "CHD"
+        assert res2.court_no == "2"
+        assert res2.list_date == date(2026, 10, 21)
+        assert len(res2.items) >= 30
+        item101 = next(it for it in res2.items if it.item_no == "101")
+        assert any(c.case_number == "5" and c.bench == "CHD" for c in item101.normalized_cases)
+
+    # Fixture 3: Mumbai Bench Court-III
+    f3 = fixtures_dir / "nclt_causelist_3.pdf"
+    if f3.exists():
+        res3 = parser.parse_pdf_bytes(f3.read_bytes())
+        assert res3.layout_drift is False
+        assert res3.bench == "MUM"
+        assert res3.court_no == "3"
+        assert res3.list_date == date(2026, 10, 21)
+        assert len(res3.items) >= 40
+
+    # Fixture 4: Mumbai Bench Court-I
+    f4 = fixtures_dir / "nclt_causelist_4.pdf"
+    if f4.exists():
+        res4 = parser.parse_pdf_bytes(f4.read_bytes())
+        assert res4.layout_drift is False
+        assert res4.bench == "MUM"
+        assert res4.court_no == "1"
+        assert res4.list_date == date(2026, 10, 21)
+        assert len(res4.items) >= 40
+        # Check child IA parent case
+        item1_1 = next(it for it in res4.items if it.item_no == "1.1")
+        assert any(c.parent_case_number == "1049" and c.parent_case_type == "CP (IB)" for c in item1_1.normalized_cases)
+

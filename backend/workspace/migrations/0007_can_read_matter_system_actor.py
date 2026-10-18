@@ -10,21 +10,25 @@ Normative sources:
 from django.db import migrations
 
 SQL_FORWARD = """
--- 1. Update tpl.can_read_matter to support system actors and background sync purposes
+-- 1. Update tpl.can_read_matter: system background actors/purposes are ONLY usable
+-- by worker/admin DB roles (SESSION_USER IN ('worker', 'admin_rw', 'postgres')),
+-- and NEVER settable or effective from an app-role (app_rw) session.
 CREATE OR REPLACE FUNCTION tpl.can_read_matter(m_id text, u_id text)
 RETURNS boolean AS $$
 BEGIN
-  -- System actor or system background sync purpose
-  IF current_setting('app.purpose', true) IN ('CAUSELIST_SYNC', 'ORDER_SYNC') OR u_id LIKE 'system:%' THEN
-    -- Ethical wall exclusion: deny-first even for system
-    IF u_id IS NOT NULL AND u_id != '' AND EXISTS (
-      SELECT 1 FROM tpl.wall_exclusion we
-      JOIN tpl.ethical_wall ew ON ew.tenant_id = we.tenant_id AND ew.wall_id = we.wall_id
-      WHERE ew.matter_id = m_id AND we.user_id = u_id
-    ) THEN
-      RETURN false;
+  -- System actor or system background sync purpose: ONLY valid for worker DB roles
+  IF SESSION_USER IN ('worker', 'admin_rw', 'postgres') THEN
+    IF COALESCE(current_setting('app.purpose', true), '') IN ('CAUSELIST_SYNC', 'ORDER_SYNC') OR u_id LIKE 'system:%' THEN
+      -- Ethical wall exclusion: deny-first even for system
+      IF u_id IS NOT NULL AND u_id != '' AND EXISTS (
+        SELECT 1 FROM tpl.wall_exclusion we
+        JOIN tpl.ethical_wall ew ON ew.tenant_id = we.tenant_id AND ew.wall_id = we.wall_id
+        WHERE ew.matter_id = m_id AND we.user_id = u_id
+      ) THEN
+        RETURN false;
+      END IF;
+      RETURN true;
     END IF;
-    RETURN true;
   END IF;
 
   IF u_id IS NULL OR u_id = '' THEN
@@ -61,14 +65,72 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = pg_catalog, tpl;
 
--- 2. Update tenant policy to allow tenant discovery during system sync purposes
+-- 2. Update tenant policy: background sync purpose bypass ONLY applies to worker DB roles
 DROP POLICY IF EXISTS tenant_isolation ON tpl.tenant;
 CREATE POLICY tenant_isolation ON tpl.tenant
   USING (
     tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
-    OR current_setting('app.purpose', true) IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    OR (
+      SESSION_USER IN ('worker', 'admin_rw', 'postgres')
+      AND COALESCE(current_setting('app.purpose', true), '') IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    )
   )
   WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), ''));
+
+-- 3. Update document vault policies: system background actors NEVER have access to read or write documents
+DROP POLICY IF EXISTS pdoc_isolation ON tpl.pdoc;
+CREATE POLICY pdoc_isolation ON tpl.pdoc
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND COALESCE(NULLIF(current_setting('app.user_id', true), ''), '') NOT LIKE 'system:%'
+    AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    AND tpl.can_read_matter(matter_id, NULLIF(current_setting('app.user_id', true), ''))
+  )
+  WITH CHECK (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND COALESCE(NULLIF(current_setting('app.user_id', true), ''), '') NOT LIKE 'system:%'
+    AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    AND tpl.can_read_matter(matter_id, NULLIF(current_setting('app.user_id', true), ''))
+  );
+
+DROP POLICY IF EXISTS pdoc_version_isolation ON tpl.pdoc_version;
+CREATE POLICY pdoc_version_isolation ON tpl.pdoc_version
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND COALESCE(NULLIF(current_setting('app.user_id', true), ''), '') NOT LIKE 'system:%'
+    AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.pdoc_version.tenant_id
+        AND p.pdoc_id = tpl.pdoc_version.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  )
+  WITH CHECK (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND COALESCE(NULLIF(current_setting('app.user_id', true), ''), '') NOT LIKE 'system:%'
+    AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.pdoc_version.tenant_id
+        AND p.pdoc_id = tpl.pdoc_version.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  );
+
+DROP POLICY IF EXISTS private_anchor_isolation ON tpl.private_anchor;
+CREATE POLICY private_anchor_isolation ON tpl.private_anchor
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND COALESCE(NULLIF(current_setting('app.user_id', true), ''), '') NOT LIKE 'system:%'
+    AND COALESCE(current_setting('app.purpose', true), '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.private_anchor.tenant_id
+        AND p.pdoc_id = tpl.private_anchor.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  );
 """
 
 SQL_REVERSE = """
@@ -110,6 +172,50 @@ DROP POLICY IF EXISTS tenant_isolation ON tpl.tenant;
 CREATE POLICY tenant_isolation ON tpl.tenant
   USING (tenant_id = NULLIF(current_setting('app.tenant_id', true), ''))
   WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), ''));
+
+DROP POLICY IF EXISTS pdoc_isolation ON tpl.pdoc;
+CREATE POLICY pdoc_isolation ON tpl.pdoc
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND tpl.can_read_matter(matter_id, NULLIF(current_setting('app.user_id', true), ''))
+  )
+  WITH CHECK (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND tpl.can_read_matter(matter_id, NULLIF(current_setting('app.user_id', true), ''))
+  );
+
+DROP POLICY IF EXISTS pdoc_version_isolation ON tpl.pdoc_version;
+CREATE POLICY pdoc_version_isolation ON tpl.pdoc_version
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.pdoc_version.tenant_id
+        AND p.pdoc_id = tpl.pdoc_version.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  )
+  WITH CHECK (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.pdoc_version.tenant_id
+        AND p.pdoc_id = tpl.pdoc_version.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  );
+
+DROP POLICY IF EXISTS private_anchor_isolation ON tpl.private_anchor;
+CREATE POLICY private_anchor_isolation ON tpl.private_anchor
+  USING (
+    tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
+    AND EXISTS (
+      SELECT 1 FROM tpl.pdoc p
+      WHERE p.tenant_id = tpl.private_anchor.tenant_id
+        AND p.pdoc_id = tpl.private_anchor.pdoc_id
+        AND tpl.can_read_matter(p.matter_id, NULLIF(current_setting('app.user_id', true), ''))
+    )
+  );
 """
 
 

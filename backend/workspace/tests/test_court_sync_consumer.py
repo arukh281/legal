@@ -9,10 +9,11 @@ Normative sources:
 - User Correction 7: Order cause title (text before paragraph 1) only, negative citation guard.
 """
 
+from collections.abc import Generator
 from datetime import date, timedelta
 
 import pytest
-from django.db import connection
+from django.db import connections
 from django.utils import timezone
 
 from anchor_lib.ids import mint_id
@@ -21,14 +22,26 @@ from workspace.db import tenant_db_context
 from workspace.models import CaseCandidate, Hearing, MatterDependency
 
 
-def setup_test_tenant_and_matter(bench: str = "MUM") -> tuple[str, str, str]:
+@pytest.fixture(autouse=True)
+def clean_tenants() -> Generator[None]:
+    with connections["admin"].cursor() as cursor:
+        cursor.execute("TRUNCATE tpl.tenant CASCADE;")
+    yield
+    with connections["admin"].cursor() as cursor:
+        cursor.execute("TRUNCATE tpl.tenant CASCADE;")
+
+
+def setup_test_tenant_and_matter(
+    case_number: str = "CP (IB) 188/MUM/2026",
+    court_or_forum: str = "NCLT Mumbai Bench",
+) -> tuple[str, str, str]:
     """Helper to create a tenant, user, client, matter, and tracked case link."""
     tenant_id = mint_id("ten")
     user_id = mint_id("usr")
     client_id = mint_id("cli")
     matter_id = mint_id("mat")
 
-    with connection.cursor() as cursor:
+    with connections["admin"].cursor() as cursor:
         cursor.execute("SET LOCAL app.tenant_id = %s;", [tenant_id])
         cursor.execute("SET LOCAL app.user_id = %s;", [user_id])
         cursor.execute(
@@ -52,9 +65,9 @@ def setup_test_tenant_and_matter(bench: str = "MUM") -> tuple[str, str, str]:
         cursor.execute(
             """
             INSERT INTO tpl.matter (tenant_id, matter_id, client_id, title, client_role, status, court_or_forum, created_at)
-            VALUES (%s, %s, %s, 'Matter A', 'PETITIONER', 'ACTIVE', 'NCLT Mumbai Bench', now())
+            VALUES (%s, %s, %s, 'Matter A', 'PETITIONER', 'ACTIVE', %s, now())
             """,
-            [tenant_id, matter_id, client_id],
+            [tenant_id, matter_id, client_id, court_or_forum],
         )
         cursor.execute(
             """
@@ -66,15 +79,15 @@ def setup_test_tenant_and_matter(bench: str = "MUM") -> tuple[str, str, str]:
         cursor.execute(
             """
             INSERT INTO tpl.matter_case_link (tenant_id, matter_id, scheme, value_normalized, role, track)
-            VALUES (%s, %s, 'NCLT', 'CP (IB) 188/MUM/2026', 'CASE', true)
+            VALUES (%s, %s, 'NCLT', %s, 'CASE', true)
             """,
-            [tenant_id, matter_id],
+            [tenant_id, matter_id, case_number],
         )
 
     return tenant_id, user_id, matter_id
 
 
-@pytest.mark.django_db(databases=["default", "admin", "owner"])
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
 def test_causelist_exact_match_and_revision_update_in_place() -> None:
     """User Correction 2: Revisions of the same list update item_no in place, do not duplicate."""
     tenant_id, user_id, matter_id = setup_test_tenant_and_matter()
@@ -167,7 +180,7 @@ def test_causelist_exact_match_and_revision_update_in_place() -> None:
         assert h_updated.source_ref == "raw_blob_rev2:14"
 
 
-@pytest.mark.django_db(databases=["default", "admin", "owner"])
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
 def test_causelist_dropped_from_revised_list() -> None:
     """User Correction 3: Entry omitted in revised list is not deleted; creates HEARING_DROPPED candidate."""
     tenant_id, user_id, matter_id = setup_test_tenant_and_matter()
@@ -248,7 +261,7 @@ def test_causelist_dropped_from_revised_list() -> None:
         assert "no longer appears" in cand.details["message"]
 
 
-@pytest.mark.django_db(databases=["default", "admin", "owner"])
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
 def test_dismissed_candidate_never_comes_back() -> None:
     """User Correction 2: Dismissed candidates never revert to PENDING or duplicate."""
     tenant_id, user_id, matter_id = setup_test_tenant_and_matter()
@@ -306,7 +319,7 @@ def test_dismissed_candidate_never_comes_back() -> None:
         assert candidates[0].status == "DISMISSED"
 
 
-@pytest.mark.django_db(databases=["default", "admin", "owner"])
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
 def test_order_sync_cause_title_only_and_negative_citation_guard() -> None:
     """User Correction 7: Match order on cause title / header only. Citations in body never match."""
     tenant_id, user_id, matter_id = setup_test_tenant_and_matter()
@@ -360,3 +373,77 @@ def test_order_sync_cause_title_only_and_negative_citation_guard() -> None:
         deps = list(MatterDependency.objects.filter(matter_id=matter_id))
         assert len(deps) == 1
         assert deps[0].source_ref == "ibbi:parse_01J9ZORDERTEST123456789A"
+
+
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
+def test_order_sync_cause_title_real_ibbi_fixture() -> None:
+    """User Correction 7: Prove cause title extraction on a real IBBI fixture PDF."""
+    from pathlib import Path
+    from unittest.mock import patch
+
+    from django.conf import settings
+
+    from parse.pipeline import ParsingPipeline
+
+    tenant_id, user_id, matter_id = setup_test_tenant_and_matter(
+        case_number="CP (IB) 36/CHD/2026",
+        court_or_forum="NCLT Chandigarh Bench",
+    )
+
+    fixture_path = Path(settings.BASE_DIR).parent / "eval" / "fixtures" / "ibbi" / "nclt_born_digital_chd.pdf"
+    assert fixture_path.exists(), f"Real fixture not found: {fixture_path}"
+
+    # Parse real PDF through ParsingPipeline
+    pipeline = ParsingPipeline()
+    parsed_doc = pipeline.process(
+        fixture_path.read_bytes(),
+        raw_id="raw_nclt_born_digital_chd",
+        existing_work_id=mint_id("wrk"),
+    )
+
+    # Convert nodes to serializable dicts
+    nodes_data = [
+        {
+            "anchor_id": n.anchor_id,
+            "node_type": n.node_type,
+            "number_as_printed": n.number_as_printed,
+            "text": n.text,
+        }
+        for n in parsed_doc.nodes
+    ]
+
+    mock_doc_json = {
+        "nodes": nodes_data,
+        "metadata": {
+            "court": {"bench_name": "Chandigarh Bench"},
+            "decision_date": "2026-09-24",
+        },
+    }
+
+    # Simulate event without pre-populated metadata.case_numbers to force extraction from cause title text before para 1
+    order_event_real = {
+        "data": {
+            "parse_id": "parse_01J9ZREALIBBITEST123",
+            "work_id": "wrk_01J9ZREALIBBITEST123",
+            "parsed_doc_uri": "s3://plc-vault/parsed/wrk_test/en/parse_test.json.gz",
+            "metadata": {
+                "court": {"bench_name": "Chandigarh Bench"},
+                "decision_date": "2026-09-24",
+                "parties": "Tegral India vs Aastha Autotech",
+                "case_numbers": [],  # Empty! Must extract from cause title (#hdr / text before #p2)
+            },
+        }
+    }
+
+    with patch("workspace.consumer.ParsedDocStorage.fetch_parsed_document", return_value=mock_doc_json):
+        res = handle_doc_parsed(order_event_real)
+
+    assert res["status"] == "SUCCESS"
+    assert res["exact_matches"] == 1
+
+    with tenant_db_context(tenant_id=tenant_id, user_id=user_id):
+        deps = list(MatterDependency.objects.filter(matter_id=matter_id, kind="OWN_CASE"))
+        assert len(deps) == 1
+        assert deps[0].match_key == "CP (IB) 36/CHD/2026"
+        assert deps[0].source_ref == "ibbi:parse_01J9ZREALIBBITEST123"
+
