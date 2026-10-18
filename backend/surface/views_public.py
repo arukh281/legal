@@ -16,13 +16,17 @@ from __future__ import annotations
 import hashlib
 import hmac
 import html
+from datetime import UTC, datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import connection
 from django.http import HttpRequest, HttpResponse
 
 from workspace.audit import record_audit_event
+
+IST = ZoneInfo("Asia/Kolkata")
 
 
 def get_client_ip(request: HttpRequest) -> str:
@@ -139,7 +143,16 @@ def public_share_view(request: HttpRequest, token: str) -> HttpResponse:
     else:
         for u in updates:
             u_text = html.escape(u.get("text", "")).replace("\n", "<br>")
-            pub_at_str = u.get("published_at", "")[:10]
+            raw_pub_at = u.get("published_at", "")
+            pub_at_str = ""
+            if raw_pub_at:
+                try:
+                    dt = datetime.fromisoformat(raw_pub_at.replace("Z", "+00:00"))
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=UTC)
+                    pub_at_str = dt.astimezone(IST).date().isoformat()
+                except Exception:
+                    pub_at_str = raw_pub_at[:10]
             updates_html_parts.append(
                 f"""
                 <article class="update-item">

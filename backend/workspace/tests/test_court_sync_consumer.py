@@ -447,3 +447,95 @@ def test_order_sync_cause_title_real_ibbi_fixture() -> None:
         assert deps[0].match_key == "CP (IB) 36/CHD/2026"
         assert deps[0].source_ref == "ibbi:parse_01J9ZREALIBBITEST123"
 
+
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
+def test_causelist_exact_match_updates_existing_manual_hearing_in_place() -> None:
+    """Session R3 Item 9: Exact cause list match updates existing LISTED MANUAL hearing in place without duplicating."""
+    tenant_id, user_id, matter_id = setup_test_tenant_and_matter(
+        case_number="CP (IB) 555/MB/2026",
+        court_or_forum="NCLT Mumbai Bench",
+    )
+    list_date = date.today() + timedelta(days=5)
+    orig_hearing_id = mint_id("hrg")
+    task_id = mint_id("tsk")
+
+    with connections["admin"].cursor() as cursor:
+        cursor.execute("SET LOCAL app.tenant_id = %s;", [tenant_id])
+        cursor.execute("SET LOCAL app.user_id = %s;", [user_id])
+        # 1. Existing manual imported hearing
+        cursor.execute(
+            """
+            INSERT INTO tpl.hearing (
+                tenant_id, matter_id, hearing_id, date, court_no, item_no,
+                bench, purpose, source, source_ref, status, outcome, entered_by, observed_at
+            ) VALUES (%s, %s, %s, %s, NULL, NULL, NULL, 'Listing', 'MANUAL', 'import:imj_test:row 5', 'LISTED', NULL, %s, now())
+            """,
+            [tenant_id, matter_id, orig_hearing_id, list_date, user_id],
+        )
+        # 2. Linked task
+        cursor.execute(
+            """
+            INSERT INTO tpl.task (
+                tenant_id, task_id, matter_id, title, notes, assignee,
+                due_on, status, hearing_id, deadline_id, created_by, created_at
+            ) VALUES (%s, %s, %s, 'Prepare hearing brief', NULL, %s, %s, 'OPEN', %s, NULL, %s, now())
+            """,
+            [tenant_id, task_id, matter_id, user_id, list_date, orig_hearing_id, user_id],
+        )
+
+    # 3. Cause list event with exact match on that date
+    raw_causelist_id = "raw_blob_mumbai_exact"
+    event = {
+        "data": {
+            "source_id": "NCLT_CAUSELIST",
+            "raw_id": raw_causelist_id,
+            "bench": "MUMBAI BENCH",
+            "court_no": "2",
+            "list_date": list_date.isoformat(),
+            "items": [
+                {
+                    "item_no": "29",
+                    "court_no": "2",
+                    "bench": "Court-II Special Bench",
+                    "purpose": "Arguments",
+                    "parties": "Petitioner Corp vs Respondent Ltd",
+                    "normalized_cases": [
+                        {
+                            "raw": "CP (IB) 555/2026",
+                            "case_type": "CP (IB)",
+                            "case_number": "555",
+                            "year": 2026,
+                            "bench": "MB",
+                            "canonical": "CP (IB) 555/MB/2026",
+                            "parseable": True,
+                        }
+                    ],
+                }
+            ],
+        }
+    }
+
+    res = handle_causelist_published(event)
+    assert res["status"] == "SUCCESS"
+    assert res["exact_matches"] == 1
+
+    with tenant_db_context(tenant_id=tenant_id, user_id=user_id):
+        hearings = list(Hearing.objects.filter(matter_id=matter_id, date=list_date))
+        # MUST NOT create duplicate hearing (Item 9)
+        assert len(hearings) == 1
+        h = hearings[0]
+        # Preserves original hearing_id so linked tasks stay linked
+        assert h.hearing_id == orig_hearing_id
+        assert h.source == "CAUSE_LIST"
+        assert h.source_ref == f"{raw_causelist_id}:29"
+        assert h.court_no == "2"
+        assert h.item_no == "29"
+        assert h.bench == "MUM"
+        assert h.purpose == "Arguments"
+        assert h.status == "LISTED"
+
+        # Check linked task still points to the same hearing
+        from workspace.models import Task
+        t = Task.objects.get(matter_id=matter_id, task_id=task_id)
+        assert t.hearing_id == orig_hearing_id
+

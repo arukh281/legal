@@ -285,11 +285,6 @@ def create_hearing_service(
     now = timezone.now()
 
     actual_outcome = outcome
-    if notes:
-        if actual_outcome:
-            actual_outcome = f"{actual_outcome} - {notes}"
-        else:
-            actual_outcome = notes
 
     with transaction.atomic():
         with connection.cursor() as cursor:

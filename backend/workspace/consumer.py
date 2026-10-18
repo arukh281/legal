@@ -137,21 +137,49 @@ def handle_causelist_published(event: dict[str, Any]) -> dict[str, Any]:
                                     update_fields=["item_no", "source_ref", "purpose", "observed_at"]
                                 )
                             else:
-                                Hearing.objects.create(
+                                # Session R3 Item 9: Update existing LISTED MANUAL hearing in place if present
+                                existing_manual = Hearing.objects.filter(
                                     tenant_id=tenant_id,
                                     matter_id=link.matter_id,
-                                    hearing_id=mint_id("hrg"),
                                     date=list_date,
-                                    court_no=court_no,
-                                    item_no=item_no,
-                                    bench=bench,
-                                    purpose=purpose,
-                                    source="CAUSE_LIST",
-                                    source_ref=f"{raw_id}:{item_no}",
+                                    source="MANUAL",
                                     status="LISTED",
-                                    entered_by="system:causelist",
-                                    observed_at=now,
-                                )
+                                ).first()
+                                if existing_manual:
+                                    existing_manual.bench = bench
+                                    existing_manual.court_no = court_no
+                                    existing_manual.item_no = item_no
+                                    existing_manual.purpose = purpose or existing_manual.purpose
+                                    existing_manual.source = "CAUSE_LIST"
+                                    existing_manual.source_ref = f"{raw_id}:{item_no}"
+                                    existing_manual.observed_at = now
+                                    existing_manual.save(
+                                        update_fields=[
+                                            "bench",
+                                            "court_no",
+                                            "item_no",
+                                            "purpose",
+                                            "source",
+                                            "source_ref",
+                                            "observed_at",
+                                        ]
+                                    )
+                                else:
+                                    Hearing.objects.create(
+                                        tenant_id=tenant_id,
+                                        matter_id=link.matter_id,
+                                        hearing_id=mint_id("hrg"),
+                                        date=list_date,
+                                        court_no=court_no,
+                                        item_no=item_no,
+                                        bench=bench,
+                                        purpose=purpose,
+                                        source="CAUSE_LIST",
+                                        source_ref=f"{raw_id}:{item_no}",
+                                        status="LISTED",
+                                        entered_by="system:causelist",
+                                        observed_at=now,
+                                    )
                             total_exact_matches += 1
 
                         elif match_res == "PARTIAL":

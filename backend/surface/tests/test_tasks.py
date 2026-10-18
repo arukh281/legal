@@ -403,3 +403,200 @@ def test_today_dashboard_tasks_and_non_negotiable_deadline_isolation(r3_task_set
         assert not ddl.get("deadline_id", "").startswith("tsk_")
         assert ddl.get("label") != "Overdue Research Note"
         assert ddl.get("label") != "Proofread Petition"
+
+
+def test_firm_admin_non_member_forbidden_on_updates_and_links(r3_task_setup: dict[str, Any]) -> None:
+    """Session R3 Item 1: A firm admin who is not a LEAD on a matter gets 403 on publish, create, extend, revoke link."""
+    ctx = r3_task_setup
+    client = HttpClient()
+
+    # Firm admin is not a member on the matter
+    with admin_db_context():
+        MatterMember.objects.filter(matter_id=ctx["matter_id"], user_id=ctx["admin_id"]).delete()
+
+    admin_auth = f"Bearer {ctx['admin_id']}"
+
+    # 1. Publish client update -> 403
+    res_pub = client.post(
+        f"/api/matters/{ctx['matter_id']}/client-updates",
+        data={"text": "Firm admin unauthorized update", "facts": {}},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=admin_auth,
+    )
+    assert res_pub.status_code == 403
+
+    # 2. Create share link -> 403
+    res_create_link = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link",
+        data={"client_matter_title": "Admin Portal", "days": 30},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=admin_auth,
+    )
+    assert res_create_link.status_code == 403
+
+    # 3. Extend share link -> 403
+    res_ext_link = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link/extend",
+        data={"days": 15},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=admin_auth,
+    )
+    assert res_ext_link.status_code == 403
+
+    # 4. Revoke share link -> 403
+    res_rev_link = client.post(
+        f"/api/matters/{ctx['matter_id']}/share-link/revoke",
+        content_type="application/json",
+        HTTP_AUTHORIZATION=admin_auth,
+    )
+    assert res_rev_link.status_code == 403
+
+
+def test_task_assignment_refuses_revoked_matter_member(r3_task_setup: dict[str, Any]) -> None:
+    """Session R3 Item 8: Task creation and assignment refuses people revoked from the matter."""
+    ctx = r3_task_setup
+    client = HttpClient()
+
+    # Create a former member whose membership is now revoked
+    revoked_user_id = mint_id("usr")
+    now = timezone.now()
+    with admin_db_context():
+        AppUser.objects.create(
+            tenant_id=ctx["tenant_id"],
+            user_id=revoked_user_id,
+            email=f"former_{revoked_user_id}@firm.in",
+            display_name="Former Member Lawyer",
+            idp_subject=f"sub_{revoked_user_id}",
+            firm_role="ASSOCIATE",
+            active=True,
+        )
+        MatterMember.objects.create(
+            tenant_id=ctx["tenant_id"],
+            matter_id=ctx["matter_id"],
+            user_id=revoked_user_id,
+            role="MEMBER",
+            granted_by=ctx["lead_id"],
+            granted_at=now - timedelta(days=30),
+            revoked_at=now - timedelta(days=2),
+        )
+
+    # 1. Attempt task creation with revoked member as assignee -> 400
+    res_create = client.post(
+        f"/api/matters/{ctx['matter_id']}/tasks",
+        data={"title": "Draft reply to notice", "assignee": revoked_user_id},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    assert res_create.status_code == 400
+    assert "active lead or member" in res_create.json()["detail"].lower()
+
+    # 2. Create task with active member
+    res_valid_create = client.post(
+        f"/api/matters/{ctx['matter_id']}/tasks",
+        data={"title": "Draft reply to notice", "assignee": ctx["member_id"]},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    assert res_valid_create.status_code == 200
+    task_id = res_valid_create.json()["task_id"]
+
+    # 3. Attempt reassignment to revoked member -> 400
+    res_reassign = client.post(
+        f"/api/tasks/{task_id}/assign",
+        data={"assignee": revoked_user_id},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    assert res_reassign.status_code == 400
+    assert "active lead or member" in res_reassign.json()["detail"].lower()
+
+
+def test_hearing_outcome_with_task_atomicity(r3_task_setup: dict[str, Any]) -> None:
+    """Session R3 Item 11: Hearing outcome with Add a task creates both in one transaction; bad assignee creates neither."""
+    ctx = r3_task_setup
+    client = HttpClient()
+
+    # Setup a hearing
+    hearing_id = mint_id("hrg")
+    today_d = timezone.now().astimezone(IST).date()
+    with admin_db_context():
+        Hearing.objects.create(
+            tenant_id=ctx["tenant_id"],
+            hearing_id=hearing_id,
+            matter_id=ctx["matter_id"],
+            date=today_d,
+            court_no="1",
+            bench="Bench-I",
+            purpose="Admission",
+            status="LISTED",
+            outcome=None,
+            entered_by=ctx["lead_id"],
+        )
+
+    # Revoked or invalid user
+    bad_user_id = mint_id("usr")
+    with admin_db_context():
+        AppUser.objects.create(
+            tenant_id=ctx["tenant_id"],
+            user_id=bad_user_id,
+            email=f"bad_{bad_user_id}@firm.in",
+            display_name="Bad User",
+            idp_subject=f"sub_{bad_user_id}",
+            firm_role="ASSOCIATE",
+            active=True,
+        )
+
+    # 1. Bad assignee -> 400, neither hearing outcome updated nor task created
+    res_bad = client.post(
+        f"/api/hearings/{hearing_id}/outcome",
+        data={
+            "status": "HEARD",
+            "outcome": "Interim orders passed.",
+            "next_date": (today_d + timedelta(days=14)).isoformat(),
+            "next_purpose": "Compliance",
+            "task": {
+                "title": "File compliance affidavit",
+                "assignee": bad_user_id,
+                "due_on": (today_d + timedelta(days=7)).isoformat(),
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    assert res_bad.status_code == 400
+
+    with admin_db_context():
+        h_check = Hearing.objects.get(tenant_id=ctx["tenant_id"], hearing_id=hearing_id)
+        assert h_check.status == "LISTED"
+        assert h_check.outcome is None
+        tasks_count = Task.objects.filter(tenant_id=ctx["tenant_id"], matter_id=ctx["matter_id"]).count()
+        assert tasks_count == 0
+
+    # 2. Good assignee -> 200, both created atomically
+    res_good = client.post(
+        f"/api/hearings/{hearing_id}/outcome",
+        data={
+            "status": "HEARD",
+            "outcome": "Interim orders passed.",
+            "next_date": (today_d + timedelta(days=14)).isoformat(),
+            "next_purpose": "Compliance",
+            "task": {
+                "title": "File compliance affidavit",
+                "assignee": ctx["member_id"],
+                "due_on": (today_d + timedelta(days=7)).isoformat(),
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['lead_id']}",
+    )
+    assert res_good.status_code == 200
+
+    with admin_db_context():
+        h_after = Hearing.objects.get(tenant_id=ctx["tenant_id"], hearing_id=hearing_id)
+        assert h_after.status == "HEARD"
+        assert h_after.outcome == "Interim orders passed."
+        tasks = list(Task.objects.filter(tenant_id=ctx["tenant_id"], matter_id=ctx["matter_id"]))
+        assert len(tasks) == 1
+        assert tasks[0].title == "File compliance affidavit"
+        assert tasks[0].assignee == ctx["member_id"]
+        assert tasks[0].hearing_id == hearing_id
