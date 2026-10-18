@@ -11,7 +11,9 @@ Normative sources:
 from __future__ import annotations
 
 import json
+from datetime import date, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from django.db import connection, transaction
 from django.http import HttpRequest, HttpResponse
@@ -19,6 +21,7 @@ from django.utils import timezone
 from ninja import File, Form, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 
+from anchor_lib.case_numbers import normalize_case_number
 from anchor_lib.ids import mint_id
 from core.authz_dependency import authz_required
 from parse.vault import DocumentVaultService, VaultStorage
@@ -27,13 +30,19 @@ from workspace.audit import record_audit_event
 from workspace.db import tenant_db_context
 from workspace.models import (
     AppUser,
+    CaseCandidate,
     Client,
+    Deadline,
+    Hearing,
     Matter,
     MatterCaseLink,
+    MatterDependency,
     Pdoc,
     PdocVersion,
     PrivateAnchor,
 )
+
+IST = ZoneInfo("Asia/Kolkata")
 
 router = Router(tags=["Clients, Matters & Vault"], auth=authz_required)
 
@@ -115,6 +124,8 @@ class CaseLinkResponse(Schema):
     value_normalized: str
     role: str
     track: bool
+    parseable: bool = True
+    warning: str | None = None
 
 
 class CaseLinkCreateRequest(Schema):
@@ -122,6 +133,137 @@ class CaseLinkCreateRequest(Schema):
     value_normalized: str
     role: str = "CASE"
     track: bool = True
+
+
+class HearingResponse(Schema):
+    hearing_id: str
+    matter_id: str
+    date: str
+    court_no: str | None
+    item_no: str | None
+    bench: str | None
+    purpose: str | None
+    source: str
+    source_ref: str | None
+    status: str
+    outcome: str | None
+    entered_by: str
+    observed_at: str | None
+    court_or_forum: str | None
+
+
+class HearingCreateRequest(Schema):
+    date: str
+    court_no: str | None = None
+    item_no: str | None = None
+    bench: str | None = None
+    purpose: str | None = None
+
+
+class HearingOutcomeRequest(Schema):
+    outcome: str
+    status: str = "HEARD"
+    next_date: str | None = None
+    next_purpose: str | None = None
+
+
+class DeadlineResponse(Schema):
+    deadline_id: str
+    matter_id: str
+    rule_id: str | None
+    label: str
+    kind: str
+    due_on: str
+    lifecycle: str
+    owner: str | None
+    source_note: str
+    created_at: str
+
+
+class DeadlineCreateRequest(Schema):
+    label: str
+    due_on: str
+    owner: str | None = None
+    rule_id: str | None = None
+
+
+class DeadlineLifecycleRequest(Schema):
+    lifecycle: str
+
+
+class CaseCandidateResponse(Schema):
+    candidate_id: str
+    matter_id: str
+    kind: str
+    source: str
+    source_ref: str
+    case_number_raw: str
+    list_date: str | None
+    bench: str | None
+    normalized_case_no: str | None
+    details: dict[str, Any]
+    status: str
+    created_at: str
+    resolved_at: str | None
+    resolved_by: str | None
+
+
+class CourtOrderResponse(Schema):
+    matter_id: str
+    public_id: str
+    match_key: str
+    decision_date: str | None
+    bench: str | None
+    kind: str
+    source_ref: str
+    uncertified_badge: bool = True
+    source_viewer_url: str
+
+
+class TimelineItemResponse(Schema):
+    id: str
+    date: str
+    item_type: str
+    title: str
+    subtitle: str | None
+    status: str | None
+    metadata: dict[str, Any]
+
+
+class TodayHearingItem(Schema):
+    hearing_id: str
+    matter_id: str
+    matter_title: str
+    client_id: str | None
+    court_or_forum: str | None
+    court_no: str | None
+    item_no: str | None
+    bench: str | None
+    purpose: str | None
+    status: str
+    date: str
+
+
+class TodayDeadlineItem(Schema):
+    deadline_id: str
+    matter_id: str
+    matter_title: str
+    label: str
+    due_on: str
+    lifecycle: str
+    source_note: str
+    is_overdue: bool
+
+
+class TodayResponse(Schema):
+    today_date: str
+    today_hearings: list[TodayHearingItem]
+    tomorrow_hearings: list[TodayHearingItem]
+    this_week_hearings: list[TodayHearingItem]
+    this_week_deadlines: list[TodayDeadlineItem]
+    pending_candidates: list[CaseCandidateResponse]
+    recent_orders: list[CourtOrderResponse]
+    total_active_matters: int
 
 
 class PdocResponse(Schema):
@@ -726,12 +868,22 @@ def list_case_links(request: HttpRequest, matter_id: str) -> list[dict[str, Any]
 def add_case_link(
     request: HttpRequest, matter_id: str, payload: CaseLinkCreateRequest
 ) -> dict[str, Any]:
-    """Add a case number link to a matter."""
+    """Add a case number link to a matter with normalization on write."""
     user = _get_app_user(request)
     with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
         matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
         if not matter or not authz.can(user, "write", matter):
             raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        parsed = normalize_case_number(payload.value_normalized)
+        if parsed.parseable:
+            val = parsed.canonical
+            parseable = True
+            warning = None
+        else:
+            val = payload.value_normalized.strip()
+            parseable = False
+            warning = "Case number format could not be parsed; automatic cause-list tracking will not run for this number until edited to a recognized format."
 
         with transaction.atomic():
             with connection.cursor() as cursor:
@@ -747,7 +899,7 @@ def add_case_link(
                         user.tenant_id,
                         matter_id,
                         payload.scheme,
-                        payload.value_normalized,
+                        val,
                         payload.role,
                         payload.track,
                     ],
@@ -757,18 +909,25 @@ def add_case_link(
                 tenant_id=user.tenant_id,
                 actor=user.user_id,
                 action="CASE_LINK_ADD",
-                object_ref=f"{payload.scheme}:{payload.value_normalized}",
+                object_ref=f"{payload.scheme}:{val}",
                 matter_id=matter_id,
                 decision="ALLOW",
-                detail={"scheme": payload.scheme, "value": payload.value_normalized},
+                detail={
+                    "scheme": payload.scheme,
+                    "raw": payload.value_normalized,
+                    "normalized": val,
+                    "parseable": parseable,
+                },
             )
 
         return {
             "matter_id": matter_id,
             "scheme": payload.scheme,
-            "value_normalized": payload.value_normalized,
+            "value_normalized": val,
             "role": payload.role,
             "track": payload.track,
+            "parseable": parseable,
+            "warning": warning,
         }
 
 
@@ -1010,3 +1169,1026 @@ def download_document(
         response = HttpResponse(raw_bytes, content_type=mime)
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+
+# ==============================================================================
+# R2: Hearings, Dates & Procedural Clock
+# ==============================================================================
+
+
+@router.get("/matters/{matter_id}/hearings", response=list[HearingResponse], auth=authz_required)
+def list_matter_hearings(request: HttpRequest, matter_id: str) -> list[dict[str, Any]]:
+    """List hearings for a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        hearings = Hearing.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id
+        ).order_by("date", "court_no", "item_no")
+
+        return [
+            {
+                "hearing_id": h.hearing_id,
+                "matter_id": h.matter_id,
+                "date": h.date.isoformat(),
+                "court_no": h.court_no,
+                "item_no": h.item_no,
+                "bench": h.bench,
+                "purpose": h.purpose,
+                "source": h.source,
+                "source_ref": h.source_ref,
+                "status": h.status,
+                "outcome": h.outcome,
+                "entered_by": h.entered_by,
+                "observed_at": h.observed_at.isoformat() if h.observed_at else None,
+                "court_or_forum": (
+                    h.bench
+                    if (h.source == "CAUSE_LIST" and h.bench)
+                    else (matter.court_or_forum or h.bench)
+                ),
+            }
+            for h in hearings
+        ]
+
+
+@router.post("/matters/{matter_id}/hearings", response=HearingResponse, auth=authz_required)
+def create_hearing(
+    request: HttpRequest, matter_id: str, payload: HearingCreateRequest
+) -> dict[str, Any]:
+    """Manually enter a hearing for any court."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        hrg_id = mint_id("hrg")
+        h_date = date.fromisoformat(payload.date)
+        now = timezone.now()
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO tpl.hearing (
+                        tenant_id, matter_id, hearing_id, date, court_no, item_no,
+                        bench, purpose, source, source_ref, status, outcome,
+                        next_date, entered_by, observed_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'MANUAL', NULL, 'LISTED', NULL, NULL, %s, %s)
+                    """,
+                    [
+                        user.tenant_id,
+                        matter_id,
+                        hrg_id,
+                        h_date,
+                        payload.court_no,
+                        payload.item_no,
+                        payload.bench or matter.court_or_forum,
+                        payload.purpose,
+                        user.user_id,
+                        now,
+                    ],
+                )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="HEARING_CREATE",
+                object_ref=hrg_id,
+                matter_id=matter_id,
+                decision="ALLOW",
+                detail={"date": payload.date, "purpose": payload.purpose},
+            )
+
+        return {
+            "hearing_id": hrg_id,
+            "matter_id": matter_id,
+            "date": h_date.isoformat(),
+            "court_no": payload.court_no,
+            "item_no": payload.item_no,
+            "bench": payload.bench or matter.court_or_forum,
+            "purpose": payload.purpose,
+            "source": "MANUAL",
+            "source_ref": None,
+            "status": "LISTED",
+            "outcome": None,
+            "entered_by": user.user_id,
+            "observed_at": now.isoformat(),
+            "court_or_forum": matter.court_or_forum or payload.bench,
+        }
+
+
+@router.post("/hearings/{hearing_id}/outcome", response=HearingResponse, auth=authz_required)
+def record_hearing_outcome(
+    request: HttpRequest, hearing_id: str, payload: HearingOutcomeRequest
+) -> dict[str, Any]:
+    """Record outcome of a hearing and optionally schedule the next date in one click."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        hearing = Hearing.objects.filter(
+            tenant_id=user.tenant_id, hearing_id=hearing_id
+        ).first()
+        if not hearing:
+            raise HttpError(404, "Hearing not found.")
+
+        matter = Matter.objects.filter(
+            tenant_id=user.tenant_id, matter_id=hearing.matter_id
+        ).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        now = timezone.now()
+        next_d = date.fromisoformat(payload.next_date) if payload.next_date else None
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE tpl.hearing
+                    SET outcome = %s, status = %s, next_date = %s
+                    WHERE tenant_id = %s AND hearing_id = %s
+                    """,
+                    [payload.outcome, payload.status, next_d, user.tenant_id, hearing_id],
+                )
+
+                if next_d:
+                    next_hrg_id = mint_id("hrg")
+                    cursor.execute(
+                        """
+                        INSERT INTO tpl.hearing (
+                            tenant_id, matter_id, hearing_id, date, court_no, item_no,
+                            bench, purpose, source, source_ref, status, outcome,
+                            next_date, entered_by, observed_at
+                        ) VALUES (%s, %s, %s, %s, %s, NULL, %s, %s, 'MANUAL', NULL, 'LISTED', NULL, NULL, %s, %s)
+                        """,
+                        [
+                            user.tenant_id,
+                            hearing.matter_id,
+                            next_hrg_id,
+                            next_d,
+                            hearing.court_no,
+                            hearing.bench,
+                            payload.next_purpose or "Next hearing",
+                            user.user_id,
+                            now,
+                        ],
+                    )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="HEARING_OUTCOME",
+                object_ref=hearing_id,
+                matter_id=hearing.matter_id,
+                decision="ALLOW",
+                detail={
+                    "outcome": payload.outcome,
+                    "status": payload.status,
+                    "next_date": payload.next_date,
+                },
+            )
+
+        updated = Hearing.objects.get(tenant_id=user.tenant_id, hearing_id=hearing_id)
+        return {
+            "hearing_id": updated.hearing_id,
+            "matter_id": updated.matter_id,
+            "date": updated.date.isoformat(),
+            "court_no": updated.court_no,
+            "item_no": updated.item_no,
+            "bench": updated.bench,
+            "purpose": updated.purpose,
+            "source": updated.source,
+            "source_ref": updated.source_ref,
+            "status": updated.status,
+            "outcome": updated.outcome,
+            "entered_by": updated.entered_by,
+            "observed_at": updated.observed_at.isoformat() if updated.observed_at else None,
+            "court_or_forum": (
+                updated.bench
+                if (updated.source == "CAUSE_LIST" and updated.bench)
+                else (matter.court_or_forum or updated.bench)
+            ),
+        }
+
+
+@router.get("/matters/{matter_id}/deadlines", response=list[DeadlineResponse], auth=authz_required)
+def list_matter_deadlines(request: HttpRequest, matter_id: str) -> list[dict[str, Any]]:
+    """List procedural deadlines and dates for a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        deadlines = Deadline.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id
+        ).order_by("due_on")
+
+        return [
+            {
+                "deadline_id": d.deadline_id,
+                "matter_id": d.matter_id,
+                "rule_id": d.rule_id,
+                "label": d.label,
+                "kind": d.kind,
+                "due_on": d.due_on.isoformat(),
+                "lifecycle": d.lifecycle,
+                "owner": d.owner,
+                "source_note": (
+                    f"computed from {d.rule_id}"
+                    if d.rule_id
+                    else f"entered by {d.owner or 'lawyer'}, not computed"
+                ),
+                "created_at": d.created_at.isoformat(),
+            }
+            for d in deadlines
+        ]
+
+
+@router.post("/matters/{matter_id}/deadlines", response=DeadlineResponse, auth=authz_required)
+def create_deadline(
+    request: HttpRequest, matter_id: str, payload: DeadlineCreateRequest
+) -> dict[str, Any]:
+    """Manually enter a deadline or date. Rule-computed deadlines are rejected until R4."""
+    user = _get_app_user(request)
+    if payload.rule_id is not None:
+        raise HttpError(400, "Rule-computed deadlines are disabled until Session R4.")
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        ddl_id = mint_id("ddl")
+        due_d = date.fromisoformat(payload.due_on)
+        owner_name = payload.owner or user.user_id
+        now = timezone.now()
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO tpl.deadline (
+                        tenant_id, matter_id, deadline_id, rule_id, rule_code,
+                        rule_version, label, kind, due_on, status, lifecycle,
+                        owner, statutory_anchors, trace, sensitivity, created_at
+                    ) VALUES (%s, %s, %s, NULL, NULL, NULL, %s, 'MANUAL', %s, NULL, 'CONFIRMED', %s, '{}', '[]', '[]', %s)
+                    """,
+                    [
+                        user.tenant_id,
+                        matter_id,
+                        ddl_id,
+                        payload.label,
+                        due_d,
+                        owner_name,
+                        now,
+                    ],
+                )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="DEADLINE_CREATE",
+                object_ref=ddl_id,
+                matter_id=matter_id,
+                decision="ALLOW",
+                detail={"label": payload.label, "due_on": payload.due_on},
+            )
+
+        return {
+            "deadline_id": ddl_id,
+            "matter_id": matter_id,
+            "rule_id": None,
+            "label": payload.label,
+            "kind": "MANUAL",
+            "due_on": due_d.isoformat(),
+            "lifecycle": "CONFIRMED",
+            "owner": owner_name,
+            "source_note": f"entered by {owner_name}, not computed",
+            "created_at": now.isoformat(),
+        }
+
+
+@router.post("/deadlines/{deadline_id}/lifecycle", response=DeadlineResponse, auth=authz_required)
+def update_deadline_lifecycle(
+    request: HttpRequest, deadline_id: str, payload: DeadlineLifecycleRequest
+) -> dict[str, Any]:
+    """Update deadline lifecycle state (PROPOSED, CONFIRMED, DONE, WAIVED, MISSED)."""
+    allowed = {"PROPOSED", "CONFIRMED", "DONE", "WAIVED", "MISSED"}
+    if payload.lifecycle not in allowed:
+        raise HttpError(400, f"Invalid lifecycle state. Allowed: {allowed}")
+
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        deadline = Deadline.objects.filter(
+            tenant_id=user.tenant_id, deadline_id=deadline_id
+        ).first()
+        if not deadline:
+            raise HttpError(404, "Deadline not found.")
+
+        matter = Matter.objects.filter(
+            tenant_id=user.tenant_id, matter_id=deadline.matter_id
+        ).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE tpl.deadline
+                    SET lifecycle = %s
+                    WHERE tenant_id = %s AND deadline_id = %s
+                    """,
+                    [payload.lifecycle, user.tenant_id, deadline_id],
+                )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="DEADLINE_LIFECYCLE",
+                object_ref=deadline_id,
+                matter_id=deadline.matter_id,
+                decision="ALLOW",
+                detail={"lifecycle": payload.lifecycle},
+            )
+
+        updated = Deadline.objects.get(tenant_id=user.tenant_id, deadline_id=deadline_id)
+        return {
+            "deadline_id": updated.deadline_id,
+            "matter_id": updated.matter_id,
+            "rule_id": updated.rule_id,
+            "label": updated.label,
+            "kind": updated.kind,
+            "due_on": updated.due_on.isoformat(),
+            "lifecycle": updated.lifecycle,
+            "owner": updated.owner,
+            "source_note": (
+                f"computed from {updated.rule_id}"
+                if updated.rule_id
+                else f"entered by {updated.owner or 'lawyer'}, not computed"
+            ),
+            "created_at": updated.created_at.isoformat(),
+        }
+
+
+# ==============================================================================
+# Candidates ("Check these")
+# ==============================================================================
+
+
+@router.get("/candidates", response=list[CaseCandidateResponse], auth=authz_required)
+def list_candidates(
+    request: HttpRequest, matter_id: str | None = None
+) -> list[dict[str, Any]]:
+    """List pending case candidates requiring lawyer confirmation ('Check these')."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        qs = CaseCandidate.objects.filter(
+            tenant_id=user.tenant_id, status="PENDING"
+        )
+        if matter_id:
+            qs = qs.filter(matter_id=matter_id)
+
+        candidates = qs.order_by("-created_at")
+        results: list[dict[str, Any]] = []
+        for c in candidates:
+            matter = Matter.objects.filter(
+                tenant_id=user.tenant_id, matter_id=c.matter_id
+            ).first()
+            if matter and authz.can(user, "read", matter):
+                results.append(
+                    {
+                        "candidate_id": c.candidate_id,
+                        "matter_id": c.matter_id,
+                        "kind": c.kind,
+                        "source": c.source,
+                        "source_ref": c.source_ref,
+                        "case_number_raw": c.case_number_raw,
+                        "list_date": c.list_date.isoformat() if c.list_date else None,
+                        "bench": c.bench,
+                        "normalized_case_no": c.normalized_case_no,
+                        "details": c.details or {},
+                        "status": c.status,
+                        "created_at": c.created_at.isoformat(),
+                        "resolved_at": c.resolved_at.isoformat() if c.resolved_at else None,
+                        "resolved_by": c.resolved_by,
+                    }
+                )
+        return results
+
+
+@router.post("/candidates/{candidate_id}/confirm", auth=authz_required)
+def confirm_candidate(request: HttpRequest, candidate_id: str) -> dict[str, Any]:
+    """Confirm a candidate match and promote to active hearing/order."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        candidate = CaseCandidate.objects.filter(
+            tenant_id=user.tenant_id, candidate_id=candidate_id
+        ).first()
+        if not candidate or candidate.status != "PENDING":
+            raise HttpError(404, "Pending candidate not found.")
+
+        matter = Matter.objects.filter(
+            tenant_id=user.tenant_id, matter_id=candidate.matter_id
+        ).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        now = timezone.now()
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                if candidate.kind == "HEARING":
+                    hrg_id = mint_id("hrg")
+                    cursor.execute(
+                        """
+                        INSERT INTO tpl.hearing (
+                            tenant_id, matter_id, hearing_id, date, court_no, item_no,
+                            bench, purpose, source, source_ref, status, outcome,
+                            next_date, entered_by, observed_at
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'CAUSE_LIST', %s, 'LISTED', NULL, NULL, %s, %s)
+                        ON CONFLICT (tenant_id, matter_id, date, bench, court_no) WHERE source = 'CAUSE_LIST'
+                        DO UPDATE SET item_no = EXCLUDED.item_no, observed_at = EXCLUDED.observed_at
+                        """,
+                        [
+                            user.tenant_id,
+                            candidate.matter_id,
+                            hrg_id,
+                            candidate.list_date,
+                            candidate.details.get("court_no"),
+                            candidate.details.get("item_no"),
+                            candidate.bench or matter.court_or_forum,
+                            candidate.details.get("purpose") or "Hearing",
+                            candidate.source_ref,
+                            user.user_id,
+                            now,
+                        ],
+                    )
+                elif candidate.kind == "ORDER":
+                    cursor.execute(
+                        """
+                        INSERT INTO tpl.matter_dependency (
+                            tenant_id, matter_id, public_id, match_key, as_of_legal_date,
+                            kind, weight, source_ref, added_at
+                        ) VALUES (%s, %s, %s, %s, %s, 'OWN_CASE', 1.0, %s, %s)
+                        ON CONFLICT (tenant_id, matter_id, public_id, kind) DO NOTHING
+                        """,
+                        [
+                            user.tenant_id,
+                            candidate.matter_id,
+                            candidate.source_ref,
+                            candidate.normalized_case_no or candidate.case_number_raw,
+                            candidate.list_date,
+                            candidate.source_ref,
+                            now,
+                        ],
+                    )
+
+                cursor.execute(
+                    """
+                    UPDATE tpl.case_candidate
+                    SET status = 'CONFIRMED', resolved_at = %s, resolved_by = %s
+                    WHERE tenant_id = %s AND candidate_id = %s
+                    """,
+                    [now, user.user_id, user.tenant_id, candidate_id],
+                )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="CANDIDATE_CONFIRM",
+                object_ref=candidate_id,
+                matter_id=candidate.matter_id,
+                decision="ALLOW",
+                detail={"kind": candidate.kind, "raw_number": candidate.case_number_raw},
+            )
+
+        return {"status": "ok", "candidate_id": candidate_id, "resolved": "CONFIRMED"}
+
+
+@router.post("/candidates/{candidate_id}/dismiss", auth=authz_required)
+def dismiss_candidate(request: HttpRequest, candidate_id: str) -> dict[str, Any]:
+    """Dismiss a candidate. Remembered permanently so the item never re-alerts."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        candidate = CaseCandidate.objects.filter(
+            tenant_id=user.tenant_id, candidate_id=candidate_id
+        ).first()
+        if not candidate or candidate.status != "PENDING":
+            raise HttpError(404, "Pending candidate not found.")
+
+        matter = Matter.objects.filter(
+            tenant_id=user.tenant_id, matter_id=candidate.matter_id
+        ).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Access to modify this matter is forbidden.")
+
+        now = timezone.now()
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE tpl.case_candidate
+                    SET status = 'DISMISSED', resolved_at = %s, resolved_by = %s
+                    WHERE tenant_id = %s AND candidate_id = %s
+                    """,
+                    [now, user.user_id, user.tenant_id, candidate_id],
+                )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="CANDIDATE_DISMISS",
+                object_ref=candidate_id,
+                matter_id=candidate.matter_id,
+                decision="ALLOW",
+                detail={"kind": candidate.kind, "raw_number": candidate.case_number_raw},
+            )
+
+        return {"status": "ok", "candidate_id": candidate_id, "resolved": "DISMISSED"}
+
+
+# ==============================================================================
+# Court Orders & Timeline
+# ==============================================================================
+
+
+@router.get("/matters/{matter_id}/orders", response=list[CourtOrderResponse], auth=authz_required)
+def list_matter_orders(request: HttpRequest, matter_id: str) -> list[dict[str, Any]]:
+    """List public court orders matched to this matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        deps = MatterDependency.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id, kind="OWN_CASE"
+        ).order_by("-added_at")
+
+        return [
+            {
+                "matter_id": d.matter_id,
+                "public_id": d.public_id,
+                "match_key": d.match_key,
+                "decision_date": d.as_of_legal_date.isoformat() if d.as_of_legal_date else None,
+                "bench": matter.court_or_forum,
+                "kind": d.kind,
+                "source_ref": d.source_ref,
+                "uncertified_badge": True,
+                "source_viewer_url": f"/viewer/public/{d.public_id}",
+            }
+            for d in deps
+        ]
+
+
+@router.get("/matters/{matter_id}/timeline", response=list[TimelineItemResponse], auth=authz_required)
+def get_matter_timeline(request: HttpRequest, matter_id: str) -> list[dict[str, Any]]:
+    """Unified chronological timeline of hearings, dates, documents and orders."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        items: list[dict[str, Any]] = []
+
+        # 1. Hearings
+        hearings = Hearing.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+        for h in hearings:
+            items.append(
+                {
+                    "id": h.hearing_id,
+                    "date": h.date.isoformat(),
+                    "item_type": "HEARING",
+                    "title": f"Hearing: {h.bench or matter.court_or_forum or 'Court'} (Court {h.court_no or '-'}, Item {h.item_no or '-'})",
+                    "subtitle": h.purpose or "Hearing listed",
+                    "status": h.status,
+                    "metadata": {
+                        "hearing_id": h.hearing_id,
+                        "source": h.source,
+                        "outcome": h.outcome,
+                        "court_no": h.court_no,
+                        "item_no": h.item_no,
+                    },
+                }
+            )
+
+        # 2. Deadlines
+        deadlines = Deadline.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+        for d in deadlines:
+            items.append(
+                {
+                    "id": d.deadline_id,
+                    "date": d.due_on.isoformat(),
+                    "item_type": "DEADLINE",
+                    "title": f"Deadline: {d.label}",
+                    "subtitle": (
+                        f"computed from {d.rule_id}"
+                        if d.rule_id
+                        else f"entered by {d.owner or 'lawyer'}, not computed"
+                    ),
+                    "status": d.lifecycle,
+                    "metadata": {
+                        "deadline_id": d.deadline_id,
+                        "kind": d.kind,
+                        "owner": d.owner,
+                    },
+                }
+            )
+
+        # 3. Documents
+        docs = Pdoc.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+        for p in docs:
+            items.append(
+                {
+                    "id": p.pdoc_id,
+                    "date": p.created_at.date().isoformat(),
+                    "item_type": "DOCUMENT",
+                    "title": f"Document: {p.title or p.pdoc_id}",
+                    "subtitle": f"Stage: {p.stage} | Provenance: {p.provenance}",
+                    "status": p.stage,
+                    "metadata": {
+                        "pdoc_id": p.pdoc_id,
+                        "doc_type": p.doc_type,
+                        "current_version": p.current_version,
+                    },
+                }
+            )
+
+        # 4. Court Orders
+        deps = MatterDependency.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id, kind="OWN_CASE"
+        )
+        for dep in deps:
+            order_date = (
+                dep.as_of_legal_date.isoformat()
+                if dep.as_of_legal_date
+                else dep.added_at.date().isoformat()
+            )
+            items.append(
+                {
+                    "id": dep.public_id,
+                    "date": order_date,
+                    "item_type": "ORDER",
+                    "title": f"Court Order: {dep.public_id}",
+                    "subtitle": "Uncertified copy from official public mirror",
+                    "status": "ORDER",
+                    "metadata": {
+                        "public_id": dep.public_id,
+                        "match_key": dep.match_key,
+                        "source_ref": dep.source_ref,
+                    },
+                }
+            )
+
+        # Sort descending by date
+        items.sort(key=lambda x: str(x["date"]), reverse=True)
+        return items
+
+
+# ==============================================================================
+# Today Dashboard & Calendar
+# ==============================================================================
+
+
+@router.get("/today", response=TodayResponse, auth=authz_required)
+def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
+    """Mobile-first Today dashboard answering: What is listed today/tomorrow, what is due, what came in."""
+    user = _get_app_user(request)
+    now_ist = timezone.now().astimezone(IST)
+    today_d = now_ist.date()
+    tomorrow_d = today_d + timedelta(days=1)
+    week_end_d = today_d + timedelta(days=7)
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        all_matters = Matter.objects.filter(tenant_id=user.tenant_id, status="ACTIVE")
+        matters_map = {m.matter_id: m for m in all_matters if authz.can(user, "read", m)}
+        matter_ids = list(matters_map.keys())
+
+        if not matter_ids:
+            return {
+                "today_date": today_d.isoformat(),
+                "today_hearings": [],
+                "tomorrow_hearings": [],
+                "this_week_hearings": [],
+                "this_week_deadlines": [],
+                "pending_candidates": [],
+                "recent_orders": [],
+                "total_active_matters": 0,
+            }
+
+        # Hearings
+        all_hearings = (
+            Hearing.objects.filter(
+                tenant_id=user.tenant_id,
+                matter_id__in=matter_ids,
+                date__gte=today_d,
+                date__lte=week_end_d,
+            )
+            .exclude(status="CANCELLED")
+            .order_by("date", "court_no", "item_no")
+        )
+
+        today_hearings_list: list[dict[str, Any]] = []
+        tomorrow_hearings_list: list[dict[str, Any]] = []
+        this_week_hearings_list: list[dict[str, Any]] = []
+
+        for h in all_hearings:
+            m = matters_map.get(h.matter_id)
+            m_title = m.title if m else "Matter"
+            c_id = m.client_id if m else None
+            court_forum = (
+                h.bench
+                if (h.source == "CAUSE_LIST" and h.bench)
+                else ((m.court_or_forum if m else None) or h.bench)
+            )
+
+            item = {
+                "hearing_id": h.hearing_id,
+                "matter_id": h.matter_id,
+                "matter_title": m_title,
+                "client_id": c_id,
+                "court_or_forum": court_forum,
+                "court_no": h.court_no,
+                "item_no": h.item_no,
+                "bench": h.bench,
+                "purpose": h.purpose,
+                "status": h.status,
+                "date": h.date.isoformat(),
+            }
+
+            if h.date == today_d:
+                today_hearings_list.append(item)
+            elif h.date == tomorrow_d:
+                tomorrow_hearings_list.append(item)
+            this_week_hearings_list.append(item)
+
+        # Deadlines
+        active_deadlines = Deadline.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id__in=matter_ids,
+            due_on__lte=week_end_d,
+            lifecycle__in=["PROPOSED", "CONFIRMED"],
+        ).order_by("due_on")
+
+        this_week_deadlines_list: list[dict[str, Any]] = []
+        for d in active_deadlines:
+            m = matters_map.get(d.matter_id)
+            m_title = m.title if m else "Matter"
+            is_overdue = d.due_on < today_d
+            source_note = (
+                f"computed from {d.rule_id}"
+                if d.rule_id
+                else f"entered by {d.owner or 'lawyer'}, not computed"
+            )
+            this_week_deadlines_list.append(
+                {
+                    "deadline_id": d.deadline_id,
+                    "matter_id": d.matter_id,
+                    "matter_title": m_title,
+                    "label": d.label,
+                    "due_on": d.due_on.isoformat(),
+                    "lifecycle": d.lifecycle,
+                    "source_note": source_note,
+                    "is_overdue": is_overdue,
+                }
+            )
+
+        # Pending Candidates ("Check these")
+        candidates = CaseCandidate.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id__in=matter_ids,
+            status="PENDING",
+        ).order_by("-created_at")
+
+        pending_candidates_list = [
+            {
+                "candidate_id": c.candidate_id,
+                "matter_id": c.matter_id,
+                "kind": c.kind,
+                "source": c.source,
+                "source_ref": c.source_ref,
+                "case_number_raw": c.case_number_raw,
+                "list_date": c.list_date.isoformat() if c.list_date else None,
+                "bench": c.bench,
+                "normalized_case_no": c.normalized_case_no,
+                "details": c.details or {},
+                "status": c.status,
+                "created_at": c.created_at.isoformat(),
+                "resolved_at": c.resolved_at.isoformat() if c.resolved_at else None,
+                "resolved_by": c.resolved_by,
+            }
+            for c in candidates
+        ]
+
+        # Recent Orders
+        recent_deps = MatterDependency.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id__in=matter_ids,
+            kind="OWN_CASE",
+        ).order_by("-added_at")[:10]
+
+        recent_orders_list = [
+            {
+                "matter_id": dep.matter_id,
+                "public_id": dep.public_id,
+                "match_key": dep.match_key,
+                "decision_date": dep.as_of_legal_date.isoformat() if dep.as_of_legal_date else None,
+                "bench": None,
+                "kind": dep.kind,
+                "source_ref": dep.source_ref,
+                "uncertified_badge": True,
+                "source_viewer_url": f"/viewer/public/{dep.public_id}",
+            }
+            for dep in recent_deps
+        ]
+
+        return {
+            "today_date": today_d.isoformat(),
+            "today_hearings": today_hearings_list,
+            "tomorrow_hearings": tomorrow_hearings_list,
+            "this_week_hearings": this_week_hearings_list,
+            "this_week_deadlines": this_week_deadlines_list,
+            "pending_candidates": pending_candidates_list,
+            "recent_orders": recent_orders_list,
+            "total_active_matters": len(matters_map),
+        }
+
+
+def _generate_ical_calendar(
+    events: list[dict[str, Any]], cal_name: str = "Lawyer Brain Calendar"
+) -> str:
+    """Generate RFC 5545 compliant iCalendar string with all-day VALUE=DATE events."""
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Lawyer Brain//Legal Intelligence Platform//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        f"X-WR-CALNAME:{cal_name}",
+        "X-WR-TIMEZONE:Asia/Kolkata",
+    ]
+    now_stamp = timezone.now().strftime("%Y%m%dT%H%M%SZ")
+    for ev in events:
+        start_d: date = ev["date"]
+        end_d: date = start_d + timedelta(days=1)
+        start_str = start_d.strftime("%Y%m%d")
+        end_str = end_d.strftime("%Y%m%d")
+        uid = ev["uid"]
+        summary = (
+            str(ev["summary"])
+            .replace("\\", "\\\\")
+            .replace(";", "\\;")
+            .replace(",", "\\,")
+            .replace("\n", " ")
+        )
+        desc = (
+            str(ev.get("description", ""))
+            .replace("\\", "\\\\")
+            .replace(";", "\\;")
+            .replace(",", "\\,")
+            .replace("\n", "\\n")
+        )
+        loc = (
+            str(ev.get("location", ""))
+            .replace("\\", "\\\\")
+            .replace(";", "\\;")
+            .replace(",", "\\,")
+            .replace("\n", " ")
+        )
+        lines.append("BEGIN:VEVENT")
+        lines.append(f"UID:{uid}@lawyerbrain")
+        lines.append(f"DTSTAMP:{now_stamp}")
+        lines.append(f"DTSTART;VALUE=DATE:{start_str}")
+        lines.append(f"DTEND;VALUE=DATE:{end_str}")
+        lines.append(f"SUMMARY:{summary}")
+        if desc:
+            lines.append(f"DESCRIPTION:{desc}")
+        if loc:
+            lines.append(f"LOCATION:{loc}")
+        lines.append("STATUS:CONFIRMED")
+        lines.append("END:VEVENT")
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines) + "\r\n"
+
+
+@router.get("/matters/{matter_id}/calendar/export", auth=authz_required)
+def export_matter_calendar(request: HttpRequest, matter_id: str) -> HttpResponse:
+    """Export matter hearings and deadlines as RFC 5545 all-day iCalendar file."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        events: list[dict[str, Any]] = []
+
+        hearings = Hearing.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id
+        ).exclude(status="CANCELLED")
+        for h in hearings:
+            events.append(
+                {
+                    "uid": f"hearing-{h.hearing_id}",
+                    "date": h.date,
+                    "summary": f"Hearing: {matter.title} ({h.bench or matter.court_or_forum or 'Court'})",
+                    "location": f"Court {h.court_no or '-'}, Item {h.item_no or '-'}",
+                    "description": f"Purpose: {h.purpose or 'Hearing'}\\nStatus: {h.status}\\nSource: {h.source}",
+                }
+            )
+
+        deadlines = Deadline.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id=matter_id,
+            lifecycle__in=["PROPOSED", "CONFIRMED"],
+        )
+        for d in deadlines:
+            events.append(
+                {
+                    "uid": f"deadline-{d.deadline_id}",
+                    "date": d.due_on,
+                    "summary": f"Due: {d.label} - {matter.title}",
+                    "location": matter.court_or_forum or "",
+                    "description": f"entered by {d.owner or 'lawyer'}, not computed\\nLifecycle: {d.lifecycle}",
+                }
+            )
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="CALENDAR_EXPORT",
+            object_ref=matter_id,
+            matter_id=matter_id,
+            decision="ALLOW",
+            detail={"events_count": len(events)},
+        )
+
+        ics_content = _generate_ical_calendar(events, cal_name=f"Matter {matter.title}")
+        response = HttpResponse(ics_content, content_type="text/calendar; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="matter_{matter_id}_calendar.ics"'
+        return response
+
+
+@router.get("/calendar/export", auth=authz_required)
+def export_firm_calendar(request: HttpRequest) -> HttpResponse:
+    """Export all accessible hearings and deadlines as RFC 5545 all-day iCalendar file."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        all_matters = Matter.objects.filter(tenant_id=user.tenant_id, status="ACTIVE")
+        matters_map = {m.matter_id: m for m in all_matters if authz.can(user, "read", m)}
+        matter_ids = list(matters_map.keys())
+
+        events: list[dict[str, Any]] = []
+
+        hearings = Hearing.objects.filter(
+            tenant_id=user.tenant_id, matter_id__in=matter_ids
+        ).exclude(status="CANCELLED")
+        for h in hearings:
+            m = matters_map.get(h.matter_id)
+            m_title = m.title if m else "Matter"
+            events.append(
+                {
+                    "uid": f"hearing-{h.hearing_id}",
+                    "date": h.date,
+                    "summary": f"Hearing: {m_title} ({h.bench or (m.court_or_forum if m else None) or 'Court'})",
+                    "location": f"Court {h.court_no or '-'}, Item {h.item_no or '-'}",
+                    "description": f"Purpose: {h.purpose or 'Hearing'}\\nStatus: {h.status}\\nSource: {h.source}",
+                }
+            )
+
+        deadlines = Deadline.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id__in=matter_ids,
+            lifecycle__in=["PROPOSED", "CONFIRMED"],
+        )
+        for d in deadlines:
+            m = matters_map.get(d.matter_id)
+            m_title = m.title if m else "Matter"
+            events.append(
+                {
+                    "uid": f"deadline-{d.deadline_id}",
+                    "date": d.due_on,
+                    "summary": f"Due: {d.label} - {m_title}",
+                    "location": (m.court_or_forum if m else "") or "",
+                    "description": f"entered by {d.owner or 'lawyer'}, not computed\\nLifecycle: {d.lifecycle}",
+                }
+            )
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="CALENDAR_EXPORT",
+            object_ref="firm",
+            decision="ALLOW",
+            detail={"events_count": len(events)},
+        )
+
+        ics_content = _generate_ical_calendar(events, cal_name="Lawyer Brain - Court Calendar")
+        response = HttpResponse(ics_content, content_type="text/calendar; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="lawyer_brain_calendar.ics"'
+        return response
+

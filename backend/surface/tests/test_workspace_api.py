@@ -169,7 +169,8 @@ def test_client_matter_vault_full_lifecycle_and_exit_checks(api_setup: dict[str,
     )
     assert add_case_resp.status_code == 200
     case_link_data = add_case_resp.json()
-    assert case_link_data["value_normalized"] == "CP (IB) 123/MB/2026"
+    assert case_link_data["value_normalized"] == "CP (IB) 123/MUM/2026"
+    assert case_link_data["parseable"] is True
 
     # 2. Upload one IBBI fixture PDF as ORDER with provenance COURT
     ibbi_fixture_path = REPO_ROOT / "eval" / "fixtures" / "ibbi" / "sample_order_1.pdf"

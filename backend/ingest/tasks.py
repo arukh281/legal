@@ -41,3 +41,31 @@ def crawl_ibbi_section_task(
         "unchanged_count": summary.unchanged_count,
         "changed_count": summary.changed_count,
     }
+
+
+@app.task(queue="bulk")
+def crawl_nclt_causelist_task(
+    crawl_run_id: str | None = None,
+    pdf_paths: list[str] | None = None,
+) -> dict[str, Any]:
+    """Background task executing NCLT daily cause-list processing."""
+    from ingest.adapters.nclt_causelist import NCLTCauseListAdapter
+
+    adapter = NCLTCauseListAdapter()
+    processed_count = 0
+    items_count = 0
+
+    if pdf_paths:
+        for p in pdf_paths:
+            with open(p, "rb") as f:
+                content = f.read()
+            res = adapter.process_causelist_pdf(content, source_url=f"file://{p}", crawl_run_id=crawl_run_id)
+            processed_count += 1
+            items_count += len(res.items)
+
+    return {
+        "crawl_run_id": crawl_run_id,
+        "source_id": "NCLT_CAUSELIST",
+        "processed_lists": processed_count,
+        "items_total": items_count,
+    }

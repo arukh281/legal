@@ -393,3 +393,284 @@ export function getDocumentDownloadUrl(pdocId: string, pver?: string): string {
     ? `${API_BASE_URL}/api/documents/${encodeURIComponent(pdocId)}/download?pver=${encodeURIComponent(pver)}`
     : `${API_BASE_URL}/api/documents/${encodeURIComponent(pdocId)}/download`;
 }
+
+// ==============================================================================
+// R2: Hearings, Dates, Candidates, Timeline & Today API
+// ==============================================================================
+
+export interface HearingResponse {
+  hearing_id: string;
+  matter_id: string;
+  date: string;
+  court_no: string | null;
+  item_no: string | null;
+  bench: string | null;
+  purpose: string | null;
+  source: string;
+  source_ref: string | null;
+  status: string;
+  outcome: string | null;
+  entered_by: string;
+  observed_at: string | null;
+  court_or_forum: string | null;
+}
+
+export interface HearingCreateRequest {
+  date: string;
+  court_no?: string | null;
+  item_no?: string | null;
+  bench?: string | null;
+  purpose?: string | null;
+}
+
+export interface HearingOutcomeRequest {
+  outcome: string;
+  status?: string;
+  next_date?: string | null;
+  next_purpose?: string | null;
+}
+
+export interface DeadlineResponse {
+  deadline_id: string;
+  matter_id: string;
+  rule_id: string | null;
+  label: string;
+  kind: string;
+  due_on: string;
+  lifecycle: string;
+  owner: string | null;
+  source_note: string;
+  created_at: string;
+}
+
+export interface DeadlineCreateRequest {
+  label: string;
+  due_on: string;
+  owner?: string | null;
+  rule_id?: string | null;
+}
+
+export interface CaseCandidateResponse {
+  candidate_id: string;
+  matter_id: string;
+  kind: string;
+  source: string;
+  source_ref: string;
+  case_number_raw: string;
+  list_date: string | null;
+  bench: string | null;
+  normalized_case_no: string | null;
+  details: Record<string, any>;
+  status: string;
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+}
+
+export interface CourtOrderResponse {
+  matter_id: string;
+  public_id: string;
+  match_key: string;
+  decision_date: string | null;
+  bench: string | null;
+  kind: string;
+  source_ref: string;
+  uncertified_badge: boolean;
+  source_viewer_url: string;
+}
+
+export interface TimelineItemResponse {
+  id: string;
+  date: string;
+  item_type: string;
+  title: string;
+  subtitle: string | null;
+  status: string | null;
+  metadata: Record<string, any>;
+}
+
+export interface TodayHearingItem {
+  hearing_id: string;
+  matter_id: string;
+  matter_title: string;
+  client_id: string | null;
+  court_or_forum: string | null;
+  court_no: string | null;
+  item_no: string | null;
+  bench: string | null;
+  purpose: string | null;
+  status: string;
+  date: string;
+}
+
+export interface TodayDeadlineItem {
+  deadline_id: string;
+  matter_id: string;
+  matter_title: string;
+  label: string;
+  due_on: string;
+  lifecycle: string;
+  source_note: string;
+  is_overdue: boolean;
+}
+
+export interface TodayResponse {
+  today_date: string;
+  today_hearings: TodayHearingItem[];
+  tomorrow_hearings: TodayHearingItem[];
+  this_week_hearings: TodayHearingItem[];
+  this_week_deadlines: TodayDeadlineItem[];
+  pending_candidates: CaseCandidateResponse[];
+  recent_orders: CourtOrderResponse[];
+  total_active_matters: number;
+}
+
+export async function fetchToday(): Promise<TodayResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/today`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Today dashboard (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterHearings(matterId: string): Promise<HearingResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/hearings`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch hearings (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function createMatterHearing(matterId: string, data: HearingCreateRequest): Promise<HearingResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/hearings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Failed to create hearing (${response.status}): ${err}`);
+  }
+  return response.json();
+}
+
+export async function recordHearingOutcome(hearingId: string, data: HearingOutcomeRequest): Promise<HearingResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/hearings/${encodeURIComponent(hearingId)}/outcome`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Failed to record outcome (${response.status}): ${err}`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterDeadlines(matterId: string): Promise<DeadlineResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/deadlines`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch deadlines (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function createMatterDeadline(matterId: string, data: DeadlineCreateRequest): Promise<DeadlineResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/deadlines`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Failed to create deadline (${response.status}): ${err}`);
+  }
+  return response.json();
+}
+
+export async function updateDeadlineLifecycle(deadlineId: string, lifecycle: string): Promise<DeadlineResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/deadlines/${encodeURIComponent(deadlineId)}/lifecycle`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ lifecycle }),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Failed to update deadline lifecycle (${response.status}): ${err}`);
+  }
+  return response.json();
+}
+
+export async function fetchCandidates(matterId?: string): Promise<CaseCandidateResponse[]> {
+  const url = matterId
+    ? `${API_BASE_URL}/api/candidates?matter_id=${encodeURIComponent(matterId)}`
+    : `${API_BASE_URL}/api/candidates`;
+  const response = await fetch(url, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch candidates (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function confirmCandidate(candidateId: string): Promise<{ status: string; candidate_id: string; resolved: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/candidates/${encodeURIComponent(candidateId)}/confirm`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to confirm candidate (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function dismissCandidate(candidateId: string): Promise<{ status: string; candidate_id: string; resolved: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/candidates/${encodeURIComponent(candidateId)}/dismiss`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to dismiss candidate (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterOrders(matterId: string): Promise<CourtOrderResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/orders`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch court orders (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function fetchMatterTimeline(matterId: string): Promise<TimelineItemResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/timeline`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch matter timeline (${response.status})`);
+  }
+  return response.json();
+}
+
+export function getMatterCalendarExportUrl(matterId: string): string {
+  return `${API_BASE_URL}/api/matters/${encodeURIComponent(matterId)}/calendar/export`;
+}
+
+export function getFirmCalendarExportUrl(): string {
+  return `${API_BASE_URL}/api/calendar/export`;
+}
+

@@ -17,6 +17,11 @@ _is_admin_context: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "is_admin_context", default=False
 )
 
+# ContextVar indicating that the current thread/task is executing a background worker operation
+_is_worker_context: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "is_worker_context", default=False
+)
+
 
 @contextmanager
 def admin_db_context() -> Generator[None]:
@@ -28,11 +33,23 @@ def admin_db_context() -> Generator[None]:
         _is_admin_context.reset(token)
 
 
+@contextmanager
+def worker_db_context() -> Generator[None]:
+    """Context manager setting worker execution context for database routing."""
+    token = _is_worker_context.set(True)
+    try:
+        yield
+    finally:
+        _is_worker_context.reset(token)
+
+
 class DatabaseRouter:
     """Routes database operations across connection aliases:
 
     - 'admin': Django admin operations and cross-tenant platform administration
       (connects as admin_rw with BYPASSRLS).
+    - 'worker': Background worker jobs and asynchronous pipeline tasks
+      (connects as worker role).
     - 'owner': Database migrations and schema evolution (connects as postgres/migration owner).
     - 'default': Application web requests and tenant-scoped domain queries
       (connects as app_rw with NOBYPASSRLS).
@@ -49,11 +66,15 @@ class DatabaseRouter:
     def db_for_read(self, model: Any, **hints: Any) -> str | None:
         if self._is_admin(hints):
             return "admin"
+        if _is_worker_context.get():
+            return "worker"
         return "default"
 
     def db_for_write(self, model: Any, **hints: Any) -> str | None:
         if self._is_admin(hints):
             return "admin"
+        if _is_worker_context.get():
+            return "worker"
         return "default"
 
     def allow_relation(self, obj1: Any, obj2: Any, **hints: Any) -> bool:

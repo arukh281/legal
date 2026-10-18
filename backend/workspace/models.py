@@ -9,6 +9,7 @@ Normative sources:
 
 from __future__ import annotations
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models.fields.composite import CompositePrimaryKey
 from django.utils import timezone
@@ -394,3 +395,200 @@ class AuditChainHead(DomainModel):
     class Meta:
         managed = False
         db_table = 'tpl"."audit_chain_head'
+
+
+class Hearing(DomainModel):
+    """Court hearing or listing observation (tpl.hearing)."""
+
+    pk = CompositePrimaryKey("tenant_id", "hearing_id")
+    tenant_id = models.TextField()
+    matter_id = models.TextField()
+    hearing_id = PrefixedULIDField(prefix="hrg")
+    case_id = models.TextField(null=True, blank=True)
+    date = models.DateField()
+    court_no = models.TextField(null=True, blank=True)
+    item_no = models.TextField(null=True, blank=True)
+    bench = models.TextField(null=True, blank=True)
+    purpose = models.TextField(null=True, blank=True)
+    source = models.TextField(
+        default="MANUAL",
+        choices=[
+            ("MANUAL", "MANUAL"),
+            ("CAUSE_LIST", "CAUSE_LIST"),
+            ("ECOURTS", "ECOURTS"),
+            ("SC", "SC"),
+        ],
+    )
+    source_ref = models.TextField(null=True, blank=True)
+    status = models.TextField(
+        default="LISTED",
+        choices=[
+            ("LISTED", "LISTED"),
+            ("HEARD", "HEARD"),
+            ("ADJOURNED", "ADJOURNED"),
+            ("NOT_REACHED", "NOT_REACHED"),
+            ("CANCELLED", "CANCELLED"),
+        ],
+    )
+    outcome = models.TextField(null=True, blank=True)
+    next_date = models.DateField(null=True, blank=True)
+    entered_by = models.TextField()
+    observed_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."hearing'
+
+    def __str__(self) -> str:
+        return f"Hearing({self.hearing_id}, {self.date}, {self.status})"
+
+
+class Deadline(DomainModel):
+    """Procedural deadline or lawyer-entered date (tpl.deadline)."""
+
+    pk = CompositePrimaryKey("tenant_id", "deadline_id")
+    tenant_id = models.TextField()
+    matter_id = models.TextField()
+    deadline_id = PrefixedULIDField(prefix="ddl")
+    rule_id = models.TextField(null=True, blank=True)
+    rule_code = models.TextField(null=True, blank=True)
+    rule_version = models.TextField(null=True, blank=True)
+    label = models.TextField()
+    kind = models.TextField(
+        choices=[
+            ("LIMITATION", "LIMITATION"),
+            ("STATUTORY_REPLY", "STATUTORY_REPLY"),
+            ("COURT_ORDERED", "COURT_ORDERED"),
+            ("COMPLIANCE", "COMPLIANCE"),
+            ("INTERNAL", "INTERNAL"),
+            ("MANUAL", "MANUAL"),
+        ]
+    )
+    calendar_ref = models.JSONField(null=True, blank=True)
+    trigger_event = models.JSONField(null=True, blank=True)
+    computed_date = models.DateField(null=True, blank=True)
+    due_on = models.DateField()
+    window_kind = models.TextField(null=True, blank=True)
+    hard_limit = models.DateField(null=True, blank=True)
+    extendable = models.TextField(
+        null=True,
+        blank=True,
+        choices=[
+            ("NO", "NO"),
+            ("CONDONABLE", "CONDONABLE"),
+            ("COURT_DISCRETION", "COURT_DISCRETION"),
+        ],
+    )
+    statutory_anchors: list[str] = ArrayField(models.TextField(), default=list)  # type: ignore[assignment]
+    trace = models.JSONField(default=list)
+    sensitivity = models.JSONField(default=list)
+    interpretation_variant = models.TextField(null=True, blank=True)
+    status = models.TextField(
+        null=True,
+        blank=True,
+        choices=[
+            ("CONFIRMED_INPUTS", "CONFIRMED_INPUTS"),
+            ("ASSUMED_INPUTS", "ASSUMED_INPUTS"),
+            ("UNCERTAIN_CALENDAR", "UNCERTAIN_CALENDAR"),
+            ("CONTESTED_RULE", "CONTESTED_RULE"),
+        ],
+    )
+    lifecycle = models.TextField(
+        default="PROPOSED",
+        choices=[
+            ("PROPOSED", "PROPOSED"),
+            ("CONFIRMED", "CONFIRMED"),
+            ("DONE", "DONE"),
+            ("WAIVED", "WAIVED"),
+            ("MISSED", "MISSED"),
+        ],
+    )
+    owner = models.TextField(null=True, blank=True)
+    reminders = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."deadline'
+
+    def __str__(self) -> str:
+        return f"Deadline({self.deadline_id}, {self.label}, due={self.due_on}, {self.lifecycle})"
+
+
+class MatterDependency(DomainModel):
+    """Inverted index linking public documents/orders to matters (tpl.matter_dependency)."""
+
+    pk = CompositePrimaryKey("tenant_id", "matter_id", "public_id", "kind")
+    tenant_id = models.TextField()
+    matter_id = models.TextField()
+    public_id = models.TextField()
+    match_key = models.TextField()
+    as_of_legal_date = models.DateField(null=True, blank=True)
+    kind = models.TextField(
+        choices=[
+            ("OWN_CASE", "OWN_CASE"),
+            ("CITED_IN_OUR_DRAFT", "CITED_IN_OUR_DRAFT"),
+            ("CITED_BY_OPPONENT", "CITED_BY_OPPONENT"),
+            ("IN_MEMO_FAVOURABLE", "IN_MEMO_FAVOURABLE"),
+            ("IN_MEMO_ADVERSE", "IN_MEMO_ADVERSE"),
+            ("GOVERNING_PROVISION", "GOVERNING_PROVISION"),
+            ("WATCHED", "WATCHED"),
+        ]
+    )
+    weight = models.FloatField(null=True, blank=True)
+    source_ref = models.TextField()
+    added_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."matter_dependency'
+
+    def __str__(self) -> str:
+        return f"MatterDependency({self.matter_id}, {self.public_id}, {self.kind})"
+
+
+class CaseCandidate(DomainModel):
+    """Candidate hearing or order match requiring lawyer review under 'Check these' (tpl.case_candidate)."""
+
+    pk = CompositePrimaryKey("tenant_id", "candidate_id")
+    tenant_id = models.TextField()
+    candidate_id = PrefixedULIDField(prefix="cnd")
+    matter_id = models.TextField()
+    kind = models.TextField(
+        choices=[
+            ("HEARING", "HEARING"),
+            ("ORDER", "ORDER"),
+            ("HEARING_DROPPED", "HEARING_DROPPED"),
+        ]
+    )
+    source = models.TextField(
+        choices=[
+            ("CAUSE_LIST", "CAUSE_LIST"),
+            ("IBBI_ORDER", "IBBI_ORDER"),
+        ]
+    )
+    source_ref = models.TextField()
+    case_number_raw = models.TextField()
+    list_date = models.DateField(null=True, blank=True)
+    bench = models.TextField(null=True, blank=True)
+    normalized_case_no = models.TextField(null=True, blank=True)
+    details = models.JSONField(default=dict)
+    status = models.TextField(
+        default="PENDING",
+        choices=[
+            ("PENDING", "PENDING"),
+            ("CONFIRMED", "CONFIRMED"),
+            ("DISMISSED", "DISMISSED"),
+        ],
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    resolved_by = models.TextField(null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'tpl"."case_candidate'
+
+    def __str__(self) -> str:
+        return f"CaseCandidate({self.candidate_id}, {self.kind}, {self.status})"
+

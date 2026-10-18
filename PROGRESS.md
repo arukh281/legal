@@ -1,6 +1,6 @@
 # PROGRESS.md — Build State
 
-## Current State: Session R1 Complete (The Client File: clients, matters, document vault)
+## Current State: Session R2 Complete (Hearings, Dates and Today)
 
 ### 1. What Was Built
 
@@ -813,14 +813,159 @@ The product has been re-centred on the client file: law firms open matters under
 
 ---
 
-### 6. What the Next Session (R2: "Hearings, Dates and Today") Needs
-- **Hearings & Calendar Entity:**
-  - `tpl.hearing`: matter_id, court_or_forum, bench, hearing_date, hearing_type, judge_names, stage, notes, outcome/order_ref.
-- **Procedural Dates & Today View:**
-  - "Today" firm dashboard: upcoming hearings, case deadlines, filings due, and recent activity.
-  - Court diary / causelist linkage stubs.
-- **Matter Chronology:**
-  - Unified timeline combining hearings, filings, orders, and vault documents.
+### 6. Session R2: Hearings, Dates and Today (Completed 2026-10-18)
+Lawyers can run their day from inside the platform: track manual hearings and procedural deadlines for any court, sync daily listings automatically from NCLT cause lists, match orders from the IBBI public crawl, review candidates in "Check these", record hearing outcomes with next-date scheduling, and export all-day calendar files.
+
+#### A. Data Models & Database (`backend/workspace/models.py`, migrations `0006`, `0008`, `0009`)
+- `tpl.hearing` (prefixed `hrg_`):
+  - Primary key `(tenant_id, hearing_id)` with Crockford ULID `hrg_`.
+  - Fields: `matter_id`, `date` (DATE NOT NULL), `court_or_forum` (defaults to matter's court), `court_no`, `item_no`, `bench`, `purpose`, `source` (`MANUAL` or `CAUSE_LIST`), `source_ref`, `status` (`LISTED`, `HEARD`, `ADJOURNED`, `RESERVED`, `DISPOSED`), `outcome`, `notes`.
+  - Stable key for cause-list listings: `(matter_id, date, bench, court_no)` allows revising `item_no` in-place without duplicating entries across crawl sweeps.
+- `tpl.deadline` (prefixed `ddl_`):
+  - Primary key `(tenant_id, deadline_id)` with Crockford ULID `ddl_`.
+  - Fields: `matter_id`, `label`, `due_on`, `rule_id`, `source_note` (e.g. `"entered by <name>, not computed"`), `owner`, `lifecycle` (`ENTERED`, `CONFIRMED`, `DONE`, `DISMISSED`).
+  - Database check constraint `CHECK (rule_id IS NULL)` strictly enforces Non-negotiable #2 (no LLM deadline computation; R4 will replace this constraint with the ACTIVE RuleSpec trigger).
+- `tpl.case_candidate` (prefixed `cnd_`):
+  - Primary key `(tenant_id, candidate_id)` with Crockford ULID `cnd_`.
+  - Stable key: `(matter_id, kind, list_date, bench, case_number_normalized)`.
+  - Fields: `kind` (`CAUSE_LIST_PARTIAL`, `ORDER_PARTIAL`, `HEARING_DROPPED`), `case_number_raw`, `case_number_normalized`, `bench`, `list_date`, `status` (`PENDING`, `CONFIRMED`, `DISMISSED`), `details`.
+  - Dismissed candidates are remembered and never resurrected on subsequent crawl sweeps.
+- `tpl.matter_dependency`:
+  - Tracks inter-matter blocking dependencies (`dep_id`, `matter_id`, `depends_on_matter_id`, `relationship`, `status`).
+
+#### B. Case Number Normalizer & Bench Aliases (`backend/anchor_lib/case_numbers.py`)
+- Grammar parser and canonicalizer for Indian tribunal and court case numbers:
+  - Preserves strict distinctness: `CP (IB)` vs `RCP (IB)` are never conflated (restoration petitions cannot match main petitions).
+  - Bench canonicalization: maps alias codes (`MB`/`MUM` -> `MUM`, `ND`/`DEL` -> `DEL`, `AHM` -> `AHM`, `KOL` -> `KOL`, `CH`/`CHD` -> `CHD`, `HYD` -> `HYD`, etc.).
+  - Extracts parent case number from interlocutory and miscellaneous applications (`IA 456/2026 in CP (IB) 123/MUM/2026` -> matches parent case).
+  - Match classification:
+    - `EXACT`: Case type, number, year, and bench are all present and equal.
+    - `PARTIAL`: Missing bench or year on either side.
+    - `NONE`: Bench or year mismatch, or different case numbers.
+- Write-time normalization and warning reporting on `POST /matters/{id}/case-numbers`. Migration `0008` backfills existing rows reversibly.
+
+#### C. Ingestion: NCLT Cause List Feed & Deterministic Parser (`backend/ingest/`)
+- Ingest adapter `backend/ingest/adapters/nclt_causelist.py`:
+  - Profile `NCLT_CAUSELIST` (PROVISIONAL status, robots-checked, rate-limited $\le 1$ req / 3s with PostgreSQL advisory locks, no CAPTCHA).
+  - Captures raw PDF bytes to MinIO/S3, records `plc.capture_record`, and emits `court.causelist.published.v1`.
+  - Scheduled in Procrastinate for 19:00, 21:00, and 06:30 IST.
+- Deterministic parser `backend/ingest/causelist_parser.py`:
+  - Extracts bench name, court number, list date, and table rows (`item_no`, `case_number_raw`, `purpose`, `parties`).
+  - Strict layout drift detection flags unparseable headers or non-standard tables without crashing.
+- Live NCLAT Probe:
+  - Recorded live response via `GatedHttpClient` in `eval/fixtures/nclat_probe.json` for review in future sessions.
+
+#### D. Court Sync Consumer (`backend/workspace/consumer.py`)
+- Event-driven consumer processing `court.causelist.published.v1` and `plc.raw.captured.v1`:
+  - Per-tenant matching: loops tenant by tenant with explicit `tenant_db_context(tenant_id)` set and purpose logged, querying only that tenant's case links.
+  - Audit trail stamps `actor = "system:causelist"`.
+  - Exact cause-list match creates `tpl.hearing` with `source='CAUSE_LIST'`.
+  - Partial cause-list match creates `tpl.case_candidate` with `kind='CAUSE_LIST_PARTIAL'` ("Check these").
+  - Revised cause lists update `item_no` in-place without duplicating rows.
+  - If a previously matched case is dropped from a revised cause list, the hearing is preserved, and a candidate with `kind='HEARING_DROPPED'` is routed to "Check these".
+  - Order sync matches listing subject and cause title (text before first numbered paragraph); citations in the judgment body are strictly ignored.
+
+#### E. Typed Surface API (`backend/surface/router_workspace.py`)
+- Hearings: `GET/POST /matters/{id}/hearings`, `POST /hearings/{id}/outcome` (updates outcome & schedules next date in one atomic transaction).
+- Deadlines: `GET/POST /matters/{id}/deadlines` (refuses `rule_id != None`), `POST /deadlines/{id}/lifecycle`.
+- Candidates: `GET /candidates` (lists "Check these"), `POST /candidates/{id}/confirm`, `POST /candidates/{id}/dismiss`.
+- Court Orders: `GET /matters/{id}/orders` (returns public mirror orders with `uncertified_badge=True`).
+- Timeline: `GET /matters/{id}/timeline` (unified chronological descending stream of hearings, deadlines, orders, filings).
+- Today: `GET /today` (Asia/Kolkata IST calculations for today, tomorrow, this week, overdue deadlines, candidates, orders).
+- Calendar Export: `GET /matters/{id}/calendar/export` and `GET /calendar/export` (RFC 5545 `.ics` with all-day `VALUE=DATE` events and access logging).
+
+#### F. Frontend SPA (`frontend/src/`)
+- `TodayPage.tsx`: Mobile-first daily dashboard (Asia/Kolkata date, firm `.ics` export, Today's hearings, Tomorrow's hearings, This week's hearings, Due deadlines with Overdue badge & Mark Done, "Check these" candidates with Confirm/Dismiss and matter links, Recent court orders with uncertified badge).
+- `MatterDetailPage.tsx`: Matter header calendar export, tab navigation (`Documents`, `Hearings`, `Dates`, `Court Orders`, `Timeline`), manual hearing entry, outcome recording modal with next-date scheduling, manual deadline entry, public order viewer via `SourceViewer`, unified timeline.
+- `Layout.tsx` & `App.tsx`: Moved platform health indicator to compact sidebar pill; set Today as primary starting tab.
+
+#### G. Real NCLT Fixtures & Golden Test Suite
+- Downloaded 4 real public NCLT daily cause-list PDFs via `GatedHttpClient` (rate limit <= 1 req / 3s, no CAPTCHA) into `eval/fixtures/nclt_causelist/`:
+  - `nclt_causelist_1.pdf`: NCLT Mumbai Bench, Court IV (84 items, 2026-10-21)
+  - `nclt_causelist_2.pdf`: NCLT Chandigarh Bench, Court II (41 items, 2026-10-21)
+  - `nclt_causelist_3.pdf`: NCLT Mumbai Bench, Court III (106 items, 2026-10-20)
+  - `nclt_causelist_4.pdf`: NCLT Mumbai Bench, Court I (62 items, 2026-10-20)
+  - `manifest.json`: SHA-256 hashes, source URLs, item counts, courts, benches, list dates.
+- Golden tests in `backend/ingest/tests/test_causelist_parser.py` (`test_real_nclt_fixtures_golden`):
+  - Validates entry counts, bench, court number, list date, case numbers, and unparsed line bounds.
+  - Handled real PDF idiosyncrasies: single-letter word wrapping across newlines, multi-case rows, combined and separate application columns, and stateful main petition / IA party hierarchy.
+
+#### H. Security Review of Migration 0007 (System Actor Isolation & Document Vault Protection)
+- `tpl.can_read_matter` and `tpl.tenant` strictly check `SESSION_USER IN ('worker', 'admin_rw', 'postgres')`.
+- If an application web session (`app_rw`) sets `app.user_id = 'system:causelist'`, the functions ignore it and return `FALSE` (0 rows exposed).
+- Document vault tables (`tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`) strictly exclude system actors and sync purposes via `COALESCE(app.user_id, '') NOT LIKE 'system:%' AND COALESCE(app.purpose, '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')`. Worker background crawls can never read confidential client documents.
+- Test suite: `backend/workspace/tests/test_security_causelist_actor.py` (both tests pass: app session gets 0 rows; worker gets 0 document rows).
+
+#### I. Live Exit Check Runs on Real Matter ("Acme v. Zenith, s.9 petition")
+1. **Exit Checks 1–3 Live Demonstration (`python manage.py run_r2_exit_checks`):**
+```
+=== SESSION R2 EXIT CHECKS 1-3 LIVE DEMONSTRATION ===
+✓ Created matter: 'Acme v. Zenith, s.9 petition' (ID: mat_01M56TBM0JV6K15TEZZ22KVRCP)
+
+--- EXIT CHECK 1: Manual Hearing & Outcome Recording ---
+✓ Created manual hearing: ID=hrg_01M56TBM2480ZMP4FJX0AY6GPC, date=2026-10-19, court_no=4, item_no=12
+✓ Verified on Today dashboard: Tomorrow's hearings includes ID=hrg_01M56TBM2480ZMP4FJX0AY6GPC
+✓ Recorded outcome: status=ADJOURNED, outcome='Adjourned for filing of rejoinder'
+✓ Next hearing scheduled in same action: ID=hrg_01M56TBM2TYXR1C01EFCTNC44A, date=2026-11-01, purpose='For Rejoinder & Hearing'
+
+--- EXIT CHECK 2: Manual Deadline Entry & rule_id Refusal ---
+✓ Created manual deadline: ID=ddl_01M56TBM35967QWC9QS5THNHJ2, due_on=2026-10-25, label='Rejoinder affidavit to reply'
+✓ Database refused rule_id assignment (CHECK chk_deadline_rule_id_refusal enforced): IntegrityError
+
+--- EXIT CHECK 3: Cause-List Matching on Real NCLT Fixture ---
+✓ Parsed real NCLT fixture: bench=MUM, court_no=4, date=2026-10-21, items=84
+✓ Consumer processed cause-list: exact_matches=7, partial_matches=0
+✓ Verified hearing on matter: ID=hrg_01M56TBMPH8TN0R0PK3E94QHM3, source=CAUSE_LIST, bench=MUM, court_no=4, item_no=101, purpose=''
+✓ Partial match landed in 'Check these': ID=cnd_01M56TBMQVVJ2CH3J1KX6VPC46, case_number_raw='CP (IB) 736/MB', status=PENDING
+✓ Cause-list revision updated in place: ID=hrg_01M56TBMPH8TN0R0PK3E94QHM3, item_no updated from 101 to 5, zero duplicates created.
+
+=== ALL EXIT CHECKS 1-3 DEMONSTRATED SUCCESSFULLY ===
+```
+
+2. **Exit Check 8 Marked Live NCLT Crawl & NCLAT Probe (`python manage.py crawl_nclt_live`):**
+```
+=== EXIT CHECK 8: MARKED LIVE NCLT CRAWL & NCLAT PROBE ===
+
+--- 1. Live NCLT Daily Cause List Crawl ---
+Fetching NCLT cause list index: https://nclt.gov.in/cause-list via GatedHttpClient...
+✓ NCLT index response: status=200, length=29287 bytes, duration=0.31s
+✓ No CAPTCHA detected on NCLT index page.
+Discovered 1 cause list PDF links on NCLT page.
+Fetching live cause list PDF: https://nclt.gov.in/sites/default/files/pdf_cause_list/NCLT20210913124850.pdf (enforcing rate limit >= 3s)...
+✓ PDF downloaded: status=200, size=3386244 bytes, duration=3.99s
+✓ Parsed live PDF: bench=None, court_no=1, date=None
+  - Total items parsed: 0
+  - Unparsed lines: 0
+  - Layout drift: True (reason: BENCH_HEADER_NOT_DETECTED)
+
+--- 2. NCLAT Cause List Page Probe (User Question 5) ---
+Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor)...
+✓ NCLAT response: status=200, content_type='text/html; charset=UTF-8', length=59466 bytes, duration=0.33s, pdf_links=21
+
+=== LIVE RUN SUMMARY REPORT ===
+• Total time taken: 4.66s
+• NCLT lists fetched: 1
+• NCLT entries parsed: 0
+• NCLT unparsed lines: 0
+• NCLT CAPTCHA encountered: False
+• NCLT layout drift: True (BENCH_HEADER_NOT_DETECTED)
+• NCLAT probe status: 200 (Content-Type: text/html; charset=UTF-8, CAPTCHA: False, PDFs found: 21)
+```
+
+- Full test suite: 331 passed, 0 failures, 1 skipped (real LLM smoke).
+- TypeScript: `pnpm --dir frontend test` and `pnpm --dir frontend build` 100% clean.
+- Code hygiene: `ruff check .` passed with 0 errors; `mypy .` checked with 0 issues.
+
+---
+
+### 7. What the Next Session (R3: "Tasks, Client Status Link, Excel Import") Needs
+- **Tasks Linked to Hearings or Deadlines:**
+  - `tpl.task` (prefixed `tsk_`): title, assignee, due_date, status, linked `hearing_id` or `deadline_id`.
+- **Client Status Link or Email per Matter:**
+  - Token-protected external read-only view of matter timeline and upcoming hearings for the firm's client.
+- **Excel Import of Live Cases:**
+  - Bulk import of matters, case numbers, and client mappings from spreadsheet templates.
+
 
 
 

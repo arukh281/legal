@@ -14,7 +14,7 @@ import { fetchHealth } from "./api/client";
 
 export const App: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string | null>("partner.lawyer@firm.in");
-  const [currentTab, setCurrentTab] = useState<NavTab>("clients");
+  const [currentTab, setCurrentTab] = useState<NavTab>("today");
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [activeMatterId, setActiveMatterId] = useState<string | null>(null);
 
@@ -34,12 +34,19 @@ export const App: React.FC = () => {
     setCurrentTab(tab);
   };
 
+  const handleSelectMatter = (matterId: string) => {
+    setActiveMatterId(matterId);
+    setCurrentTab("clients");
+  };
+
   return (
     <Layout
       currentTab={currentTab}
       onSelectTab={handleTabChange}
       userEmail={userEmail}
       onLogout={() => setUserEmail(null)}
+      health={health}
+      healthLoading={healthLoading}
     >
       {currentTab === "clients" && (
         activeMatterId ? (
@@ -70,7 +77,7 @@ export const App: React.FC = () => {
         />
       )}
       {currentTab === "research" && <ResearchPage />}
-      {currentTab === "today" && <TodayPage health={health} healthLoading={healthLoading} />}
+      {currentTab === "today" && <TodayPage onSelectMatter={handleSelectMatter} />}
       {currentTab === "authority" && <AuthorityPage />}
       {currentTab === "alerts" && <AlertsPage />}
     </Layout>
