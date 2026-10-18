@@ -1,21 +1,21 @@
-client name,client type,CIN or PAN,matter title,case type,court or forum,case number,next hearing date,lead lawyer email,notes
-Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,Insolvency Petition vs Beta Corp,IBC,NCLT New Delhi Bench Court-II,CP (IB) No. 421/ND/2024,25/11/2026,partner@lawfirm.in,Section 9 petition for unpaid operational debt
-State Bank of Horizon,COMPANY,AAACS1234E,Horizon CIRP Application,IBC,NCLT Mumbai Bench-I,CP (IB)/888/MB/2024,06/07/2026,associate@lawfirm.in,Financial creditor claim under section 7
-Zenith Global Pvt Ltd,COMPANY,U98765MH2015PTC654321,Zenith Appeal against Liquidation Order,Company Appeal,NCLAT New Delhi,Company Appeal (AT) (Insolvency) No. 102/2024,10/12/2026,partner@lawfirm.in,Stay on CoC constitution
-Pinnacle Steel Ltd,COMPANY,L55555WB2005PLC555555,Pinnacle Resolution Plan Approval,IBC,NCLT Kolkata Bench,CP (IB)/12/KB/2023,15/01/2024,associate@lawfirm.in,Historical hearing from last year
-Vanguard Estates,COMPANY,U11111KA2018PTC111111,Commercial Arbitration with Builder,Arbitration,High Court of Karnataka,ARB/COMM/SPECIAL/2023,20/11/2026,unknown_lawyer@lawfirm.in,Non-standard citation format
-Aura Technologies,COMPANY,U22222DL2019PTC222222,Pre-litigation Insolvency Mediation,Mediation,Pre-filing,,,partner@lawfirm.in,Mediation in progress
-Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,Acme Restructuring Advisory,Advisory,NCLT New Delhi,CA/99/ND/2024,18/12/2026,partner@lawfirm.in,Scheme of arrangement
-Rohan Sharma,INDIVIDUAL,ABCPS1234A,Personal Insolvency against Guarantor,Personal Insolvency,NCLT New Delhi Court-III,CP (IB) No. 55/ND/2024,05/11/2026,associate@lawfirm.in,Section 95 guarantor application
-Delta Logistics Ltd,COMPANY,U33333TN2012PTC333333,CIRP against Vendor,IBC,NCLT Chennai Bench,CP(IB)/45/CHE/2024,24/11/2026,partner@lawfirm.in,Serial date cell
-Vikram Malhotra,INDIVIDUAL,ABCPM5678B,Recovery Suit under Commercial Courts Act,Commercial Suit,Delhi High Court,CS(COMM) 312/2024,12/12/2026,associate@lawfirm.in,Summary commercial suit
-Secured Finlease Corp,COMPANY,U44444MH2011PLC444444,Finlease vs Defaults,IBC,NCLT Mumbai Bench-II,CP (IB)/600/MB/2024,14/11/2026,partner@lawfirm.in,=cmd|' /C calc'!A0
-Blue Star Exports,COMPANY,U66666DL2008PLC666666,Blue Star Invalidation Plea,IBC,NCLT New Delhi Bench-IV,C.P. (IB) - 789 / ND / 2024,19/11/2026,associate@lawfirm.in,Dotted case number notation
-Omicron Biotech,COMPANY,U77777KA2020PTC777777,Biotech Patent Dispute,Commercial Suit,High Court of Bombay,COMMS 45/2024,22/11/2026,partner@lawfirm.in,IP litigation
-Sunrise Power Ltd,COMPANY,L88888GJ2000PLC888888,Sunrise CIRP Admission,IBC,NCLT Ahmedabad Bench,CP(IB) 34/AHM/2024,28/11/2026,associate@lawfirm.in,Thermal power plant project debt
-Silverline Shipping,COMPANY,U99999MH2014PTC999999,Vessel Demurrage Claim,Admiralty,Bombay High Court,ADM 12/2024,02/12/2026,partner@lawfirm.in,Maritime lien
-Northwind Traders,COMPANY,U12121DL2016PTC121212,Goods Supply Contract Breach,Commercial Suit,Delhi High Court,CS (COMM) 101/2024,10/12/2026,nonexistent_lawyer@lawfirm.in,External briefing counsel
-Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,Insolvency Petition vs Beta Corp - Duplicate,IBC,NCLT New Delhi Bench Court-II,CP (IB) No. 421/ND/2024,25/11/2026,partner@lawfirm.in,Duplicate row in same batch
-Crest Pharmaceuticals,COMPANY,L13131MH2002PLC131313,Preferential Transaction Avoidance,IBC Avoidance,NCLT Mumbai Bench-I,IA(IBC)/124/MB/2024,17/11/2026,associate@lawfirm.in,Section 43 avoidance petition
-Apex Retailers,COMPANY,U14141DL2017PTC141414,Negotiable Instruments Complaint,Section 138 NI Act,Patiala House Courts New Delhi,CC NI ACT 450/2024,08/12/2026,associate@lawfirm.in,Dishonour of cheque
-Zenith Global Pvt Ltd,COMPANY,U98765MH2015PTC654321,Arbitral Award Execution,Execution,Delhi High Court,OMP (ENF) (COMM) 55/2024,15/12/2026,partner@lawfirm.in,Execution of arbitral award
+client name,client type,CIN or PAN,client role,matter title,case type,court or forum,case number,next hearing date,lead lawyer email,notes
+Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,PETITIONER,"Acme v. Zenith, s.9 petition",IBC,NCLT New Delhi Bench Court-II,CP (IB) No. 421/ND/2024,25/11/2026,partner@lawfirm.in,Section 9 petition for unpaid operational debt
+Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,PETITIONER,Insolvency Petition vs Beta Corp,IBC,NCLT Mumbai Bench Court-IV,CP (IB) 736/MB/2025,21/10/2026,partner@lawfirm.in,Section 7 petition for operational debt
+Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,,Acme Restructuring Advisory,Advisory,NCLT New Delhi,CA/99/ND/2024,18/12/2026,partner@lawfirm.in,Scheme of arrangement
+Acme Infra Ltd,COMPANY,L12345DL2010PLC123456,PETITIONER,Commercial Arbitration with Builder,Arbitration,High Court of Karnataka,ARB/COMM/SPECIAL/2023,20/11/2026,associate@lawfirm.in,Non-standard citation format
+State Bank of Horizon,COMPANY,AAACS1234E,PETITIONER,Horizon CIRP Application,IBC,NCLT Mumbai Bench-I,CP (IB)/888/MB/2024,06/07/2026,associate@lawfirm.in,Financial creditor claim under section 7
+State Bank of Horizon,COMPANY,AAACS1234E,PLAINTIFF,Recovery vs Defaulting Promoters,Commercial Suit,City Civil Court Bengaluru,SUIT-COMM-BLR-01/2024,03/04/2026,associate@lawfirm.in,Recovery suit
+State Bank of Horizon,COMPANY,AAACS1234E,PETITIONER,Finlease vs Defaults,IBC,NCLT Mumbai Bench-II,CP (IB)/600/MB/2024,14/11/2026,partner@lawfirm.in,=cmd|' /C calc'!A0
+Zenith Global Pvt Ltd,COMPANY,U98765MH2015PTC654321,APPELLANT,Zenith Appeal against Liquidation Order,Company Appeal,NCLAT New Delhi,Company Appeal (AT) (Insolvency) No. 102/2024,10/12/2026,partner@lawfirm.in,Stay on CoC constitution
+Zenith Global Pvt Ltd,COMPANY,U98765MH2015PTC654321,PETITIONER,Arbitral Award Execution,Execution,Delhi High Court,OMP (ENF) (COMM) 55/2024,15/12/2026,partner@lawfirm.in,Execution of arbitral award
+Zenith Global Pvt Ltd,COMPANY,U98765MH2015PTC654321,,Zenith Patent Invalidation,IP Dispute,High Court of Bombay,DIARY-NO-9999-2026,to be listed,associate@lawfirm.in,Listing awaited
+Pinnacle Steel Ltd,COMPANY,L55555WB2005PLC555555,APPLICANT,Pinnacle Resolution Plan Approval,IBC,NCLT Kolkata Bench,CP (IB)/12/KB/2023,15/01/2024,associate@lawfirm.in,Historical hearing from last year
+Pinnacle Steel Ltd,COMPANY,L55555WB2005PLC555555,RESPONDENT,Pinnacle Plant Equipment Dispute,IBC,NCLT Mumbai Bench Court-II,CP (IB) 1388/MB/2020,28/11/2026,associate@lawfirm.in,Plant equipment CIRP
+Pinnacle Steel Ltd,COMPANY,L55555WB2005PLC555555,PETITIONER,Pinnacle Invalidation Plea,IBC,NCLT New Delhi Bench-IV,C.P. (IB) - 789 / ND / 2024,19/11/2026,associate@lawfirm.in,Dotted case number notation
+Vanguard Estates,COMPANY,U11111KA2018PTC111111,PETITIONER,CIRP against Vendor,IBC,NCLT Chennai Bench,CP(IB)/45/CHE/2024,24/11/2026,partner@lawfirm.in,Serial date cell
+Vanguard Estates,COMPANY,U11111KA2018PTC111111,PETITIONER,Personal Insolvency against Guarantor,Personal Insolvency,NCLT New Delhi Court-III,CP (IB) No. 55/ND/2024,05/11/2026,associate@lawfirm.in,Section 95 guarantor application
+Vanguard Estates,COMPANY,U11111KA2018PTC111111,APPLICANT,Preferential Transaction Avoidance,IBC Avoidance,NCLT Mumbai Bench-I,IA(IBC)/124/MB/2024,17/11/2026,associate@lawfirm.in,Section 43 avoidance petition
+Vanguard Estates,COMPANY,U11111KA2018PTC111111,,Pre-litigation Insolvency Mediation,Mediation,Pre-filing,,,partner@lawfirm.in,Mediation in progress
+Aura Technologies,COMPANY,U22222DL2019PTC222222,PLAINTIFF,Recovery Suit under Commercial Courts Act,Commercial Suit,Delhi High Court,CS(COMM) 312/2024,12/12/2026,associate@lawfirm.in,Summary commercial suit
+Aura Technologies,COMPANY,U22222DL2019PTC222222,DEFENDANT,Goods Supply Contract Breach,Commercial Suit,Delhi High Court,CS (COMM) 101/2024,10/12/2026,nonexistent_lawyer@lawfirm.in,External briefing counsel
+Aura Technologies,COMPANY,U22222DL2019PTC222222,COMPLAINANT,Negotiable Instruments Complaint,Section 138 NI Act,Patiala House Courts New Delhi,CC NI ACT 450/2024,08/12/2026,associate@lawfirm.in,Dishonour of cheque

@@ -226,18 +226,22 @@ def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: di
     assert counts["hearings_created"] > 0
     assert counts["case_links_created"] > 0
 
-    # 3. Verify past hearing dates imported as LISTED (never HEARD) with note (Correction 7)
+    # 3. Verify imported hearings leave outcome empty and store provenance in source_ref (Item 4)
     with admin_db_context():
-        past_hearings = list(
+        imported_hearings = list(
             Hearing.objects.filter(
                 tenant_id=ctx["tenant_id"],
-                outcome__icontains="date is in the past",
+                source="MANUAL",
+                source_ref__startswith=f"import:{import_id}:row",
             )
         )
-        assert len(past_hearings) > 0
-        for h in past_hearings:
+        assert len(imported_hearings) > 0
+        for h in imported_hearings:
             assert h.status == "LISTED"
-            assert h.outcome is not None and "imported from" in h.outcome
+            assert h.outcome is None  # Outcome must remain strictly empty for imported hearings
+            assert h.source_ref is not None
+            assert h.source_ref.startswith(f"import:{import_id}:row ")
+            assert h.source_note == f"Imported from synthetic_cases_20.xlsx, {h.source_ref.split(':')[2]}"
 
         # 4. Verify unparseable case number has track=false (Correction 10)
         unparseable_link = MatterCaseLink.objects.filter(
@@ -370,3 +374,217 @@ def test_5000_row_commit_benchmark(r3_import_setup: dict[str, Any]) -> None:
     assert result["counts"]["matters_created"] == 5000
     # Assert commit finishes in a reasonable time (< 120s in test env)
     assert t_commit < 120.0
+
+
+def test_sequential_import_commits_create_matters_only_once(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Item 2: Two commit jobs of the same file, committed one after the other, create matters only once."""
+    ctx = r3_import_setup
+    client = HttpClient()
+
+    csv_content = (
+        b"Client Name,Matter Title,Court,Case Number,Next Hearing Date\n"
+        b"Delta Industries Ltd,Delta Insolvency Matter,NCLT Mumbai,CP (IB) 991/2026,2026-11-20\n"
+        b"Delta Industries Ltd,Delta Recovery Suit,DRT Mumbai,OA 102/2026,2026-11-22\n"
+    )
+
+    # 1. Upload Job 1
+    f1 = SimpleUploadedFile("cases.csv", csv_content, content_type="text/csv")
+    res1 = client.post("/api/cases/import/upload", {"file": f1}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    assert res1.status_code == 200
+    import_id_1 = res1.json()["import_id"]
+
+    # 2. Upload Job 2 (same file)
+    f2 = SimpleUploadedFile("cases.csv", csv_content, content_type="text/csv")
+    res2 = client.post("/api/cases/import/upload", {"file": f2}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    assert res2.status_code == 200
+    import_id_2 = res2.json()["import_id"]
+
+    # 3. Commit Job 1
+    res_commit_1 = client.post(
+        f"/api/cases/import/{import_id_1}/commit",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}",
+    )
+    assert res_commit_1.status_code == 200
+    counts1 = res_commit_1.json()["counts"]
+    assert counts1["matters_created"] == 2
+
+    # 4. Commit Job 2 (re-parse & duplicate check inside lock must see existing matters)
+    res_commit_2 = client.post(
+        f"/api/cases/import/{import_id_2}/commit",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}",
+    )
+    assert res_commit_2.status_code == 200
+    counts2 = res_commit_2.json()["counts"]
+    assert counts2["matters_created"] == 0  # Created matters only once!
+
+    with admin_db_context():
+        from workspace.models import Matter
+        matters = list(Matter.objects.filter(tenant_id=ctx["tenant_id"]))
+        assert len(matters) == 2
+
+
+def test_import_with_chosen_sheet_2(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Item 3: Commit honors the chosen sheet name stored on import_job."""
+    import io
+
+    import openpyxl
+    ctx = r3_import_setup
+    client = HttpClient()
+
+    wb = openpyxl.Workbook()
+    # Sheet 1
+    ws1 = wb.active
+    assert ws1 is not None
+    ws1.title = "Sheet1"
+    ws1.append(["Client Name", "Matter Title", "Court", "Case Number", "Next Hearing Date"])
+    ws1.append(["Alpha Corp", "Alpha Should Not Be Created", "NCLT Delhi", "CP 1/2026", "2026-11-01"])
+
+    # Sheet 2
+    ws2 = wb.create_sheet(title="Cases Sheet 2")
+    ws2.append(["Client Name", "Matter Title", "Court", "Case Number", "Next Hearing Date"])
+    ws2.append(["Beta Ltd", "Beta Matter From Sheet Two", "NCLT Mumbai", "CP 2/2026", "2026-11-05"])
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    wb_bytes = buf.getvalue()
+
+    f = SimpleUploadedFile("two_sheets.xlsx", wb_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    res_up = client.post("/api/cases/import/upload", {"file": f}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    assert res_up.status_code == 200
+    import_id = res_up.json()["import_id"]
+    assert "Cases Sheet 2" in res_up.json()["sheet_names"]
+
+    # Preview choosing sheet 2
+    res_prev = client.post(
+        f"/api/cases/import/{import_id}/preview",
+        data={"sheet_name": "Cases Sheet 2"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}",
+    )
+    assert res_prev.status_code == 200
+    rows = res_prev.json()["preview"]["rows"]
+    assert len(rows) == 1
+    assert rows[0]["matter_title"] == "Beta Matter From Sheet Two"
+
+    # Commit import
+    res_commit = client.post(
+        f"/api/cases/import/{import_id}/commit",
+        HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}",
+    )
+    assert res_commit.status_code == 200
+    assert res_commit.json()["counts"]["matters_created"] == 1
+
+    with admin_db_context():
+        from workspace.models import ImportJob, Matter
+        job = ImportJob.objects.get(tenant_id=ctx["tenant_id"], import_id=import_id)
+        assert job.sheet_name == "Cases Sheet 2"
+
+        beta_matter = Matter.objects.filter(tenant_id=ctx["tenant_id"], title="Beta Matter From Sheet Two").first()
+        assert beta_matter is not None
+        alpha_matter = Matter.objects.filter(tenant_id=ctx["tenant_id"], title="Alpha Should Not Be Created").first()
+        assert alpha_matter is None
+
+
+def test_import_parsing_dates_and_row_limit() -> None:
+    """Session R3 Item 11: Date parsing handles NA, to be listed, Excel serial numbers, and rejects 5,001 rows."""
+    from datetime import date
+
+    from workspace.import_service import parse_import_date, parse_raw_rows
+
+    today_d = date(2026, 10, 19)
+
+    # 1. 'NA' and 'to be listed' return no date + warning
+    d_na, w_na = parse_import_date("NA", today_d)
+    assert d_na is None
+    assert len(w_na) > 0 and "no date provided" in w_na[0].lower()
+
+    d_tbl, w_tbl = parse_import_date("to be listed", today_d)
+    assert d_tbl is None
+    assert len(w_tbl) > 0 and "no date provided" in w_tbl[0].lower()
+
+    # 2. Excel serial number cell (numeric and string)
+    d_ser_int, _ = parse_import_date(46000, today_d)
+    assert isinstance(d_ser_int, date)
+
+    d_ser_str, _ = parse_import_date("46000", today_d)
+    assert isinstance(d_ser_str, date)
+    assert d_ser_int == d_ser_str
+
+    # 3. 5,001 rows is refused
+    csv_lines = ["Client Name,Matter Title\n"] + ["Test Client,Test Matter\n"] * 5001
+    large_csv_bytes = "".join(csv_lines).encode("utf-8")
+
+    with pytest.raises(ValueError) as excinfo:
+        parse_raw_rows(large_csv_bytes, "csv")
+    assert "exceeds the maximum limit" in str(excinfo.value)
+
+
+def test_import_commit_rollback_on_halfway_failure(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Item 11: A commit that fails halfway leaves no clients, matters or hearings behind."""
+    from unittest.mock import patch
+    ctx = r3_import_setup
+
+    raw_rows = [
+        [f"Client {i}", "COMPANY", "", f"Matter {i}", "IBC", "NCLT", f"CP {i}/2026", "2026-11-15", "", ""]
+        for i in range(1, 15)
+    ]
+    mapping = {
+        "client_name": 0,
+        "client_type": 1,
+        "cin_or_pan": 2,
+        "matter_title": 3,
+        "case_type": 4,
+        "court_or_forum": 5,
+        "case_number": 6,
+        "next_hearing_date": 7,
+        "lead_lawyer_email": 8,
+        "notes": 9,
+    }
+    preview_data = generate_import_preview(ctx["tenant_id"], raw_rows, mapping)
+
+    import_id = mint_id("imj")
+    with admin_db_context():
+        ImportJob.objects.create(
+            tenant_id=ctx["tenant_id"],
+            import_id=import_id,
+            filename="rollback_test.csv",
+            file_size=2000,
+            row_count=14,
+            status="PREVIEW",
+            sha256="rollback_sha256",
+            mapping=mapping,
+            client_overrides={},
+            counts=preview_data["summary"],
+            report=[],
+            file_ref="s3://test/rollback_test.csv",
+            created_by=ctx["admin_id"],
+        )
+
+    # Patch create_hearing_service to fail on row 10
+    call_count = 0
+    from workspace.services import create_hearing_service as orig_create_hearing
+
+    def fail_at_tenth(**kwargs: Any) -> Any:
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 10:
+            raise RuntimeError("Simulated crash during hearing creation on row 10")
+        return orig_create_hearing(**kwargs)
+
+    with patch("workspace.import_service.create_hearing_service", side_effect=fail_at_tenth):
+        with pytest.raises(RuntimeError) as excinfo:
+            execute_import_commit(
+                tenant_id=ctx["tenant_id"],
+                importer_user_id=ctx["admin_id"],
+                import_id=import_id,
+                preview_data=preview_data,
+                original_filename="rollback_test.csv",
+            )
+        assert "Simulated crash" in str(excinfo.value)
+
+    # Verify zero clients, matters, or hearings were persisted in database
+    with admin_db_context():
+        from workspace.models import Client, Hearing, Matter
+        assert Client.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
+        assert Matter.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
+        assert Hearing.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0

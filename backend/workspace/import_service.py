@@ -18,6 +18,7 @@ import io
 import json
 import re
 import zipfile
+from collections import defaultdict
 from datetime import date, datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -30,7 +31,7 @@ from openpyxl.utils.datetime import from_excel
 
 from anchor_lib.case_numbers import normalize_case_number
 from workspace.audit import record_audit_event
-from workspace.models import AppUser, Client, Matter, MatterCaseLink
+from workspace.models import AppUser, Client, Hearing, Matter, MatterCaseLink
 from workspace.services import (
     create_case_link_service,
     create_client_service,
@@ -47,6 +48,7 @@ TEMPLATE_COLUMNS = [
     "client name",
     "client type",
     "CIN or PAN",
+    "client role",
     "matter title",
     "case type",
     "court or forum",
@@ -60,6 +62,7 @@ HEADER_SYNONYMS: dict[str, list[str]] = {
     "client_name": ["client name", "client", "party", "party name", "client_name"],
     "client_type": ["client type", "type", "client_type", "entity type"],
     "cin_or_pan": ["cin or pan", "cin/pan", "cin", "pan", "identifier", "cin_or_pan"],
+    "client_role": ["client role", "client_role", "role", "capacity", "client side", "side"],
     "matter_title": ["matter title", "matter", "title", "case name", "matter_name", "matter_title"],
     "case_type": ["case type", "case_type", "nature of case", "type of case"],
     "court_or_forum": ["court or forum", "court", "forum", "bench", "tribunal", "court_or_forum"],
@@ -82,6 +85,24 @@ HEADER_SYNONYMS: dict[str, list[str]] = {
     ],
     "notes": ["notes", "remarks", "comment", "comments", "description"],
 }
+
+
+def normalize_client_name(name: str) -> str:
+    """Fold case, punctuation, repeated spaces, leading M/s, and Pvt/Private, Ltd/Limited."""
+    if not name:
+        return ""
+    s = name.strip()
+    # Leading M/s, M/S, M/s., Messrs, etc.
+    s = re.sub(r"^(?:m\s*/\s*s\.?|messrs\.?)\s+", "", s, flags=re.IGNORECASE)
+    # Fold punctuation (dots, commas, hyphens, quotes, slashes, brackets) to spaces
+    s = re.sub(r"[.,\-–—'\"/()\\]+", " ", s)
+    # Fold Pvt / Private
+    s = re.sub(r"\bpvt\b", "private", s, flags=re.IGNORECASE)
+    # Fold Ltd / Limited
+    s = re.sub(r"\bltd\b", "limited", s, flags=re.IGNORECASE)
+    # Fold repeated whitespace
+    s = re.sub(r"\s+", " ", s).strip().lower()
+    return s
 
 
 def sanitize_csv_cell(value: Any) -> str:
@@ -261,6 +282,19 @@ def parse_import_date(raw_val: Any, today_d: date) -> tuple[date | None, list[st
     if not s or s.lower() in ("na", "n/a", "to be listed", "tbd", "-", "none", "null", ""):
         return None, [f"No date provided: '{raw_val}'"]
 
+    # Excel serial number passed as numeric string
+    if s.isdigit() and len(s) in (4, 5):
+        try:
+            val_num = int(s)
+            if 1000 <= val_num <= 100000:
+                dt = from_excel(val_num)
+                d = dt.date()
+                if d < today_d:
+                    warnings.append("Hearing date is in the past (historical hearing)")
+                return d, warnings
+        except Exception:
+            pass
+
     # Try ISO YYYY-MM-DD
     iso_match = re.match(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$", s)
     if iso_match:
@@ -336,18 +370,27 @@ def generate_import_preview(
     }
 
     # Index existing case links by matter_id
+    # Index existing case links by matter_id
     case_links_by_matter: dict[str, list[MatterCaseLink]] = {}
     for cl in existing_case_links:
         case_links_by_matter.setdefault(cl.matter_id, []).append(cl)
 
-    # Index matters by client_id
+    # Index matters by client_id and map client display names
     matters_by_client: dict[str, list[Matter]] = {}
+    matter_client_map: dict[str, str] = {}
     for m in existing_matters:
         if m.client_id:
             matters_by_client.setdefault(m.client_id, []).append(m)
+            matter_client_map[m.matter_id] = m.client_id
+    client_display_map: dict[str, str] = {c.client_id: c.display_name for c in existing_clients}
+
+    # Pre-fetch existing hearing dates by matter_id
+    hearings_by_matter: dict[str, set[date]] = defaultdict(set)
+    for h in Hearing.objects.filter(tenant_id=tenant_id).values("matter_id", "date"):
+        hearings_by_matter[h["matter_id"]].add(h["date"])
 
     preview_rows: list[dict[str, Any]] = []
-    seen_in_batch_clients: dict[str, str] = {}  # key -> virtual or existing client_id
+    seen_in_batch_clients: dict[str, str] = {}  # norm_client_name -> virtual or existing client_id
     seen_in_batch_matters: set[tuple[str, str]] = set()  # (client_key, matter_key)
 
     total_new_clients = 0
@@ -373,6 +416,13 @@ def generate_import_preview(
             client_type = "COMPANY"
 
         cin_pan_raw = str(get_row_val(row, "cin_or_pan") or "").strip()
+        client_role_raw = str(get_row_val(row, "client_role") or "").strip()
+        client_role = "NOT_SET"
+        if client_role_raw:
+            client_role = client_role_raw.upper()
+        else:
+            row_warnings.append("Client role not specified; set to 'Not set'.")
+
         matter_title = str(get_row_val(row, "matter_title") or "").strip()
         case_type = str(get_row_val(row, "case_type") or "").strip() or None
         court_or_forum = str(get_row_val(row, "court_or_forum") or "").strip() or None
@@ -399,6 +449,7 @@ def generate_import_preview(
                 row_warnings.append(f"Identifier '{cin_pan_raw}' is neither a 21-char CIN nor a 10-char PAN.")
 
         # --- 1. Client Matching ---
+        norm_client_name = normalize_client_name(client_name)
         matched_client: Client | None = None
         override = overrides.get(str(row_num))
         if override and override.get("action") == "USE_EXISTING":
@@ -418,10 +469,10 @@ def generate_import_preview(
                     (c for c in existing_clients if (c.identifiers or {}).get("pan") == pan),
                     None,
                 )
-            # Step B: Match by exact normalized display_name
-            if not matched_client and client_name:
+            # Step B: Match by folded normalized display_name (case, punctuation, M/s, Pvt/Ltd)
+            if not matched_client and norm_client_name:
                 matched_client = next(
-                    (c for c in existing_clients if c.display_name.strip().lower() == client_name.lower()),
+                    (c for c in existing_clients if normalize_client_name(c.display_name) == norm_client_name),
                     None,
                 )
 
@@ -433,10 +484,10 @@ def generate_import_preview(
             total_existing_clients += 1
         else:
             client_status = "NEW_CLIENT"
-            resolved_client_id = seen_in_batch_clients.get(client_name.lower())
+            resolved_client_id = seen_in_batch_clients.get(norm_client_name)
             if not resolved_client_id:
                 resolved_client_id = f"batch_new_cli_{idx}"
-                seen_in_batch_clients[client_name.lower()] = resolved_client_id
+                seen_in_batch_clients[norm_client_name] = resolved_client_id
                 total_new_clients += 1
 
         # --- 2. Case Numbers Normalization ---
@@ -469,6 +520,22 @@ def generate_import_preview(
                     row_warnings.append(
                         f"Case number '{p}' could not be canonically parsed; it will not be tracked automatically."
                     )
+
+        # Check if case number exists under a different client (Session R3 Fix Pass - Item 17)
+        for c_norm in canonical_case_numbers:
+            for cl in existing_case_links:
+                if cl.value_normalized == c_norm:
+                    other_client_id = matter_client_map.get(cl.matter_id)
+                    if (
+                        other_client_id
+                        and resolved_client_id
+                        and other_client_id != resolved_client_id
+                        and not resolved_client_id.startswith("batch_new_")
+                    ):
+                        other_client_name = client_display_map.get(other_client_id, other_client_id)
+                        row_warnings.append(
+                            f"Case number '{c_norm}' already exists under a different client '{other_client_name}'; not auto-matched."
+                        )
 
         # --- 3. Matter Deduplication & Matching ---
         # Rule 8:
@@ -513,7 +580,7 @@ def generate_import_preview(
 
         # Check duplicate within batch
         batch_key = (
-            resolved_client_id or client_name.lower(),
+            resolved_client_id or norm_client_name,
             canonical_case_numbers[0]
             if canonical_case_numbers
             else (raw_case_numbers[0] if raw_case_numbers else matter_title.lower()),
@@ -525,19 +592,26 @@ def generate_import_preview(
         else:
             seen_in_batch_matters.add(batch_key)
 
+        # --- 4. Date Parsing ---
+        parsed_date, date_warnings = parse_import_date(next_date_raw, today_d)
+        row_warnings.extend(date_warnings)
+
         matter_status: str
         if matched_matter:
             matter_status = "ALREADY_EXISTS"
             total_existing_matters += 1
+            # Warning: next hearing date was not added if matter already exists (Session R3 Fix Pass - Item 17)
+            if parsed_date:
+                m_hearings = hearings_by_matter.get(getattr(matched_matter, "matter_id", ""), set())
+                if parsed_date not in m_hearings:
+                    row_warnings.append(
+                        f"matter already exists; next date {parsed_date.isoformat()} was not added"
+                    )
         else:
             matter_status = "NEW_MATTER"
             total_new_matters += 1
-
-        # --- 4. Date Parsing ---
-        parsed_date, date_warnings = parse_import_date(next_date_raw, today_d)
-        row_warnings.extend(date_warnings)
-        if parsed_date and matter_status == "NEW_MATTER":
-            total_hearings += 1
+            if parsed_date:
+                total_hearings += 1
 
         # --- 5. Lead Lawyer Email Matching ---
         lead_user_id: str | None = None
@@ -555,6 +629,7 @@ def generate_import_preview(
                 "row_number": row_num,
                 "client_name": client_name,
                 "client_type": client_type,
+                "client_role": client_role,
                 "client_status": client_status,
                 "matched_client_id": matched_client.client_id if matched_client else None,
                 "cin": cin,
@@ -592,8 +667,8 @@ def execute_import_commit(
     tenant_id: str,
     importer_user_id: str,
     import_id: str,
-    preview_data: dict[str, Any],
-    original_filename: str,
+    preview_data: dict[str, Any] | None = None,
+    original_filename: str | None = None,
 ) -> dict[str, Any]:
     """Execute import creation in a single transaction with advisory lock per tenant."""
     now = timezone.now()
@@ -606,8 +681,8 @@ def execute_import_commit(
     }
     report: list[dict[str, Any]] = []
 
-    # Cache created clients within this transaction
-    created_clients_cache: dict[str, str] = {}  # client_name.lower() -> client_id
+    # Cache created clients within this transaction (normalized name -> client_id)
+    created_clients_cache: dict[str, str] = {}
 
     with transaction.atomic():
         with connection.cursor() as cursor:
@@ -621,9 +696,9 @@ def execute_import_commit(
                 [f"import_{tenant_id}"],
             )
 
-            # Check that job is not already COMMITTED
+            # Check that job is not already COMMITTED with FOR UPDATE
             cursor.execute(
-                "SELECT status FROM tpl.import_job WHERE tenant_id = %s AND import_id = %s FOR UPDATE",
+                "SELECT status, file_ref, filename, mapping, client_overrides, sheet_name FROM tpl.import_job WHERE tenant_id = %s AND import_id = %s FOR UPDATE",
                 [tenant_id, import_id],
             )
             job_row = cursor.fetchone()
@@ -632,7 +707,32 @@ def execute_import_commit(
             if job_row[0] == "COMMITTED":
                 raise ValueError("This import job has already been committed.")
 
-        for row in preview_data.get("rows", []):
+            job_file_ref = job_row[1]
+            job_filename = job_row[2]
+            job_mapping = job_row[3] or {}
+            job_client_overrides = job_row[4] or {}
+            job_sheet_name = job_row[5]
+
+        actual_filename = original_filename or job_filename
+
+        # Re-parse file and re-evaluate duplicate check INSIDE advisory lock (Session R3 Fix Pass - Item 2 & 3)
+        if preview_data is not None:
+            actual_preview = preview_data
+        else:
+            from parse.vault import VaultStorage
+            storage = VaultStorage()
+            file_bytes = storage.get_raw(job_file_ref)
+            file_type, sheet_names, _ = inspect_file_safety(file_bytes, job_filename)
+            selected_sheet = job_sheet_name or (sheet_names[0] if sheet_names else None)
+            _, raw_rows, _ = parse_raw_rows(file_bytes, file_type, sheet_name=selected_sheet)
+            actual_preview = generate_import_preview(
+                tenant_id=tenant_id,
+                raw_rows=raw_rows,
+                mapping=job_mapping,
+                client_overrides=job_client_overrides,
+            )
+
+        for row in actual_preview.get("rows", []):
             row_num = row.get("row_number", 0)
             client_name = row.get("client_name")
             matter_title = row.get("matter_title")
@@ -665,9 +765,10 @@ def execute_import_commit(
                 continue
 
             # 1. Resolve or Create Client
+            norm_name = normalize_client_name(client_name)
             client_id = row.get("matched_client_id")
             if not client_id:
-                client_id = created_clients_cache.get(client_name.lower())
+                client_id = created_clients_cache.get(norm_name)
 
             if not client_id:
                 identifiers = {}
@@ -683,11 +784,11 @@ def execute_import_commit(
                     client_type=row.get("client_type", "COMPANY"),
                     identifiers=identifiers,
                     contact={},
-                    notes=f"Imported from {original_filename}, row {row_num}",
+                    notes=f"Imported from {actual_filename}, row {row_num}",
                     import_id=import_id,
                 )
                 client_id = new_client["client_id"]
-                created_clients_cache[client_name.lower()] = client_id
+                created_clients_cache[norm_name] = client_id
                 counts["clients_created"] += 1
 
             # 2. Create Matter
@@ -696,7 +797,7 @@ def execute_import_commit(
                 actor_id=importer_user_id,
                 client_id=client_id,
                 title=matter_title,
-                client_role="PETITIONER",
+                client_role=row.get("client_role") or "NOT_SET",
                 case_type=row.get("case_type"),
                 court_or_forum=row.get("court_or_forum"),
                 jurisdiction_state=None,
@@ -729,11 +830,7 @@ def execute_import_commit(
             hearing_id = None
             if h_date_str:
                 h_date = date.fromisoformat(h_date_str)
-                today_d = now.astimezone(IST).date()
-                note_text = f"imported from {original_filename}, row {row_num}"
-                if h_date < today_d:
-                    note_text += "; date is in the past"
-
+                # Session R3 Fix Pass - Item 4: Leave outcome empty, provenance in source_ref
                 new_hearing = create_hearing_service(
                     tenant_id=tenant_id,
                     actor_id=importer_user_id,
@@ -744,10 +841,10 @@ def execute_import_commit(
                     bench=row.get("court_or_forum"),
                     purpose="Listing",
                     source="MANUAL",
-                    source_ref=None,
+                    source_ref=f"import:{import_id}:row {row_num}",
                     status="LISTED",  # Correction 7: LISTED, never HEARD
                     outcome=None,
-                    notes=note_text,
+                    notes=None,
                     import_id=import_id,
                 )
                 hearing_id = new_hearing["hearing_id"]
@@ -791,7 +888,7 @@ def execute_import_commit(
             decision="ALLOW",
             detail={
                 "import_id": import_id,
-                "filename": original_filename,
+                "filename": actual_filename,
                 "counts": counts,
             },
         )

@@ -442,6 +442,18 @@ class Hearing(DomainModel):
     def __str__(self) -> str:
         return f"Hearing({self.hearing_id}, {self.date}, {self.status})"
 
+    @property
+    def source_note(self) -> str | None:
+        if self.source_ref and self.source_ref.startswith("import:"):
+            parts = self.source_ref.split(":")
+            if len(parts) >= 3:
+                from workspace.models import ImportJob
+                job = ImportJob.objects.filter(import_id=parts[1]).first()
+                filename = job.filename if job else "import file"
+                return f"Imported from {filename}, {parts[2]}"
+            return f"Imported from {self.source_ref}"
+        return None
+
 
 class Deadline(DomainModel):
     """Procedural deadline or lawyer-entered date (tpl.deadline)."""
@@ -690,6 +702,7 @@ class ImportJob(DomainModel):
         ],
     )
     sha256 = models.TextField()
+    sheet_name = models.TextField(null=True, blank=True)
     mapping = models.JSONField(default=dict)
     client_overrides = models.JSONField(default=dict)
     counts = models.JSONField(default=dict)
