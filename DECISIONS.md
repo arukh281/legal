@@ -673,16 +673,9 @@ Record of decisions made during the build. Every entry has: date, decision, reas
 - **Reason:** AGENTS.md §8 (Session R2); User Prompt and Corrections 1–7; Mandate 3 Security Review; Follow-up Security Hardening.
 - **Doc Reference:** `docs/mvp/00_mvp_spec.md` §4; `docs/mvp/03_data_model_and_contracts.md` §1, §3.9, §3.10; `docs/01a_spine_decision_record.md`; AGENTS.md §4, §5.
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
+### 2026-10-18 — Immutability of Pushed Database Migrations
+- **Decision:** A database migration that has been pushed to the remote repository (`main` or shared branches) is immutable and is never edited or replaced in-place again. Any schema changes, data fixes, or policy adjustments must go into a new, subsequent migration.
+- **Reason:** Pushed migrations represent applied database state across developer environments, CI pipelines, and production clusters. Modifying a pushed migration corrupts migration histories, creates divergence in `django_migrations`, breaks zero-downtime rollouts, and risks irreproducible environments. Creating a new migration preserves forward-only, reversible evolution.
+- **Doc Reference:** AGENTS.md §5, §7; User Directive (Session R2 Finalization).

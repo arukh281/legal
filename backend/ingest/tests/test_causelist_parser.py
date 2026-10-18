@@ -174,3 +174,28 @@ def test_real_nclt_fixtures_golden() -> None:
         item1_1 = next(it for it in res4.items if it.item_no == "1.1")
         assert any(c.parent_case_number == "1049" and c.parent_case_type == "CP (IB)" for c in item1_1.normalized_cases)
 
+
+def test_all_four_nclt_fixtures_zero_unparsed_case_numbers() -> None:
+    """Golden test across all 4 fixtures asserting zero unparsed lines with a case number."""
+    from pathlib import Path
+
+    from django.conf import settings
+
+    from ingest.causelist_parser import RE_HAS_CASE_NUM
+
+    fixtures_dir = Path(settings.BASE_DIR).parent / "eval" / "fixtures" / "nclt_causelist"
+    if not fixtures_dir.exists():
+        return
+
+    parser = NCLTCauseListParser()
+    for fix_no in range(1, 5):
+        pdf_file = fixtures_dir / f"nclt_causelist_{fix_no}.pdf"
+        if not pdf_file.exists():
+            continue
+        res = parser.parse_pdf_bytes(pdf_file.read_bytes())
+        unparsed_with_cn = [line for line in res.unparsed_lines if RE_HAS_CASE_NUM.search(line)]
+        assert (
+            len(unparsed_with_cn) == 0
+        ), f"Fixture {fix_no} has {len(unparsed_with_cn)} unparsed lines containing case numbers: {unparsed_with_cn}"
+
+

@@ -185,9 +185,9 @@ RE_COMPETITION_APP = re.compile(
     re.IGNORECASE,
 )
 
-# Interlocutory / Company Applications: IA (IBC) 123/2024 or IA 123/MB/2024, CONT.A, COMP.APPL
+# Interlocutory / Company Applications: IA (IBC) 123/2024 or IA 123/MB/2024, CONT.A, COMP.APPL, MA, IVN.P, EP
 RE_APPLICATION = re.compile(
-    r"\b(?P<app_type>I\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|C\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|M\.?A\.?|CONT\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|COMP\.?APPL\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*)\s*(?:No\.?)?[/\s-]*(?P<num>\d+)"
+    r"\b(?P<app_type>I\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|C\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|M\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|IVN\.?P\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|CONT\.?A\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|COMP\.?APPL\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*|E\.?P\.?(?:\s*\([A-Za-z.\s\(\)-]+\))*)\s*(?:No\.?)?[/\s-]*(?P<num>\d+)"
     r"(?:[/\s]+(?P<subnum>\d+))?"
     r"(?:[/\s(]+(?P<bench>[A-Za-z]{2,15})(?:/[A-Za-z]+)*[/\s)]*)?"
     r"(?:\s+of\s+|[/\s-]|\bin\b)*(?P<year>\d{4})?\b",
@@ -222,6 +222,12 @@ def _clean_case_type(raw_type: str) -> str:
         return "CONT.A"
     if "COMP" in t and "APPL" in t:
         return "COMP.APPL"
+    if "IVN" in t:
+        return "IVN.P"
+    if "EP" in t or "E.P" in t:
+        return "EP"
+    if "MA" in t or "M.A" in t:
+        return "MA"
     if "I.A" in t or "IA" in t:
         return "IA"
     if "C.A" in t or "CA" in t:

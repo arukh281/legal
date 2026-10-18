@@ -948,13 +948,14 @@ Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor
 • Total time taken: 4.33s
 • NCLT lists fetched: 1
 • NCLT entries parsed: 84
-• NCLT unparsed lines: 101
+• NCLT unparsed lines: 2 (down from 101; 0 with case numbers)
 • NCLT CAPTCHA encountered: False
 • NCLT layout drift: False (None)
 • NCLAT probe status: 200 (Content-Type: text/html; charset=UTF-8, CAPTCHA: False, PDFs found: 21)
 ```
 
-- Full test suite: 331 passed, 0 failures, 1 skipped (real LLM smoke).
+- Full test suite: 332 passed, 0 failures, 1 skipped (real LLM smoke).
+- Golden test across all 4 NCLT fixtures asserts 0 unparsed lines with case numbers.
 - TypeScript: `pnpm --dir frontend test` and `pnpm --dir frontend build` 100% clean.
 - Code hygiene: `ruff check .` passed with 0 errors; `mypy .` checked with 0 issues.
 
@@ -967,11 +968,3 @@ Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor
   - Token-protected external read-only view of matter timeline and upcoming hearings for the firm's client.
 - **Excel Import of Live Cases:**
   - Bulk import of matters, case numbers, and client mappings from spreadsheet templates.
-
-
-
-
-
-
-
-

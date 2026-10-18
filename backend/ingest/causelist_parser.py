@@ -69,6 +69,35 @@ ROMAN_NUMS = {
 }
 
 
+RE_APP_TYPE = re.compile(
+    r"\b(?:I\.?A\.?|C\.?A\.?|M\.?A\.?|IVN\.?P\.?|CONT\.?A\.?|COMP\.?APPL\.?|E\.?P\.?|NEW\s+IA)\b|"
+    r"\b\d+\s*\([A-Za-z]+\)\s*\d{4}\b",
+    re.IGNORECASE,
+)
+
+RE_CP_TYPE = re.compile(
+    r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|Company\s+Petition|Comp\.\s*App)\b",
+    re.IGNORECASE,
+)
+
+RE_HAS_CASE_NUM = re.compile(
+    r"(?:"
+    r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|C\.?A\.?|IA|I\.?A\.?|MA|M\.?A\.?|IVN\.?P\.?|CONT\.?A\.?|COMP\.?APPL\.?|EP|E\.?P\.?)\b|"
+    r"\(IB\)|"
+    r"\(CAA\)|"
+    r"\(COMPANIES|"
+    r"\(LIQ|"
+    r"\(DIS\)|"
+    r"\(PLAN\)|"
+    r"\(NEW\s+IA|"
+    r"\b\d+\s*\(\s*(?:MB|CHD|CH|ND|DEL|KOL|AHM|HYD|ALL|PRAY|JAIP|GHY|CBO|BENG|BLR)\s*\)|"
+    r"/\d{1,4}\s*\(\s*(?:MB|CHD|CH|ND|DEL|KOL|AHM|HYD)\s*\)|"
+    r"/\d{4}\b"
+    r")",
+    re.IGNORECASE,
+)
+
+
 def _clean_court_no(raw: str) -> str:
     cleaned = raw.strip().upper()
     return ROMAN_NUMS.get(cleaned, cleaned)
@@ -100,6 +129,7 @@ class ParsedCauseList:
     list_date: date | None
     items: list[CauseListItem] = field(default_factory=list)
     unparsed_lines_count: int = 0
+    unparsed_lines: list[str] = field(default_factory=list)
     layout_drift: bool = False
     drift_reason: str | None = None
     total_pages: int = 0
@@ -176,11 +206,10 @@ class NCLTCauseListParser:
         list_date = parse_date_string(p0_text) or fallback_date
 
         items: list[CauseListItem] = []
-        unparsed_lines = 0
+        unparsed_lines_list: list[str] = []
 
-        current_main_item: str | None = None
-        current_main_case: str | None = None
-        current_main_parties: str | None = None
+        current_main: CauseListItem | None = None
+        current_sub: CauseListItem | None = None
 
         # 2. Extract tables across pages
         for page_idx in range(total_pages):
@@ -243,7 +272,10 @@ class NCLTCauseListParser:
                         if not any(row):
                             continue
 
-                        row_str = " ".join([str(c or "").strip() for c in row])
+                        row_str = " ".join([str(c or "").strip() for c in row if c and str(c).strip()])
+                        if not row_str:
+                            continue
+
                         if any(
                             banner in row_str.upper()
                             for banner in [
@@ -253,6 +285,7 @@ class NCLTCauseListParser:
                                 "NOTE:",
                                 "FOR PENDING ADMISSION",
                                 "FOR PRONOUNCEMENT",
+                                "ADMISSION LIST",
                             ]
                         ):
                             continue
@@ -269,6 +302,9 @@ class NCLTCauseListParser:
                                 "cp. no",
                             ]
                         ):
+                            continue
+
+                        if any(furn in row_str for furn in ["SD /-", "Shardul Thavi", "Court Officer"]):
                             continue
 
                         raw_item = str(row[col_map["item_no"]] or "").strip() if col_map["item_no"] < len(row) else ""
@@ -303,97 +339,163 @@ class NCLTCauseListParser:
                         clean_ia = re.sub(r"\s+", " ", raw_ia).strip()
 
                         m_item = re.match(r"^(\d{1,4})", raw_item)
+                        m_sub = re.match(r"^(\d{1,3})\.?$", clean_cp) if not m_item else None
+
                         if m_item:
                             it_no = m_item.group(1)
-                            # 1. Main case
-                            if re.search(r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|Company\s+Petition|Comp\.\s*App)\b", clean_cp, re.IGNORECASE):
-                                current_main_item = it_no
-                                current_main_case = clean_cp
-                                current_main_parties = parties
+                            c_ref = [clean_cp] if clean_cp else []
+                            norm_c = [normalize_case_number(clean_cp, default_bench=bench)] if clean_cp else []
+                            main_it = CauseListItem(
+                                item_no=it_no,
+                                case_refs=c_ref,
+                                normalized_cases=norm_c,
+                                parties=parties,
+                                purpose=purpose,
+                                court_no=court_no,
+                                bench=bench,
+                                list_date=list_date or date.today(),
+                                section=section_text,
+                                remarks=remarks,
+                                raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
+                            )
+                            items.append(main_it)
+                            current_main = main_it
+                            current_sub = None
 
-                                norm_c = normalize_case_number(clean_cp, default_bench=bench)
-                                items.append(
-                                    CauseListItem(
-                                        item_no=it_no,
-                                        case_refs=[clean_cp],
-                                        normalized_cases=[norm_c],
-                                        parties=parties,
-                                        purpose=purpose,
-                                        court_no=court_no,
-                                        bench=bench,
-                                        list_date=list_date or date.today(),
-                                        section=section_text,
-                                        remarks=remarks,
-                                        raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
-                                    )
-                                )
-
-                            # 2. Check if ia_no also has an application in the same row
                             if clean_ia and not any(k in clean_ia.upper() for k in ["MAIN CASE", "NONE", "-"]):
-                                if re.search(r"\b(?:IA|C\.?A|CONT\.?A|COMP\.?APPL)\b", clean_ia, re.IGNORECASE):
+                                if RE_APP_TYPE.search(clean_ia):
+                                    app_str = clean_ia
+                                    if re.match(r"^\d+\s*\(", app_str):
+                                        app_str = f"IA {app_str}"
                                     norm_ia = normalize_case_number(
-                                        clean_ia, default_bench=bench, parent_case=current_main_case
+                                        app_str,
+                                        default_bench=bench,
+                                        parent_case=current_main.case_refs[0] if current_main.case_refs else None,
                                     )
-                                    items.append(
-                                        CauseListItem(
-                                            item_no=f"{it_no}.1",
-                                            case_refs=[clean_ia],
-                                            normalized_cases=[norm_ia],
-                                            parties=parties or (current_main_parties or ""),
-                                            purpose=purpose,
-                                            court_no=court_no,
-                                            bench=bench,
-                                            list_date=list_date or date.today(),
-                                            section=section_text,
-                                            remarks=remarks,
-                                            raw_text=f"{it_no}.1 | {clean_ia} | {parties} | {purpose}",
-                                        )
-                                    )
-                        else:
-                            # Sub-row IA under current main case
-                            if clean_ia and re.search(r"\b(?:IA|C\.?A|CONT\.?A|COMP\.?APPL)\b", clean_ia, re.IGNORECASE):
-                                m_sub = re.search(r"^(\d{1,3})\.?", raw_cp)
-                                sub_no = m_sub.group(1) if m_sub else "1"
-                                it_no = f"{current_main_item}.{sub_no}" if current_main_item else sub_no
-                                norm_ia = normalize_case_number(
-                                    clean_ia, default_bench=bench, parent_case=current_main_case
-                                )
-                                items.append(
-                                    CauseListItem(
-                                        item_no=it_no,
+                                    sub_it = CauseListItem(
+                                        item_no=f"{it_no}.1",
                                         case_refs=[clean_ia],
                                         normalized_cases=[norm_ia],
-                                        parties=parties or (current_main_parties or ""),
+                                        parties=parties or current_main.parties,
                                         purpose=purpose,
                                         court_no=court_no,
                                         bench=bench,
                                         list_date=list_date or date.today(),
                                         section=section_text,
                                         remarks=remarks,
-                                        raw_text=f"{it_no} | {clean_ia} | {parties} | {purpose}",
+                                        raw_text=f"{it_no}.1 | {clean_ia} | {parties} | {purpose}",
                                     )
-                                )
-                            elif clean_cp and re.search(r"\b(?:CP|C\.?P\.?|RCP|R\.?C\.?P\.?|CA|Company\s+Petition|Comp\.\s*App)\b", clean_cp, re.IGNORECASE):
-                                # Standalone CP row without item number in col 0
-                                it_no = str(len(items) + 1)
-                                norm_c = normalize_case_number(clean_cp, default_bench=bench)
-                                items.append(
-                                    CauseListItem(
-                                        item_no=it_no,
-                                        case_refs=[clean_cp],
-                                        normalized_cases=[norm_c],
-                                        parties=parties or (current_main_parties or ""),
-                                        purpose=purpose,
-                                        court_no=court_no,
-                                        bench=bench,
-                                        list_date=list_date or date.today(),
-                                        section=section_text,
-                                        remarks=remarks,
-                                        raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
-                                    )
-                                )
+                                    items.append(sub_it)
+                                    current_sub = sub_it
+                        elif m_sub:
+                            sub_no = m_sub.group(1)
+                            full_it = f"{current_main.item_no}.{sub_no}" if current_main else sub_no
+                            app_str = clean_ia or clean_cp
+                            if re.match(r"^\d+\s*\(", app_str):
+                                app_str = f"IA {app_str}"
+                            norm_ia = normalize_case_number(
+                                app_str,
+                                default_bench=bench,
+                                parent_case=current_main.case_refs[0] if current_main and current_main.case_refs else None,
+                            )
+                            sub_it = CauseListItem(
+                                item_no=full_it,
+                                case_refs=[clean_ia] if clean_ia else [],
+                                normalized_cases=[norm_ia] if clean_ia else [],
+                                parties=parties or (current_main.parties if current_main else ""),
+                                purpose=purpose,
+                                court_no=court_no,
+                                bench=bench,
+                                list_date=list_date or date.today(),
+                                section=section_text,
+                                remarks=remarks,
+                                raw_text=f"{full_it} | {clean_ia} | {parties} | {purpose}",
+                            )
+                            items.append(sub_it)
+                            current_sub = sub_it
+                        elif clean_ia and RE_APP_TYPE.search(clean_ia) and (not current_sub or clean_ia not in current_sub.case_refs):
+                            sub_idx = len([it for it in items if current_main and it.item_no.startswith(f"{current_main.item_no}.")]) + 1
+                            full_it = f"{current_main.item_no}.{sub_idx}" if current_main else str(sub_idx)
+                            app_str = clean_ia
+                            if re.match(r"^\d+\s*\(", app_str):
+                                app_str = f"IA {app_str}"
+                            norm_ia = normalize_case_number(
+                                app_str,
+                                default_bench=bench,
+                                parent_case=current_main.case_refs[0] if current_main and current_main.case_refs else None,
+                            )
+                            sub_it = CauseListItem(
+                                item_no=full_it,
+                                case_refs=[clean_ia],
+                                normalized_cases=[norm_ia],
+                                parties=parties or (current_main.parties if current_main else ""),
+                                purpose=purpose,
+                                court_no=court_no,
+                                bench=bench,
+                                list_date=list_date or date.today(),
+                                section=section_text,
+                                remarks=remarks,
+                                raw_text=f"{full_it} | {clean_ia} | {parties} | {purpose}",
+                            )
+                            items.append(sub_it)
+                            current_sub = sub_it
+                        elif clean_cp and RE_CP_TYPE.search(clean_cp) and not current_main:
+                            it_no = str(len(items) + 1)
+                            main_it = CauseListItem(
+                                item_no=it_no,
+                                case_refs=[clean_cp],
+                                normalized_cases=[normalize_case_number(clean_cp, default_bench=bench)],
+                                parties=parties,
+                                purpose=purpose,
+                                court_no=court_no,
+                                bench=bench,
+                                list_date=list_date or date.today(),
+                                section=section_text,
+                                remarks=remarks,
+                                raw_text=f"{it_no} | {clean_cp} | {parties} | {purpose}",
+                            )
+                            items.append(main_it)
+                            current_main = main_it
+                            current_sub = None
+                        else:
+                            if current_main is not None or current_sub is not None:
+                                target = current_sub if current_sub is not None else current_main
+                                assert target is not None
+                                if clean_cp:
+                                    if current_main and (
+                                        not current_main.case_refs
+                                        or not current_main.normalized_cases
+                                        or not current_main.normalized_cases[0].parseable
+                                        or any(k in clean_cp for k in ["(IB)", "(CAA)", "202"])
+                                    ):
+                                        old_c = current_main.case_refs[0] if current_main.case_refs else ""
+                                        new_c = f"{old_c} {clean_cp}".strip()
+                                        current_main.case_refs = [new_c]
+                                        current_main.normalized_cases = [normalize_case_number(new_c, default_bench=bench)]
+                                if clean_ia and current_sub:
+                                    old_ia = current_sub.case_refs[0] if current_sub.case_refs else ""
+                                    new_ia = f"{old_ia} {clean_ia}".strip()
+                                    current_sub.case_refs = [new_ia]
+                                    app_str = new_ia
+                                    if re.match(r"^\d+\s*\(", app_str):
+                                        app_str = f"IA {app_str}"
+                                    current_sub.normalized_cases = [
+                                        normalize_case_number(
+                                            app_str,
+                                            default_bench=bench,
+                                            parent_case=current_main.case_refs[0] if current_main and current_main.case_refs else None,
+                                        )
+                                    ]
+                                if parties:
+                                    target.parties = f"{target.parties} {parties}".strip()
+                                if purpose:
+                                    target.purpose = f"{target.purpose} {purpose}".strip()
+                                if section_text:
+                                    target.section = f"{target.section or ''} {section_text}".strip()
+                                if remarks:
+                                    target.remarks = f"{target.remarks or ''} {remarks}".strip()
                             else:
-                                unparsed_lines += 1
+                                unparsed_lines_list.append(row_str)
             else:
                 # Text-based fallback when no bordered table found
                 lines = [line_text.strip() for line_text in page_text.splitlines() if line_text.strip()]
@@ -412,12 +514,12 @@ class NCLTCauseListParser:
                         case_str = m_row.group(2).strip()
                         purpose_str = (m_row.group(3) or "").strip()
                         rem_str = (m_row.group(4) or "").strip()
-                        norm_c = normalize_case_number(case_str, default_bench=bench)
+                        text_norm_c = normalize_case_number(case_str, default_bench=bench)
                         items.append(
                             CauseListItem(
                                 item_no=item_no,
                                 case_refs=[case_str],
-                                normalized_cases=[norm_c],
+                                normalized_cases=[text_norm_c],
                                 parties=rem_str,
                                 purpose=purpose_str,
                                 court_no=court_no,
@@ -452,12 +554,12 @@ class NCLTCauseListParser:
                                     parties_str = cand
                                     offset += 1
 
-                            norm_c = normalize_case_number(case_str, default_bench=bench)
+                            seq_norm_c = normalize_case_number(case_str, default_bench=bench)
                             items.append(
                                 CauseListItem(
                                 item_no=item_no,
                                 case_refs=[case_str],
-                                normalized_cases=[norm_c],
+                                normalized_cases=[seq_norm_c],
                                 parties=parties_str,
                                 purpose=purpose_str,
                                 court_no=court_no,
@@ -470,7 +572,7 @@ class NCLTCauseListParser:
                             continue
 
                     if any(k in line for k in ["CP (IB)", "IA", "CA (IB)"]):
-                        unparsed_lines += 1
+                        unparsed_lines_list.append(line)
                     idx += 1
 
         # Check layout drift
@@ -493,7 +595,8 @@ class NCLTCauseListParser:
             court_no=court_no,
             list_date=list_date,
             items=items,
-            unparsed_lines_count=unparsed_lines,
+            unparsed_lines_count=len(unparsed_lines_list),
+            unparsed_lines=unparsed_lines_list,
             layout_drift=layout_drift,
             drift_reason=drift_reason,
             total_pages=total_pages,
