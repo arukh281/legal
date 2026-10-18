@@ -584,7 +584,7 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
             <span style={{ color: "var(--text-muted)", display: "block", fontSize: "11px" }}>
               CLIENT ROLE
             </span>
-            <span>{matter.client_role}</span>
+            <span>{matter.client_role === "NOT_SET" ? "Not set" : matter.client_role}</span>
           </div>
         </div>
 
@@ -1645,6 +1645,19 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
                         }}
                       >
                         <strong>Outcome:</strong> {h.outcome}
+                      </div>
+                    )}
+
+                    {(h as any).source_note && (
+                      <div
+                        style={{
+                          marginTop: "6px",
+                          fontSize: "12px",
+                          color: "var(--text-muted)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {(h as any).source_note}
                       </div>
                     )}
                   </div>

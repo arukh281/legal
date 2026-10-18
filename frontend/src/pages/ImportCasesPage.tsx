@@ -536,26 +536,34 @@ export const ImportCasesPage: React.FC<ImportCasesPageProps> = ({ onBack }) => {
                 ← Back to Mapping
               </button>
 
-              <button
-                onClick={() => {
-                  if (window.confirm("Commit these cases into your firm workspace? This will atomically create clients, matters, and listings under an advisory lock.")) {
-                    commitMutation.mutate();
-                  }
-                }}
-                disabled={commitMutation.isPending}
-                style={{
-                  padding: "10px 28px",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--success)",
-                  color: "#fff",
-                  border: "none",
-                  fontWeight: "700",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                {commitMutation.isPending ? "Committing Import..." : "Commit Cases to Firm"}
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <button
+                  onClick={() => {
+                    if (window.confirm("Commit these cases into your firm workspace? This will atomically create clients, matters, and listings under an advisory lock.")) {
+                      commitMutation.mutate();
+                    }
+                  }}
+                  disabled={commitMutation.isPending}
+                  style={{
+                    padding: "10px 28px",
+                    borderRadius: "6px",
+                    backgroundColor: commitMutation.isPending ? "var(--border)" : "var(--success)",
+                    color: commitMutation.isPending ? "var(--text-muted)" : "#fff",
+                    border: "none",
+                    fontWeight: "700",
+                    fontSize: "14px",
+                    cursor: commitMutation.isPending ? "not-allowed" : "pointer",
+                    opacity: commitMutation.isPending ? 0.7 : 1,
+                  }}
+                >
+                  {commitMutation.isPending ? "Committing Import (this can take up to a minute)..." : "Commit Cases to Firm"}
+                </button>
+                {commitMutation.isPending && (
+                  <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                    Hold on — this can take up to a minute.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

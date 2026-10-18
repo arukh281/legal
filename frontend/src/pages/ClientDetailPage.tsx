@@ -400,7 +400,7 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       gap: "12px",
                     }}
                   >
-                    <span>Role: {matter.client_role}</span>
+                    <span>Role: {matter.client_role === "NOT_SET" ? "Not set" : matter.client_role}</span>
                     <span>Status: {matter.status}</span>
                   </div>
                 </div>

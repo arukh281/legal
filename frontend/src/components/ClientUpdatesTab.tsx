@@ -75,15 +75,9 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
     },
   });
 
-  const handleCopyForWhatsApp = (updateText: string, updateId: string) => {
-    const isLinkActive = Boolean(shareLink && !shareLink.revoked_at && new Date(shareLink.expires_at) > new Date());
-    const publicUrl = isLinkActive && shareLink?.url ? `${window.location.origin}${shareLink.url}` : "";
-
-    let formatted = `*Update: ${matterTitle}*\n\n${updateText}`;
-    if (publicUrl) {
-      formatted += `\n\nView case status: ${publicUrl}`;
-    }
-
+  const handleCopyUpdateText = (updateText: string, updateId: string) => {
+    const title = shareLink?.client_matter_title || matterTitle;
+    const formatted = `*Update: ${title}*\n\n${updateText}`;
     navigator.clipboard.writeText(formatted);
     setCopiedUpdateId(updateId);
     setTimeout(() => setCopiedUpdateId(null), 2500);
@@ -348,7 +342,7 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
                   </div>
 
                   <button
-                    onClick={() => handleCopyForWhatsApp(update.text, update.update_id)}
+                    onClick={() => handleCopyUpdateText(update.text, update.update_id)}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -372,7 +366,7 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
                   >
                     <span>{copiedUpdateId === update.update_id ? "✓" : "📋"}</span>
                     <span>
-                      {copiedUpdateId === update.update_id ? "Copied!" : "Copy for WhatsApp"}
+                      {copiedUpdateId === update.update_id ? "Copied!" : "Copy update text"}
                     </span>
                   </button>
                 </div>

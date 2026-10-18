@@ -290,7 +290,7 @@ export const MattersPage: React.FC<MattersPageProps> = ({
                     color: "var(--text-muted)",
                   }}
                 >
-                  <span>Role: {matter.client_role}</span>
+                  <span>Role: {matter.client_role === "NOT_SET" ? "Not set" : matter.client_role}</span>
                   <span>Opened: {new Date(matter.created_at).toLocaleDateString()}</span>
                 </div>
               </div>

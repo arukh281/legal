@@ -24,6 +24,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   const [days, setDays] = useState(90);
   const [createdResult, setCreatedResult] = useState<ShareLinkResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [whatsAppCopied, setWhatsAppCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const { data: link, isLoading, refetch } = useQuery<ShareLinkResponse | null>({
@@ -86,6 +87,14 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const copyWhatsAppWithLink = () => {
+    const title = createdResult?.client_matter_title || clientMatterTitle.trim() || matterTitle;
+    const formatted = `*Update: ${title}*\n\nView case status: ${fullShareUrl}`;
+    navigator.clipboard.writeText(formatted);
+    setWhatsAppCopied(true);
+    setTimeout(() => setWhatsAppCopied(false), 2500);
   };
 
   const isExpired = link && new Date(link.expires_at) < new Date();
@@ -212,6 +221,27 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 }}
               >
                 {copied ? "Copied!" : "Copy URL"}
+              </button>
+            </div>
+            <div style={{ marginTop: "10px" }}>
+              <button
+                onClick={copyWhatsAppWithLink}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  backgroundColor: whatsAppCopied ? "var(--success)" : "rgba(37, 211, 102, 0.15)",
+                  color: whatsAppCopied ? "#fff" : "#25D366",
+                  border: "1px solid rgba(37, 211, 102, 0.3)",
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span>{whatsAppCopied ? "✓" : "💬"}</span>
+                <span>{whatsAppCopied ? "Copied!" : "Copy for WhatsApp (with link)"}</span>
               </button>
             </div>
           </div>
