@@ -50,5 +50,8 @@ class TenantContextMiddleware:
             response = self.get_response(request)
             return response
         finally:
+            if hasattr(request, "path_info") and request.path_info.startswith("/share/"):
+                request.path_info = "/share/<redacted>"
+                request.path = "/share/<redacted>"
             # Guarantees that any connection checkout is completely reset on release
             reset_db_tenant_context()

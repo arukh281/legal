@@ -10,7 +10,9 @@ Normative sources:
 
 from __future__ import annotations
 
+import hashlib
 import json
+import secrets
 from datetime import date, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -21,25 +23,43 @@ from django.utils import timezone
 from ninja import File, Form, Router, Schema, UploadedFile
 from ninja.errors import HttpError
 
-from anchor_lib.case_numbers import normalize_case_number
 from anchor_lib.ids import mint_id
 from core.authz_dependency import authz_required
 from parse.vault import DocumentVaultService, VaultStorage
 from workspace import authz
 from workspace.audit import record_audit_event
 from workspace.db import tenant_db_context
+from workspace.import_service import (
+    auto_map_headers,
+    execute_import_commit,
+    generate_import_preview,
+    generate_import_report_csv,
+    generate_sample_template_bytes,
+    inspect_file_safety,
+    parse_raw_rows,
+)
 from workspace.models import (
     AppUser,
     CaseCandidate,
     Client,
+    ClientUpdate,
     Deadline,
     Hearing,
+    ImportJob,
     Matter,
     MatterCaseLink,
     MatterDependency,
     Pdoc,
     PdocVersion,
     PrivateAnchor,
+    ShareLink,
+    Task,
+)
+from workspace.services import (
+    create_case_link_service,
+    create_client_service,
+    create_hearing_service,
+    create_matter_service,
 )
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -160,11 +180,19 @@ class HearingCreateRequest(Schema):
     purpose: str | None = None
 
 
+class TaskCreateRow(Schema):
+    title: str
+    assignee: str
+    due_on: str | None = None
+    notes: str | None = None
+
+
 class HearingOutcomeRequest(Schema):
     outcome: str
     status: str = "HEARD"
     next_date: str | None = None
     next_purpose: str | None = None
+    task: TaskCreateRow | None = None
 
 
 class DeadlineResponse(Schema):
@@ -255,15 +283,145 @@ class TodayDeadlineItem(Schema):
     is_overdue: bool
 
 
+class TodayTaskItem(Schema):
+    task_id: str
+    matter_id: str
+    matter_title: str
+    title: str
+    notes: str | None = None
+    assignee: str
+    assignee_name: str | None = None
+    due_on: str | None = None
+    status: str
+    is_overdue: bool = False
+    bucket: str  # OVERDUE | TODAY | THIS_WEEK | UNDATED
+
+
 class TodayResponse(Schema):
     today_date: str
     today_hearings: list[TodayHearingItem]
     tomorrow_hearings: list[TodayHearingItem]
     this_week_hearings: list[TodayHearingItem]
     this_week_deadlines: list[TodayDeadlineItem]
+    my_tasks: list[TodayTaskItem] = []
     pending_candidates: list[CaseCandidateResponse]
     recent_orders: list[CourtOrderResponse]
     total_active_matters: int
+
+
+# ==============================================================================
+# R3 Schemas: Tasks, Client Updates, Share Links & Case Import
+# ==============================================================================
+
+
+class TaskCreateRequest(Schema):
+    title: str
+    assignee: str
+    notes: str | None = None
+    due_on: str | None = None
+    hearing_id: str | None = None
+    deadline_id: str | None = None
+
+
+class TaskStatusRequest(Schema):
+    status: str  # OPEN | DONE | CANCELLED
+
+
+class TaskAssignRequest(Schema):
+    assignee: str
+
+
+class TaskResponse(Schema):
+    task_id: str
+    matter_id: str
+    matter_title: str | None = None
+    title: str
+    notes: str | None = None
+    assignee: str
+    assignee_name: str | None = None
+    due_on: str | None = None
+    status: str
+    hearing_id: str | None = None
+    deadline_id: str | None = None
+    created_by: str
+    created_at: str
+    done_by: str | None = None
+    done_at: str | None = None
+    is_overdue: bool = False
+
+
+class MatterMemberResponse(Schema):
+    user_id: str
+    display_name: str
+    email: str
+    role: str
+
+
+class ClientUpdateDraftResponse(Schema):
+    matter_id: str
+    matter_title: str
+    draft_text: str
+    facts: dict[str, Any]
+
+
+class ClientUpdateCreateRequest(Schema):
+    text: str
+    facts: dict[str, Any] = {}
+
+
+class ClientUpdateResponse(Schema):
+    update_id: str
+    matter_id: str
+    text: str
+    published_by: str
+    published_at: str
+    created_by: str
+    created_at: str
+
+
+class ShareLinkResponse(Schema):
+    link_id: str
+    matter_id: str
+    client_matter_title: str
+    created_by: str
+    created_at: str
+    expires_at: str
+    revoked_at: str | None = None
+    token: str | None = None
+    url: str | None = None
+
+
+class ShareLinkCreateRequest(Schema):
+    client_matter_title: str | None = None
+    days: int = 90
+
+
+class ShareLinkExtendRequest(Schema):
+    days: int = 90
+
+
+class CaseImportUploadResponse(Schema):
+    import_id: str
+    filename: str
+    file_type: str
+    sheet_names: list[str]
+    headers: list[str]
+    mapping: dict[str, int]
+    preview: dict[str, Any]
+    warning: str | None = None
+
+
+class CaseImportPreviewRequest(Schema):
+    mapping: dict[str, int] | None = None
+    client_overrides: dict[str, Any] | None = None
+    sheet_name: str | None = None
+
+
+class CaseImportCommitResponse(Schema):
+    import_id: str
+    status: str
+    counts: dict[str, Any]
+    report: list[dict[str, Any]]
 
 
 class PdocResponse(Schema):
@@ -363,52 +521,16 @@ def list_clients(request: HttpRequest) -> list[dict[str, Any]]:
 def create_client(request: HttpRequest, payload: ClientCreateRequest) -> dict[str, Any]:
     """Create a new client entity."""
     user = _get_app_user(request)
-    client_id = mint_id("cli")
-    now = timezone.now()
-
     with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO tpl.client (
-                        tenant_id, client_id, display_name, client_type,
-                        identifiers, contact, notes, status, created_by, created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'ACTIVE', %s, %s)
-                    """,
-                    [
-                        user.tenant_id,
-                        client_id,
-                        payload.display_name,
-                        payload.client_type,
-                        json.dumps(payload.identifiers),
-                        json.dumps(payload.contact),
-                        payload.notes,
-                        user.user_id,
-                        now,
-                    ],
-                )
-
-            record_audit_event(
-                tenant_id=user.tenant_id,
-                actor=user.user_id,
-                action="CLIENT_CREATE",
-                object_ref=client_id,
-                decision="ALLOW",
-                detail={"display_name": payload.display_name, "client_type": payload.client_type},
-            )
-
-    return {
-        "client_id": client_id,
-        "display_name": payload.display_name,
-        "client_type": payload.client_type,
-        "identifiers": payload.identifiers,
-        "contact": payload.contact,
-        "notes": payload.notes,
-        "status": "ACTIVE",
-        "created_by": user.user_id,
-        "created_at": now.isoformat(),
-    }
+        return create_client_service(
+            tenant_id=user.tenant_id,
+            actor_id=user.user_id,
+            display_name=payload.display_name,
+            client_type=payload.client_type,
+            identifiers=payload.identifiers,
+            contact=payload.contact,
+            notes=payload.notes,
+        )
 
 
 @router.get("/clients/{client_id}", response=ClientDetailResponse, auth=authz_required)
@@ -597,70 +719,18 @@ def create_matter(request: HttpRequest, payload: MatterCreateRequest) -> dict[st
         if not client or not authz.can(user, "read", client):
             raise HttpError(403, "Access to client forbidden.")
 
-        matter_id = mint_id("mat")
-        now = timezone.now()
-
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO tpl.matter (
-                        tenant_id, matter_id, client_id, client_matter_no, title,
-                        client_role, case_type, court_or_forum, jurisdiction_state,
-                        status, walled, legal_hold, context_version, membership_version,
-                        created_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE', %s, false, 0, 1, %s)
-                    """,
-                    [
-                        user.tenant_id,
-                        matter_id,
-                        payload.client_id,
-                        payload.client_matter_no,
-                        payload.title,
-                        payload.client_role,
-                        payload.case_type,
-                        payload.court_or_forum,
-                        payload.jurisdiction_state,
-                        payload.walled,
-                        now,
-                    ],
-                )
-
-                # Creator is added as LEAD member
-                cursor.execute(
-                    """
-                    INSERT INTO tpl.matter_member (
-                        tenant_id, matter_id, user_id, role, granted_by, granted_at
-                    ) VALUES (%s, %s, %s, 'LEAD', %s, %s)
-                    """,
-                    [user.tenant_id, matter_id, user.user_id, user.user_id, now],
-                )
-
-            record_audit_event(
-                tenant_id=user.tenant_id,
-                actor=user.user_id,
-                action="MATTER_CREATE",
-                object_ref=matter_id,
-                matter_id=matter_id,
-                decision="ALLOW",
-                detail={
-                    "client_id": payload.client_id,
-                    "title": payload.title,
-                    "case_type": payload.case_type,
-                    "court": payload.court_or_forum,
-                },
-            )
-
-    return {
-        "matter_id": matter_id,
-        "client_id": payload.client_id,
-        "title": payload.title,
-        "client_role": payload.client_role,
-        "case_type": payload.case_type,
-        "court_or_forum": payload.court_or_forum,
-        "status": "ACTIVE",
-        "created_at": now.isoformat(),
-    }
+        return create_matter_service(
+            tenant_id=user.tenant_id,
+            actor_id=user.user_id,
+            client_id=payload.client_id,
+            title=payload.title,
+            client_role=payload.client_role,
+            case_type=payload.case_type,
+            court_or_forum=payload.court_or_forum,
+            jurisdiction_state=payload.jurisdiction_state,
+            client_matter_no=payload.client_matter_no,
+            walled=payload.walled,
+        )
 
 
 @router.get("/matters/{matter_id}", response=MatterDetailResponse, auth=authz_required)
@@ -875,60 +945,15 @@ def add_case_link(
         if not matter or not authz.can(user, "write", matter):
             raise HttpError(403, "Access to modify this matter is forbidden.")
 
-        parsed = normalize_case_number(payload.value_normalized)
-        if parsed.parseable:
-            val = parsed.canonical
-            parseable = True
-            warning = None
-        else:
-            val = payload.value_normalized.strip()
-            parseable = False
-            warning = "Case number format could not be parsed; automatic cause-list tracking will not run for this number until edited to a recognized format."
-
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO tpl.matter_case_link (
-                        tenant_id, matter_id, scheme, value_normalized, role, track
-                    ) VALUES (%s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (tenant_id, matter_id, scheme, value_normalized)
-                    DO UPDATE SET role = EXCLUDED.role, track = EXCLUDED.track
-                    """,
-                    [
-                        user.tenant_id,
-                        matter_id,
-                        payload.scheme,
-                        val,
-                        payload.role,
-                        payload.track,
-                    ],
-                )
-
-            record_audit_event(
-                tenant_id=user.tenant_id,
-                actor=user.user_id,
-                action="CASE_LINK_ADD",
-                object_ref=f"{payload.scheme}:{val}",
-                matter_id=matter_id,
-                decision="ALLOW",
-                detail={
-                    "scheme": payload.scheme,
-                    "raw": payload.value_normalized,
-                    "normalized": val,
-                    "parseable": parseable,
-                },
-            )
-
-        return {
-            "matter_id": matter_id,
-            "scheme": payload.scheme,
-            "value_normalized": val,
-            "role": payload.role,
-            "track": payload.track,
-            "parseable": parseable,
-            "warning": warning,
-        }
+        return create_case_link_service(
+            tenant_id=user.tenant_id,
+            actor_id=user.user_id,
+            matter_id=matter_id,
+            value_raw=payload.value_normalized,
+            scheme=payload.scheme,
+            role=payload.role,
+            track=payload.track,
+        )
 
 
 @router.delete("/matters/{matter_id}/case-links", auth=authz_required)
@@ -1225,67 +1250,31 @@ def create_hearing(
         if not matter or not authz.can(user, "write", matter):
             raise HttpError(403, "Access to modify this matter is forbidden.")
 
-        hrg_id = mint_id("hrg")
         h_date = date.fromisoformat(payload.date)
-        now = timezone.now()
-
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO tpl.hearing (
-                        tenant_id, matter_id, hearing_id, date, court_no, item_no,
-                        bench, purpose, source, source_ref, status, outcome,
-                        next_date, entered_by, observed_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'MANUAL', NULL, 'LISTED', NULL, NULL, %s, %s)
-                    """,
-                    [
-                        user.tenant_id,
-                        matter_id,
-                        hrg_id,
-                        h_date,
-                        payload.court_no,
-                        payload.item_no,
-                        payload.bench or matter.court_or_forum,
-                        payload.purpose,
-                        user.user_id,
-                        now,
-                    ],
-                )
-
-            record_audit_event(
-                tenant_id=user.tenant_id,
-                actor=user.user_id,
-                action="HEARING_CREATE",
-                object_ref=hrg_id,
-                matter_id=matter_id,
-                decision="ALLOW",
-                detail={"date": payload.date, "purpose": payload.purpose},
-            )
-
-        return {
-            "hearing_id": hrg_id,
-            "matter_id": matter_id,
-            "date": h_date.isoformat(),
-            "court_no": payload.court_no,
-            "item_no": payload.item_no,
-            "bench": payload.bench or matter.court_or_forum,
-            "purpose": payload.purpose,
-            "source": "MANUAL",
-            "source_ref": None,
-            "status": "LISTED",
-            "outcome": None,
-            "entered_by": user.user_id,
-            "observed_at": now.isoformat(),
-            "court_or_forum": matter.court_or_forum or payload.bench,
-        }
+        res = create_hearing_service(
+            tenant_id=user.tenant_id,
+            actor_id=user.user_id,
+            matter_id=matter_id,
+            hearing_date=h_date,
+            court_no=payload.court_no,
+            item_no=payload.item_no,
+            bench=payload.bench or matter.court_or_forum,
+            purpose=payload.purpose,
+            source="MANUAL",
+            source_ref=None,
+            status="LISTED",
+            outcome=None,
+            notes=None,
+        )
+        res["court_or_forum"] = matter.court_or_forum or payload.bench
+        return res
 
 
 @router.post("/hearings/{hearing_id}/outcome", response=HearingResponse, auth=authz_required)
 def record_hearing_outcome(
     request: HttpRequest, hearing_id: str, payload: HearingOutcomeRequest
 ) -> dict[str, Any]:
-    """Record outcome of a hearing and optionally schedule the next date in one click."""
+    """Record outcome of a hearing and optionally schedule the next date and add a task in one action."""
     user = _get_app_user(request)
     with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
         hearing = Hearing.objects.filter(
@@ -1302,6 +1291,21 @@ def record_hearing_outcome(
 
         now = timezone.now()
         next_d = date.fromisoformat(payload.next_date) if payload.next_date else None
+
+        # Validate task assignee if task is requested
+        if payload.task:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT role FROM tpl.matter_member
+                    WHERE tenant_id = %s AND matter_id = %s AND user_id = %s AND revoked_at IS NULL
+                    ORDER BY granted_at DESC LIMIT 1
+                    """,
+                    [user.tenant_id, hearing.matter_id, payload.task.assignee],
+                )
+                assignee_row = cursor.fetchone()
+            if not assignee_row or assignee_row[0] not in ("LEAD", "MEMBER"):
+                raise HttpError(400, "Task assignee must be an active LEAD or MEMBER of this matter.")
 
         with transaction.atomic():
             with connection.cursor() as cursor:
@@ -1337,6 +1341,31 @@ def record_hearing_outcome(
                         ],
                     )
 
+                # Optional task creation in the same action
+                if payload.task:
+                    tsk_id = mint_id("tsk")
+                    task_due = date.fromisoformat(payload.task.due_on) if payload.task.due_on else None
+                    cursor.execute(
+                        """
+                        INSERT INTO tpl.task (
+                            tenant_id, task_id, matter_id, title, notes, assignee,
+                            due_on, status, hearing_id, deadline_id, created_by, created_at
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'OPEN', %s, NULL, %s, %s)
+                        """,
+                        [
+                            user.tenant_id,
+                            tsk_id,
+                            hearing.matter_id,
+                            payload.task.title,
+                            payload.task.notes,
+                            payload.task.assignee,
+                            task_due,
+                            hearing_id,
+                            user.user_id,
+                            now,
+                        ],
+                    )
+
             record_audit_event(
                 tenant_id=user.tenant_id,
                 actor=user.user_id,
@@ -1348,8 +1377,24 @@ def record_hearing_outcome(
                     "outcome": payload.outcome,
                     "status": payload.status,
                     "next_date": payload.next_date,
+                    "has_task": payload.task is not None,
                 },
             )
+
+            if payload.task:
+                record_audit_event(
+                    tenant_id=user.tenant_id,
+                    actor=user.user_id,
+                    action="TASK_CREATE",
+                    object_ref=tsk_id,
+                    matter_id=hearing.matter_id,
+                    decision="ALLOW",
+                    detail={
+                        "title": payload.task.title,
+                        "assignee": payload.task.assignee,
+                        "hearing_id": hearing_id,
+                    },
+                )
 
         updated = Hearing.objects.get(tenant_id=user.tenant_id, hearing_id=hearing_id)
         return {
@@ -1845,6 +1890,53 @@ def get_matter_timeline(request: HttpRequest, matter_id: str) -> list[dict[str, 
                 }
             )
 
+        # 5. Completed Tasks
+        completed_tasks = Task.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id, status="DONE"
+        )
+        for t in completed_tasks:
+            t_date = (
+                t.done_at.date().isoformat()
+                if t.done_at
+                else t.created_at.date().isoformat()
+            )
+            items.append(
+                {
+                    "id": t.task_id,
+                    "date": t_date,
+                    "item_type": "TASK",
+                    "title": f"Task: {t.title}",
+                    "subtitle": f"Completed by {t.done_by or t.assignee}",
+                    "status": "DONE",
+                    "metadata": {
+                        "task_id": t.task_id,
+                        "assignee": t.assignee,
+                        "done_by": t.done_by,
+                    },
+                }
+            )
+
+        # 6. Published Client Updates
+        published_updates = ClientUpdate.objects.filter(
+            tenant_id=user.tenant_id, matter_id=matter_id
+        )
+        for u in published_updates:
+            snippet = u.text[:100] + "..." if len(u.text) > 100 else u.text
+            items.append(
+                {
+                    "id": u.update_id,
+                    "date": u.published_at.date().isoformat(),
+                    "item_type": "CLIENT_UPDATE",
+                    "title": "Client Update Published",
+                    "subtitle": snippet,
+                    "status": "PUBLISHED",
+                    "metadata": {
+                        "update_id": u.update_id,
+                        "published_by": u.published_by,
+                    },
+                }
+            )
+
         # Sort descending by date
         items.sort(key=lambda x: str(x["date"]), reverse=True)
         return items
@@ -1857,7 +1949,7 @@ def get_matter_timeline(request: HttpRequest, matter_id: str) -> list[dict[str, 
 
 @router.get("/today", response=TodayResponse, auth=authz_required)
 def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
-    """Mobile-first Today dashboard answering: What is listed today/tomorrow, what is due, what came in."""
+    """Mobile-first Today dashboard answering: What is listed today/tomorrow, what is due, my tasks, what came in."""
     user = _get_app_user(request)
     now_ist = timezone.now().astimezone(IST)
     today_d = now_ist.date()
@@ -1876,6 +1968,7 @@ def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
                 "tomorrow_hearings": [],
                 "this_week_hearings": [],
                 "this_week_deadlines": [],
+                "my_tasks": [],
                 "pending_candidates": [],
                 "recent_orders": [],
                 "total_active_matters": 0,
@@ -1927,7 +2020,7 @@ def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
                 tomorrow_hearings_list.append(item)
             this_week_hearings_list.append(item)
 
-        # Deadlines
+        # Deadlines (Internal tasks are NOT included here, preserving Non-negotiable 2)
         active_deadlines = Deadline.objects.filter(
             tenant_id=user.tenant_id,
             matter_id__in=matter_ids,
@@ -1957,6 +2050,57 @@ def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
                     "is_overdue": is_overdue,
                 }
             )
+
+        # My tasks: assigned to current user, OPEN status
+        tasks = Task.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id__in=matter_ids,
+            assignee=user.user_id,
+            status="OPEN",
+        )
+
+        overdue_tasks: list[dict[str, Any]] = []
+        today_tasks: list[dict[str, Any]] = []
+        this_week_tasks: list[dict[str, Any]] = []
+        undated_tasks: list[dict[str, Any]] = []
+
+        for t in tasks:
+            m = matters_map.get(t.matter_id)
+            m_title = m.title if m else "Matter"
+            t_item = {
+                "task_id": t.task_id,
+                "matter_id": t.matter_id,
+                "matter_title": m_title,
+                "title": t.title,
+                "notes": t.notes,
+                "assignee": t.assignee,
+                "due_on": t.due_on.isoformat() if t.due_on else None,
+                "status": t.status,
+                "is_overdue": False,
+                "bucket": "UNDATED",
+            }
+            if t.due_on is None:
+                t_item["bucket"] = "UNDATED"
+                undated_tasks.append(t_item)
+            elif t.due_on < today_d:
+                t_item["is_overdue"] = True
+                t_item["bucket"] = "OVERDUE"
+                overdue_tasks.append(t_item)
+            elif t.due_on == today_d:
+                t_item["bucket"] = "TODAY"
+                today_tasks.append(t_item)
+            elif today_d < t.due_on <= week_end_d:
+                t_item["bucket"] = "THIS_WEEK"
+                this_week_tasks.append(t_item)
+            else:
+                t_item["bucket"] = "UNDATED"
+                undated_tasks.append(t_item)
+
+        overdue_tasks.sort(key=lambda x: str(x["due_on"]))
+        today_tasks.sort(key=lambda x: str(x["due_on"]))
+        this_week_tasks.sort(key=lambda x: str(x["due_on"]))
+
+        my_tasks_list = overdue_tasks + today_tasks + this_week_tasks + undated_tasks
 
         # Pending Candidates ("Check these")
         candidates = CaseCandidate.objects.filter(
@@ -2013,6 +2157,7 @@ def get_today_dashboard(request: HttpRequest) -> dict[str, Any]:
             "tomorrow_hearings": tomorrow_hearings_list,
             "this_week_hearings": this_week_hearings_list,
             "this_week_deadlines": this_week_deadlines_list,
+            "my_tasks": my_tasks_list,
             "pending_candidates": pending_candidates_list,
             "recent_orders": recent_orders_list,
             "total_active_matters": len(matters_map),
@@ -2191,4 +2336,913 @@ def export_firm_calendar(request: HttpRequest) -> HttpResponse:
         response = HttpResponse(ics_content, content_type="text/calendar; charset=utf-8")
         response["Content-Disposition"] = 'attachment; filename="lawyer_brain_calendar.ics"'
         return response
+
+
+# ==============================================================================
+# R3: Tasks Endpoints
+# ==============================================================================
+
+
+@router.get("/matters/{matter_id}/members", response=list[MatterMemberResponse], auth=authz_required)
+def list_matter_members(request: HttpRequest, matter_id: str) -> list[MatterMemberResponse]:
+    """List active members of a matter eligible for task assignment."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT m.user_id, u.display_name, u.email, m.role
+                FROM tpl.matter_member m
+                JOIN tpl.app_user u ON u.tenant_id = m.tenant_id AND u.user_id = m.user_id
+                WHERE m.tenant_id = %s AND m.matter_id = %s AND u.status = 'ACTIVE'
+                ORDER BY m.role DESC, u.display_name ASC
+                """,
+                [user.tenant_id, matter_id],
+            )
+            rows = cursor.fetchall()
+            return [
+                MatterMemberResponse(
+                    user_id=r[0],
+                    display_name=r[1] or r[2],
+                    email=r[2],
+                    role=r[3],
+                )
+                for r in rows
+            ]
+
+
+@router.get("/matters/{matter_id}/tasks", response=list[TaskResponse], auth=authz_required)
+def list_matter_tasks(request: HttpRequest, matter_id: str) -> list[TaskResponse]:
+    """List all internal tasks for a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        tasks = list(
+            Task.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+            .order_by("due_on", "-created_at")
+        )
+        user_ids = {t.assignee for t in tasks if t.assignee}
+        user_ids.update(t.created_by for t in tasks if t.created_by)
+        user_ids.update(t.done_by for t in tasks if t.done_by)
+        users_map = {
+            u.user_id: u.display_name or u.email
+            for u in AppUser.objects.filter(tenant_id=user.tenant_id, user_id__in=user_ids)
+        }
+
+        today_d = timezone.now().astimezone(IST).date()
+        out: list[TaskResponse] = []
+        for t in tasks:
+            is_overdue = bool(t.due_on and t.due_on < today_d and t.status == "OPEN")
+            out.append(
+                TaskResponse(
+                    task_id=t.task_id,
+                    matter_id=t.matter_id,
+                    matter_title=matter.title,
+                    title=t.title,
+                    notes=t.notes,
+                    assignee=t.assignee,
+                    assignee_name=users_map.get(t.assignee, t.assignee),
+                    due_on=t.due_on.isoformat() if t.due_on else None,
+                    status=t.status,
+                    hearing_id=t.hearing_id,
+                    deadline_id=t.deadline_id,
+                    created_by=t.created_by,
+                    created_at=t.created_at.isoformat(),
+                    done_by=t.done_by,
+                    done_at=t.done_at.isoformat() if t.done_at else None,
+                    is_overdue=is_overdue,
+                )
+            )
+        return out
+
+
+@router.post("/matters/{matter_id}/tasks", response=TaskResponse, auth=authz_required)
+def create_matter_task(request: HttpRequest, matter_id: str, payload: TaskCreateRequest) -> TaskResponse:
+    """Create an internal work task on a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Write access to this matter is required.")
+
+        # Assignee validation (Correction 14):
+        assignee_user = AppUser.objects.filter(tenant_id=user.tenant_id, user_id=payload.assignee, active=True).first()
+        if not assignee_user:
+            raise HttpError(400, f"Assignee '{payload.assignee}' is not an active user in this firm.")
+
+        from workspace.models import MatterMember
+        mm = MatterMember.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id, user_id=payload.assignee).first()
+        if not mm or mm.role not in ("LEAD", "MEMBER"):
+            raise HttpError(400, "The assignee must be an active LEAD or MEMBER on this matter, never a VIEWER.")
+
+        # Linked hearing/deadline validation (Correction 14):
+        if payload.hearing_id and payload.deadline_id:
+            raise HttpError(400, "A task can be linked to a hearing or a deadline, but not both.")
+        if payload.hearing_id:
+            h_exists = Hearing.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id, hearing_id=payload.hearing_id).exists()
+            if not h_exists:
+                raise HttpError(400, "Linked hearing does not belong to this matter.")
+        if payload.deadline_id:
+            d_exists = Deadline.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id, deadline_id=payload.deadline_id).exists()
+            if not d_exists:
+                raise HttpError(400, "Linked deadline does not belong to this matter.")
+
+        due_on_date = None
+        if payload.due_on:
+            try:
+                due_on_date = date.fromisoformat(payload.due_on)
+            except ValueError as e:
+                raise HttpError(400, "Invalid date format for due_on; use YYYY-MM-DD.") from e
+
+        task_id = mint_id("tsk")
+        now = timezone.now()
+        task = Task.objects.create(
+            tenant_id=user.tenant_id,
+            task_id=task_id,
+            matter_id=matter_id,
+            title=payload.title.strip(),
+            notes=payload.notes,
+            assignee=payload.assignee,
+            due_on=due_on_date,
+            status="OPEN",
+            hearing_id=payload.hearing_id,
+            deadline_id=payload.deadline_id,
+            created_by=user.user_id,
+            created_at=now,
+        )
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="TASK_CREATE",
+            object_ref=task_id,
+            matter_id=matter_id,
+            decision="ALLOW",
+            detail={"title": task.title, "assignee": task.assignee, "due_on": payload.due_on},
+        )
+
+        today_d = now.astimezone(IST).date()
+        return TaskResponse(
+            task_id=task.task_id,
+            matter_id=task.matter_id,
+            matter_title=matter.title,
+            title=task.title,
+            notes=task.notes,
+            assignee=task.assignee,
+            assignee_name=assignee_user.display_name or assignee_user.email,
+            due_on=task.due_on.isoformat() if task.due_on else None,
+            status=task.status,
+            hearing_id=task.hearing_id,
+            deadline_id=task.deadline_id,
+            created_by=task.created_by,
+            created_at=task.created_at.isoformat(),
+            done_by=None,
+            done_at=None,
+            is_overdue=bool(task.due_on and task.due_on < today_d),
+        )
+
+
+@router.post("/tasks/{task_id}/status", response=TaskResponse, auth=authz_required)
+def update_task_status(request: HttpRequest, task_id: str, payload: TaskStatusRequest) -> TaskResponse:
+    """Update internal task status (OPEN | DONE | CANCELLED)."""
+    user = _get_app_user(request)
+    if payload.status not in ("OPEN", "DONE", "CANCELLED"):
+        raise HttpError(400, "Status must be OPEN, DONE, or CANCELLED.")
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        task = Task.objects.filter(tenant_id=user.tenant_id, task_id=task_id).first()
+        if not task:
+            raise HttpError(404, "Task not found.")
+
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=task.matter_id).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Write access to this matter is required.")
+
+        old_status = task.status
+        now = timezone.now()
+        if payload.status == "DONE" and old_status != "DONE":
+            task.done_at = now
+            task.done_by = user.user_id
+        elif payload.status != "DONE":
+            task.done_at = None
+            task.done_by = None
+        task.status = payload.status
+        task.save(update_fields=["status", "done_at", "done_by"])
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="TASK_STATUS_UPDATE",
+            object_ref=task_id,
+            matter_id=task.matter_id,
+            decision="ALLOW",
+            detail={"old_status": old_status, "new_status": payload.status},
+        )
+
+        assignee_user = AppUser.objects.filter(tenant_id=user.tenant_id, user_id=task.assignee).first()
+        today_d = now.astimezone(IST).date()
+        return TaskResponse(
+            task_id=task.task_id,
+            matter_id=task.matter_id,
+            matter_title=matter.title,
+            title=task.title,
+            notes=task.notes,
+            assignee=task.assignee,
+            assignee_name=assignee_user.display_name if assignee_user else task.assignee,
+            due_on=task.due_on.isoformat() if task.due_on else None,
+            status=task.status,
+            hearing_id=task.hearing_id,
+            deadline_id=task.deadline_id,
+            created_by=task.created_by,
+            created_at=task.created_at.isoformat(),
+            done_by=task.done_by,
+            done_at=task.done_at.isoformat() if task.done_at else None,
+            is_overdue=bool(task.due_on and task.due_on < today_d and task.status == "OPEN"),
+        )
+
+
+@router.post("/tasks/{task_id}/assign", response=TaskResponse, auth=authz_required)
+def assign_task(request: HttpRequest, task_id: str, payload: TaskAssignRequest) -> TaskResponse:
+    """Reassign an internal task to another active LEAD or MEMBER on the matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        task = Task.objects.filter(tenant_id=user.tenant_id, task_id=task_id).first()
+        if not task:
+            raise HttpError(404, "Task not found.")
+
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=task.matter_id).first()
+        if not matter or not authz.can(user, "write", matter):
+            raise HttpError(403, "Write access to this matter is required.")
+
+        assignee_user = AppUser.objects.filter(tenant_id=user.tenant_id, user_id=payload.assignee, active=True).first()
+        if not assignee_user:
+            raise HttpError(400, f"Assignee '{payload.assignee}' is not an active user in this firm.")
+
+        from workspace.models import MatterMember
+        mm = MatterMember.objects.filter(tenant_id=user.tenant_id, matter_id=task.matter_id, user_id=payload.assignee).first()
+        if not mm or mm.role not in ("LEAD", "MEMBER"):
+            raise HttpError(400, "The assignee must be an active LEAD or MEMBER on this matter, never a VIEWER.")
+
+        old_assignee = task.assignee
+        task.assignee = payload.assignee
+        task.save(update_fields=["assignee"])
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="TASK_ASSIGN",
+            object_ref=task_id,
+            matter_id=task.matter_id,
+            decision="ALLOW",
+            detail={"old_assignee": old_assignee, "new_assignee": payload.assignee},
+        )
+
+        today_d = timezone.now().astimezone(IST).date()
+        return TaskResponse(
+            task_id=task.task_id,
+            matter_id=task.matter_id,
+            matter_title=matter.title,
+            title=task.title,
+            notes=task.notes,
+            assignee=task.assignee,
+            assignee_name=assignee_user.display_name or assignee_user.email,
+            due_on=task.due_on.isoformat() if task.due_on else None,
+            status=task.status,
+            hearing_id=task.hearing_id,
+            deadline_id=task.deadline_id,
+            created_by=task.created_by,
+            created_at=task.created_at.isoformat(),
+            done_by=task.done_by,
+            done_at=task.done_at.isoformat() if task.done_at else None,
+            is_overdue=bool(task.due_on and task.due_on < today_d and task.status == "OPEN"),
+        )
+
+
+# ==============================================================================
+# R3: Client Updates Endpoints
+# ==============================================================================
+
+
+@router.get("/matters/{matter_id}/client-updates", response=list[ClientUpdateResponse], auth=authz_required)
+def list_client_updates(request: HttpRequest, matter_id: str) -> list[ClientUpdateResponse]:
+    """List published client updates for a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        updates = list(
+            ClientUpdate.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+            .order_by("-published_at")
+        )
+        user_ids = {u.published_by for u in updates}
+        users_map = {
+            u.user_id: u.display_name or u.email
+            for u in AppUser.objects.filter(tenant_id=user.tenant_id, user_id__in=user_ids)
+        }
+
+        return [
+            ClientUpdateResponse(
+                update_id=u.update_id,
+                matter_id=u.matter_id,
+                text=u.text,
+                published_by=users_map.get(u.published_by, u.published_by),
+                published_at=u.published_at.isoformat(),
+                created_by=u.created_by,
+                created_at=u.created_at.isoformat(),
+            )
+            for u in updates
+        ]
+
+
+@router.get("/matters/{matter_id}/client-updates/draft", response=ClientUpdateDraftResponse, auth=authz_required)
+def get_client_update_draft(request: HttpRequest, matter_id: str) -> ClientUpdateDraftResponse:
+    """Generate deterministic client update draft text from factual case events."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        last_update = (
+            ClientUpdate.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id)
+            .order_by("-published_at")
+            .first()
+        )
+        since_time = last_update.published_at if last_update else None
+
+        # Correction 17: Filed by firm documents
+        doc_query = Pdoc.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id=matter_id,
+            stage__in=["PLEADING", "REPLY"],
+            tombstoned_at__isnull=True,
+        ).exclude(trust_label="TENANT_OPPOSING_DOC")
+        if since_time:
+            doc_query = doc_query.filter(created_at__gt=since_time)
+        filed_docs = list(doc_query.order_by("-created_at"))
+
+        today_d = timezone.now().astimezone(IST).date()
+        recent_hearings = list(
+            Hearing.objects.filter(
+                tenant_id=user.tenant_id,
+                matter_id=matter_id,
+                date__lte=today_d,
+            ).order_by("-date")[:5]
+        )
+        last_hearing = recent_hearings[0] if recent_hearings else None
+
+        next_hearing = (
+            Hearing.objects.filter(
+                tenant_id=user.tenant_id,
+                matter_id=matter_id,
+                date__gte=today_d,
+            )
+            .exclude(status="CANCELLED")
+            .order_by("date")
+            .first()
+        )
+
+        next_deadline = (
+            Deadline.objects.filter(
+                tenant_id=user.tenant_id,
+                matter_id=matter_id,
+                due_on__gte=today_d,
+                lifecycle__in=["PROPOSED", "CONFIRMED"],
+            )
+            .order_by("due_on")
+            .first()
+        )
+
+        facts: dict[str, Any] = {
+            "last_hearing": {
+                "date": last_hearing.date.isoformat(),
+                "status": last_hearing.status,
+                "purpose": last_hearing.purpose,
+                "outcome": last_hearing.outcome,
+            }
+            if last_hearing
+            else None,
+            "next_hearing": {
+                "date": next_hearing.date.isoformat(),
+                "purpose": next_hearing.purpose,
+                "court_no": next_hearing.court_no,
+                "item_no": next_hearing.item_no,
+            }
+            if next_hearing
+            else None,
+            "filed_documents": [
+                {"title": d.title or d.pdoc_id, "stage": d.stage, "date": d.created_at.date().isoformat()}
+                for d in filed_docs
+            ],
+            "next_deadline": {
+                "label": next_deadline.label,
+                "due_on": next_deadline.due_on.isoformat(),
+            }
+            if next_deadline
+            else None,
+        }
+
+        parts = [f"Dear Client,\n\nHere is an update regarding your matter: {matter.title}"]
+        if matter.court_or_forum:
+            parts.append(f"Forum: {matter.court_or_forum}")
+
+        if last_hearing:
+            outcome_str = f"Outcome: {last_hearing.outcome}" if last_hearing.outcome else f"Status: {last_hearing.status}"
+            parts.append(f"Recent Hearing ({last_hearing.date}): {last_hearing.purpose or 'Listing'} — {outcome_str}")
+
+        if filed_docs:
+            doc_titles = ", ".join(f"'{d.title or d.pdoc_id}' ({d.stage})" for d in filed_docs)
+            parts.append(f"Documents Filed: {doc_titles}")
+
+        if next_hearing:
+            court_str = f", Court {next_hearing.court_no}" if next_hearing.court_no else ""
+            item_str = f", Item {next_hearing.item_no}" if next_hearing.item_no else ""
+            parts.append(
+                f"Next Hearing: Scheduled on {next_hearing.date}{court_str}{item_str} for {next_hearing.purpose or 'Hearing'}."
+            )
+
+        if next_deadline:
+            parts.append(f"Upcoming Target Date: {next_deadline.label} due by {next_deadline.due_on}.")
+
+        parts.append("\nPlease let us know if you have any questions.\n\nWarm regards,\nLegal Team")
+        draft_text = "\n\n".join(parts)
+
+        return ClientUpdateDraftResponse(
+            matter_id=matter_id,
+            matter_title=matter.title,
+            draft_text=draft_text,
+            facts=facts,
+        )
+
+
+@router.post("/matters/{matter_id}/client-updates", response=ClientUpdateResponse, auth=authz_required)
+def create_client_update(request: HttpRequest, matter_id: str, payload: ClientUpdateCreateRequest) -> ClientUpdateResponse:
+    """Publish an immutable client status update snapshot (LEAD only)."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter:
+            raise HttpError(404, "Matter not found.")
+        if not authz.can(user, "publish_client_update", matter):
+            raise HttpError(403, "Only a matter LEAD can publish client updates.")
+
+        text = payload.text.strip()
+        if not text:
+            raise HttpError(400, "Update text cannot be empty.")
+
+        update_id = mint_id("cup")
+        now = timezone.now()
+        update = ClientUpdate.objects.create(
+            tenant_id=user.tenant_id,
+            update_id=update_id,
+            matter_id=matter_id,
+            text=text,
+            facts=payload.facts or {},
+            published_by=user.user_id,
+            published_at=now,
+            created_by=user.user_id,
+            created_at=now,
+        )
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="CLIENT_UPDATE_PUBLISH",
+            object_ref=update_id,
+            matter_id=matter_id,
+            decision="ALLOW",
+            detail={"text_len": len(text)},
+        )
+
+        return ClientUpdateResponse(
+            update_id=update.update_id,
+            matter_id=update.matter_id,
+            text=update.text,
+            published_by=user.display_name or user.email,
+            published_at=update.published_at.isoformat(),
+            created_by=update.created_by,
+            created_at=update.created_at.isoformat(),
+        )
+
+
+# ==============================================================================
+# R3: Share Links Endpoints
+# ==============================================================================
+
+
+@router.get("/matters/{matter_id}/share-link", response=ShareLinkResponse, auth=authz_required)
+def get_matter_share_link(request: HttpRequest, matter_id: str) -> ShareLinkResponse:
+    """Get active share link status for a matter."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter or not authz.can(user, "read", matter):
+            raise HttpError(403, "Access to this matter is forbidden.")
+
+        link = ShareLink.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id=matter_id,
+            revoked_at__isnull=True,
+        ).first()
+        if not link:
+            raise HttpError(404, "No active share link found for this matter.")
+
+        return ShareLinkResponse(
+            link_id=link.link_id,
+            matter_id=link.matter_id,
+            client_matter_title=link.client_matter_title,
+            created_by=link.created_by,
+            created_at=link.created_at.isoformat(),
+            expires_at=link.expires_at.isoformat(),
+            revoked_at=link.revoked_at.isoformat() if link.revoked_at else None,
+            token=None,
+            url=None,
+        )
+
+
+@router.post("/matters/{matter_id}/share-link", response=ShareLinkResponse, auth=authz_required)
+def create_matter_share_link(request: HttpRequest, matter_id: str, payload: ShareLinkCreateRequest) -> ShareLinkResponse:
+    """Create a new external share link (LEAD only, revokes prior link)."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter:
+            raise HttpError(404, "Matter not found.")
+        if not authz.can(user, "create_share_link", matter):
+            raise HttpError(403, "Only a matter LEAD can create a share link.")
+
+        days = max(1, min(payload.days, 365))
+        client_title = (payload.client_matter_title or matter.title).strip()
+        now = timezone.now()
+        expires_at = now + timedelta(days=days)
+
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+        link_id = mint_id("shl")
+
+        with transaction.atomic():
+            ShareLink.objects.filter(
+                tenant_id=user.tenant_id,
+                matter_id=matter_id,
+                revoked_at__isnull=True,
+            ).update(revoked_at=now, revoked_by=user.user_id)
+
+            link = ShareLink.objects.create(
+                tenant_id=user.tenant_id,
+                link_id=link_id,
+                matter_id=matter_id,
+                token_hash=token_hash,
+                client_matter_title=client_title,
+                created_by=user.user_id,
+                created_at=now,
+                expires_at=expires_at,
+            )
+
+            record_audit_event(
+                tenant_id=user.tenant_id,
+                actor=user.user_id,
+                action="SHARE_LINK_CREATE",
+                object_ref=link_id,
+                matter_id=matter_id,
+                decision="ALLOW",
+                detail={"days": days, "expires_at": expires_at.isoformat()},
+            )
+
+        return ShareLinkResponse(
+            link_id=link.link_id,
+            matter_id=link.matter_id,
+            client_matter_title=link.client_matter_title,
+            created_by=link.created_by,
+            created_at=link.created_at.isoformat(),
+            expires_at=link.expires_at.isoformat(),
+            revoked_at=None,
+            token=raw_token,
+            url=f"/share/{raw_token}",
+        )
+
+
+@router.post("/matters/{matter_id}/share-link/extend", response=ShareLinkResponse, auth=authz_required)
+def extend_matter_share_link(request: HttpRequest, matter_id: str, payload: ShareLinkExtendRequest) -> ShareLinkResponse:
+    """Extend expiration of an existing share link (LEAD only)."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter:
+            raise HttpError(404, "Matter not found.")
+        if not authz.can(user, "extend_share_link", matter):
+            raise HttpError(403, "Only a matter LEAD can extend a share link.")
+
+        link = ShareLink.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id=matter_id,
+            revoked_at__isnull=True,
+        ).first()
+        if not link:
+            raise HttpError(404, "No active share link found for this matter.")
+
+        now = timezone.now()
+        days = max(1, min(payload.days, 365))
+        base_time = max(now, link.expires_at)
+        new_expires_at = base_time + timedelta(days=days)
+        link.expires_at = new_expires_at
+        link.save(update_fields=["expires_at"])
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="SHARE_LINK_EXTEND",
+            object_ref=link.link_id,
+            matter_id=matter_id,
+            decision="ALLOW",
+            detail={"days": days, "new_expires_at": new_expires_at.isoformat()},
+        )
+
+        return ShareLinkResponse(
+            link_id=link.link_id,
+            matter_id=link.matter_id,
+            client_matter_title=link.client_matter_title,
+            created_by=link.created_by,
+            created_at=link.created_at.isoformat(),
+            expires_at=link.expires_at.isoformat(),
+            revoked_at=None,
+            token=None,
+            url=None,
+        )
+
+
+@router.post("/matters/{matter_id}/share-link/revoke", response=ShareLinkResponse, auth=authz_required)
+def revoke_matter_share_link(request: HttpRequest, matter_id: str) -> ShareLinkResponse:
+    """Revoke an active share link immediately (LEAD only)."""
+    user = _get_app_user(request)
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        matter = Matter.objects.filter(tenant_id=user.tenant_id, matter_id=matter_id).first()
+        if not matter:
+            raise HttpError(404, "Matter not found.")
+        if not authz.can(user, "revoke_share_link", matter):
+            raise HttpError(403, "Only a matter LEAD can revoke a share link.")
+
+        link = ShareLink.objects.filter(
+            tenant_id=user.tenant_id,
+            matter_id=matter_id,
+            revoked_at__isnull=True,
+        ).first()
+        if not link:
+            raise HttpError(404, "No active share link found for this matter.")
+
+        now = timezone.now()
+        link.revoked_at = now
+        link.revoked_by = user.user_id
+        link.save(update_fields=["revoked_at", "revoked_by"])
+
+        record_audit_event(
+            tenant_id=user.tenant_id,
+            actor=user.user_id,
+            action="SHARE_LINK_REVOKE",
+            object_ref=link.link_id,
+            matter_id=matter_id,
+            decision="ALLOW",
+        )
+
+        return ShareLinkResponse(
+            link_id=link.link_id,
+            matter_id=link.matter_id,
+            client_matter_title=link.client_matter_title,
+            created_by=link.created_by,
+            created_at=link.created_at.isoformat(),
+            expires_at=link.expires_at.isoformat(),
+            revoked_at=link.revoked_at.isoformat(),
+            token=None,
+            url=None,
+        )
+
+
+# ==============================================================================
+# R3: Case Import Endpoints (ADMIN only)
+# ==============================================================================
+
+
+@router.get("/cases/import/template", auth=authz_required)
+def get_import_template(request: HttpRequest, fmt: str = "xlsx") -> HttpResponse:
+    """Download live cases import spreadsheet template."""
+    user = _get_app_user(request)
+    if not authz.can(user, "import_cases", None):
+        raise HttpError(403, "Only firm ADMIN may download the case import template.")
+
+    content = generate_sample_template_bytes(fmt)
+    mime = "text/csv" if fmt == "csv" else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ext = "csv" if fmt == "csv" else "xlsx"
+    response = HttpResponse(content, content_type=mime)
+    response["Content-Disposition"] = f'attachment; filename="cases_import_template.{ext}"'
+    return response
+
+
+@router.post("/cases/import/upload", response=CaseImportUploadResponse, auth=authz_required)
+def upload_import_file(request: HttpRequest, file: File[UploadedFile]) -> CaseImportUploadResponse:
+    """Upload and parse an Excel or CSV file of live cases for preview (ADMIN only)."""
+    user = _get_app_user(request)
+    if not authz.can(user, "import_cases", None):
+        raise HttpError(403, "Only firm ADMIN may import cases.")
+
+    file_bytes = file.read()
+    safe_filename = file.name or "cases_import"
+    try:
+        file_type, sheet_names, safety_warnings = inspect_file_safety(file_bytes, safe_filename)
+    except ValueError as e:
+        raise HttpError(400, str(e)) from e
+
+    raw_sha256 = hashlib.sha256(file_bytes).hexdigest()
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        # Correction 11: Hash warning if previously committed
+        prior_job = (
+            ImportJob.objects.filter(
+                tenant_id=user.tenant_id,
+                sha256=raw_sha256,
+                status="COMMITTED",
+            )
+            .order_by("-committed_at")
+            .first()
+        )
+        hash_warning = None
+        if prior_job:
+            committed_time = (
+                prior_job.committed_at.strftime("%Y-%m-%d %H:%M")
+                if prior_job.committed_at
+                else "previously"
+            )
+            hash_warning = f"File with identical content was already imported on {committed_time} by {prior_job.committed_by}."
+
+        storage = VaultStorage()
+        client = storage._get_client()
+        key = f"tpl/{user.tenant_id}/imports/{raw_sha256}"
+        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" if file_type == "xlsx" else "text/csv"
+        client.put_object(
+            Bucket=storage.bucket_name,
+            Key=key,
+            Body=file_bytes,
+            ContentType=mime_type,
+        )
+        file_ref = f"s3://{storage.bucket_name}/{key}"
+
+        try:
+            headers, raw_rows, parse_warnings = parse_raw_rows(
+                file_bytes, file_type, sheet_name=sheet_names[0] if sheet_names else None
+            )
+        except ValueError as e:
+            raise HttpError(400, str(e)) from e
+
+        mapping = auto_map_headers(headers)
+        preview_data = generate_import_preview(user.tenant_id, raw_rows, mapping)
+
+        import_id = mint_id("imj")
+        ImportJob.objects.create(
+            tenant_id=user.tenant_id,
+            import_id=import_id,
+            filename=safe_filename,
+            file_size=len(file_bytes),
+            row_count=len(raw_rows),
+            status="PREVIEW",
+            sha256=raw_sha256,
+            mapping=mapping,
+            client_overrides={},
+            counts=preview_data["summary"],
+            report=[],
+            file_ref=file_ref,
+            created_by=user.user_id,
+            created_at=timezone.now(),
+        )
+
+        combined_warnings = safety_warnings + parse_warnings
+        if hash_warning:
+            combined_warnings.insert(0, hash_warning)
+
+        return CaseImportUploadResponse(
+            import_id=import_id,
+            filename=safe_filename,
+            file_type=file_type,
+            sheet_names=sheet_names,
+            headers=headers,
+            mapping=mapping,
+            preview=preview_data,
+            warning="; ".join(combined_warnings) if combined_warnings else None,
+        )
+
+
+@router.post("/cases/import/{import_id}/preview", response=CaseImportUploadResponse, auth=authz_required)
+def preview_import(request: HttpRequest, import_id: str, payload: CaseImportPreviewRequest) -> CaseImportUploadResponse:
+    """Re-run import preview with updated column mappings or client overrides (ADMIN only)."""
+    user = _get_app_user(request)
+    if not authz.can(user, "import_cases", None):
+        raise HttpError(403, "Only firm ADMIN may preview imports.")
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        job = ImportJob.objects.filter(tenant_id=user.tenant_id, import_id=import_id).first()
+        if not job:
+            raise HttpError(404, "Import job not found.")
+        if job.status == "COMMITTED":
+            raise HttpError(400, "This import job has already been committed.")
+
+        storage = VaultStorage()
+        file_bytes = storage.get_raw(job.file_ref)
+        file_type, sheet_names, _ = inspect_file_safety(file_bytes, job.filename)
+
+        selected_sheet = payload.sheet_name or (sheet_names[0] if sheet_names else None)
+        try:
+            headers, raw_rows, parse_warnings = parse_raw_rows(file_bytes, file_type, sheet_name=selected_sheet)
+        except ValueError as e:
+            raise HttpError(400, str(e)) from e
+
+        mapping = payload.mapping if payload.mapping is not None else job.mapping
+        client_overrides = payload.client_overrides if payload.client_overrides is not None else job.client_overrides
+
+        preview_data = generate_import_preview(user.tenant_id, raw_rows, mapping, client_overrides=client_overrides)
+
+        job.mapping = mapping
+        job.client_overrides = client_overrides
+        job.counts = preview_data["summary"]
+        job.row_count = len(raw_rows)
+        job.save(update_fields=["mapping", "client_overrides", "counts", "row_count"])
+
+        return CaseImportUploadResponse(
+            import_id=job.import_id,
+            filename=job.filename,
+            file_type=file_type,
+            sheet_names=sheet_names,
+            headers=headers,
+            mapping=mapping,
+            preview=preview_data,
+            warning="; ".join(parse_warnings) if parse_warnings else None,
+        )
+
+
+@router.post("/cases/import/{import_id}/commit", response=CaseImportCommitResponse, auth=authz_required)
+def commit_import(request: HttpRequest, import_id: str) -> CaseImportCommitResponse:
+    """Atomically commit a verified case import batch (ADMIN only)."""
+    user = _get_app_user(request)
+    if not authz.can(user, "import_cases", None):
+        raise HttpError(403, "Only firm ADMIN may commit case imports.")
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        job = ImportJob.objects.filter(tenant_id=user.tenant_id, import_id=import_id).first()
+        if not job:
+            raise HttpError(404, "Import job not found.")
+        if job.status == "COMMITTED":
+            raise HttpError(400, "This import job has already been committed.")
+
+        storage = VaultStorage()
+        file_bytes = storage.get_raw(job.file_ref)
+        file_type, sheet_names, _ = inspect_file_safety(file_bytes, job.filename)
+        headers, raw_rows, _ = parse_raw_rows(
+            file_bytes, file_type, sheet_name=sheet_names[0] if sheet_names else None
+        )
+
+        preview_data = generate_import_preview(
+            user.tenant_id,
+            raw_rows,
+            job.mapping,
+            client_overrides=job.client_overrides,
+        )
+
+        result = execute_import_commit(
+            tenant_id=user.tenant_id,
+            importer_user_id=user.user_id,
+            import_id=job.import_id,
+            preview_data=preview_data,
+            original_filename=job.filename,
+        )
+
+        return CaseImportCommitResponse(
+            import_id=result["import_id"],
+            status=result["status"],
+            counts=result["counts"],
+            report=result["report"],
+        )
+
+
+@router.get("/cases/import/{import_id}/report", auth=authz_required)
+def get_import_report(request: HttpRequest, import_id: str) -> HttpResponse:
+    """Download sanitized CSV audit report for an import job."""
+    user = _get_app_user(request)
+    if not authz.can(user, "import_cases", None):
+        raise HttpError(403, "Only firm ADMIN may download import reports.")
+
+    with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
+        job = ImportJob.objects.filter(tenant_id=user.tenant_id, import_id=import_id).first()
+        if not job:
+            raise HttpError(404, "Import job not found.")
+
+        csv_text = generate_import_report_csv(job.report or [])
+        response = HttpResponse(csv_text, content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="import_{import_id}_report.csv"'
+        return response
+
 

@@ -9,12 +9,16 @@ Enforces:
 import hashlib
 import json
 import logging
+import re
 from typing import Any
 
 import structlog
 from structlog.types import EventDict
 
 SENSITIVE_DATACLASSES = {"TENANT_CONFIDENTIAL", "PRIVILEGED"}
+
+
+SHARE_PATH_PATTERN = re.compile(r"/share/[A-Za-z0-9_\-]+")
 
 
 def filter_sensitive_payloads(logger: Any, method_name: str, event_dict: EventDict) -> EventDict:
@@ -34,6 +38,12 @@ def filter_sensitive_payloads(logger: Any, method_name: str, event_dict: EventDi
                     raw_bytes = str(val).encode()
                 event_dict[field] = f"sha256:{hashlib.sha256(raw_bytes).hexdigest()}"
                 event_dict[f"{field}_masked"] = True
+
+    # Redact share tokens from any logged paths or strings
+    for key, val in list(event_dict.items()):
+        if isinstance(val, str) and "/share/" in val:
+            event_dict[key] = SHARE_PATH_PATTERN.sub("/share/<redacted>", val)
+
     return event_dict
 
 
