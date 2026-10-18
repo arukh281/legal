@@ -891,10 +891,11 @@ Lawyers can run their day from inside the platform: track manual hearings and pr
   - Handled real PDF idiosyncrasies: single-letter word wrapping across newlines, multi-case rows, combined and separate application columns, and stateful main petition / IA party hierarchy.
 
 #### H. Security Review of Migration 0007 (System Actor Isolation & Document Vault Protection)
-- `tpl.can_read_matter` and `tpl.tenant` strictly check `SESSION_USER IN ('worker', 'admin_rw', 'postgres')`.
+- `tpl.can_read_matter` and `tpl.tenant` strictly check `SESSION_USER = 'worker'` (strictly removing `'admin_rw'` and `'postgres'`).
 - If an application web session (`app_rw`) sets `app.user_id = 'system:causelist'`, the functions ignore it and return `FALSE` (0 rows exposed).
+- If an administrative session (`admin_rw`) sets `app.purpose = 'CAUSELIST_SYNC'`, it gets nothing extra from the system-sync path (`can_read_matter` returns `FALSE`).
 - Document vault tables (`tpl.pdoc`, `tpl.pdoc_version`, `tpl.private_anchor`) strictly exclude system actors and sync purposes via `COALESCE(app.user_id, '') NOT LIKE 'system:%' AND COALESCE(app.purpose, '') NOT IN ('CAUSELIST_SYNC', 'ORDER_SYNC')`. Worker background crawls can never read confidential client documents.
-- Test suite: `backend/workspace/tests/test_security_causelist_actor.py` (both tests pass: app session gets 0 rows; worker gets 0 document rows).
+- Test suite: `backend/workspace/tests/test_security_causelist_actor.py` (3 tests pass: app session gets 0 rows; worker gets 0 document rows; admin session with `CAUSELIST_SYNC` gets nothing extra).
 
 #### I. Live Exit Check Runs on Real Matter ("Acme v. Zenith, s.9 petition")
 1. **Exit Checks 1–3 Live Demonstration (`python manage.py run_r2_exit_checks`):**
@@ -927,28 +928,29 @@ Lawyers can run their day from inside the platform: track manual hearings and pr
 === EXIT CHECK 8: MARKED LIVE NCLT CRAWL & NCLAT PROBE ===
 
 --- 1. Live NCLT Daily Cause List Crawl ---
-Fetching NCLT cause list index: https://nclt.gov.in/cause-list via GatedHttpClient...
-✓ NCLT index response: status=200, length=29287 bytes, duration=0.31s
+Fetching NCLT cause list index: https://nclt.gov.in/all-cause-list via GatedHttpClient...
+✓ NCLT index response: status=200, length=68559 bytes, duration=0.42s
 ✓ No CAPTCHA detected on NCLT index page.
-Discovered 1 cause list PDF links on NCLT page.
-Fetching live cause list PDF: https://nclt.gov.in/sites/default/files/pdf_cause_list/NCLT20210913124850.pdf (enforcing rate limit >= 3s)...
-✓ PDF downloaded: status=200, size=3386244 bytes, duration=3.99s
-✓ Parsed live PDF: bench=None, court_no=1, date=None
-  - Total items parsed: 0
-  - Unparsed lines: 0
-  - Layout drift: True (reason: BENCH_HEADER_NOT_DETECTED)
+Discovery: Found 20 total cause list rows; 20 dated today (2026-10-18) or later.
+Fetching current cause list PDF: Cause List - Mumbai Bench - Court No.IV -  21 October 2026 (21/10/2026) -> https://nclt.gov.in/sites/default/files/pdf_cause_list/Cause%20List%20-%20Mumbai%20Bench%20-%20Court%20No.IV%20-%20%2021%20October%202026.pdf (enforcing rate limit >= 3s)...
+✓ PDF downloaded: status=200, size=447014 bytes, duration=2.79s
+✓ Parsed live PDF: bench=MUM, court_no=4, date=2026-10-21
+  - Total items parsed: 84
+  - Unparsed lines: 101
+  - Layout drift: False (reason: None)
+  - Sample Item 101: cases=['CP (IB) 736/MUM/2025'], parties='EDELWEISS ASSET RECONSTRUCTION COMPANY LIMITED VS ITMC DEVEL...'
 
 --- 2. NCLAT Cause List Page Probe (User Question 5) ---
 Probing NCLAT URL: https://nclat.nic.in/cause-list via GatedHttpClient (3s floor)...
-✓ NCLAT response: status=200, content_type='text/html; charset=UTF-8', length=59466 bytes, duration=0.33s, pdf_links=21
+✓ NCLAT response: status=200, content_type='text/html; charset=UTF-8', length=59468 bytes, duration=0.50s, pdf_links=21
 
 === LIVE RUN SUMMARY REPORT ===
-• Total time taken: 4.66s
+• Total time taken: 4.33s
 • NCLT lists fetched: 1
-• NCLT entries parsed: 0
-• NCLT unparsed lines: 0
+• NCLT entries parsed: 84
+• NCLT unparsed lines: 101
 • NCLT CAPTCHA encountered: False
-• NCLT layout drift: True (BENCH_HEADER_NOT_DETECTED)
+• NCLT layout drift: False (None)
 • NCLAT probe status: 200 (Content-Type: text/html; charset=UTF-8, CAPTCHA: False, PDFs found: 21)
 ```
 

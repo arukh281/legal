@@ -11,13 +11,13 @@ from django.db import migrations
 
 SQL_FORWARD = """
 -- 1. Update tpl.can_read_matter: system background actors/purposes are ONLY usable
--- by worker/admin DB roles (SESSION_USER IN ('worker', 'admin_rw', 'postgres')),
--- and NEVER settable or effective from an app-role (app_rw) session.
+-- by worker DB role (SESSION_USER = 'worker'),
+-- and NEVER settable or effective from an app-role (app_rw) or admin-role (admin_rw) session.
 CREATE OR REPLACE FUNCTION tpl.can_read_matter(m_id text, u_id text)
 RETURNS boolean AS $$
 BEGIN
-  -- System actor or system background sync purpose: ONLY valid for worker DB roles
-  IF SESSION_USER IN ('worker', 'admin_rw', 'postgres') THEN
+  -- System actor or system background sync purpose: ONLY valid for worker DB role
+  IF SESSION_USER = 'worker' THEN
     IF COALESCE(current_setting('app.purpose', true), '') IN ('CAUSELIST_SYNC', 'ORDER_SYNC') OR u_id LIKE 'system:%' THEN
       -- Ethical wall exclusion: deny-first even for system
       IF u_id IS NOT NULL AND u_id != '' AND EXISTS (
@@ -71,7 +71,7 @@ CREATE POLICY tenant_isolation ON tpl.tenant
   USING (
     tenant_id = NULLIF(current_setting('app.tenant_id', true), '')
     OR (
-      SESSION_USER IN ('worker', 'admin_rw', 'postgres')
+      SESSION_USER = 'worker'
       AND COALESCE(current_setting('app.purpose', true), '') IN ('CAUSELIST_SYNC', 'ORDER_SYNC')
     )
   )

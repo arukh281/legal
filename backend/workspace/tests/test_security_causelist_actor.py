@@ -202,3 +202,34 @@ def test_system_causelist_actor_never_reads_documents(
             )
             cursor.execute("SELECT count(*) FROM tpl.case_candidate WHERE candidate_id = %s;", [cnd_worker_id])
             assert cursor.fetchone()[0] == 1, "worker with system:causelist must write tpl.case_candidate"
+
+
+@pytest.mark.django_db(transaction=True, databases=["default", "admin", "owner", "worker"])
+def test_admin_session_with_cause_list_sync_purpose_gets_nothing_extra(
+    seeded_tenant_with_matter_and_doc: dict[str, str],
+) -> None:
+    """An admin_rw session setting app.purpose=CAUSELIST_SYNC gets nothing extra from the system-sync path."""
+    info = seeded_tenant_with_matter_and_doc
+    tenant_id = info["tenant_id"]
+    matter_id = info["matter_id"]
+
+    with connections["admin"].cursor() as cursor:
+        cursor.execute("SELECT SESSION_USER;")
+        assert cursor.fetchone()[0] == "admin_rw", "connections['admin'] must run as admin_rw"
+
+        # 1. Setting purpose to CAUSELIST_SYNC under admin_rw does NOT activate the system-sync path
+        cursor.execute("SET LOCAL app.tenant_id = %s;", [tenant_id])
+        cursor.execute("SET LOCAL app.purpose = 'CAUSELIST_SYNC';")
+
+        # can_read_matter with system:causelist must return false because SESSION_USER != 'worker'
+        cursor.execute("SELECT tpl.can_read_matter(%s, 'system:causelist');", [matter_id])
+        assert cursor.fetchone()[0] is False, "admin_rw must not activate system-sync path in can_read_matter"
+
+        # can_read_matter with empty user must return false
+        cursor.execute("SELECT tpl.can_read_matter(%s, '');", [matter_id])
+        assert cursor.fetchone()[0] is False, "admin_rw with empty user must return false in can_read_matter"
+
+        # can_read_matter with unauthorized non-member must return false
+        unauth_user_id = mint_id("usr")
+        cursor.execute("SELECT tpl.can_read_matter(%s, %s);", [matter_id, unauth_user_id])
+        assert cursor.fetchone()[0] is False, "admin_rw with unauthenticated user must return false"

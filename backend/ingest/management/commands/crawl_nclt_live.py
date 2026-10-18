@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import re
 import time
+from datetime import date, datetime
 from typing import Any
 from urllib.parse import urljoin
 
+from bs4 import BeautifulSoup
 from django.core.management.base import BaseCommand
 
 from ingest.causelist_parser import NCLTCauseListParser
@@ -38,7 +40,7 @@ class Command(BaseCommand):
             crawl_mode="delta",
         )
 
-        nclt_url = "https://nclt.gov.in/cause-list"
+        nclt_url = "https://nclt.gov.in/all-cause-list"
         self.stdout.write(f"Fetching NCLT cause list index: {nclt_url} via GatedHttpClient...")
         t0 = time.time()
         nclt_resp = nclt_client.get(nclt_url)
@@ -55,24 +57,63 @@ class Command(BaseCommand):
         else:
             self.stdout.write("✓ No CAPTCHA detected on NCLT index page.")
 
-        # Find cause list PDF links
-        pdf_urls = re.findall(r'href=[\'"]([^\'"]+?\.pdf)[\'"]', body_text, re.IGNORECASE)
-        # Filter for cause list pdfs
-        causelist_pdfs = [urljoin(nclt_url, u) for u in pdf_urls if "cause" in u.lower() or "list" in u.lower() or "court" in u.lower()]
-        if not causelist_pdfs and pdf_urls:
-            causelist_pdfs = [urljoin(nclt_url, u) for u in pdf_urls]
+        # Discovery: Parse table for cause lists dated today or later
+        soup = BeautifulSoup(body_text, "html.parser")
+        table = soup.find("table")
+        rows = table.find_all("tr")[1:] if (table and hasattr(table, "find_all")) else []
 
-        self.stdout.write(f"Discovered {len(causelist_pdfs)} cause list PDF links on NCLT page.")
+        today = date.today()
+        current_candidates: list[dict[str, Any]] = []
+
+        for tr in rows:
+            tds = [td.text.strip() for td in tr.find_all("td")]
+            a = tr.find("a")
+            if not a or not a.get("href"):
+                continue
+            href = str(a.get("href", ""))
+            if not href.lower().endswith(".pdf"):
+                continue
+
+            full_url = urljoin(nclt_url, href)
+            title = tds[1] if len(tds) > 1 else ""
+            court = tds[2] if len(tds) > 2 else ""
+            entries_str = tds[3] if len(tds) > 3 else ""
+            date_str = tds[4] if len(tds) > 4 else ""
+
+            parsed_list_date: date | None = None
+            try:
+                parsed_list_date = datetime.strptime(date_str, "%d/%m/%Y").date()
+            except ValueError:
+                parsed_list_date = None
+
+            # Only pick lists dated today or later
+            if parsed_list_date and parsed_list_date >= today:
+                current_candidates.append({
+                    "title": title,
+                    "court": court,
+                    "entries_str": entries_str,
+                    "date": parsed_list_date,
+                    "date_str": date_str,
+                    "url": full_url,
+                })
+
+        self.stdout.write(
+            f"Discovery: Found {len(rows)} total cause list rows; {len(current_candidates)} dated today ({today}) or later."
+        )
 
         lists_fetched = 0
         total_items_parsed = 0
         total_unparsed_lines = 0
         drift_detected = False
         drift_reasons: list[str] = []
+        parse_failure_reason: str | None = None
 
-        if causelist_pdfs:
-            target_pdf_url = causelist_pdfs[0]
-            self.stdout.write(f"Fetching live cause list PDF: {target_pdf_url} (enforcing rate limit >= 3s)...")
+        if current_candidates:
+            target = current_candidates[0]
+            target_pdf_url = target["url"]
+            self.stdout.write(
+                f"Fetching current cause list PDF: {target['title']} ({target['date_str']}) -> {target_pdf_url} (enforcing rate limit >= 3s)..."
+            )
             t_pdf = time.time()
             pdf_resp = nclt_client.get(target_pdf_url)
             pdf_duration = time.time() - t_pdf
@@ -97,7 +138,13 @@ class Command(BaseCommand):
             if parsed.items:
                 sample_item = parsed.items[0]
                 sample_cases = [c.canonical for c in sample_item.normalized_cases]
-                self.stdout.write(f"  - Sample Item {sample_item.item_no}: cases={sample_cases}, parties='{sample_item.parties[:50]}...'")
+                self.stdout.write(f"  - Sample Item {sample_item.item_no}: cases={sample_cases}, parties='{sample_item.parties[:60]}...'")
+            else:
+                parse_failure_reason = parsed.drift_reason or "0 items parsed from current PDF"
+                self.stdout.write(self.style.WARNING(f"  ! Current cause list parsed 0 items: {parse_failure_reason}"))
+        else:
+            parse_failure_reason = f"No cause list rows found on {nclt_url} dated today ({today}) or later"
+            self.stdout.write(self.style.WARNING(f"! {parse_failure_reason}"))
 
         # -------------------------------------------------------------
         # Part 2: NCLAT Live Cause List Probe
@@ -158,4 +205,6 @@ class Command(BaseCommand):
         self.stdout.write(f"• NCLT unparsed lines: {total_unparsed_lines}")
         self.stdout.write(f"• NCLT CAPTCHA encountered: {captcha_found}")
         self.stdout.write(f"• NCLT layout drift: {drift_detected} ({', '.join(drift_reasons) if drift_reasons else 'None'})")
+        if parse_failure_reason:
+            self.stdout.write(f"• NCLT parse notes: {parse_failure_reason}")
         self.stdout.write(f"• NCLAT probe status: {nclat_served_status} (Content-Type: {nclat_content_type}, CAPTCHA: {nclat_captcha}, PDFs found: {nclat_pdf_links_count})")
