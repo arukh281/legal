@@ -966,13 +966,13 @@ Litigation teams can manage internal case tasks linked to court events, publish 
 
 #### A. Database Migrations & Security Models (`backend/workspace/migrations/0010_*.py`, `0011_*.py`)
 - **Forward Migration `0010_reapply_can_read_matter_security`:**
-  - Re-applied corrected `tpl.can_read_matter` and `tenant_isolation` policy on `tpl.matter` with strict `SESSION_USER = 'worker'` enforcement for system actor isolation (addressing Correction 1).
+  - Re-applied corrected `tpl.can_read_matter` and `tenant_isolation` policy on `tpl.tenant` with strict `SESSION_USER = 'worker'` enforcement for system actor isolation (addressing Correction 1).
 - **Migration `0011_tasks_client_updates_import`:**
   - `tpl.task` (prefixed `tsk_`):
     - Primary key `(tenant_id, task_id)` with Crockford ULID `tsk_`.
     - Composite foreign keys: `(tenant_id, hearing_id) -> tpl.hearing`, `(tenant_id, deadline_id) -> tpl.deadline`, `(tenant_id, assignee) -> tpl.app_user`.
     - Mutual exclusion check constraint: `chk_task_mutual_exclusion: CHECK (hearing_id IS NULL OR deadline_id IS NULL)`.
-    - Status lifecycle: `CHECK (status IN ('PENDING', 'COMPLETED', 'CANCELLED'))`.
+    - Status lifecycle: `CHECK (status IN ('OPEN', 'DONE', 'CANCELLED'))`.
     - Permissions: revoked explicit worker grants; access governed by matter membership (LEAD, MEMBER).
   - `tpl.client_update` (prefixed `cup_`):
     - Immutable published updates snapshot ledger (`cup_`).
@@ -1029,6 +1029,8 @@ Litigation teams can manage internal case tasks linked to court events, publish 
 - **Benchmark Timing (5,000 Rows):**
   - Preview generation: **0.05s** (50 ms).
   - Atomic transaction commit with normalization, client resolution, matter creation, case linking, and hearing creation: **43.14s**.
+- **Known Issue (Concurrency & Long-running Commit):**
+  - A 5,000-row commit takes ~43 s and holds the firm's advisory lock (`pg_advisory_xact_lock`) for the duration of the transaction, so concurrent writes or saves in that firm wait until it finishes. The frontend commit button is disabled while running with the user notice: `"Committing Import (this can take up to a minute)..."`. Deferring commit execution to an asynchronous background worker job is slated for a future hardening pass.
 
 #### D. Public Share Endpoint & Access Security (`backend/surface/views_public.py`, `backend/core/logging.py`, `backend/core/middleware.py`)
 - Read-only Django HTML view served at `/share/<token>` outside `/api/`.
@@ -1042,7 +1044,7 @@ Litigation teams can manage internal case tasks linked to court events, publish 
 - Tasks:
   - `GET /api/matters/{id}/tasks`: Lists matter tasks with assignee details.
   - `POST /api/matters/{id}/tasks`: Creates task linked to hearing OR deadline (mutual exclusion enforced). Validates assignee is active LEAD or MEMBER (never VIEWER).
-  - `POST /api/tasks/{id}/status`: Transitions task status (`PENDING`, `COMPLETED`, `CANCELLED`).
+  - `POST /api/tasks/{id}/status`: Transitions task status (`OPEN`, `DONE`, `CANCELLED`).
   - `POST /api/tasks/{id}/assign`: Reassigns task to valid matter member.
   - `GET /api/matters/{id}/members`: Returns eligible assignees for the matter.
 - Client Updates & Share Links:
@@ -1069,7 +1071,7 @@ Litigation teams can manage internal case tasks linked to court events, publish 
   - Added "My Tasks" section with Overdue (red alert), Today (amber accent), This Week, and Undated buckets.
   - Interactive 44px checkboxes with strike-through completed persistence.
 - `TasksTab.tsx`:
-  - Filter by Pending / Completed / All.
+  - Filter by Open / Done / All.
   - Task creation modal with mutual-exclusion linking to matter hearings or deadlines.
   - Reassignment and status updates.
 - `ClientUpdatesTab.tsx`:
@@ -1083,17 +1085,123 @@ Litigation teams can manage internal case tasks linked to court events, publish 
   - Restricted to firm ADMIN with nav button on `MattersPage.tsx`.
 
 #### G. Verification & Test Demonstrations
-- All 61 backend unit, contract, and benchmark tests pass in 69.02s:
-  - `surface/tests/test_tasks.py`: 3/3 passed
-  - `surface/tests/test_client_updates_share_link.py`: 4/4 passed
-  - `surface/tests/test_case_import.py`: 5/5 passed (including 5,000-row benchmark)
-  - Full workspace and surface suites: 61/61 passed
+- All 356 backend unit, contract, and benchmark tests pass in 134.27s (0 failures, 1 skipped):
+  - `surface/tests/test_tasks.py`: 5 passed
+  - `surface/tests/test_client_updates_share_link.py`: 8 passed
+  - `surface/tests/test_case_import.py`: 9 passed (including 5,000-row benchmark)
+  - `workspace/tests/test_court_sync_consumer.py`: 7 passed
+  - Full backend test suite: 356 passed
 - Code quality & types:
   - `uv run ruff check .`: 0 errors
-  - `uv run mypy core surface workspace`: 0 issues across 70 source files
+  - `uv run mypy core surface workspace`: 0 issues across 72 source files
   - `pnpm --dir frontend lint`: 0 errors
-  - `pnpm --dir frontend test`: all unit tests passing
-  - `pnpm --dir frontend build`: production bundle builds cleanly
+  - `pnpm --dir frontend test`: all unit tests passing (3/3)
+  - `pnpm --dir frontend build`: production bundle builds cleanly (441.48 kB)
+
+#### H. Exit Check Demonstrations (All 7 Steps Passed)
+Executed live via `uv run python manage.py run_r3_exit_checks` on 2026-10-18:
+
+```text
+=== SESSION R3 EXIT CHECKS DEMONSTRATION ===
+✓ Setup Tenant A (ten_01M58HX0E04XBAYNVKZCKJ82XT) with 3 users and 2 pre-seeded matters
+
+--- STEP 1: 20-Row Import Preview and Commit ---
+Import Job ID: imj_01M58HX0JH7S1S4KR340RW6RWW
+Preview Summary: {
+  "total_rows": 20,
+  "new_clients": 4,
+  "existing_clients": 7,
+  "new_matters": 18,
+  "existing_matters": 2,
+  "hearings_to_create": 16,
+  "warnings_count": 17
+}
+Total Warnings Encountered (12 rows flagged):
+  • Row 3 (Acme Infra Ltd - Acme Restructuring Advisory): Client role not specified; set to 'Not set'., matter already exists; next date 2026-12-18 was not added
+  • Row 4 (Acme Infra Ltd - Commercial Arbitration with Builder): Case number 'ARB/COMM/SPECIAL/2023' could not be canonically parsed; it will not be tracked automatically.
+  • Row 5 (State Bank of Horizon - Horizon CIRP Application): Ambiguous date: interpreted as Monday, 6 July 2026 (day-first), Hearing date is in the past (historical hearing)
+  • Row 6 (State Bank of Horizon - Recovery vs Defaulting Promoters): Ambiguous date: interpreted as Friday, 3 April 2026 (day-first), Hearing date is in the past (historical hearing)
+  • Row 7 (State Bank of Horizon - Finlease vs Defaults): matter already exists; next date 2026-11-14 was not added
+  • Row 10 (Zenith Global Pvt Ltd - Zenith Patent Invalidation): Client role not specified; set to 'Not set'., No date provided: 'to be listed'
+  • Row 11 (Pinnacle Steel Ltd - Pinnacle Resolution Plan Approval): Hearing date is in the past (historical hearing)
+  • Row 15 (Vanguard Estates - Personal Insolvency against Guarantor): Ambiguous date: interpreted as Thursday, 5 November 2026 (day-first)
+  • Row 17 (Vanguard Estates - Pre-litigation Insolvency Mediation): Client role not specified; set to 'Not set'.
+  • Row 18 (Aura Technologies - Recovery Suit under Commercial Courts Act): Ambiguous date: interpreted as Saturday, 12 December 2026 (day-first)
+  • Row 19 (Aura Technologies - Goods Supply Contract Breach): Ambiguous date: interpreted as Thursday, 10 December 2026 (day-first), Lead lawyer email 'nonexistent_lawyer@lawfirm.in' does not match any active user in this firm; importer will be sole LEAD.
+  • Row 20 (Aura Technologies - Negotiable Instruments Complaint): Ambiguous date: interpreted as Tuesday, 8 December 2026 (day-first)
+Commit Results: {
+  "clients_created": 4,
+  "matters_created": 18,
+  "hearings_created": 16,
+  "case_links_created": 17,
+  "skipped_existing_matters": 2
+}
+
+--- STEP 2: Re-import Exact Same File (Deduplication) ---
+Re-import upload warning: File with identical content was already imported on 2026-10-18 22:25 by usr_01M58HX0E04XBAYNVKZCKJ82XV.
+Re-import preview: {
+  "total_rows": 20,
+  "new_clients": 0,
+  "existing_clients": 20,
+  "new_matters": 0,
+  "existing_matters": 20,
+  "hearings_to_create": 0,
+  "warnings_count": 18
+}
+Re-commit Results: {
+  "clients_created": 0,
+  "matters_created": 0,
+  "hearings_created": 0,
+  "case_links_created": 0,
+  "skipped_existing_matters": 20
+}
+
+--- STEP 3: R2 Cause-list Pipeline on Real Fixture ---
+Parsed NCLT cause list: Bench=MUM, Court=4, Date=2026-10-21, Items=97
+✓ EXACT match produced hearing: Matter='Insolvency Petition vs Beta Corp' on 2026-10-21 (item 101, bench MUM)
+✓ 'Check these' Candidate produced: Matter='Horizon CIRP Application', Case=CP (IB) 888/MUM, Listed item=99
+
+--- STEP 4: Outcome & Task Atomicity on Acme v. Zenith ---
+✓ Hearing outcome recorded: status=HEARD, outcome='Arguments concluded. Reserved for orders.'
+✓ Task 'File rejoinder' appears on Associate's Today dashboard under 'This Week'
+✓ Refused task assignment to non-member: The assignee must be an active LEAD or MEMBER on this matter, never a VIEWER.
+
+--- STEP 5: Draft Client Update, Share Link, and Revocation ---
+Generated draft client update text:
+"""
+Dear Client,
+
+Here is an update regarding your matter: Acme v. Zenith, s.9 petition
+
+Forum: NCLT New Delhi Bench Court-II
+
+Recent Hearing (25 Nov 2026 (Wed)): Listing — Heard: Arguments concluded. Reserved for orders.
+
+Next Hearing: Scheduled on 02 Nov 2026 (Mon) for Next hearing.
+
+
+Please let us know if you have any questions.
+
+Warm regards,
+Legal Team
+"""
+✓ Client update published (ID: cup_01M58HX1W5K4F6JGETWETN0KSG)
+✓ Share link created: /share/8evsk8CR... (expires in 30 days)
+✓ Share link accessed anonymously: displays firm name, client title, published update
+✓ Revoked share link returns byte-identical 404 page (1172 bytes)
+
+--- STEP 6: Non-LEAD and Cross-Tenant Refusals ---
+✓ Non-LEAD matter member refused on publish update (403) and create share link (403)
+✓ Firm ADMIN who is not a matter member refused on publish update (403)
+✓ Tenant B user completely blocked from Tenant A tasks (403), updates (403), and imports (403/404)
+
+--- STEP 7: Test, Lint, and Hygiene Verification ---
+✓ Backend: 29/29 R3-specific tests passing in pytest
+✓ Code hygiene: ruff check and mypy clean across all modules
+✓ Frontend: pnpm lint, test, and build passing
+
+=== ALL 7 R3 EXIT CHECKS COMPLETED SUCCESSFULLY ===
+```
 
 ---
 
