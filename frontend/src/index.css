@@ -1,20 +1,79 @@
 :root {
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --border: #334155;
-  --border-light: #1e293b;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  /* Font Family */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Three Text Sizes */
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-lg: 18px;
+
+  /* Line Heights */
+  --lh-sm: 16px;
+  --lh-base: 20px;
+  --lh-lg: 24px;
+
+  /* 4/8 px Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Corner Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Neutral Palette */
+  --bg-app: #ffffff;
+  --bg-subtle: #f9fafb;
+  --bg-hover: #f3f4f6;
+  --bg-active: #e5e7eb;
+  --bg-modal: #ffffff;
+
+  --text-main: #111827;
+  --text-muted: #4b5563;
+  --text-faint: #6b7280;
+
+  --border-subtle: #f3f4f6;
+  --border-main: #e5e7eb;
+  --border-strong: #d1d5db;
+  --border-focus: #1e3a8a;
+
+  /* Single Accent Colour (Muted Navy / Blue) */
+  --accent-main: #1e3a8a;
+  --accent-hover: #172554;
+  --accent-text: #ffffff;
+  --accent-link: #1e40af;
+  --accent-subtle: #eff6ff;
+
+  /* Real Status Only (WCAG AA Compliant: Contrast > 8:1) */
+  --status-overdue-bg: #fef2f2;
+  --status-overdue-text: #991b1b;
+  --status-overdue-border: #fecaca;
+
+  --status-due-soon-bg: #fffbeb;
+  --status-due-soon-text: #78350f;
+  --status-due-soon-border: #fde68a;
+
+  --status-done-bg: #f0fdf4;
+  --status-done-text: #14532d;
+  --status-done-border: #bbf7d0;
+
+  --status-neutral-bg: #f3f4f6;
+  --status-neutral-text: #374151;
+  --status-neutral-border: #e5e7eb;
+
+  /* Shadow (Calm, Minimal) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-modal: 0 4px 16px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
 }
 
+/* Reset */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -22,21 +81,544 @@
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  color: var(--text-main);
+  background-color: var(--bg-app);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 a {
-  color: inherit;
+  color: var(--accent-link);
   text-decoration: none;
 }
 
+a:hover {
+  text-decoration: underline;
+}
+
 button {
-  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--text-base);
   border: none;
   background: none;
+  cursor: pointer;
+}
+
+input, select, textarea {
   font-family: inherit;
+  font-size: var(--text-base);
+  color: var(--text-main);
+}
+
+/* ==============================================================================
+   Layout Classes
+   ============================================================================== */
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.sidebar {
+  width: 220px;
+  background-color: var(--bg-subtle);
+  border-right: 1px solid var(--border-main);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebar-brand {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--text-muted);
+  text-align: left;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.sidebar-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.sidebar-item.active {
+  background-color: var(--bg-active);
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-main);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidebar-user {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--space-8);
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.page-wrapper {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+/* ==============================================================================
+   Page Header
+   ============================================================================== */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-main);
+}
+
+.page-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: var(--lh-lg);
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.page-description {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ==============================================================================
+   Buttons
+   ============================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: 500;
+  line-height: var(--lh-base);
+  border: 1px solid transparent;
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  border-radius: var(--radius-sm);
+}
+
+.btn-primary {
+  background-color: var(--accent-main);
+  color: var(--accent-text);
+  border-color: var(--accent-main);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  border-color: var(--border-main);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.btn-quiet {
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+}
+
+.btn-danger {
+  background-color: var(--bg-app);
+  color: var(--status-overdue-text);
+  border-color: var(--status-overdue-border);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--status-overdue-bg);
+}
+
+/* ==============================================================================
+   Inputs & Form Controls
+   ============================================================================== */
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  outline: none;
+  transition: border-color 0.12s ease;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--border-focus);
+}
+
+.input:disabled, .select:disabled, .textarea:disabled {
+  background-color: var(--bg-subtle);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
+
+.form-hint {
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+.form-error {
+  font-size: var(--text-sm);
+  color: var(--status-overdue-text);
+}
+
+/* ==============================================================================
+   Tables
+   ============================================================================== */
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--text-base);
+}
+
+.table th {
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-main);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr.clickable {
+  cursor: pointer;
+}
+
+.table tr.clickable:hover td {
+  background-color: var(--bg-hover);
+}
+
+/* ==============================================================================
+   Badges (Real Status Only)
+   ============================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: var(--lh-sm);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-overdue {
+  background-color: var(--status-overdue-bg);
+  color: var(--status-overdue-text);
+  border-color: var(--status-overdue-border);
+}
+
+.badge-due-soon {
+  background-color: var(--status-due-soon-bg);
+  color: var(--status-due-soon-text);
+  border-color: var(--status-due-soon-border);
+}
+
+.badge-done {
+  background-color: var(--status-done-bg);
+  color: var(--status-done-text);
+  border-color: var(--status-done-border);
+}
+
+.badge-neutral {
+  background-color: var(--status-neutral-bg);
+  color: var(--status-neutral-text);
+  border-color: var(--status-neutral-border);
+}
+
+/* ==============================================================================
+   Tabs
+   ============================================================================== */
+
+.tabs {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border-main);
+  margin-bottom: var(--space-6);
+}
+
+.tab-btn {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.12s ease;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+}
+
+.tab-btn.active {
+  color: var(--text-main);
+  font-weight: 500;
+  border-bottom-color: var(--accent-main);
+}
+
+/* ==============================================================================
+   Modals
+   ============================================================================== */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(17, 24, 39, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 1000;
+}
+
+.modal-dialog {
+  background-color: var(--bg-modal);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-main);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.modal-body {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-main);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  background-color: var(--bg-subtle);
+}
+
+/* ==============================================================================
+   Empty State & Plain Lists
+   ============================================================================== */
+
+.empty-state {
+  padding: var(--space-6);
+  text-align: center;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-main);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-subtle);
+}
+
+.plain-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-app);
+}
+
+.plain-list-row {
+  display: grid;
+  grid-template-columns: 100px 1.5fr 1fr 1.5fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-base);
+  color: var(--text-main);
+  transition: background-color 0.1s ease;
+}
+
+.plain-list-row:last-child {
+  border-bottom: none;
+}
+
+.plain-list-row.clickable {
+  cursor: pointer;
+}
+
+.plain-list-row.clickable:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Dropdown Menu */
+.more-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: var(--space-1);
+  min-width: 180px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-main);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  padding: var(--space-1) 0;
+  z-index: 200;
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-hover);
 }
