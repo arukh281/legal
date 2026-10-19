@@ -110,6 +110,16 @@ class Client(DomainModel):
         return f"{self.display_name} ({self.client_id})"
 
 
+CLIENT_ROLES = (
+    "PETITIONER",
+    "RESPONDENT",
+    "APPELLANT",
+    "CLAIMANT",
+    "ADVISORY",
+    "NOT_SET",
+)
+
+
 class Matter(DomainModel):
     """Legal matter workspace (tpl.matter)."""
 
@@ -119,7 +129,7 @@ class Matter(DomainModel):
     client_id = models.TextField(null=True, blank=True)
     client_matter_no = models.TextField(null=True, blank=True)
     title = models.TextField()
-    client_role = models.TextField()  # PETITIONER|RESPONDENT|...
+    client_role = models.TextField(choices=[(r, r) for r in CLIENT_ROLES])
     case_type = models.TextField(null=True, blank=True)
     court_or_forum = models.TextField(null=True, blank=True)
     forum = models.JSONField(null=True, blank=True)

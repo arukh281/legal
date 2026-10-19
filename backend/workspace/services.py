@@ -102,6 +102,11 @@ def create_matter_service(
     import_id: str | None = None,
 ) -> dict[str, Any]:
     """Open a matter under a client, establish LEAD memberships, and record audit event."""
+    from workspace.models import CLIENT_ROLES
+
+    if client_role not in CLIENT_ROLES:
+        raise ValueError(f"Invalid client_role '{client_role}'. Must be one of: {', '.join(CLIENT_ROLES)}")
+
     matter_id = mint_id("mat")
     now = timezone.now()
 

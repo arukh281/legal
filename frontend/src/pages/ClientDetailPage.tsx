@@ -576,11 +576,12 @@ export const ClientDetailPage: React.FC<ClientDetailPageProps> = ({
                       color: "var(--text-primary)",
                     }}
                   >
-                    <option value="PETITIONER">Petitioner / Applicant</option>
+                    <option value="PETITIONER">Petitioner / Applicant / Plaintiff / Complainant</option>
                     <option value="RESPONDENT">Respondent / Defendant</option>
                     <option value="APPELLANT">Appellant</option>
                     <option value="CLAIMANT">Claimant</option>
                     <option value="ADVISORY">Advisory / Corporate</option>
+                    <option value="NOT_SET">Not set</option>
                   </select>
                 </div>
                 <div>
