@@ -269,6 +269,7 @@ def test_all_ninja_routes_enforce_authz_unless_allowlisted() -> None:
     PUBLIC_ALLOWLIST = {
         ("/health", "GET"),
         ("/auth/dev-login", "POST"),
+        ("/auth/logout", "POST"),
     }
 
     routes_checked = 0

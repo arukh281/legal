@@ -757,3 +757,28 @@ Record of decisions made during the build. Every entry has: date, decision, reas
      - Reason: Clear separation between practice management tasks and legal statutory deadlines.
      - Doc Reference: Session R3 Review Corrections 14, 15, 16.
 
+---
+
+### 2026-10-19 — Frontend Minimalist Redesign & Design System
+
+- **Decision:**
+  1. **Unified Design System (`frontend/src/index.css`):**
+     - Replaced all ad-hoc styling and inline `style={{...}}` blocks with centralized CSS variables and utility classes.
+     - Neutral palette: Near-white backgrounds (`#ffffff`, `#f9fafb`), neutral grey borders (`#e5e7eb`, `#d1d5db`), text (`#111827`, `#4b5563`, `#6b7280`), and a single muted navy brand accent (`#1e3a8a` / `#172554`).
+     - Strict status colors reserved only for real statuses (Overdue red `#991b1b` on `#fef2f2`, Due soon amber `#92400e` on `#fffbeb`, Done green `#166534` on `#f0fdf4`). Every combination rigorously verified for WCAG AA compliance (>6:1 to >10:1 contrast ratios).
+     - Single typography scale (base font size 14px, heading sizes 18px and 24px) using Inter / system font.
+     - 4/8 px spacing scale (`--space-1`: 4px, `--space-2`: 8px, `--space-3`: 12px, `--space-4`: 16px, `--space-6`: 24px, `--space-8`: 32px).
+  2. **Shared UI Component Primitives (`frontend/src/components/ui/`):**
+     - Built atomic reusable components: `Button` (primary, secondary, quiet variants), `Input`, `Select`, `Table` (`Table`, `Thead`, `Tbody`, `Tr`, `Th`, `Td`), `Badge` (neutral, success, warning, danger), `Tabs`, `Modal`, `EmptyState`, `PageHeader`, and `MoreMenu`.
+  3. **Calm Layout & Navigation:**
+     - Left slim sidebar containing: `Today`, `Clients`, `Matters`, `Tasks`, and `Import` (admin only). User name and `Sign out` pinned to the bottom.
+     - Single primary action rule: at most one primary button per screen; all secondary actions grouped into quiet "More ▾" dropdown menus.
+  4. **Strict API Adherence without Backend Drift:**
+     - Sidebar `Matters` navigates to existing `listMatters` table view.
+     - Sidebar `Tasks` aggregates the user's tasks from the existing `getToday().my_tasks` dataset with status updates via existing `updateTaskStatus` endpoint. Zero backend schema or API modifications were made.
+  5. **Dev-Only Visual Verification Scripting:**
+     - Automated headless capture using `puppeteer-core` pinned as a development dependency (`devDependencies` only).
+     - Scripts located in `frontend/scripts/` (`capture_before.js`, `capture_after.js`) with zero imports or references in `frontend/src/`.
+- **Reason:** Provides a tranquil, distraction-free, and professional interface tailored for corporate lawyers, prioritizing clarity, typography, and contrast while strictly preserving existing API contracts and backend isolation.
+- **Doc Reference:** User instructions 2026-10-19; AGENTS.md §2, §4, §5.
+

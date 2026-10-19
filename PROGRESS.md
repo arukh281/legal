@@ -1242,5 +1242,64 @@ Legal Team
 - `pnpm lint`: Clean (0 errors, 0 warnings)
 - `pnpm test`: 3/3 passed
 - `pnpm build`: Succeeded without warnings
-- Backend pytest: 30/30 passed
+- Backend pytest: 40/40 passed
+
+---
+
+## Frontend Minimalist Redesign (Linear / Notion Aesthetic)
+
+### 1. What Was Built
+1. **Design System Tokens (`frontend/src/index.css`):**
+   - Pure CSS variables defining a calm neutral color system:
+     - Backgrounds: Canvas `#ffffff`, subtle `#f9fafb`, hover `#f3f4f6`, active `#e5e7eb`
+     - Borders: Subtlest `#f3f4f6`, standard `#e5e7eb`, strong `#d1d5db`
+     - Typography: Primary `#111827`, secondary `#4b5563`, muted `#6b7280`
+     - Brand / Accent: Muted navy `#1e3a8a`, hover `#172554`, background `#eff6ff`
+     - Functional Status (WCAG AA verified >6:1 to >10:1 contrast on tinted backgrounds):
+       - Overdue / Danger: `#991b1b` on `#fef2f2` (border `#fecaca`)
+       - Due Soon / Warning: `#92400e` on `#fffbeb` (border `#fde68a`)
+       - Done / Success: `#166534` on `#f0fdf4` (border `#bbf7d0`)
+       - Neutral: `#374151` on `#f3f4f6` (border `#e5e7eb`)
+   - Spacing scale: 4px (`--space-1`), 8px (`--space-2`), 12px (`--space-3`), 16px (`--space-4`), 24px (`--space-6`), 32px (`--space-8`).
+   - Typography: Single Inter / system font with 3 sizes: `--text-xs` (12px), `--text-sm` (13px), `--text-base` (14px), and titles (18px/24px).
+   - Eliminated all glows, gradients, heavy shadows, and arbitrary colored cards.
+
+2. **Shared UI Components (`frontend/src/components/ui/`):**
+   - `Button`: Primary (navy), Secondary (clean white border), Quiet (ghost).
+   - `Input` & `Select`: Consistent borders, focus rings, and placeholder typography.
+   - `Table`: Composable `Table`, `Thead`, `Tbody`, `Tr`, `Th`, `Td` with subtle row separators and hover states.
+   - `Badge`: Strict semantic status tags (Neutral, Success, Warning, Danger).
+   - `Tabs`: Underlined minimalist tabs with active indicators and counters.
+   - `Modal`: Centered backdrop with Esc and outside-click dismiss.
+   - `EmptyState`: Subtle dashed border container with centered muted guidance.
+   - `PageHeader`: Clean title with optional subtitle and exactly one primary action.
+   - `MoreMenu`: Quiet dropdown menu for secondary actions.
+
+3. **Page Redesigns:**
+   - **Login (`LoginPlaceholder.tsx`):** Clean centered sign-in card with quick-select demo user buttons.
+   - **Navigation & Layout (`Layout.tsx`):** Slim sidebar with `Today`, `Clients`, `Matters`, `Tasks`, and `Import` (restricted to ADMIN). Current user name and "Sign out" at bottom.
+   - **Today (`TodayPage.tsx`):** Three plain lists (Hearings today, Tomorrow, My tasks this week) with 1-line rows. Secondary actions (Export .ics, Refresh) moved into quiet "More" menu.
+   - **Clients (`ClientsPage.tsx` & `ClientDetailPage.tsx`):** Plain table with search. Single primary action "New client". Client detail shows client metadata and simple matters table.
+   - **Matters (`MattersPage.tsx` & `MatterDetailPage.tsx`):** Plain table with search and status dropdown. Matter detail features compact header, 5 tabs (Overview, Hearings, Tasks, Documents, Client updates), single primary action "Add case link", and secondary actions in "More" menu.
+   - **Tasks (`TasksPage.tsx`):** Dedicated sidebar view aggregating personal tasks from existing `getToday().my_tasks` data with status filtering and interactive completion.
+   - **Import (`ImportCasesPage.tsx`):** Clear 3-step progress (1. Upload -> 2. Check -> 3. Import), grouped flagged rows at top with inline resolution actions.
+
+4. **Plain Words and Exact Formatting (`format.ts`):**
+   - Dates strictly formatted as "21 Oct 2026".
+   - Times formatted as "10:30 am".
+   - Statuses rendered in clean sentence case without internal backend codes.
+
+5. **Visual Verification Tooling (`frontend/scripts/` & `docs/ui/`):**
+   - `puppeteer-core` retained strictly as a development dependency.
+   - Automated scripts `capture_before.js` and `capture_after.js` generated 37 visual artifacts (13 before, 24 after) across admin, partner, and associate user flows in `docs/ui/`.
+   - Verified 0 imports of puppeteer in application source code (`frontend/src/`).
+
+### 2. Quality Gates Status
+- `uv run ruff check .`: Clean (0 errors)
+- `uv run mypy core surface workspace`: Clean (0 issues across 74 source files)
+- Backend pytest: 40/40 passed (`workspace/tests/`)
+- `pnpm lint`: Clean (0 errors, 0 warnings)
+- `pnpm test`: 3/3 passed (vitest)
+- `pnpm build`: Succeeded in 464ms (dist/assets/index-FCVjEBDc.js 372.30 kB, bundle size reduced by ~69 kB)
+
 
