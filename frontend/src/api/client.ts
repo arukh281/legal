@@ -137,9 +137,11 @@ export interface DevLoginResponse {
   email: string;
   tenant_id: string;
   firm_role: string;
+  role: string;
+  display_name?: string | null;
 }
 
-export async function devLogin(email: string = "partner.lawyer@firm.in"): Promise<DevLoginResponse> {
+export async function devLogin(email: string): Promise<DevLoginResponse> {
   const response = await fetch(`${API_BASE_URL}/api/auth/dev-login`, {
     method: "POST",
     headers: {
@@ -149,8 +151,19 @@ export async function devLogin(email: string = "partner.lawyer@firm.in"): Promis
     body: JSON.stringify({ email }),
   });
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Dev login failed (${response.status}): ${errorText}`);
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `Dev login failed (${response.status})`);
+  }
+  return response.json();
+}
+
+export async function logout(): Promise<{ status: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Logout failed (${response.status})`);
   }
   return response.json();
 }

@@ -47,6 +47,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dev Logout
+         * @description End the user session and clear authentication cookies.
+         */
+        post: operations["core_api_dev_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -978,6 +998,10 @@ export interface components {
             tenant_id: string;
             /** Firm Role */
             firm_role: string;
+            /** Role */
+            role: string;
+            /** Display Name */
+            display_name?: string | null;
         };
         /** DevLoginRequest */
         DevLoginRequest: {
@@ -985,6 +1009,11 @@ export interface components {
             email?: string | null;
             /** User Id */
             user_id?: string | null;
+        };
+        /** LogoutResponse */
+        LogoutResponse: {
+            /** Status */
+            status: string;
         };
         /** UserProfileResponse */
         UserProfileResponse: {
@@ -996,6 +1025,10 @@ export interface components {
             tenant_id: string;
             /** Firm Role */
             firm_role: string;
+            /** Role */
+            role: string;
+            /** Display Name */
+            display_name?: string | null;
             /** Residency Policy */
             residency_policy: string;
         };
@@ -1918,6 +1951,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DevLoginResponse"];
+                };
+            };
+        };
+    };
+    core_api_dev_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogoutResponse"];
                 };
             };
         };

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, type NavTab } from "./components/Layout";
 import { TodayPage } from "./pages/TodayPage";
 import { ResearchPage } from "./pages/ResearchPage";
@@ -10,10 +10,11 @@ import { MatterDetailPage } from "./pages/MatterDetailPage";
 import { AuthorityPage } from "./pages/AuthorityPage";
 import { AlertsPage } from "./pages/AlertsPage";
 import { LoginPlaceholder } from "./pages/LoginPlaceholder";
-import { fetchHealth } from "./api/client";
+import { fetchHealth, logout, type DevLoginResponse } from "./api/client";
 
 export const App: React.FC = () => {
-  const [userEmail, setUserEmail] = useState<string | null>("partner.lawyer@firm.in");
+  const queryClient = useQueryClient();
+  const [currentUser, setCurrentUser] = useState<DevLoginResponse | null>(null);
   const [currentTab, setCurrentTab] = useState<NavTab>("today");
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [activeMatterId, setActiveMatterId] = useState<string | null>(null);
@@ -24,8 +25,18 @@ export const App: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  if (!userEmail) {
-    return <LoginPlaceholder onLogin={(email) => setUserEmail(email)} />;
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // session termination fallback
+    }
+    setCurrentUser(null);
+    queryClient.clear();
+  };
+
+  if (!currentUser) {
+    return <LoginPlaceholder onLogin={(user) => setCurrentUser(user)} />;
   }
 
   const handleTabChange = (tab: NavTab) => {
@@ -43,8 +54,8 @@ export const App: React.FC = () => {
     <Layout
       currentTab={currentTab}
       onSelectTab={handleTabChange}
-      userEmail={userEmail}
-      onLogout={() => setUserEmail(null)}
+      userEmail={currentUser.email}
+      onLogout={handleLogout}
       health={health}
       healthLoading={healthLoading}
     >

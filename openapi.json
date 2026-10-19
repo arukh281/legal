@@ -62,6 +62,29 @@
         }
       }
     },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "core_api_dev_logout",
+        "summary": "Dev Logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "End the user session and clear authentication cookies.",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/me": {
       "get": {
         "operationId": "core_api_get_current_user_profile",
@@ -2378,6 +2401,21 @@
           "firm_role": {
             "title": "Firm Role",
             "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
           }
         },
         "required": [
@@ -2385,7 +2423,8 @@
           "user_id",
           "email",
           "tenant_id",
-          "firm_role"
+          "firm_role",
+          "role"
         ],
         "title": "DevLoginResponse",
         "type": "object"
@@ -2418,6 +2457,19 @@
         "title": "DevLoginRequest",
         "type": "object"
       },
+      "LogoutResponse": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "LogoutResponse",
+        "type": "object"
+      },
       "UserProfileResponse": {
         "properties": {
           "user_id": {
@@ -2436,6 +2488,21 @@
             "title": "Firm Role",
             "type": "string"
           },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
           "residency_policy": {
             "title": "Residency Policy",
             "type": "string"
@@ -2446,6 +2513,7 @@
           "email",
           "tenant_id",
           "firm_role",
+          "role",
           "residency_policy"
         ],
         "title": "UserProfileResponse",

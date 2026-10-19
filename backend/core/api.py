@@ -76,6 +76,8 @@ class DevLoginResponse(Schema):
     email: str
     tenant_id: str
     firm_role: str
+    role: str
+    display_name: str | None = None
 
 
 @api.post("/auth/dev-login", response=DevLoginResponse, tags=["Auth"])
@@ -93,13 +95,18 @@ def dev_login(request: HttpRequest, payload: DevLoginRequest) -> dict[str, Any]:
     with admin_db_context():
         query = AppUser.objects.filter(active=True)
         if payload.email:
-            query = query.filter(email=payload.email)
+            query = query.filter(email__iexact=payload.email.strip())
         elif payload.user_id:
-            query = query.filter(user_id=payload.user_id)
+            query = query.filter(user_id=payload.user_id.strip())
         else:
             raise HttpError(400, "Provide either email or user_id.")
 
-        app_user = query.first()
+        matching_users = list(query)
+        distinct_tenants = {u.tenant_id for u in matching_users}
+        if len(distinct_tenants) > 1:
+            raise HttpError(400, "Ambiguous email: matches active users in multiple firms.")
+
+        app_user = matching_users[0] if matching_users else None
     if not app_user:
         raise HttpError(403, "User not found or inactive.")
 
@@ -119,7 +126,21 @@ def dev_login(request: HttpRequest, payload: DevLoginRequest) -> dict[str, Any]:
         "email": app_user.email,
         "tenant_id": app_user.tenant_id,
         "firm_role": app_user.firm_role,
+        "role": app_user.firm_role,
+        "display_name": app_user.display_name,
     }
+
+
+class LogoutResponse(Schema):
+    status: str
+
+
+@api.post("/auth/logout", response=LogoutResponse, tags=["Auth"])
+def dev_logout(request: HttpRequest) -> dict[str, str]:
+    """End the user session and clear authentication cookies."""
+    from django.contrib.auth import logout
+    logout(request)
+    return {"status": "logged_out"}
 
 
 class UserProfileResponse(Schema):
@@ -127,6 +148,8 @@ class UserProfileResponse(Schema):
     email: str
     tenant_id: str
     firm_role: str
+    role: str
+    display_name: str | None = None
     residency_policy: str
 
 
@@ -141,5 +164,8 @@ def get_current_user_profile(request: HttpRequest) -> dict[str, Any]:
         "email": app_user.email,
         "tenant_id": ctx.tenant_id,
         "firm_role": ctx.firm_role,
+        "role": ctx.firm_role,
+        "display_name": app_user.display_name,
         "residency_policy": ctx.residency_policy,
     }
+

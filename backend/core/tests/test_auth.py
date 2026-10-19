@@ -128,6 +128,40 @@ def test_api_dev_login_endpoint(auth_setup: dict[str, Any]) -> None:
     )
     assert resp2.status_code == 403
 
+    # Ambiguous email across multiple firms refused (400)
+    tenant2_id = mint_id("ten")
+    u2_id = mint_id("usr")
+    with admin_db_context():
+        Tenant.objects.create(
+            tenant_id=tenant2_id,
+            name="Second Firm Ltd",
+            deployment_mode="D2",
+            residency_policy="ANY",
+        )
+        AppUser.objects.create(
+            tenant_id=tenant2_id,
+            user_id=u2_id,
+            email=u_active.email,  # duplicate email in tenant2
+            display_name="Duplicate User",
+            idp_subject=f"sub_{u2_id}",
+            firm_role="ASSOCIATE",
+            active=True,
+        )
+
+    resp3 = client.post(
+        "/api/auth/dev-login",
+        data={"email": u_active.email},
+        content_type="application/json",
+    )
+    assert resp3.status_code == 400
+    assert "multiple firms" in resp3.json().get("detail", "")
+
+    # Logout endpoint ends session
+    resp_logout = client.post("/api/auth/logout")
+    assert resp_logout.status_code == 200
+    assert resp_logout.json()["status"] == "logged_out"
+
+
 
 def test_no_self_signup_adapters() -> None:
     account_adapter = LawyerBrainAccountAdapter()
