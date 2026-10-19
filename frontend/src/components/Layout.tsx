@@ -1,4 +1,5 @@
 import React from "react";
+import type { HealthResponse } from "../api/client";
 
 export type NavTab = "clients" | "matters" | "research" | "today" | "authority" | "alerts";
 
@@ -8,7 +9,7 @@ interface LayoutProps {
   children: React.ReactNode;
   userEmail?: string;
   onLogout?: () => void;
-  health?: any;
+  health?: HealthResponse;
   healthLoading?: boolean;
 }
 

@@ -32,8 +32,8 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
     queryFn: async () => {
       try {
         return await fetchMatterShareLink(matterId);
-      } catch (e: any) {
-        if (e.message?.includes("404") || e.message?.includes("not found")) {
+      } catch (e: unknown) {
+        if (e instanceof Error && (e.message.includes("404") || e.message.includes("not found"))) {
           return null;
         }
         throw e;
@@ -53,8 +53,8 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_share_link", matterId] });
       refetch();
     },
-    onError: (err: any) => {
-      setErrorMsg(err.message || "Failed to create share link.");
+    onError: (err: unknown) => {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to create share link.");
     },
   });
 
@@ -65,8 +65,8 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_share_link", matterId] });
       refetch();
     },
-    onError: (err: any) => {
-      setErrorMsg(err.message || "Failed to extend share link.");
+    onError: (err: unknown) => {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to extend share link.");
     },
   });
 
@@ -78,8 +78,8 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_share_link", matterId] });
       refetch();
     },
-    onError: (err: any) => {
-      setErrorMsg(err.message || "Failed to revoke share link.");
+    onError: (err: unknown) => {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to revoke share link.");
     },
   });
 

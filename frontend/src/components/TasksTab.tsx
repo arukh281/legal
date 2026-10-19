@@ -72,8 +72,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_tasks", matterId] });
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to create task.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to create task.");
     },
   });
 
@@ -84,8 +84,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_tasks", matterId] });
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to update task status.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to update task status.");
     },
   });
 
@@ -96,8 +96,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_tasks", matterId] });
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to reassign task.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to reassign task.");
     },
   });
 
@@ -197,7 +197,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         </div>
       ) : error ? (
         <div style={{ padding: "20px", textAlign: "center", color: "var(--danger)" }}>
-          Failed to load tasks: {(error as any)?.message}
+          Failed to load tasks: {error instanceof Error ? error.message : String(error)}
         </div>
       ) : filteredTasks.length === 0 ? (
         <div

@@ -109,7 +109,9 @@ def test_import_admin_only_access(r3_import_setup: dict[str, Any]) -> None:
     ctx = r3_import_setup
     client = HttpClient()
 
-    dummy_file = SimpleUploadedFile("cases.csv", b"client name,matter title\nAcme,Suit 1\n", content_type="text/csv")
+    dummy_file = SimpleUploadedFile(
+        "cases.csv", b"client name,matter title\nAcme,Suit 1\n", content_type="text/csv"
+    )
 
     # Partner upload -> 403
     res_part = client.post(
@@ -148,7 +150,11 @@ def test_import_file_safety_checks(r3_import_setup: dict[str, Any]) -> None:
     with open(macro_path, "rb") as f:
         macro_bytes = f.read()
 
-    macro_file = SimpleUploadedFile("malicious.xlsm", macro_bytes, content_type="application/vnd.ms-excel.sheet.macroEnabled.main+xml")
+    macro_file = SimpleUploadedFile(
+        "malicious.xlsm",
+        macro_bytes,
+        content_type="application/vnd.ms-excel.sheet.macroEnabled.main+xml",
+    )
     res_macro = client.post(
         "/api/cases/import/upload",
         {"file": macro_file},
@@ -179,7 +185,9 @@ def test_import_file_safety_checks(r3_import_setup: dict[str, Any]) -> None:
     assert "Windows-1252" in res_win.json()["warning"]
 
 
-def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: dict[str, Any]) -> None:
+def test_synthetic_20_cases_preview_commit_and_deduplication(
+    r3_import_setup: dict[str, Any],
+) -> None:
     """Full end-to-end test with synthetic_cases_20.xlsx fixture: preview, commit, deduplication, past hearings."""
     ctx = r3_import_setup
     client = HttpClient()
@@ -188,7 +196,11 @@ def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: di
     with open(xlsx_path, "rb") as f:
         xlsx_bytes = f.read()
 
-    upload_file = SimpleUploadedFile("synthetic_cases_20.xlsx", xlsx_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    upload_file = SimpleUploadedFile(
+        "synthetic_cases_20.xlsx",
+        xlsx_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
     # 1. Upload & Preview
     res_upload = client.post(
@@ -205,11 +217,15 @@ def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: di
 
     # Check warnings: ambiguous date warning present
     rows = preview["rows"]
-    has_ambiguity_warning = any(any("ambiguous" in w.lower() for w in r.get("warnings", [])) for r in rows)
+    has_ambiguity_warning = any(
+        any("ambiguous" in w.lower() for w in r.get("warnings", [])) for r in rows
+    )
     assert has_ambiguity_warning
 
     # Check lead lawyer email warning for non-existent lawyer (Correction 13)
-    has_lawyer_warning = any(any("lead lawyer email" in w.lower() for w in r.get("warnings", [])) for r in rows)
+    has_lawyer_warning = any(
+        any("lead lawyer email" in w.lower() for w in r.get("warnings", [])) for r in rows
+    )
     assert has_lawyer_warning
 
     # 2. Commit import
@@ -241,7 +257,10 @@ def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: di
             assert h.outcome is None  # Outcome must remain strictly empty for imported hearings
             assert h.source_ref is not None
             assert h.source_ref.startswith(f"import:{import_id}:row ")
-            assert h.source_note == f"Imported from synthetic_cases_20.xlsx, {h.source_ref.split(':')[2]}"
+            assert (
+                h.source_note
+                == f"Imported from synthetic_cases_20.xlsx, {h.source_ref.split(':')[2]}"
+            )
 
         # 4. Verify unparseable case number has track=false (Correction 10)
         unparseable_link = MatterCaseLink.objects.filter(
@@ -258,10 +277,17 @@ def test_synthetic_20_cases_preview_commit_and_deduplication(r3_import_setup: di
             object_ref=import_id,
         ).first()
         assert audit is not None
-        assert audit.detail is not None and audit.detail["counts"]["matters_created"] == counts["matters_created"]
+        assert (
+            audit.detail is not None
+            and audit.detail["counts"]["matters_created"] == counts["matters_created"]
+        )
 
     # 6. Re-import the exact same file -> must warn and create 0 new matters (Correction 11 & Deduplication)
-    upload_file2 = SimpleUploadedFile("synthetic_cases_20.xlsx", xlsx_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    upload_file2 = SimpleUploadedFile(
+        "synthetic_cases_20.xlsx",
+        xlsx_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
     res_reupload = client.post(
         "/api/cases/import/upload",
         {"file": upload_file2},
@@ -376,7 +402,9 @@ def test_5000_row_commit_benchmark(r3_import_setup: dict[str, Any]) -> None:
     assert t_commit < 180.0
 
 
-def test_sequential_import_commits_create_matters_only_once(r3_import_setup: dict[str, Any]) -> None:
+def test_sequential_import_commits_create_matters_only_once(
+    r3_import_setup: dict[str, Any],
+) -> None:
     """Session R3 Item 2: Two commit jobs of the same file, committed one after the other, create matters only once."""
     ctx = r3_import_setup
     client = HttpClient()
@@ -389,13 +417,17 @@ def test_sequential_import_commits_create_matters_only_once(r3_import_setup: dic
 
     # 1. Upload Job 1
     f1 = SimpleUploadedFile("cases.csv", csv_content, content_type="text/csv")
-    res1 = client.post("/api/cases/import/upload", {"file": f1}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    res1 = client.post(
+        "/api/cases/import/upload", {"file": f1}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}"
+    )
     assert res1.status_code == 200
     import_id_1 = res1.json()["import_id"]
 
     # 2. Upload Job 2 (same file)
     f2 = SimpleUploadedFile("cases.csv", csv_content, content_type="text/csv")
-    res2 = client.post("/api/cases/import/upload", {"file": f2}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    res2 = client.post(
+        "/api/cases/import/upload", {"file": f2}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}"
+    )
     assert res2.status_code == 200
     import_id_2 = res2.json()["import_id"]
 
@@ -419,6 +451,7 @@ def test_sequential_import_commits_create_matters_only_once(r3_import_setup: dic
 
     with admin_db_context():
         from workspace.models import Matter
+
         matters = list(Matter.objects.filter(tenant_id=ctx["tenant_id"]))
         assert len(matters) == 2
 
@@ -428,6 +461,7 @@ def test_import_with_chosen_sheet_2(r3_import_setup: dict[str, Any]) -> None:
     import io
 
     import openpyxl
+
     ctx = r3_import_setup
     client = HttpClient()
 
@@ -437,7 +471,9 @@ def test_import_with_chosen_sheet_2(r3_import_setup: dict[str, Any]) -> None:
     assert ws1 is not None
     ws1.title = "Sheet1"
     ws1.append(["Client Name", "Matter Title", "Court", "Case Number", "Next Hearing Date"])
-    ws1.append(["Alpha Corp", "Alpha Should Not Be Created", "NCLT Delhi", "CP 1/2026", "2026-11-01"])
+    ws1.append(
+        ["Alpha Corp", "Alpha Should Not Be Created", "NCLT Delhi", "CP 1/2026", "2026-11-01"]
+    )
 
     # Sheet 2
     ws2 = wb.create_sheet(title="Cases Sheet 2")
@@ -448,8 +484,14 @@ def test_import_with_chosen_sheet_2(r3_import_setup: dict[str, Any]) -> None:
     wb.save(buf)
     wb_bytes = buf.getvalue()
 
-    f = SimpleUploadedFile("two_sheets.xlsx", wb_bytes, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    res_up = client.post("/api/cases/import/upload", {"file": f}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}")
+    f = SimpleUploadedFile(
+        "two_sheets.xlsx",
+        wb_bytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    res_up = client.post(
+        "/api/cases/import/upload", {"file": f}, HTTP_AUTHORIZATION=f"Bearer {ctx['admin_id']}"
+    )
     assert res_up.status_code == 200
     import_id = res_up.json()["import_id"]
     assert "Cases Sheet 2" in res_up.json()["sheet_names"]
@@ -476,12 +518,17 @@ def test_import_with_chosen_sheet_2(r3_import_setup: dict[str, Any]) -> None:
 
     with admin_db_context():
         from workspace.models import ImportJob, Matter
+
         job = ImportJob.objects.get(tenant_id=ctx["tenant_id"], import_id=import_id)
         assert job.sheet_name == "Cases Sheet 2"
 
-        beta_matter = Matter.objects.filter(tenant_id=ctx["tenant_id"], title="Beta Matter From Sheet Two").first()
+        beta_matter = Matter.objects.filter(
+            tenant_id=ctx["tenant_id"], title="Beta Matter From Sheet Two"
+        ).first()
         assert beta_matter is not None
-        alpha_matter = Matter.objects.filter(tenant_id=ctx["tenant_id"], title="Alpha Should Not Be Created").first()
+        alpha_matter = Matter.objects.filter(
+            tenant_id=ctx["tenant_id"], title="Alpha Should Not Be Created"
+        ).first()
         assert alpha_matter is None
 
 
@@ -522,10 +569,22 @@ def test_import_parsing_dates_and_row_limit() -> None:
 def test_import_commit_rollback_on_halfway_failure(r3_import_setup: dict[str, Any]) -> None:
     """Session R3 Item 11: A commit that fails halfway leaves no clients, matters or hearings behind."""
     from unittest.mock import patch
+
     ctx = r3_import_setup
 
     raw_rows = [
-        [f"Client {i}", "COMPANY", "", f"Matter {i}", "IBC", "NCLT", f"CP {i}/2026", "2026-11-15", "", ""]
+        [
+            f"Client {i}",
+            "COMPANY",
+            "",
+            f"Matter {i}",
+            "IBC",
+            "NCLT",
+            f"CP {i}/2026",
+            "2026-11-15",
+            "",
+            "",
+        ]
         for i in range(1, 15)
     ]
     mapping = {
@@ -585,12 +644,15 @@ def test_import_commit_rollback_on_halfway_failure(r3_import_setup: dict[str, An
     # Verify zero clients, matters, or hearings were persisted in database
     with admin_db_context():
         from workspace.models import Client, Hearing, Matter
+
         assert Client.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
         assert Matter.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
         assert Hearing.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
 
 
-def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: dict[str, Any]) -> None:
+def test_import_cross_client_case_duplicate_detection_and_skip(
+    r3_import_setup: dict[str, Any],
+) -> None:
     """Session R3 Fix Pass 2 - Item 2: Existing case number under another client is skipped by default with warning."""
     ctx = r3_import_setup
     from workspace.db import tenant_db_context
@@ -625,7 +687,18 @@ def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: 
 
     # Now preview an import row where client name has a typo: 'Acme Infra Lt'
     raw_rows = [
-        ["Acme Infra Lt", "COMPANY", "", "Resolution Plan Approval", "IBC", "NCLT Mumbai", "CP (IB) 123/MB/2024", "", "", ""]
+        [
+            "Acme Infra Lt",
+            "COMPANY",
+            "",
+            "Resolution Plan Approval",
+            "IBC",
+            "NCLT Mumbai",
+            "CP (IB) 123/MB/2024",
+            "",
+            "",
+            "",
+        ]
     ]
     mapping = {
         "client_name": 0,
@@ -645,9 +718,15 @@ def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: 
 
         assert row["client_status"] == "NEW_CLIENT"
         assert row["matter_status"] == "ALREADY_EXISTS"
-        assert any("possible duplicate (case number exists under Acme Infra Ltd)" in w for w in row["warnings"])
+        assert any(
+            "possible duplicate (case number exists under Acme Infra Ltd)" in w
+            for w in row["warnings"]
+        )
+        assert row["suggested_client_name"] == "Acme Infra Ltd"
+        assert row["suggested_client_id"] == c["client_id"]
         assert preview_data["summary"]["existing_matters"] == 1
         assert preview_data["summary"]["new_matters"] == 0
+        assert preview_data["summary"]["new_clients"] == 0
 
         # Test override: with action CREATE_ANYWAY, matter_status is NEW_MATTER and can be committed
         override_preview = generate_import_preview(
@@ -655,9 +734,13 @@ def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: 
         )
         ov_row = override_preview["rows"][0]
         assert ov_row["matter_status"] == "NEW_MATTER"
-        assert any("possible duplicate (case number exists under Acme Infra Ltd)" in w for w in ov_row["warnings"])
+        assert any(
+            "possible duplicate (case number exists under Acme Infra Ltd)" in w
+            for w in ov_row["warnings"]
+        )
         assert override_preview["summary"]["existing_matters"] == 0
         assert override_preview["summary"]["new_matters"] == 1
+        assert override_preview["summary"]["new_clients"] == 1
 
     import_id = mint_id("imj")
     with admin_db_context():
@@ -687,7 +770,10 @@ def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: 
 
     with admin_db_context():
         from workspace.models import Client
-        assert Client.objects.filter(tenant_id=ctx["tenant_id"], display_name="Acme Infra Lt").exists()
+
+        assert Client.objects.filter(
+            tenant_id=ctx["tenant_id"], display_name="Acme Infra Lt"
+        ).exists()
 
 
 def test_client_role_canonical_list_and_normalization(r3_import_setup: dict[str, Any]) -> None:
@@ -700,7 +786,14 @@ def test_client_role_canonical_list_and_normalization(r3_import_setup: dict[str,
     ctx = r3_import_setup
 
     # Canonical list check
-    assert CLIENT_ROLES == ("PETITIONER", "RESPONDENT", "APPELLANT", "CLAIMANT", "ADVISORY", "NOT_SET")
+    assert CLIENT_ROLES == (
+        "PETITIONER",
+        "RESPONDENT",
+        "APPELLANT",
+        "CLAIMANT",
+        "ADVISORY",
+        "NOT_SET",
+    )
 
     # Synonym mapping
     role, warn = normalize_client_role("Applicant No. 2")
@@ -905,3 +998,123 @@ def test_excel_serial_number_boundaries_and_rejections() -> None:
     assert d_high is None
     assert any("unreadable date" in w.lower() for w in w_high)
 
+
+def test_import_row_override_does_not_leak_to_next_row(r3_import_setup: dict[str, Any]) -> None:
+    """Session Demo setup: Verify that an override on row 5 does NOT leak to row 6.
+
+    Previously, overrides.get(str(row_num)) or overrides.get(str(idx)) caused
+    row 6 (where idx is 5) to inherit row 5's override when row 6 had no override.
+    """
+    ctx = r3_import_setup
+    from workspace.db import tenant_db_context
+    from workspace.services import (
+        create_case_link_service,
+        create_client_service,
+        create_matter_service,
+    )
+
+    with tenant_db_context(tenant_id=ctx["tenant_id"], user_id=ctx["admin_id"]):
+        cli = create_client_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            display_name="Existing Corporation Ltd",
+            client_type="COMPANY",
+        )
+        mat = create_matter_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            client_id=cli["client_id"],
+            title="Pre-existing Matter",
+            case_type="IBC",
+            court_or_forum="NCLT Mumbai",
+        )
+        create_case_link_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            matter_id=mat["matter_id"],
+            value_raw="CP (IB) 888/MB/2024",
+        )
+
+        mapping = {
+            "client_name": 0,
+            "client_type": 1,
+            "cin_or_pan": 2,
+            "matter_title": 3,
+            "case_type": 4,
+            "court_or_forum": 5,
+            "case_number": 6,
+            "next_hearing_date": 7,
+            "lead_lawyer_email": 8,
+            "notes": 9,
+        }
+
+        # Create 6 rows. Rows 1-4 are ordinary new matters.
+        # Row 5 and Row 6 both reference the existing case number under a different client.
+        raw_rows = [
+            [
+                f"Client {i}",
+                "COMPANY",
+                "",
+                f"Matter {i}",
+                "IBC",
+                "NCLT",
+                f"CP (IB) {i}/2024",
+                "",
+                "",
+                "",
+            ]
+            for i in range(1, 5)
+        ]
+        # Row 5 (idx 4, row_num 5):
+        raw_rows.append(
+            [
+                "New Client Five",
+                "COMPANY",
+                "",
+                "Matter Five",
+                "IBC",
+                "NCLT Mumbai",
+                "CP (IB) 888/MB/2024",
+                "",
+                "",
+                "",
+            ]
+        )
+        # Row 6 (idx 5, row_num 6):
+        raw_rows.append(
+            [
+                "New Client Six",
+                "COMPANY",
+                "",
+                "Matter Six",
+                "IBC",
+                "NCLT Mumbai",
+                "CP (IB) 888/MB/2024",
+                "",
+                "",
+                "",
+            ]
+        )
+
+        # Without override: row 5 and row 6 are both flagged as ALREADY_EXISTS
+        preview_no_ov = generate_import_preview(ctx["tenant_id"], raw_rows, mapping)
+        assert preview_no_ov["rows"][4]["matter_status"] == "ALREADY_EXISTS"
+        assert preview_no_ov["rows"][5]["matter_status"] == "ALREADY_EXISTS"
+
+        # Apply override ONLY to row 5:
+        # Row 5 (row_num 5) should become NEW_MATTER.
+        # Row 6 (row_num 6, idx 5) must remain ALREADY_EXISTS and NOT leak row 5's override.
+        preview_with_ov = generate_import_preview(
+            ctx["tenant_id"],
+            raw_rows,
+            mapping,
+            client_overrides={"5": {"action": "CREATE_ANYWAY"}},
+        )
+        assert preview_with_ov["rows"][4]["matter_status"] == "NEW_MATTER"
+        assert preview_with_ov["rows"][5]["matter_status"] == "ALREADY_EXISTS"
+
+        # Summary check: 4 + 1 = 5 new matters, 1 existing matter
+        assert preview_with_ov["summary"]["new_matters"] == 5
+        assert preview_with_ov["summary"]["existing_matters"] == 1
+        # 4 new clients from rows 1-4, plus row 5 (overridden), row 6 skipped -> 5 new clients
+        assert preview_with_ov["summary"]["new_clients"] == 5

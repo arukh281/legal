@@ -461,7 +461,7 @@ export interface CaseCandidateResponse {
   list_date: string | null;
   bench: string | null;
   normalized_case_no: string | null;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   status: string;
   created_at: string;
   resolved_at: string | null;
@@ -487,7 +487,7 @@ export interface TimelineItemResponse {
   title: string;
   subtitle: string | null;
   status: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 export interface TodayHearingItem {

@@ -10,6 +10,19 @@ import {
 } from "../api/client";
 import { ShareLinkModal } from "./ShareLinkModal";
 
+interface HearingFact {
+  date?: string;
+  status?: string;
+  outcome?: string | null;
+}
+
+interface DraftFacts {
+  last_hearing?: HearingFact;
+  next_hearing?: HearingFact;
+  recent_documents_count?: number;
+  [key: string]: unknown;
+}
+
 interface ClientUpdatesTabProps {
   matterId: string;
   matterTitle: string;
@@ -50,8 +63,8 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
       const res = await fetchMatterClientUpdateDraft(matterId);
       setDraft(res);
       setDraftText(res.draft_text);
-    } catch (err: any) {
-      setActionError(err.message || "Failed to generate update draft.");
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Failed to generate update draft.");
     } finally {
       setIsGeneratingDraft(false);
     }
@@ -61,7 +74,7 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
     mutationFn: () =>
       createMatterClientUpdate(matterId, {
         text: draftText.trim(),
-        facts: (draft?.facts as any) || {},
+        facts: (draft?.facts as Record<string, unknown>) || {},
       }),
     onSuccess: () => {
       setDraft(null);
@@ -70,8 +83,8 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ["matter_client_updates", matterId] });
       queryClient.invalidateQueries({ queryKey: ["matter_timeline", matterId] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to publish client update.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to publish client update.");
     },
   });
 
@@ -204,21 +217,21 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
                 <div style={{ fontWeight: "700", color: "var(--accent)", marginBottom: "4px" }}>
                   Extracted Record Facts:
                 </div>
-                {Boolean((draft.facts as any).last_hearing) && (
+                {Boolean((draft.facts as DraftFacts).last_hearing) && (
                   <div>
-                    • Last Hearing: {(draft.facts as any).last_hearing.date} (
-                    {(draft.facts as any).last_hearing.status}
-                    {(draft.facts as any).last_hearing.outcome
-                      ? ` - ${(draft.facts as any).last_hearing.outcome}`
+                    • Last Hearing: {(draft.facts as DraftFacts).last_hearing?.date} (
+                    {(draft.facts as DraftFacts).last_hearing?.status}
+                    {(draft.facts as DraftFacts).last_hearing?.outcome
+                      ? ` - ${(draft.facts as DraftFacts).last_hearing?.outcome}`
                       : ""}
                     )
                   </div>
                 )}
-                {Boolean((draft.facts as any).next_hearing) && (
-                  <div>• Next Scheduled Date: {(draft.facts as any).next_hearing.date}</div>
+                {Boolean((draft.facts as DraftFacts).next_hearing) && (
+                  <div>• Next Scheduled Date: {(draft.facts as DraftFacts).next_hearing?.date}</div>
                 )}
-                {Boolean((draft.facts as any).recent_documents_count) && (
-                  <div>• Filings Filed: {(draft.facts as any).recent_documents_count} document(s)</div>
+                {Boolean((draft.facts as DraftFacts).recent_documents_count) && (
+                  <div>• Filings Filed: {(draft.facts as DraftFacts).recent_documents_count} document(s)</div>
                 )}
               </div>
             )}

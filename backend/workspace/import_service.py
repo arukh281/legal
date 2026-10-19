@@ -504,10 +504,7 @@ def generate_import_preview(
         # --- 1. Client Matching ---
         norm_client_name = normalize_client_name(client_name)
         matched_client: Client | None = None
-        override = (
-            overrides.get(str(row_num))
-            or overrides.get(str(idx))
-        )
+        override = overrides.get(str(row_num))
         if override and override.get("action") == "USE_EXISTING":
             matched_client = next(
                 (c for c in existing_clients if c.client_id == override.get("client_id")),
@@ -717,10 +714,23 @@ def generate_import_preview(
                 "hearing_date": parsed_date.isoformat() if parsed_date else None,
                 "lead_lawyer_email": lead_lawyer_email,
                 "lead_user_id": lead_user_id,
+                "suggested_client_id": matched_other_client_case["client_id"] if matched_other_client_case else None,
+                "suggested_client_name": matched_other_client_case["client_name"] if matched_other_client_case else None,
                 "notes": notes,
                 "warnings": row_warnings,
             }
         )
+
+    # Preview counts must match what commit will do: a skipped row adds no new client
+    new_clients_to_create = {
+        normalize_client_name(r["client_name"])
+        for r in preview_rows
+        if r.get("client_status") == "NEW_CLIENT"
+        and r.get("matter_status") == "NEW_MATTER"
+        and r.get("client_name")
+        and r.get("matter_title")
+    }
+    total_new_clients = len(new_clients_to_create)
 
     return {
         "summary": {

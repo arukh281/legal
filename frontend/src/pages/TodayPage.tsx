@@ -35,8 +35,8 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
       setActionError(null);
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to confirm match.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to confirm match.");
     },
   });
 
@@ -46,8 +46,8 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
       setActionError(null);
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to dismiss candidate.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to dismiss candidate.");
     },
   });
 
@@ -67,8 +67,8 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["today"] });
     },
-    onError: (err: any) => {
-      setActionError(err.message || "Failed to update task.");
+    onError: (err: unknown) => {
+      setActionError(err instanceof Error ? err.message : "Failed to update task.");
     },
   });
 
@@ -83,7 +83,7 @@ export const TodayPage: React.FC<TodayPageProps> = ({ onSelectMatter }) => {
   if (error || !data) {
     return (
       <div style={{ maxWidth: "860px", margin: "0 auto", padding: "16px 0" }}>
-        <p style={{ color: "var(--danger)" }}>Failed to load Today: {(error as any)?.message}</p>
+        <p style={{ color: "var(--danger)" }}>Failed to load Today: {error instanceof Error ? error.message : String(error)}</p>
         <button
           onClick={() => refetch()}
           style={{
@@ -760,8 +760,8 @@ const CandidateCard: React.FC<{
           </div>
           <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
             Date: {candidate.list_date || "Unknown"} • Bench: {candidate.bench || "N/A"}
-            {candidate.details?.court_no && ` • Court ${candidate.details.court_no}`}
-            {candidate.details?.item_no && ` • Item #${candidate.details.item_no}`}
+            {Boolean(candidate.details?.court_no) && ` • Court ${String(candidate.details?.court_no)}`}
+            {Boolean(candidate.details?.item_no) && ` • Item #${String(candidate.details?.item_no)}`}
           </div>
           {isDropped && (
             <div style={{ fontSize: "12px", color: "var(--danger)", marginTop: "4px" }}>
