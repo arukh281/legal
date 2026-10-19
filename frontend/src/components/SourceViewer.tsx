@@ -162,9 +162,8 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
       style={{
         position: "fixed",
         inset: 0,
-        backgroundColor: "rgba(15, 23, 42, 0.75)",
-        backdropFilter: "blur(4px)",
-        zIndex: 50,
+        backgroundColor: "rgba(17, 24, 39, 0.4)",
+        zIndex: 1000,
         display: "flex",
         justifyContent: "flex-end",
       }}
@@ -175,9 +174,9 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
           width: "100%",
           maxWidth: "800px",
           height: "100%",
-          backgroundColor: "var(--bg-primary)",
-          borderLeft: "1px solid var(--border)",
-          boxShadow: "-10px 0 25px rgba(0, 0, 0, 0.5)",
+          backgroundColor: "var(--bg-app)",
+          borderLeft: "1px solid var(--border-main)",
+          boxShadow: "var(--shadow-modal)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -186,9 +185,9 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
         {/* Header */}
         <div
           style={{
-            padding: "20px 24px",
-            borderBottom: "1px solid var(--border)",
-            backgroundColor: "var(--bg-secondary)",
+            padding: "var(--space-4) var(--space-6)",
+            borderBottom: "1px solid var(--border-main)",
+            backgroundColor: "var(--bg-subtle)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
@@ -198,14 +197,13 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
               <span
                 style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  padding: "2px 8px",
-                  borderRadius: "4px",
-                  backgroundColor: "rgba(59, 130, 246, 0.2)",
-                  color: "#60a5fa",
-                  letterSpacing: "0.05em",
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "500",
+                  padding: "2px 6px",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--bg-app)",
+                  border: "1px solid var(--border-main)",
+                  color: "var(--text-muted)",
                 }}
               >
                 Primary Authority
@@ -213,31 +211,30 @@ export const SourceViewer: React.FC<SourceViewerProps> = ({
               {data?.court_id && (
                 <span
                   style={{
-                    fontSize: "12px",
-                    color: "var(--text-secondary)",
-                    fontFamily: "monospace",
+                    fontSize: "var(--text-sm)",
+                    color: "var(--text-muted)",
                   }}
                 >
                   {data.court_id}
                 </span>
               )}
               {data?.decision_date && (
-                <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                <span style={{ fontSize: "var(--text-sm)", color: "var(--text-faint)" }}>
                   • {data.decision_date}
                 </span>
               )}
             </div>
             <h3
               style={{
-                fontSize: "16px",
+                fontSize: "var(--text-base)",
                 fontWeight: "600",
-                color: "var(--text-primary)",
-                lineHeight: "1.4",
+                color: "var(--text-main)",
+                lineHeight: "var(--lh-base)",
               }}
             >
               {data?.title || workId}
             </h3>
-            <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-muted)" }}>
+            <div style={{ marginTop: "4px", fontSize: "var(--text-sm)", color: "var(--text-faint)" }}>
               Pinpoint Anchor: <span style={{ fontFamily: "monospace", color: "#93c5fd" }}>{anchorId}</span>
             </div>
           </div>

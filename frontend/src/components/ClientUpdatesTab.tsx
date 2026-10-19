@@ -9,19 +9,18 @@ import {
   type ClientUpdateDraftResponse,
 } from "../api/client";
 import { ShareLinkModal } from "./ShareLinkModal";
-
-interface HearingFact {
-  date?: string;
-  status?: string;
-  outcome?: string | null;
-}
-
-interface DraftFacts {
-  last_hearing?: HearingFact;
-  next_hearing?: HearingFact;
-  recent_documents_count?: number;
-  [key: string]: unknown;
-}
+import {
+  Button,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Badge,
+  EmptyState,
+} from "./ui";
+import { formatDate } from "../utils/format";
 
 interface ClientUpdatesTabProps {
   matterId: string;
@@ -98,317 +97,161 @@ export const ClientUpdatesTab: React.FC<ClientUpdatesTabProps> = ({
 
   return (
     <div>
-      {/* Top action header */}
+      {/* Top action bar */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          flexWrap: "wrap",
-          gap: "12px",
-          marginBottom: "24px",
-          paddingBottom: "16px",
-          borderBottom: "1px solid var(--border)",
+          gap: "var(--space-3)",
+          marginBottom: "var(--space-4)",
         }}
       >
-        <div>
-          <h3 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>Client Updates</h3>
-          <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginTop: "4px" }}>
-            Publish progress reports and send WhatsApp-ready updates with public status links.
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowShareModal(true)}
+          >
+            Client status link
+          </Button>
+          {shareLink && !shareLink.revoked_at && (
+            <Badge variant="done">Link active</Badge>
+          )}
         </div>
 
-        <button
-          onClick={() => setShowShareModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 16px",
-            borderRadius: "6px",
-            backgroundColor: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
-            color: "var(--text-primary)",
-            fontSize: "13px",
-            fontWeight: "600",
-            cursor: "pointer",
-            minHeight: "40px",
-          }}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleGenerateDraft}
+          disabled={isGeneratingDraft}
         >
-          <span>🔗</span> Manage Share Link
-        </button>
+          {isGeneratingDraft ? "Generating draft..." : "Draft update"}
+        </Button>
       </div>
 
       {actionError && (
         <div
           style={{
-            backgroundColor: "rgba(239, 68, 68, 0.15)",
-            border: "1px solid var(--danger)",
-            borderRadius: "8px",
-            padding: "10px 14px",
-            color: "var(--danger)",
-            fontSize: "13px",
-            marginBottom: "16px",
+            backgroundColor: "var(--status-overdue-bg)",
+            border: "1px solid var(--status-overdue-border)",
+            borderRadius: "var(--radius-md)",
+            padding: "var(--space-2) var(--space-3)",
+            color: "var(--status-overdue-text)",
+            fontSize: "var(--text-sm)",
+            marginBottom: "var(--space-4)",
           }}
         >
           {actionError}
         </div>
       )}
 
-      {/* Draft section */}
-      <div
-        style={{
-          backgroundColor: "var(--bg-secondary)",
-          border: "1px solid var(--border)",
-          borderRadius: "10px",
-          padding: "20px",
-          marginBottom: "32px",
-        }}
-      >
+      {/* Draft editor */}
+      {draft && (
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "14px",
-            flexWrap: "wrap",
-            gap: "10px",
+            backgroundColor: "var(--bg-subtle)",
+            border: "1px solid var(--border-main)",
+            borderRadius: "var(--radius-md)",
+            padding: "var(--space-4)",
+            marginBottom: "var(--space-6)",
           }}
         >
-          <div>
-            <div style={{ fontSize: "15px", fontWeight: "700" }}>Draft New Update</div>
-            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-              Auto-generate from recent hearings, filings, and court orders
-            </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-2)" }}>
+            <span style={{ fontSize: "var(--text-base)", fontWeight: 600 }}>Draft client update</span>
+            <span style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+              Assembled from matter records
+            </span>
           </div>
 
-          <button
-            onClick={handleGenerateDraft}
-            disabled={isGeneratingDraft}
-            style={{
-              padding: "8px 16px",
-              borderRadius: "6px",
-              backgroundColor: "var(--accent)",
-              color: "#fff",
-              border: "none",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            {isGeneratingDraft ? "Generating Draft..." : "✨ Generate Draft"}
-          </button>
-        </div>
+          <textarea
+            className="textarea"
+            rows={5}
+            value={draftText}
+            onChange={(e) => setDraftText(e.target.value)}
+            style={{ marginBottom: "var(--space-3)" }}
+          />
 
-        {draft && (
-          <div style={{ marginTop: "16px" }}>
-            {/* Extracted Facts Overview */}
-            {draft.facts && Object.keys(draft.facts).length > 0 && (
-              <div
-                style={{
-                  backgroundColor: "rgba(59, 130, 246, 0.08)",
-                  border: "1px solid rgba(59, 130, 246, 0.25)",
-                  borderRadius: "8px",
-                  padding: "12px 16px",
-                  marginBottom: "14px",
-                  fontSize: "12px",
-                }}
-              >
-                <div style={{ fontWeight: "700", color: "var(--accent)", marginBottom: "4px" }}>
-                  Extracted Record Facts:
-                </div>
-                {Boolean((draft.facts as DraftFacts).last_hearing) && (
-                  <div>
-                    • Last Hearing: {(draft.facts as DraftFacts).last_hearing?.date} (
-                    {(draft.facts as DraftFacts).last_hearing?.status}
-                    {(draft.facts as DraftFacts).last_hearing?.outcome
-                      ? ` - ${(draft.facts as DraftFacts).last_hearing?.outcome}`
-                      : ""}
-                    )
-                  </div>
-                )}
-                {Boolean((draft.facts as DraftFacts).next_hearing) && (
-                  <div>• Next Scheduled Date: {(draft.facts as DraftFacts).next_hearing?.date}</div>
-                )}
-                {Boolean((draft.facts as DraftFacts).recent_documents_count) && (
-                  <div>• Filings Filed: {(draft.facts as DraftFacts).recent_documents_count} document(s)</div>
-                )}
-              </div>
-            )}
-
-            <label style={{ fontSize: "12px", fontWeight: "600", display: "block", marginBottom: "6px" }}>
-              Update Text (Review and edit before publishing)
-            </label>
-            <textarea
-              rows={5}
-              value={draftText}
-              onChange={(e) => setDraftText(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: "6px",
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--bg-primary)",
-                color: "var(--text-primary)",
-                fontSize: "13px",
-                lineHeight: "1.5",
-                resize: "vertical",
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setDraft(null);
+                setDraftText("");
               }}
-            />
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
-              <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                ⚠️ Published updates are immutable snapshots on the firm ledger.
-              </span>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDraft(null);
-                    setDraftText("");
-                  }}
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "none",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                  }}
-                >
-                  Discard
-                </button>
-                <button
-                  type="button"
-                  onClick={() => publishMutation.mutate()}
-                  disabled={publishMutation.isPending || !draftText.trim()}
-                  style={{
-                    padding: "8px 20px",
-                    borderRadius: "6px",
-                    backgroundColor: "var(--success)",
-                    color: "#fff",
-                    border: "none",
-                    fontWeight: "600",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {publishMutation.isPending ? "Publishing..." : "Publish Update"}
-                </button>
-              </div>
-            </div>
+            >
+              Discard
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => publishMutation.mutate()}
+              disabled={publishMutation.isPending || !draftText.trim()}
+            >
+              {publishMutation.isPending ? "Publishing..." : "Publish update"}
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Published Updates History */}
+      {/* Published updates history */}
       <div>
-        <h4 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "14px" }}>
-          Published Updates History ({(updates || []).length})
-        </h4>
+        <h3 style={{ fontSize: "var(--text-base)", fontWeight: 600, marginBottom: "var(--space-3)" }}>
+          Published updates ({(updates || []).length})
+        </h3>
 
         {updatesLoading ? (
-          <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)" }}>
-            Loading updates...
-          </div>
-        ) : !updates || updates.length === 0 ? (
-          <div
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              border: "1px dashed var(--border)",
-              borderRadius: "10px",
-              padding: "36px",
-              textAlign: "center",
-              color: "var(--text-muted)",
-              fontSize: "14px",
-            }}
-          >
-            No client updates have been published for this matter yet.
-          </div>
+          <p style={{ color: "var(--text-muted)" }}>Loading updates...</p>
+        ) : (updates || []).length === 0 ? (
+          <EmptyState
+            message="No published updates yet. Generate a draft to communicate matter status to the client."
+          />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {updates.map((update) => (
-              <div
-                key={update.update_id}
-                style={{
-                  backgroundColor: "var(--bg-secondary)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                  padding: "16px 20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "10px",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                  }}
-                >
-                  <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                    Published on{" "}
-                    <strong>{new Date(update.published_at).toLocaleString("en-IN")}</strong> by{" "}
-                    {update.published_by}
-                  </div>
-
-                  <button
-                    onClick={() => handleCopyUpdateText(update.text, update.update_id)}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid var(--border)",
-                      backgroundColor:
-                        copiedUpdateId === update.update_id
-                          ? "rgba(16, 185, 129, 0.15)"
-                          : "var(--bg-primary)",
-                      color:
-                        copiedUpdateId === update.update_id
-                          ? "var(--success)"
-                          : "var(--text-primary)",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      minHeight: "36px",
-                    }}
-                  >
-                    <span>{copiedUpdateId === update.update_id ? "✓" : "📋"}</span>
-                    <span>
-                      {copiedUpdateId === update.update_id ? "Copied!" : "Copy update text"}
-                    </span>
-                  </button>
-                </div>
-
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: "var(--text-primary)",
-                    lineHeight: "1.6",
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {update.text}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <Thead>
+              <Tr>
+                <Th style={{ width: "120px" }}>Date</Th>
+                <Th>Update message</Th>
+                <Th style={{ width: "160px" }}>Published by</Th>
+                <Th style={{ width: "90px" }}></Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {(updates || []).map((u) => (
+                <Tr key={u.update_id}>
+                  <Td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+                    {formatDate(u.created_at)}
+                  </Td>
+                  <Td>
+                    <div style={{ whiteSpace: "pre-wrap", fontSize: "var(--text-base)" }}>
+                      {u.text}
+                    </div>
+                  </Td>
+                  <Td style={{ fontSize: "var(--text-sm)", color: "var(--text-muted)" }}>
+                    {u.published_by || "Partner"}
+                  </Td>
+                  <Td>
+                    <Button
+                      variant="quiet"
+                      size="sm"
+                      onClick={() => handleCopyUpdateText(u.text, u.update_id)}
+                    >
+                      {copiedUpdateId === u.update_id ? "Copied" : "Copy"}
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         )}
       </div>
 
-      {/* Share Link Modal */}
       {showShareModal && (
         <ShareLinkModal
           matterId={matterId}
           matterTitle={matterTitle}
-          onClose={() => {
-            setShowShareModal(false);
-            queryClient.invalidateQueries({ queryKey: ["matter_share_link", matterId] });
-          }}
+          onClose={() => setShowShareModal(false)}
         />
       )}
     </div>
