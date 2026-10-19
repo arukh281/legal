@@ -82,7 +82,7 @@ def r2_setup() -> dict[str, Any]:
             {
                 "client_id": client_id,
                 "title": "Insolvency Petition Matter",
-                "client_role": "FINANCIAL_CREDITOR",
+                "client_role": "PETITIONER",
                 "case_type": "CP (IB)",
                 "court_or_forum": "NCLT Mumbai Bench",
             }
@@ -105,13 +105,15 @@ def r2_setup() -> dict[str, Any]:
 def test_manual_hearing_crud_and_outcome(r2_setup: dict[str, Any]) -> None:
     client = r2_setup["client"]
     matter_id = r2_setup["matter_id"]
+    today_ist = timezone.now().astimezone(IST).date()
+    next_d = today_ist + timedelta(days=14)
 
     # 1. Create a manual hearing
     h_create_resp = client.post(
         f"/api/matters/{matter_id}/hearings",
         data=json.dumps(
             {
-                "date": "2026-10-25",
+                "date": today_ist.isoformat(),
                 "court_no": "1",
                 "item_no": "12",
                 "purpose": "First listing for admission",
@@ -143,7 +145,7 @@ def test_manual_hearing_crud_and_outcome(r2_setup: dict[str, Any]) -> None:
             {
                 "outcome": "Notice issued; reply in two weeks",
                 "status": "HEARD",
-                "next_date": "2026-11-10",
+                "next_date": next_d.isoformat(),
                 "next_purpose": "For filing reply and arguments",
             }
         ),
@@ -160,8 +162,8 @@ def test_manual_hearing_crud_and_outcome(r2_setup: dict[str, Any]) -> None:
     all_h = list_after.json()
     assert len(all_h) == 2
     dates = [h["date"] for h in all_h]
-    assert "2026-10-25" in dates
-    assert "2026-11-10" in dates
+    assert today_ist.isoformat() in dates
+    assert next_d.isoformat() in dates
 
 
 def test_deadline_rule_id_rejection_and_manual_create(r2_setup: dict[str, Any]) -> None:

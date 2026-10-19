@@ -17,13 +17,14 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
 from django.test import Client as HttpClient
+from django.utils import timezone
 
 from anchor_lib.ids import mint_id
 from core.db_router import admin_db_context
@@ -89,7 +90,7 @@ class Command(BaseCommand):
             partner_user = AppUser.objects.create(
                 tenant_id=tenant_a_id,
                 user_id=partner_id,
-                email="partner@lawfirm.in",
+                email=f"partner_{partner_id}@lexchambers.in",
                 display_name="Partner Lawyer",
                 idp_subject=f"sub_{partner_id}",
                 firm_role="PARTNER",
@@ -98,7 +99,7 @@ class Command(BaseCommand):
             associate_user = AppUser.objects.create(
                 tenant_id=tenant_a_id,
                 user_id=associate_id,
-                email="associate@lawfirm.in",
+                email=f"associate_{associate_id}@lexchambers.in",
                 display_name="Associate Lawyer",
                 idp_subject=f"sub_{associate_id}",
                 firm_role="ASSOCIATE",
@@ -363,17 +364,20 @@ class Command(BaseCommand):
                 defaults={"role": "MEMBER", "granted_by": partner_id, "revoked_at": None},
             )
 
-            # Get hearing on Acme v. Zenith
+            # Get hearing on Acme v. Zenith and set date to today in IST
+            today_ist = timezone.now().astimezone(IST).date()
             acme_hearing = Hearing.objects.filter(
                 tenant_id=tenant_a_id,
                 matter_id=acme_matter_id,
             ).first()
             assert acme_hearing is not None
+            acme_hearing.date = today_ist
+            acme_hearing.save(update_fields=["date"])
             acme_hearing_id = acme_hearing.hearing_id
 
         # Record outcome and add task in same action
-        next_hearing_date = date.today() + timedelta(days=14)
-        task_due_date = date.today() + timedelta(days=7)
+        next_hearing_date = today_ist + timedelta(days=14)
+        task_due_date = today_ist + timedelta(days=7)
 
         req_mock = type("MockRequest", (), {"app_user": partner_user})()
         outcome_payload = HearingOutcomeRequest(
@@ -561,11 +565,4 @@ class Command(BaseCommand):
         assert res_b_import.status_code in (403, 404)
         self.stdout.write(self.style.SUCCESS("✓ Tenant B user completely blocked from Tenant A tasks (403), updates (403), and imports (403/404)"))
 
-        # =====================================================================
-        # STEP 7: Quality gates
-        # =====================================================================
-        self.stdout.write(self.style.MIGRATE_LABEL("\n--- STEP 7: Test, Lint, and Hygiene Verification ---"))
-        self.stdout.write("✓ Backend: 29/29 R3-specific tests passing in pytest")
-        self.stdout.write("✓ Code hygiene: ruff check and mypy clean across all modules")
-        self.stdout.write("✓ Frontend: pnpm lint, test, and build passing")
-        self.stdout.write(self.style.SUCCESS("\n=== ALL 7 R3 EXIT CHECKS COMPLETED SUCCESSFULLY ==="))
+        self.stdout.write(self.style.SUCCESS("\n=== ALL WORKFLOW EXIT CHECKS COMPLETED SUCCESSFULLY ==="))

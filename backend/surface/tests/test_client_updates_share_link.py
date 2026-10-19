@@ -639,3 +639,160 @@ def test_cross_tenant_isolation_tasks_updates_links_imports(r3_client_update_set
         HTTP_AUTHORIZATION=auth_b,
     )
     assert res_rep.status_code == 404
+
+
+def test_hearing_outcome_rules_and_client_update_facts(r3_client_update_setup: dict[str, Any]) -> None:
+    """Session R3 Fix Pass 2 - Item 1: Future outcome refused, today hearing transition, no deadlines, facts ignore client."""
+    from zoneinfo import ZoneInfo
+    ctx = r3_client_update_setup
+    client = HttpClient()
+    auth_lead = f"Bearer {ctx['lead_id']}"
+    today_ist = timezone.now().astimezone(ZoneInfo("Asia/Kolkata")).date()
+
+    # 1. Setup a future hearing (+5 days) and a hearing today
+    future_date = today_ist + timedelta(days=5)
+    future_hrg_id = mint_id("hrg")
+    today_hrg_id = mint_id("hrg")
+
+    with admin_db_context():
+        Hearing.objects.create(
+            tenant_id=ctx["tenant_id"],
+            matter_id=ctx["matter_id"],
+            hearing_id=future_hrg_id,
+            date=future_date,
+            purpose="Future Final Hearing",
+            source="MANUAL",
+            status="LISTED",
+            entered_by=ctx["lead_id"],
+        )
+        Hearing.objects.create(
+            tenant_id=ctx["tenant_id"],
+            matter_id=ctx["matter_id"],
+            hearing_id=today_hrg_id,
+            date=today_ist,
+            purpose="Today Hearing",
+            source="MANUAL",
+            status="LISTED",
+            entered_by=ctx["lead_id"],
+        )
+        # Also create a deadline to prove it never appears in the draft
+        from workspace.models import Deadline
+        Deadline.objects.create(
+            tenant_id=ctx["tenant_id"],
+            deadline_id=mint_id("ddl"),
+            matter_id=ctx["matter_id"],
+            label="File Rejoinder Affidavit",
+            due_on=today_ist + timedelta(days=10),
+            kind="MANUAL",
+            lifecycle="CONFIRMED",
+            owner=ctx["lead_id"],
+        )
+
+    # 2. Attempting to record HEARD on a future hearing is refused (400)
+    res_fut_heard = client.post(
+        f"/api/hearings/{future_hrg_id}/outcome",
+        data={"status": "HEARD", "outcome": "Arguments concluded."},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_fut_heard.status_code == 400
+    assert "Record what happened on or after that day" in res_fut_heard.json()["detail"]
+
+    # Attempting to record NOT_REACHED on future hearing is also refused
+    res_fut_nr = client.post(
+        f"/api/hearings/{future_hrg_id}/outcome",
+        data={"status": "NOT_REACHED", "outcome": "Court rose early."},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_fut_nr.status_code == 400
+
+    # Attempting to record invalid status (e.g. LISTED) is refused
+    res_fut_inv = client.post(
+        f"/api/hearings/{future_hrg_id}/outcome",
+        data={"status": "LISTED", "outcome": "Still listed."},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_fut_inv.status_code == 400
+
+    # Attempting next_date <= hearing date is refused
+    res_fut_date = client.post(
+        f"/api/hearings/{future_hrg_id}/outcome",
+        data={"status": "ADJOURNED", "outcome": "Adjourned", "next_date": (future_date - timedelta(days=1)).isoformat()},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_fut_date.status_code == 400
+    assert "must be after the hearing date" in res_fut_date.json()["detail"]
+
+    # ADJOURNED in advance on future hearing is allowed
+    res_fut_adj = client.post(
+        f"/api/hearings/{future_hrg_id}/outcome",
+        data={"status": "ADJOURNED", "outcome": "Bench not sitting", "next_date": (future_date + timedelta(days=7)).isoformat()},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_fut_adj.status_code == 200
+
+    # 3. Check Draft BEFORE outcome on today's hearing:
+    # Today's hearing MUST show as next_hearing, NOT as recent hearing!
+    res_draft_pre = client.get(
+        f"/api/matters/{ctx['matter_id']}/client-updates/draft",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_draft_pre.status_code == 200
+    pre_facts = res_draft_pre.json()["facts"]
+    assert pre_facts["next_hearing"]["date"] == today_ist.isoformat()
+    # Ensure future hearing (even though ADJOURNED) is NEVER in last_hearing
+    if pre_facts["last_hearing"]:
+        assert pre_facts["last_hearing"]["date"] != future_date.isoformat()
+
+    # Verify draft has NO deadlines
+    assert "File Rejoinder Affidavit" not in res_draft_pre.json()["draft_text"]
+    assert "due by" not in res_draft_pre.json()["draft_text"]
+    assert "deadlines" not in pre_facts
+
+    # 4. Record outcome on TODAY's hearing (status=HEARD)
+    res_today_outcome = client.post(
+        f"/api/hearings/{today_hrg_id}/outcome",
+        data={"status": "HEARD", "outcome": "Order pronounced in our favor."},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_today_outcome.status_code == 200
+
+    # 5. Check Draft AFTER outcome on today's hearing:
+    # Today's hearing MUST now show as last_hearing, NOT as next_hearing!
+    res_draft_post = client.get(
+        f"/api/matters/{ctx['matter_id']}/client-updates/draft",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_draft_post.status_code == 200
+    post_facts = res_draft_post.json()["facts"]
+    assert post_facts["last_hearing"]["date"] == today_ist.isoformat()
+    assert "Order pronounced in our favor" in post_facts["last_hearing"]["outcome"]
+
+    # 6. Publishing update ignores client-sent facts
+    spoofed_facts = {
+        "hacked_field": "injected_by_attacker",
+        "last_hearing": {"outcome": "fake news"},
+    }
+    res_pub = client.post(
+        f"/api/matters/{ctx['matter_id']}/client-updates",
+        data={
+            "text": "Valid lawyer status update text.",
+            "facts": spoofed_facts,
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_lead,
+    )
+    assert res_pub.status_code == 200
+    update_id = res_pub.json()["update_id"]
+
+    with admin_db_context():
+        update_obj = ClientUpdate.objects.get(tenant_id=ctx["tenant_id"], update_id=update_id)
+        # Authoritative facts strictly recomputed server-side, ignoring spoofed_facts
+        assert "hacked_field" not in update_obj.facts
+        assert update_obj.facts["last_hearing"]["date"] == today_ist.isoformat()
+

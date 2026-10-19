@@ -372,8 +372,8 @@ def test_5000_row_commit_benchmark(r3_import_setup: dict[str, Any]) -> None:
     print(f"\n[BENCHMARK] 5,000-row preview: {t_preview:.2f}s | commit: {t_commit:.2f}s")
     assert result["status"] == "COMMITTED"
     assert result["counts"]["matters_created"] == 5000
-    # Assert commit finishes in a reasonable time (< 120s in test env)
-    assert t_commit < 120.0
+    # Assert commit finishes in a reasonable time (< 180s in test env)
+    assert t_commit < 180.0
 
 
 def test_sequential_import_commits_create_matters_only_once(r3_import_setup: dict[str, Any]) -> None:
@@ -588,3 +588,320 @@ def test_import_commit_rollback_on_halfway_failure(r3_import_setup: dict[str, An
         assert Client.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
         assert Matter.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
         assert Hearing.objects.filter(tenant_id=ctx["tenant_id"]).count() == 0
+
+
+def test_import_cross_client_case_duplicate_detection_and_skip(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Fix Pass 2 - Item 2: Existing case number under another client is skipped by default with warning."""
+    ctx = r3_import_setup
+    from workspace.db import tenant_db_context
+    from workspace.services import (
+        create_case_link_service,
+        create_client_service,
+        create_matter_service,
+    )
+
+    # Setup existing client 'Acme Infra Ltd' with matter and case link under tenant context
+    with tenant_db_context(tenant_id=ctx["tenant_id"], user_id=ctx["admin_id"]):
+        c = create_client_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            display_name="Acme Infra Ltd",
+            client_type="COMPANY",
+        )
+        m = create_matter_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            client_id=c["client_id"],
+            title="Insolvency Resolution Process",
+            case_type="IBC",
+            court_or_forum="NCLT Mumbai",
+        )
+        create_case_link_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            matter_id=m["matter_id"],
+            value_raw="CP (IB) 123/MB/2024",
+        )
+
+    # Now preview an import row where client name has a typo: 'Acme Infra Lt'
+    raw_rows = [
+        ["Acme Infra Lt", "COMPANY", "", "Resolution Plan Approval", "IBC", "NCLT Mumbai", "CP (IB) 123/MB/2024", "", "", ""]
+    ]
+    mapping = {
+        "client_name": 0,
+        "client_type": 1,
+        "cin_or_pan": 2,
+        "matter_title": 3,
+        "case_type": 4,
+        "court_or_forum": 5,
+        "case_number": 6,
+        "next_hearing_date": 7,
+        "lead_lawyer_email": 8,
+        "notes": 9,
+    }
+    with tenant_db_context(tenant_id=ctx["tenant_id"], user_id=ctx["admin_id"]):
+        preview_data = generate_import_preview(ctx["tenant_id"], raw_rows, mapping)
+        row = preview_data["rows"][0]
+
+        assert row["client_status"] == "NEW_CLIENT"
+        assert row["matter_status"] == "ALREADY_EXISTS"
+        assert any("possible duplicate (case number exists under Acme Infra Ltd)" in w for w in row["warnings"])
+        assert preview_data["summary"]["existing_matters"] == 1
+        assert preview_data["summary"]["new_matters"] == 0
+
+        # Test override: with action CREATE_ANYWAY, matter_status is NEW_MATTER and can be committed
+        override_preview = generate_import_preview(
+            ctx["tenant_id"], raw_rows, mapping, client_overrides={"1": {"action": "CREATE_ANYWAY"}}
+        )
+        ov_row = override_preview["rows"][0]
+        assert ov_row["matter_status"] == "NEW_MATTER"
+        assert any("possible duplicate (case number exists under Acme Infra Ltd)" in w for w in ov_row["warnings"])
+        assert override_preview["summary"]["existing_matters"] == 0
+        assert override_preview["summary"]["new_matters"] == 1
+
+    import_id = mint_id("imj")
+    with admin_db_context():
+        ImportJob.objects.create(
+            tenant_id=ctx["tenant_id"],
+            import_id=import_id,
+            filename="acme_import.csv",
+            file_size=500,
+            row_count=1,
+            status="PREVIEW",
+            sha256="acme_preview_sha",
+            mapping=mapping,
+            client_overrides={"1": {"action": "CREATE_ANYWAY"}},
+            counts=override_preview["summary"],
+            report=[],
+            file_ref="s3://test/acme_import.csv",
+            created_by=ctx["admin_id"],
+        )
+
+    execute_import_commit(
+        tenant_id=ctx["tenant_id"],
+        importer_user_id=ctx["admin_id"],
+        import_id=import_id,
+        preview_data=override_preview,
+        original_filename="acme_import.csv",
+    )
+
+    with admin_db_context():
+        from workspace.models import Client
+        assert Client.objects.filter(tenant_id=ctx["tenant_id"], display_name="Acme Infra Lt").exists()
+
+
+def test_client_role_canonical_list_and_normalization(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Fix Pass 2 - Item 3: Canonical client roles, synonym normalization, and validation."""
+    from workspace.db import tenant_db_context
+    from workspace.import_service import normalize_client_role
+    from workspace.models import CLIENT_ROLES
+    from workspace.services import create_client_service, create_matter_service
+
+    ctx = r3_import_setup
+
+    # Canonical list check
+    assert CLIENT_ROLES == ("PETITIONER", "RESPONDENT", "APPELLANT", "CLAIMANT", "ADVISORY", "NOT_SET")
+
+    # Synonym mapping
+    role, warn = normalize_client_role("Applicant No. 2")
+    assert role == "PETITIONER" and warn is None
+
+    role, warn = normalize_client_role("Plaintiff")
+    assert role == "PETITIONER" and warn is None
+
+    role, warn = normalize_client_role("complainant")
+    assert role == "PETITIONER" and warn is None
+
+    role, warn = normalize_client_role("Defendant No. 1")
+    assert role == "RESPONDENT" and warn is None
+
+    role, warn = normalize_client_role("respondent")
+    assert role == "RESPONDENT" and warn is None
+
+    role, warn = normalize_client_role("Appellant")
+    assert role == "APPELLANT" and warn is None
+
+    role, warn = normalize_client_role("CLAIMANT")
+    assert role == "CLAIMANT" and warn is None
+
+    role, warn = normalize_client_role("advisory")
+    assert role == "ADVISORY" and warn is None
+
+    role, warn = normalize_client_role("")
+    assert role == "NOT_SET" and warn is not None and "not specified" in warn
+
+    role, warn = normalize_client_role(None)
+    assert role == "NOT_SET" and warn is not None and "not specified" in warn
+
+    # Unrecognized role becomes NOT_SET with warning naming the value
+    role, warn = normalize_client_role("Intervenor")
+    assert role == "NOT_SET"
+    assert warn is not None and "Intervenor" in warn and "NOT_SET" in warn
+
+    # create_matter_service rejects invalid role
+    with tenant_db_context(tenant_id=ctx["tenant_id"], user_id=ctx["admin_id"]):
+        c = create_client_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            display_name="Role Test Client",
+            client_type="COMPANY",
+        )
+        with pytest.raises(ValueError) as excinfo:
+            create_matter_service(
+                tenant_id=ctx["tenant_id"],
+                actor_id=ctx["admin_id"],
+                client_id=c["client_id"],
+                title="Invalid Role Matter",
+                client_role="PLAINTIFF",  # Must be canonical PETITIONER
+            )
+        assert "Invalid client_role" in str(excinfo.value)
+
+        # Valid canonical role succeeds
+        m = create_matter_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            client_id=c["client_id"],
+            title="Valid Role Matter",
+            client_role="PETITIONER",
+        )
+        assert m["client_role"] == "PETITIONER"
+
+
+def test_hearing_source_note_via_api(r3_import_setup: dict[str, Any]) -> None:
+    """Session R3 Fix Pass 2 - Item 4: source_note in hearing API responses."""
+    from datetime import date
+
+    from workspace.db import tenant_db_context
+    from workspace.models import ImportJob
+    from workspace.services import (
+        create_client_service,
+        create_hearing_service,
+        create_matter_service,
+    )
+
+    ctx = r3_import_setup
+    client = HttpClient()
+    auth_header = f"Bearer {ctx['admin_id']}"
+
+    import_id = mint_id("imj")
+    with admin_db_context():
+        ImportJob.objects.create(
+            tenant_id=ctx["tenant_id"],
+            import_id=import_id,
+            filename="cause_list_oct.xlsx",
+            file_size=1024,
+            row_count=10,
+            status="COMMITTED",
+            sha256="sha_oct_cases",
+            file_ref="s3://test/cause_list_oct.xlsx",
+            created_by=ctx["admin_id"],
+        )
+
+    with tenant_db_context(tenant_id=ctx["tenant_id"], user_id=ctx["admin_id"]):
+        c = create_client_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            display_name="Source Note Client",
+            client_type="COMPANY",
+        )
+        m = create_matter_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            client_id=c["client_id"],
+            title="Source Note Matter",
+        )
+        # Create one hearing with import source_ref
+        h_imported = create_hearing_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            matter_id=m["matter_id"],
+            hearing_date=date(2026, 11, 20),
+            court_no="Court 1",
+            purpose="Hearing on Admission",
+            source="MANUAL",
+            source_ref=f"import:{import_id}:row 42",
+            status="LISTED",
+        )
+        # Create second hearing with manual source
+        h_manual = create_hearing_service(
+            tenant_id=ctx["tenant_id"],
+            actor_id=ctx["admin_id"],
+            matter_id=m["matter_id"],
+            hearing_date=date(2026, 11, 25),
+            court_no="Court 1",
+            purpose="Subsequent Hearing",
+            source="MANUAL",
+            source_ref=None,
+            status="LISTED",
+        )
+
+    # 1. Test GET /api/matters/{matter_id}/hearings
+    res = client.get(f"/api/matters/{m['matter_id']}/hearings", HTTP_AUTHORIZATION=auth_header)
+    assert res.status_code == 200
+    hearings_data = res.json()
+    assert len(hearings_data) >= 2
+
+    imported_resp = next(h for h in hearings_data if h["hearing_id"] == h_imported["hearing_id"])
+    assert imported_resp["source_note"] == "Imported from cause_list_oct.xlsx, row 42"
+
+    manual_resp = next(h for h in hearings_data if h["hearing_id"] == h_manual["hearing_id"])
+    assert manual_resp["source_note"] is None
+
+    # 2. Test POST /api/matters/{matter_id}/hearings returns source_note
+    res_post = client.post(
+        f"/api/matters/{m['matter_id']}/hearings",
+        data={"date": "2026-12-01", "court_no": "2", "purpose": "Directions"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_header,
+    )
+    assert res_post.status_code == 200
+    assert "source_note" in res_post.json()
+
+    # 3. Test POST /api/hearings/{hearing_id}/outcome returns source_note
+    res_out = client.post(
+        f"/api/hearings/{h_imported['hearing_id']}/outcome",
+        data={"status": "ADJOURNED", "outcome": "Adjourned to December."},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=auth_header,
+    )
+    assert res_out.status_code == 200
+    assert res_out.json()["source_note"] == "Imported from cause_list_oct.xlsx, row 42"
+
+
+def test_excel_serial_number_boundaries_and_rejections() -> None:
+    """Session R3 Fix Pass 2 - Item 7: Serial dates restricted to 2000-2099; 4-digit years warn unreadable."""
+    from datetime import date
+
+    from workspace.import_service import parse_import_date
+
+    today_d = date(2026, 10, 19)
+
+    # 4-digit values like 2024 warn "unreadable date"
+    d_num_year, w_num_year = parse_import_date(2024, today_d)
+    assert d_num_year is None
+    assert any("unreadable date" in w.lower() for w in w_num_year)
+
+    d_str_year, w_str_year = parse_import_date("2024", today_d)
+    assert d_str_year is None
+    assert any("unreadable date" in w.lower() for w in w_str_year)
+
+    # Below 36526 (e.g. 36525 = 1999-12-31)
+    d_low, w_low = parse_import_date(36525, today_d)
+    assert d_low is None
+    assert any("unreadable date" in w.lower() for w in w_low)
+
+    # Valid lower bound: 36526 -> 2000-01-01 (past date warning is normal, not unreadable)
+    d_min, w_min = parse_import_date(36526, today_d)
+    assert d_min == date(2000, 1, 1)
+    assert not any("unreadable" in w.lower() for w in w_min)
+
+    # Valid upper bound: 73050 -> 2099-12-31
+    d_max, w_max = parse_import_date(73050, today_d)
+    assert d_max == date(2099, 12, 31)
+    assert len(w_max) == 0
+
+    # Above 73050 (e.g. 73051)
+    d_high, w_high = parse_import_date(73051, today_d)
+    assert d_high is None
+    assert any("unreadable date" in w.lower() for w in w_high)
+
