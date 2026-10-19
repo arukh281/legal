@@ -1208,13 +1208,39 @@ Legal Team
 === ALL WORKFLOW EXIT CHECKS COMPLETED SUCCESSFULLY ===
 ```
 
+
 ---
 
-### 8. What the Next Session (R4: "Dates and Facts from Documents, Order-set Dates, Statutory Deadlines") Needs
-- **Dates & Facts Extraction from Documents:**
-  - Extract trigger dates and key case facts with exact quotes from uploaded or fetched documents for lawyer confirmation.
-- **Order-set Dates for Any Court:**
-  - Extraction of procedural dates set by court orders (filing deadlines, compliance dates).
-- **Statutory Deadlines (IBC Pack Only):**
-  - Implement statutory deadlines engine using ACTIVE RuleSpecs from 02 Part A (re-anchored to India Code text, signed off by partner).
-  - Transition from manual `CHECK (rule_id IS NULL)` constraint on `tpl.deadline` to the ACTIVE RuleSpec procedural clock.
+## Demo Setup & R3 Leftovers Fixes
+
+### 1. What Was Built
+1. **R3 Leftovers Fixes:**
+   - Fixed row override leakage in `backend/workspace/import_service.py`: keyed overrides strictly by `row_num`, preventing row 5 overrides from applying to row 6. Added test `test_import_row_override_does_not_leak_to_next_row`.
+   - Updated `ImportCasesPage.tsx`: added interactive "Import anyway" and "Use existing client <name>" buttons on flagged duplicate rows, re-running previews with explicit client overrides and ensuring accurate preview/commit counts.
+   - Fixed all 37 `no-explicit-any` ESLint warnings in the frontend; `pnpm lint` now passes with 0 errors and 0 warnings.
+2. **Demo Data Management Command (`seed_demo`):**
+   - Added `backend/workspace/management/commands/seed_demo.py` creating:
+     - Firm: "Demo Law Chambers"
+     - Three users: `admin@demo.law` (ADMIN), `partner@demo.law` (PARTNER), `associate@demo.law` (ASSOCIATE)
+     - 20 matters imported via real import service (`synthetic_cases_20.xlsx`)
+     - Partner as LEAD and Associate as MEMBER on 4 matters
+     - 1 hearing today, 1 hearing tomorrow
+     - 1 open task assigned to the associate
+     - 1 published client update
+     - Safe and idempotent to execute multiple times.
+3. **Real Sign-In for Dev:**
+   - Cross-firm disambiguation in `dev_login`: refuses (400) if an email matches active users across more than one firm.
+   - Added `POST /api/auth/logout` endpoint ending session.
+   - Redesigned sign-in screen (`LoginPlaceholder.tsx`) with real email entry, error display, and quick-select buttons for the three demo accounts.
+   - Removed hardcoded default email from `App.tsx` and wired logout button.
+4. **Local Mac Documentation:**
+   - Created `README.md` with explicit "Run it on your Mac" steps, exact ports (Postgres 5433, MinIO 9000/9001, Django 8000, Vite 5173), and demo credentials.
+
+### 2. Quality Gates Status
+- `uv run ruff check .`: Clean (0 errors)
+- `uv run mypy .`: Clean (0 issues across 290 source files)
+- `pnpm lint`: Clean (0 errors, 0 warnings)
+- `pnpm test`: 3/3 passed
+- `pnpm build`: Succeeded without warnings
+- Backend pytest: 30/30 passed
+
