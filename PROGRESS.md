@@ -1175,7 +1175,7 @@ Here is an update regarding your matter: Acme v. Zenith, s.9 petition
 
 Forum: NCLT New Delhi Bench Court-II
 
-Recent Hearing (25 Nov 2026 (Wed)): Listing — Heard: Arguments concluded. Reserved for orders.
+Recent Hearing (19 Oct 2026 (Mon)): Listing — Heard: Arguments concluded. Reserved for orders.
 
 Next Hearing: Scheduled on 02 Nov 2026 (Mon) for Next hearing.
 
@@ -1185,8 +1185,8 @@ Please let us know if you have any questions.
 Warm regards,
 Legal Team
 """
-✓ Client update published (ID: cup_01M58HX1W5K4F6JGETWETN0KSG)
-✓ Share link created: /share/8evsk8CR... (expires in 30 days)
+✓ Client update published (ID: cup_01M59ERD4Y99A6C6JZVYP3WRCK)
+✓ Share link created: /share/7P15QbjE... (expires in 30 days)
 ✓ Share link accessed anonymously: displays firm name, client title, published update
 ✓ Revoked share link returns byte-identical 404 page (1172 bytes)
 
@@ -1195,12 +1195,17 @@ Legal Team
 ✓ Firm ADMIN who is not a matter member refused on publish update (403)
 ✓ Tenant B user completely blocked from Tenant A tasks (403), updates (403), and imports (403/404)
 
---- STEP 7: Test, Lint, and Hygiene Verification ---
-✓ Backend: 29/29 R3-specific tests passing in pytest
-✓ Code hygiene: ruff check and mypy clean across all modules
-✓ Frontend: pnpm lint, test, and build passing
+--- STEP 7: Real Test Suite, Lint, and Type Verification ---
+✓ Pytest R3 Suite: 34 passed (test_tasks: 6, test_client_updates_share_link: 9, test_case_import: 13, test_court_sync_consumer: 6)
+✓ Full Backend Pytest: 361 tests passing across core, ingest, ops, parse, surface, workspace
+✓ Backend Lint: uv run ruff check . -> All checks passed!
+✓ Backend Types: uv run mypy core surface workspace -> Success: no issues found in 73 source files
+✓ Frontend Tests: pnpm test -> 3/3 passed (vitest)
+✓ Frontend Lint: pnpm lint -> 0 errors, 37 warnings (eslint)
+✓ Frontend Build: pnpm build -> built in 495ms (dist/assets/index-IkLB3bpG.js 441.56 kB)
+✓ Database Migration Guard: manage.py migrate demands --database=owner; catalog verified with 82 tables intact
 
-=== ALL 7 R3 EXIT CHECKS COMPLETED SUCCESSFULLY ===
+=== ALL WORKFLOW EXIT CHECKS COMPLETED SUCCESSFULLY ===
 ```
 
 ---
