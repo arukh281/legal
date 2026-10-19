@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Layout, type NavTab } from "./components/Layout";
 import { TodayPage } from "./pages/TodayPage";
 import { ResearchPage } from "./pages/ResearchPage";
@@ -7,10 +7,12 @@ import { MattersPage } from "./pages/MattersPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { ClientDetailPage } from "./pages/ClientDetailPage";
 import { MatterDetailPage } from "./pages/MatterDetailPage";
+import { TasksPage } from "./pages/TasksPage";
+import { ImportCasesPage } from "./pages/ImportCasesPage";
 import { AuthorityPage } from "./pages/AuthorityPage";
 import { AlertsPage } from "./pages/AlertsPage";
 import { LoginPlaceholder } from "./pages/LoginPlaceholder";
-import { fetchHealth, logout, type DevLoginResponse } from "./api/client";
+import { logout, type DevLoginResponse } from "./api/client";
 
 export const App: React.FC = () => {
   const queryClient = useQueryClient();
@@ -18,12 +20,6 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavTab>("today");
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [activeMatterId, setActiveMatterId] = useState<string | null>(null);
-
-  const { data: health, isLoading: healthLoading } = useQuery({
-    queryKey: ["health"],
-    queryFn: fetchHealth,
-    refetchInterval: 30000,
-  });
 
   const handleLogout = async () => {
     try {
@@ -47,7 +43,7 @@ export const App: React.FC = () => {
 
   const handleSelectMatter = (matterId: string) => {
     setActiveMatterId(matterId);
-    setCurrentTab("clients");
+    setCurrentTab("matters");
   };
 
   return (
@@ -55,9 +51,8 @@ export const App: React.FC = () => {
       currentTab={currentTab}
       onSelectTab={handleTabChange}
       userEmail={currentUser.email}
+      userRole={currentUser.role}
       onLogout={handleLogout}
-      health={health}
-      healthLoading={healthLoading}
     >
       {currentTab === "clients" && (
         activeMatterId ? (
@@ -79,16 +74,43 @@ export const App: React.FC = () => {
           <ClientsPage onSelectClient={(cid) => setActiveClientId(cid)} />
         )
       )}
+
       {currentTab === "matters" && (
-        <MattersPage
-          onSelectClient={(cid) => {
-            setActiveClientId(cid);
-            setCurrentTab("clients");
-          }}
+        activeMatterId ? (
+          <MatterDetailPage
+            matterId={activeMatterId}
+            onBack={() => setActiveMatterId(null)}
+            onSelectClient={(cid) => {
+              setActiveClientId(cid);
+              setActiveMatterId(null);
+            }}
+          />
+        ) : (
+          <MattersPage
+            onSelectClient={(cid) => {
+              setActiveClientId(cid);
+              setCurrentTab("clients");
+            }}
+          />
+        )
+      )}
+
+      {currentTab === "today" && (
+        <TodayPage onSelectMatter={handleSelectMatter} />
+      )}
+
+      {currentTab === "tasks" && (
+        <TasksPage onSelectMatter={handleSelectMatter} />
+      )}
+
+      {currentTab === "import" && (
+        <ImportCasesPage
+          onBack={() => setCurrentTab("matters")}
+          onViewMatters={() => setCurrentTab("matters")}
         />
       )}
+
       {currentTab === "research" && <ResearchPage />}
-      {currentTab === "today" && <TodayPage onSelectMatter={handleSelectMatter} />}
       {currentTab === "authority" && <AuthorityPage />}
       {currentTab === "alerts" && <AlertsPage />}
     </Layout>
