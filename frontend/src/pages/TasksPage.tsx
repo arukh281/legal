@@ -52,7 +52,7 @@ export const TasksPage: React.FC<TasksPageProps> = ({ onSelectMatter }) => {
   return (
     <div>
       <PageHeader
-        title="Tasks"
+        title="My tasks this week"
         description="Assigned tasks across matters"
       />
 
