@@ -3739,6 +3739,17 @@
               }
             ],
             "title": "Court Or Forum"
+          },
+          "source_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Note"
           }
         },
         "required": [

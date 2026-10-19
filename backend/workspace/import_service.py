@@ -268,6 +268,9 @@ def parse_import_date(raw_val: Any, today_d: date) -> tuple[date | None, list[st
 
     # 2. Excel numeric serial number
     if isinstance(raw_val, (int, float)):
+        # Session R3 Fix Pass 2 - Item 7: Treat as serial only between 36526 and 73050 (1 Jan 2000 to 31 Dec 2099)
+        if not (36526 <= raw_val <= 73050):
+            return None, [f"Unreadable date: '{raw_val}'"]
         try:
             dt = from_excel(raw_val)
             d = dt.date()
@@ -275,7 +278,7 @@ def parse_import_date(raw_val: Any, today_d: date) -> tuple[date | None, list[st
                 warnings.append("Hearing date is in the past (historical hearing)")
             return d, warnings
         except Exception:
-            return None, [f"Invalid Excel date serial number: {raw_val}"]
+            return None, [f"Unreadable date: '{raw_val}'"]
 
     # 3. String representation
     s = str(raw_val).strip()
@@ -284,16 +287,19 @@ def parse_import_date(raw_val: Any, today_d: date) -> tuple[date | None, list[st
 
     # Excel serial number passed as numeric string
     if s.isdigit() and len(s) in (4, 5):
-        try:
-            val_num = int(s)
-            if 1000 <= val_num <= 100000:
+        val_num = int(s)
+        if 36526 <= val_num <= 73050:
+            try:
                 dt = from_excel(val_num)
                 d = dt.date()
                 if d < today_d:
                     warnings.append("Hearing date is in the past (historical hearing)")
                 return d, warnings
-        except Exception:
-            pass
+            except Exception:
+                pass
+        elif len(s) == 4:
+            # 4-digit numbers like '2024' are not serials; avoid becoming 1905 dates
+            return None, [f"Unreadable date: '{raw_val}'"]
 
     # Try ISO YYYY-MM-DD
     iso_match = re.match(r"^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$", s)
@@ -344,7 +350,38 @@ def parse_import_date(raw_val: Any, today_d: date) -> tuple[date | None, list[st
         except ValueError:
             continue
 
-    return None, [f"Could not parse date: '{raw_val}'"]
+    return None, [f"Unreadable date: '{raw_val}'"]
+
+
+def normalize_client_role(raw_val: Any) -> tuple[str, str | None]:
+    """Normalize client role into standard canonical role with warning if unreadable. (Session R3 Fix Pass 2 - Item 3)"""
+    if raw_val is None:
+        return "NOT_SET", "Client role not specified; set to 'Not set'."
+    s = str(raw_val).strip()
+    if not s:
+        return "NOT_SET", "Client role not specified; set to 'Not set'."
+
+    # Ignore suffixes like 'No. 2', 'No 1', etc.
+    cleaned = re.sub(r"\s+no\.?\s*\d+.*$", "", s, flags=re.IGNORECASE).strip()
+    cleaned_lower = cleaned.lower()
+
+    ROLE_MAP = {
+        "petitioner": "PETITIONER",
+        "applicant": "PETITIONER",
+        "plaintiff": "PETITIONER",
+        "complainant": "PETITIONER",
+        "respondent": "RESPONDENT",
+        "defendant": "RESPONDENT",
+        "appellant": "APPELLANT",
+        "claimant": "CLAIMANT",
+        "advisory": "ADVISORY",
+        "corporate": "ADVISORY",
+        "not_set": "NOT_SET",
+        "not set": "NOT_SET",
+    }
+    if cleaned_lower in ROLE_MAP:
+        return ROLE_MAP[cleaned_lower], None
+    return "NOT_SET", f"Client role '{s}' unrecognized; set to NOT_SET."
 
 
 def generate_import_preview(
@@ -389,6 +426,24 @@ def generate_import_preview(
     for h in Hearing.objects.filter(tenant_id=tenant_id).values("matter_id", "date"):
         hearings_by_matter[h["matter_id"]].add(h["date"])
 
+    # Build case link lookup dicts once (Session R3 Fix Pass 2 - Item 2)
+    case_number_to_client: dict[str, dict[str, str]] = {}
+    raw_case_to_client: dict[str, dict[str, str]] = {}
+    for cl in existing_case_links:
+        c_id = matter_client_map.get(cl.matter_id)
+        if c_id and cl.value_normalized:
+            c_name = client_display_map.get(c_id, c_id)
+            case_number_to_client[cl.value_normalized] = {
+                "client_id": c_id,
+                "client_name": c_name,
+                "matter_id": cl.matter_id,
+            }
+            raw_case_to_client[cl.value_normalized.strip().lower()] = {
+                "client_id": c_id,
+                "client_name": c_name,
+                "matter_id": cl.matter_id,
+            }
+
     preview_rows: list[dict[str, Any]] = []
     seen_in_batch_clients: dict[str, str] = {}  # norm_client_name -> virtual or existing client_id
     seen_in_batch_matters: set[tuple[str, str]] = set()  # (client_key, matter_key)
@@ -416,12 +471,10 @@ def generate_import_preview(
             client_type = "COMPANY"
 
         cin_pan_raw = str(get_row_val(row, "cin_or_pan") or "").strip()
-        client_role_raw = str(get_row_val(row, "client_role") or "").strip()
-        client_role = "NOT_SET"
-        if client_role_raw:
-            client_role = client_role_raw.upper()
-        else:
-            row_warnings.append("Client role not specified; set to 'Not set'.")
+        client_role_raw = get_row_val(row, "client_role")
+        client_role, role_warning = normalize_client_role(client_role_raw)
+        if role_warning:
+            row_warnings.append(role_warning)
 
         matter_title = str(get_row_val(row, "matter_title") or "").strip()
         case_type = str(get_row_val(row, "case_type") or "").strip() or None
@@ -451,7 +504,10 @@ def generate_import_preview(
         # --- 1. Client Matching ---
         norm_client_name = normalize_client_name(client_name)
         matched_client: Client | None = None
-        override = overrides.get(str(row_num))
+        override = (
+            overrides.get(str(row_num))
+            or overrides.get(str(idx))
+        )
         if override and override.get("action") == "USE_EXISTING":
             matched_client = next(
                 (c for c in existing_clients if c.client_id == override.get("client_id")),
@@ -521,21 +577,26 @@ def generate_import_preview(
                         f"Case number '{p}' could not be canonically parsed; it will not be tracked automatically."
                     )
 
-        # Check if case number exists under a different client (Session R3 Fix Pass - Item 17)
+        # Check if case number exists under a different client (Session R3 Fix Pass 2 - Item 2)
+        matched_other_client_case: dict[str, str] | None = None
         for c_norm in canonical_case_numbers:
-            for cl in existing_case_links:
-                if cl.value_normalized == c_norm:
-                    other_client_id = matter_client_map.get(cl.matter_id)
-                    if (
-                        other_client_id
-                        and resolved_client_id
-                        and other_client_id != resolved_client_id
-                        and not resolved_client_id.startswith("batch_new_")
-                    ):
-                        other_client_name = client_display_map.get(other_client_id, other_client_id)
-                        row_warnings.append(
-                            f"Case number '{c_norm}' already exists under a different client '{other_client_name}'; not auto-matched."
-                        )
+            found = case_number_to_client.get(c_norm)
+            if found and found["client_id"] != resolved_client_id:
+                matched_other_client_case = found
+                row_warnings.append(
+                    f"Case number '{c_norm}' already exists under a different client '{found['client_name']}'; not auto-matched."
+                )
+                break
+
+        if not matched_other_client_case and raw_case_numbers:
+            for r_norm in raw_case_numbers:
+                found = raw_case_to_client.get(r_norm)
+                if found and found["client_id"] != resolved_client_id:
+                    matched_other_client_case = found
+                    row_warnings.append(
+                        f"Case number '{r_norm}' already exists under a different client '{found['client_name']}'; not auto-matched."
+                    )
+                    break
 
         # --- 3. Matter Deduplication & Matching ---
         # Rule 8:
@@ -545,8 +606,19 @@ def generate_import_preview(
         matched_matter: Matter | None = None
         match_reason: str | None = None
 
+        if matched_other_client_case and client_status == "NEW_CLIENT":
+            other_c_name = matched_other_client_case["client_name"]
+            row_warnings.append(f"possible duplicate (case number exists under {other_c_name})")
+            if not (override and override.get("action") in ("CREATE_ANYWAY", "IMPORT_ANYWAY", "CREATE_NEW")):
+                matched_matter = Matter(
+                    title=matter_title,
+                    matter_id=matched_other_client_case["matter_id"],
+                    client_id=matched_other_client_case["client_id"],
+                )
+                match_reason = f"case number exists under {other_c_name}"
+
         candidate_matters = matters_by_client.get(resolved_client_id or "", [])
-        if canonical_case_numbers:
+        if not matched_matter and canonical_case_numbers:
             for m in candidate_matters:
                 m_links = case_links_by_matter.get(m.matter_id, [])
                 for cl in m_links:
@@ -571,11 +643,12 @@ def generate_import_preview(
         if not matched_matter and not parsed_case_numbers and matter_title:
             for m in candidate_matters:
                 if m.title.strip().lower() == matter_title.lower():
-                    matched_matter = m
-                    match_reason = "exact title"
                     row_warnings.append(
                         f"Possible duplicate (matched by title with matter '{m.matter_id}')"
                     )
+                    if not (override and override.get("action") in ("CREATE_ANYWAY", "IMPORT_ANYWAY", "CREATE_NEW")):
+                        matched_matter = m
+                        match_reason = "exact title"
                     break
 
         # Check duplicate within batch

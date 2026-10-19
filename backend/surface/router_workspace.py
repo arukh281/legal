@@ -712,9 +712,13 @@ def list_all_matters(request: HttpRequest) -> list[dict[str, Any]]:
 @router.post("/matters", response=MatterSummaryResponse, auth=authz_required)
 def create_matter(request: HttpRequest, payload: MatterCreateRequest) -> dict[str, Any]:
     """Open a new matter under a client."""
+    from workspace.models import CLIENT_ROLES
+
     user = _get_app_user(request)
     if not payload.client_id:
         raise HttpError(400, "client_id is required for all new matters.")
+    if payload.client_role not in CLIENT_ROLES:
+        raise HttpError(400, f"Invalid client_role '{payload.client_role}'. Must be one of: {', '.join(CLIENT_ROLES)}")
 
     with tenant_db_context(tenant_id=user.tenant_id, user_id=user.user_id):
         client = Client.objects.filter(tenant_id=user.tenant_id, client_id=payload.client_id).first()
@@ -817,6 +821,9 @@ def update_matter(
             updates.append("title = %s")
             params.append(payload.title)
         if payload.client_role is not None:
+            from workspace.models import CLIENT_ROLES
+            if payload.client_role not in CLIENT_ROLES:
+                raise HttpError(400, f"Invalid client_role '{payload.client_role}'. Must be one of: {', '.join(CLIENT_ROLES)}")
             updates.append("client_role = %s")
             params.append(payload.client_role)
         if payload.case_type is not None:
@@ -1212,9 +1219,33 @@ def list_matter_hearings(request: HttpRequest, matter_id: str) -> list[dict[str,
         if not matter or not authz.can(user, "read", matter):
             raise HttpError(403, "Access to this matter is forbidden.")
 
-        hearings = Hearing.objects.filter(
-            tenant_id=user.tenant_id, matter_id=matter_id
-        ).order_by("date", "court_no", "item_no")
+        hearings = list(
+            Hearing.objects.filter(
+                tenant_id=user.tenant_id, matter_id=matter_id
+            ).order_by("date", "court_no", "item_no")
+        )
+
+        # Look up import filenames once per request (Item 4)
+        import_ids: set[str] = set()
+        for h in hearings:
+            if h.source_ref and h.source_ref.startswith("import:"):
+                parts = h.source_ref.split(":")
+                if len(parts) >= 2:
+                    import_ids.add(parts[1])
+
+        import_file_map: dict[str, str] = {}
+        if import_ids:
+            for job in ImportJob.objects.filter(tenant_id=user.tenant_id, import_id__in=import_ids).values("import_id", "filename"):
+                import_file_map[job["import_id"]] = job["filename"]
+
+        def _format_source_note(source_ref: str | None) -> str | None:
+            if not source_ref or not source_ref.startswith("import:"):
+                return None
+            parts = source_ref.split(":")
+            if len(parts) >= 3:
+                fname = import_file_map.get(parts[1], "import file")
+                return f"Imported from {fname}, {parts[2]}"
+            return f"Imported from {source_ref}"
 
         return [
             {
@@ -1236,6 +1267,7 @@ def list_matter_hearings(request: HttpRequest, matter_id: str) -> list[dict[str,
                     if (h.source == "CAUSE_LIST" and h.bench)
                     else (matter.court_or_forum or h.bench)
                 ),
+                "source_note": _format_source_note(h.source_ref),
             }
             for h in hearings
         ]
@@ -1269,6 +1301,7 @@ def create_hearing(
             notes=None,
         )
         res["court_or_forum"] = matter.court_or_forum or payload.bench
+        res["source_note"] = None
         return res
 
 
@@ -1291,8 +1324,21 @@ def record_hearing_outcome(
         if not matter or not authz.can(user, "write", matter):
             raise HttpError(403, "Access to modify this matter is forbidden.")
 
+        # Session R3 Fix Pass 2 - Item 1: Accept only HEARD, ADJOURNED, NOT_REACHED or CANCELLED
+        if payload.status not in ("HEARD", "ADJOURNED", "NOT_REACHED", "CANCELLED"):
+            raise HttpError(400, "Outcome status must be one of HEARD, ADJOURNED, NOT_REACHED, or CANCELLED.")
+
         now = timezone.now()
+        today_ist = now.astimezone(ZoneInfo("Asia/Kolkata")).date()
+
+        # Refuse HEARD and NOT_REACHED when hearing is dated after today in IST
+        if hearing.date > today_ist and payload.status in ("HEARD", "NOT_REACHED"):
+            raise HttpError(400, f"This hearing is on {hearing.date}. Record what happened on or after that day.")
+
         next_d = date.fromisoformat(payload.next_date) if payload.next_date else None
+        # Refuse next_date on or before hearing date
+        if next_d and next_d <= hearing.date:
+            raise HttpError(400, f"Next date ({next_d}) must be after the hearing date ({hearing.date}).")
 
         # Validate task assignee if task is requested
         if payload.task:
@@ -1399,6 +1445,16 @@ def record_hearing_outcome(
                 )
 
         updated = Hearing.objects.get(tenant_id=user.tenant_id, hearing_id=hearing_id)
+        source_note = None
+        if updated.source_ref and updated.source_ref.startswith("import:"):
+            parts = updated.source_ref.split(":")
+            if len(parts) >= 3:
+                job = ImportJob.objects.filter(tenant_id=user.tenant_id, import_id=parts[1]).first()
+                fname = job.filename if job else "import file"
+                source_note = f"Imported from {fname}, {parts[2]}"
+            else:
+                source_note = f"Imported from {updated.source_ref}"
+
         return {
             "hearing_id": updated.hearing_id,
             "matter_id": updated.matter_id,
@@ -1418,6 +1474,7 @@ def record_hearing_outcome(
                 if (updated.source == "CAUSE_LIST" and updated.bench)
                 else (matter.court_or_forum or updated.bench)
             ),
+            "source_note": source_note,
         }
 
 
@@ -2717,11 +2774,12 @@ def build_client_update_facts_and_draft(tenant_id: str, matter: Matter) -> tuple
         doc_query = doc_query.filter(created_at__gt=since_time)
     filed_docs = list(doc_query.order_by("-created_at"))
 
-    # Recent hearings: in past OR has outcome recorded (never overlaps next_hearing)
+    # Recent hearings: dated today or earlier AND (in past OR has outcome recorded)
     recent_hearings = list(
         Hearing.objects.filter(
             tenant_id=tenant_id,
             matter_id=matter.matter_id,
+            date__lte=today_d,
         )
         .filter(
             Q(date__lt=today_d) | (~Q(outcome__isnull=True) & ~Q(outcome=""))

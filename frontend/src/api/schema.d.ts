@@ -1410,6 +1410,8 @@ export interface components {
             observed_at: string | null;
             /** Court Or Forum */
             court_or_forum: string | null;
+            /** Source Note */
+            source_note?: string | null;
         };
         /** HearingCreateRequest */
         HearingCreateRequest: {

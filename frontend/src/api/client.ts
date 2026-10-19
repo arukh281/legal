@@ -413,6 +413,7 @@ export interface HearingResponse {
   entered_by: string;
   observed_at: string | null;
   court_or_forum: string | null;
+  source_note?: string | null;
 }
 
 export interface HearingCreateRequest {

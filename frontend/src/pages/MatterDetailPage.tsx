@@ -1648,7 +1648,7 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
                       </div>
                     )}
 
-                    {(h as any).source_note && (
+                    {h.source_note && (
                       <div
                         style={{
                           marginTop: "6px",
@@ -1657,7 +1657,7 @@ export const MatterDetailPage: React.FC<MatterDetailPageProps> = ({
                           fontStyle: "italic",
                         }}
                       >
-                        {(h as any).source_note}
+                        {h.source_note}
                       </div>
                     )}
                   </div>
